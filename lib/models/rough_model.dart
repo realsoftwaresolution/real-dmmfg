@@ -31,11 +31,15 @@ class RoughModel {
   final double? amtRs;
   final List<RoughDetModel> details;
   final List<RoughProcessDaysModel> processDays;
+  final int? totPcDb;
+
 
   RoughModel({
     this.roughMstID,
     this.roughDate,
     this.jno,
+    this.totPcDb,
+
     this.kapanNo,
     this.site,
     this.partyCode,
@@ -66,6 +70,7 @@ class RoughModel {
     this.details = const [],
     this.processDays = const [],
   });
+  int get totPc => totPcDb ?? details.fold(0, (s, r) => s + (r.pc ?? 0));
 
   factory RoughModel.fromJson(Map<String, dynamic> json) => RoughModel(
     roughMstID: json['RoughMstID'],
@@ -98,6 +103,8 @@ class RoughModel {
     amtDollar: _toDouble(json['AmtDollar']),
     rateRs: _toDouble(json['RateRs']),
     amtRs: _toDouble(json['AmtRs']),
+    totPcDb: json['TotPc'] != null ? (json['TotPc'] as num).toInt() : null,
+
   );
 
   Map<String, dynamic> toJson() => {

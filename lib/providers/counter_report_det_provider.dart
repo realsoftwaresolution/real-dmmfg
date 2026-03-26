@@ -29,7 +29,34 @@ class CounterReportDetProvider extends BaseProvider {
       notifyListeners();
     }
   }
-
+  Future<void> loadByCrId(int crId) async {
+    final result = await request<List<CounterReportDetModel>>(
+      showLoader: false,
+      call: () => api.get('/counterReportDet?crId=$crId'),
+      onSuccess: (res) {
+        final data = res.data as List;
+        return data.map((e) => CounterReportDetModel.fromJson(e)).toList();
+      },
+    );
+    if (result != null) {
+      _list = result;
+      notifyListeners();
+    }
+  }
+  Future<void> deleteByCrId(int crId) async {
+    final toDelete = _list
+        .where((e) => e.crID == crId && e.counterReportDetID != null)
+        .toList();
+    for (final item in toDelete) {
+      await request<bool>(
+        showLoader: false,
+        call: () => api.delete('/counterReportDet/${item.counterReportDetID}'),
+        onSuccess: (_) => true,
+      );
+    }
+    _list.removeWhere((e) => e.crID == crId);
+    notifyListeners();
+  }
   // ── GET BY ID ──────────────────────────────────────────────────────────────
   Future<CounterReportDetModel?> getById(int id) async {
     return await request<CounterReportDetModel>(
@@ -44,7 +71,7 @@ class CounterReportDetProvider extends BaseProvider {
     final model  = CounterReportDetModel.fromFormValues(formValues);
     final result = await request<CounterReportDetModel>(
       showLoader: true,
-      call:      () => api.post('/counterReportDet', data: model.toJson()),
+      call:      () => api.post('/counterReportDet', data: formValues),
       onSuccess: (res) => CounterReportDetModel.fromJson(res.data),
     );
     if (result != null) {

@@ -7,6 +7,7 @@ import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
+import '../bootstrap.dart';
 import '../utils/delete_dialogue.dart';
 import '../utils/msg_dialogue.dart';
 
@@ -32,11 +33,11 @@ class _MstTeamEntryState extends State<MstTeamEntry> {
 
   // ── TABLE COLUMNS ──────────────────────────────────────────────────────────
   List<ErpColumnConfig> get _tableColumns =>  [
-    ErpColumnConfig(key: 'teamCode',    label: 'CODE',    width: 80,  required: true),
+    ErpColumnConfig(key: 'teamCode',    label: 'CODE',    width: 130,  required: true),
     ErpColumnConfig(key: 'teamName',    label: 'NAME',    width: 180, required: true),
-    ErpColumnConfig(key: 'companyCode', label: 'COMPANY', width: 150),
-    ErpColumnConfig(key: 'sortID',      label: 'SORT',    width: 80),
-    ErpColumnConfig(key: 'active',      label: 'ACTIVE',  width: 80),
+    ErpColumnConfig(key: 'companyCode', label: 'COMPANY', width: 170),
+    ErpColumnConfig(key: 'sortID',      label: 'SORT',    width: 130),
+    ErpColumnConfig(key: 'active',      label: 'ACTIVE',  width: 140),
   ];
 
   // ── FORM ROWS ──────────────────────────────────────────────────────────────
@@ -57,24 +58,24 @@ class _MstTeamEntryState extends State<MstTeamEntry> {
           sectionTitle: 'TEAM MASTER', sectionIndex: 0,
         ),
         ErpFieldConfig(
-          key: 'companyCode', label: 'COMPANY',
-          type: ErpFieldType.dropdown,
-          dropdownItems: companyItems,
-          required: true, flex: 2, sectionIndex: 0,
-        ),
-      ],
-      [
-        ErpFieldConfig(
           key: 'sortID', label: 'SORT ID',
           type: ErpFieldType.number,
           flex: 1, sectionIndex: 0,
         ),
+      ],
+      [
+        // ErpFieldConfig(
+        //   key: 'sortID', label: 'SORT ID',
+        //   type: ErpFieldType.number,
+        //   flex: 1, sectionIndex: 0,
+        // ),
         ErpFieldConfig(
           key: 'active',
           label: 'ACTIVE',
           type: ErpFieldType.checkbox,
           sectionTitle: 'SETTINGS',
           sectionIndex: 1,
+          initialBoolValue: true,
           checkboxDbType: 'BIT',
         ),
         // ErpFieldConfig(
@@ -89,6 +90,27 @@ class _MstTeamEntryState extends State<MstTeamEntry> {
       ],
     ];
   }
+  void _setDefaultSortId() {
+    final provider = context.read<TeamProvider>();
+
+    int nextSortId = 1;
+    if (provider.list.isNotEmpty) {
+      nextSortId = provider.list
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+  }
 
   // ── INIT ───────────────────────────────────────────────────────────────────
   @override
@@ -99,16 +121,19 @@ class _MstTeamEntryState extends State<MstTeamEntry> {
       final teamProv = context.read<TeamProvider>();
       compProv.loadCompanies().then((_) {
         teamProv.setCompanies(compProv.companies);
+
+        final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+        context.read<TeamProvider>().setSelectedCompany(selectedCode);
       });
       teamProv.load();
-      _setDefaultFormValues();
+      _setDefaultSortId();
     });
   }
 
-  void _setDefaultFormValues() {
-    _formValues = {'active': 'true', 'sortID': '0'};
-    if (mounted) setState(() {});
-  }
+  // void _setDefaultFormValues() {
+  //   _formValues = {'active': 'true', 'sortID': '0'};
+  //   if (mounted) setState(() {});
+  // }
 
   // ── ROW TAP ────────────────────────────────────────────────────────────────
   void _onRowTap(Map<String, dynamic> row) {
@@ -119,7 +144,8 @@ class _MstTeamEntryState extends State<MstTeamEntry> {
       _isEditMode    = true;
       _formValues    = {
         'teamName':    raw.teamName    ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'sortID':      raw.sortID?.toString()      ?? '0',
         'active': raw.active == true ? 'true' : 'false',
       };
@@ -184,6 +210,7 @@ class _MstTeamEntryState extends State<MstTeamEntry> {
       _showTableOnMobile = false;
       _formValues        = {};
     });
+    _setDefaultSortId();
   }
 
   // ── BUILD ──────────────────────────────────────────────────────────────────
@@ -212,6 +239,7 @@ class _MstTeamEntryState extends State<MstTeamEntry> {
     final compProv = context.watch<CompanyProvider>();
 
     return ErpForm(
+
       logo:          AppImages.logo,
       key:           _erpFormKey,
       title:         'TEAM MASTER',
@@ -238,7 +266,7 @@ class _MstTeamEntryState extends State<MstTeamEntry> {
     return ErpDataTable(
       isReportRow:  false,
       token:        token ?? '',
-      url:          'http://50.62.183.116:5000',
+      url:          baseUrl,
       title:        'TEAM LIST',
       columns:      _tableColumns,
       data:         prov.tableData,

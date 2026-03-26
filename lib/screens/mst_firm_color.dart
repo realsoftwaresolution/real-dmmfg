@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../models/color_model.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
@@ -44,29 +45,37 @@ class _MstColorState extends State<MstColor> {
   // ── FORM ROWS ─────────────────────────────────────────────────────────────
   List<List<ErpFieldConfig>> _formRows(CompanyProvider companyProvider,ColorGroupProvider colorGroupProvider) => [
     /// ── BASIC INFO ──
+    // [
+    //   // ErpFieldConfig(
+    //   //   key: 'colorCode',
+    //   //   label: 'CODE',
+    //   //   type: ErpFieldType.number,
+    //   //   required: true,
+    //   //   sectionTitle: 'BASIC INFORMATION',
+    //   //   sectionIndex: 0,
+    //   // ),
+    //   ErpFieldConfig(
+    //     key: 'colorName',
+    //     label: 'NAME',
+    //     required: true,
+    //     sectionIndex: 0,
+    //   ),
+    // ],
+
     [
-      // ErpFieldConfig(
-      //   key: 'colorCode',
-      //   label: 'CODE',
-      //   type: ErpFieldType.number,
-      //   required: true,
-      //   sectionTitle: 'BASIC INFORMATION',
-      //   sectionIndex: 0,
-      // ),
       ErpFieldConfig(
         key: 'colorName',
         label: 'NAME',
         required: true,
         sectionIndex: 0,
       ),
-    ],
-
-    [
       ErpFieldConfig(
         key: 'colorRptGroupCode',
         label: 'GROUP CODE',
         type: ErpFieldType.dropdown,
         sectionIndex: 0,
+        required: true,
+        initialDropValue: true,
         dropdownItems: colorGroupProvider.list
             .where((element) {
           return element.active==true;
@@ -78,30 +87,36 @@ class _MstColorState extends State<MstColor> {
         }).toList(),
       ),
       ErpFieldConfig(
-        key: 'companyCode',
-        label: 'COMPANY',
-        type: ErpFieldType.dropdown,
-        dropdownItems: companyProvider.companies
-            .where((element) {
-          return element.active==true;
-        },).map((e) {
-          return ErpDropdownItem(
-            label: e.companyName ?? '',
-            value: e.companyCode?.toString() ?? '',
-          );
-        }).toList(),
-        sectionIndex: 0,
-      ),
-    ],
-
-    [
-      ErpFieldConfig(
         key: 'sortID',
         label: 'SORT ID',
         type: ErpFieldType.number,
         sectionIndex: 0,
       ),
+      // ErpFieldConfig(
+      //   key: 'companyCode',
+      //   label: 'COMPANY',
+      //   type: ErpFieldType.dropdown,
+      //   dropdownItems: companyProvider.companies
+      //       .where((element) {
+      //     return element.active==true;
+      //   },).map((e) {
+      //     return ErpDropdownItem(
+      //       label: e.companyName ?? '',
+      //       value: e.companyCode?.toString() ?? '',
+      //     );
+      //   }).toList(),
+      //   sectionIndex: 0,
+      // ),
     ],
+
+    // [
+    //   ErpFieldConfig(
+    //     key: 'sortID',
+    //     label: 'SORT ID',
+    //     type: ErpFieldType.number,
+    //     sectionIndex: 0,
+    //   ),
+    // ],
 
     /// ── SETTINGS ──
     [
@@ -110,6 +125,7 @@ class _MstColorState extends State<MstColor> {
         label: 'ACTIVE',
         type: ErpFieldType.checkbox,
         sectionTitle: 'SETTINGS',
+        initialBoolValue: true,
         sectionIndex: 1,
         checkboxDbType: 'BIT'
       ),
@@ -132,6 +148,27 @@ class _MstColorState extends State<MstColor> {
   //     context.read<CompanyProvider>().loadCompanies();
   //   });
   // }
+  void _setDefaultSortId() {
+    final provider = context.read<ColorProvider>();
+
+    int nextSortId = 1;
+    if (provider.list.isNotEmpty) {
+      nextSortId = provider.list
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+  }
 
   @override
   void initState() {
@@ -142,13 +179,15 @@ class _MstColorState extends State<MstColor> {
       context.read<ColorGroupProvider>().load();
 
       if (!mounted) return;
-
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<ColorProvider>().setSelectedCompany(selectedCode);
 
       final companies = context.read<CompanyProvider>().companies;
       context.read<ColorProvider>().setCompanies(companies);
 
 
       await context.read<ColorProvider>().load();
+      _setDefaultSortId();
 
     });
   }
@@ -163,7 +202,8 @@ class _MstColorState extends State<MstColor> {
         'colorCode': raw.colorCode?.toString() ?? '',
         'colorName': raw.colorName ?? '',
         'colorRptGroupCode': raw.colorRptGroupCode?.toString() ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'sortID': raw.sortID?.toString() ?? '',
         'active': raw.active == true ? 'true' : 'false',
         'pg': raw.pg == true ? 'true' : 'false',
@@ -241,7 +281,7 @@ class _MstColorState extends State<MstColor> {
     if (confirm != true || !mounted) return;
 
     final success =
-    await context.read<ColorProvider>().delete(raw!.colorCode!);
+    await context.read<ColorProvider>().delete(raw.colorCode!);
 
     if (success && mounted) {
       _resetForm();
@@ -273,6 +313,7 @@ class _MstColorState extends State<MstColor> {
 
     });
     _erpFormKey.currentState?.resetForm();
+    _setDefaultSortId();
   }
   bool _showTableOnMobile = false;
 
@@ -291,7 +332,7 @@ class _MstColorState extends State<MstColor> {
                 isReportRow: false,
 
                 token: token ?? '',
-                url: 'http://50.62.183.116:5000',
+                url: baseUrl,
                 title: 'COLOR LIST',
                 columns: _tableColumns,
                 data: provider.tableData,
@@ -304,6 +345,9 @@ class _MstColorState extends State<MstColor> {
                     ? 'No Color found'
                     : 'Loading...',
               ):ErpForm(
+                onExit: () {
+                  context.read<TabProvider>().closeCurrentTab();
+                },
                 logo: AppImages.logo,
 
                 key: _erpFormKey,
@@ -332,6 +376,9 @@ class _MstColorState extends State<MstColor> {
               Expanded(
                 flex: 2,
                 child: ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -363,7 +410,7 @@ class _MstColorState extends State<MstColor> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'COLOR LIST',
                   columns: _tableColumns,
                   data: provider.tableData,
@@ -384,29 +431,5 @@ class _MstColorState extends State<MstColor> {
     );
   }
 
-  // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

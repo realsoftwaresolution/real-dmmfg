@@ -1,2073 +1,506 @@
-// // // lib/screens/trn_rough_entry.dart
-// //
-// // import 'package:erp_data_table/erp_data_table/widgets/erp_buttons.dart';
-// // import 'package:flutter/material.dart';
-// // import 'package:flutter/services.dart';
-// // import 'package:intl/intl.dart';
-// // import 'package:provider/provider.dart';
-// // import 'package:rs_dashboard/rs_dashboard.dart';
-// // import 'package:erp_data_table/erp_data_table.dart';
-// //
-// // import '../models/rough_model.dart';
-// // import '../providers/rough_provider.dart';
-// // import '../utils/delete_dialogue.dart';
-// // import '../utils/msg_dialogue.dart';
-// //
-// // class TrnRoughEntry extends StatefulWidget {
-// //   const TrnRoughEntry({super.key});
-// //
-// //   @override
-// //   State<TrnRoughEntry> createState() => _TrnRoughEntryState();
-// // }
-// //
-// // class _TrnRoughEntryState extends State<TrnRoughEntry> {
-// //   // ── Theme ──────────────────────────────────────────────────────────────────
-// //   ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
-// //   ErpTheme get _theme => ErpTheme(_themeVariant);
-// //
-// //   // ── Mode flags ─────────────────────────────────────────────────────────────
-// //   bool _isEditMode = false;
-// //   bool _isAdding   = false;
-// //   bool _isEditing  = false;
-// //   bool get _formEnabled => _isAdding || _isEditing;
-// //
-// //   // ── Selected row (search table) ────────────────────────────────────────────
-// //   Map<String, dynamic>? _selectedRow;
-// //   RoughModel?           _selectedRough;
-// //
-// //   // ── Header form controllers ────────────────────────────────────────────────
-// //   final _dateCtrl       = TextEditingController();
-// //   final _idCtrl         = TextEditingController(text: '0');
-// //   final _jnoCtrl        = TextEditingController();
-// //   final _knoCtrl        = TextEditingController();
-// //   final _siteCtrl       = TextEditingController();
-// //   final _invCtrl        = TextEditingController();
-// //   final _partyCtrl      = TextEditingController();
-// //   final _typeCtrl       = TextEditingController();
-// //   final _articalCtrl    = TextEditingController();
-// //   final _janCharniCtrl  = TextEditingController();
-// //   final _exRateCtrl     = TextEditingController();
-// //   final _rateDollarCtrl = TextEditingController();
-// //   final _amtDollarCtrl  = TextEditingController();
-// //   final _rateRsCtrl     = TextEditingController();
-// //   final _amtRsCtrl      = TextEditingController();
-// //   final _rgExpPerCtrl   = TextEditingController();
-// //   final _poExpPerCtrl   = TextEditingController();
-// //   final _rgSizeCtrl     = TextEditingController();
-// //   final _poSizeCtrl     = TextEditingController();
-// //   final _lsPerCtrl      = TextEditingController();
-// //   final _mainCutNoCtrl  = TextEditingController();
-// //   final _dueDayCtrl     = TextEditingController();
-// //   final _dueDateCtrl    = TextEditingController();
-// //   final _remarksCtrl    = TextEditingController();
-// //
-// //   // ── Charni detail rows ─────────────────────────────────────────────────────
-// //   // Each entry: {charni: '', pc: '', wt: '', per: '' (auto)}
-// //   List<Map<String, TextEditingController>> _charniRows = [];
-// //
-// //   // ── Process days rows ─────────────────────────────────────────────────────
-// //   List<Map<String, TextEditingController>> _processDaysRows = [];
-// //
-// //   // ── Charni entry controllers (top input row) ───────────────────────────────
-// //   final _charniInputCtrl = TextEditingController();
-// //   final _charniPcCtrl    = TextEditingController();
-// //   final _charniWtCtrl    = TextEditingController();
-// //   final _charniPerCtrl   = TextEditingController(); // readonly
-// //
-// //   // ── Process days input row ────────────────────────────────────────────────
-// //   final _stockTypeCtrl   = TextEditingController();
-// //   final _daysCtrl        = TextEditingController();
-// //
-// //   // ── Mobile toggle ─────────────────────────────────────────────────────────
-// //   bool _showTableOnMobile = false;
-// //
-// //   final String? token = AppStorage.getString("token");
-// //
-// //   // ── Table columns for search list ─────────────────────────────────────────
-// //   List<ErpColumnConfig> get _tableColumns => [
-// //     ErpColumnConfig(key: 'roughMstID', label: 'ID',      width: 60),
-// //     ErpColumnConfig(key: 'roughDate',  label: 'DATE',    width: 120),
-// //     ErpColumnConfig(key: 'jno',        label: 'JNO',     width: 80),
-// //     ErpColumnConfig(key: 'site',       label: 'SITE',    width: 100),
-// //     ErpColumnConfig(key: 'partyCode',  label: 'PARTY',   flex: 1),
-// //     ErpColumnConfig(key: 'totWt',      label: 'TOT WT',  width: 100, align: ColumnAlign.right),
-// //     ErpColumnConfig(key: 'amtDollar',  label: 'AMT \$',  width: 110, align: ColumnAlign.right),
-// //     ErpColumnConfig(key: 'amtRs',      label: 'AMT RS',  width: 110, align: ColumnAlign.right),
-// //   ];
-// //
-// //   @override
-// //   void initState() {
-// //     super.initState();
-// //     // Set today's date
-// //     final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
-// //     _dateCtrl.text = today;
-// //     _dueDateCtrl.text = today;
-// //
-// //     WidgetsBinding.instance.addPostFrameCallback((_) {
-// //       context.read<RoughProvider>().loadRoughs();
-// //     });
-// //
-// //     // Auto-calc listeners
-// //     _exRateCtrl.addListener(_recalcAmounts);
-// //     _rateDollarCtrl.addListener(_recalcAmounts);
-// //     _dueDayCtrl.addListener(_recalcDueDate);
-// //     _dateCtrl.addListener(_recalcDueDate);
-// //   }
-// //
-// //   @override
-// //   void dispose() {
-// //     for (final c in [
-// //       _dateCtrl, _idCtrl, _jnoCtrl, _knoCtrl, _siteCtrl, _invCtrl,
-// //       _partyCtrl, _typeCtrl, _articalCtrl, _janCharniCtrl, _exRateCtrl,
-// //       _rateDollarCtrl, _amtDollarCtrl, _rateRsCtrl, _amtRsCtrl,
-// //       _rgExpPerCtrl, _poExpPerCtrl, _rgSizeCtrl, _poSizeCtrl, _lsPerCtrl,
-// //       _mainCutNoCtrl, _dueDayCtrl, _dueDateCtrl, _remarksCtrl,
-// //       _charniInputCtrl, _charniPcCtrl, _charniWtCtrl, _charniPerCtrl,
-// //       _stockTypeCtrl, _daysCtrl,
-// //     ]) {
-// //       c.dispose();
-// //     }
-// //     _disposeCharniRows();
-// //     _disposeProcessRows();
-// //     super.dispose();
-// //   }
-// //
-// //   void _disposeCharniRows() {
-// //     for (final r in _charniRows) {
-// //       r.values.forEach((c) => c.dispose());
-// //     }
-// //   }
-// //
-// //   void _disposeProcessRows() {
-// //     for (final r in _processDaysRows) {
-// //       r.values.forEach((c) => c.dispose());
-// //     }
-// //   }
-// //
-// //   // ── CALCULATIONS ──────────────────────────────────────────────────────────
-// //
-// //   /// totalWt = sum of all charni 'wt' entries
-// //   double get _totalWt {
-// //     double sum = 0;
-// //     for (final r in _charniRows) {
-// //       sum += double.tryParse(r['wt']!.text) ?? 0;
-// //     }
-// //     return sum;
-// //   }
-// //
-// //   void _recalcAmounts() {
-// //     final exRate    = double.tryParse(_exRateCtrl.text) ?? 0;
-// //     final rateDollar = double.tryParse(_rateDollarCtrl.text) ?? 0;
-// //     final totWt      = _totalWt;
-// //
-// //     final rateRs  = exRate * rateDollar;
-// //     final amtDollar = rateDollar * totWt;
-// //     final amtRs   = rateRs * totWt;
-// //
-// //     _rateRsCtrl.text   = rateRs.toStringAsFixed(2);
-// //     _amtDollarCtrl.text = amtDollar.toStringAsFixed(2);
-// //     _amtRsCtrl.text    = amtRs.toStringAsFixed(2);
-// //   }
-// //
-// //   void _recalcDueDate() {
-// //     final dateStr = _dateCtrl.text;
-// //     final days    = int.tryParse(_dueDayCtrl.text) ?? 0;
-// //     try {
-// //       final base    = DateFormat('dd/MM/yyyy').parse(dateStr);
-// //       final due     = base.add(Duration(days: days));
-// //       _dueDateCtrl.text = DateFormat('dd/MM/yyyy').format(due);
-// //     } catch (_) {}
-// //   }
-// //
-// //   /// Recalc per for a single charni row (per = wt/totalWt * 100)
-// //   void _recalcCharniPer() {
-// //     final totWt = _totalWt;
-// //     for (final r in _charniRows) {
-// //       final wt = double.tryParse(r['wt']!.text) ?? 0;
-// //       final per = totWt > 0 ? (wt / totWt * 100) : 0.0;
-// //       r['per']!.text = per.toStringAsFixed(2);
-// //     }
-// //     _recalcAmounts();
-// //   }
-// //
-// //   // ── ADD CHARNI ROW ────────────────────────────────────────────────────────
-// //   void _addCharniRow() {
-// //     final charni = _charniInputCtrl.text.trim();
-// //     final pc     = _charniPcCtrl.text.trim();
-// //     final wt     = _charniWtCtrl.text.trim();
-// //     if (charni.isEmpty && pc.isEmpty && wt.isEmpty) return;
-// //
-// //     final wtVal = double.tryParse(wt) ?? 0;
-// //     final srno  = _charniRows.length + 1;
-// //
-// //     final row = {
-// //       'srno':   TextEditingController(text: srno.toString()),
-// //       'charni': TextEditingController(text: charni),
-// //       'pc':     TextEditingController(text: pc),
-// //       'wt':     TextEditingController(text: wt),
-// //       'per':    TextEditingController(text: '0.00'),
-// //     };
-// //
-// //     // Listen to wt changes for per recalc
-// //     row['wt']!.addListener(_recalcCharniPer);
-// //
-// //     setState(() {
-// //       _charniRows.add(row);
-// //     });
-// //
-// //     _charniInputCtrl.clear();
-// //     _charniPcCtrl.clear();
-// //     _charniWtCtrl.clear();
-// //     _charniPerCtrl.clear();
-// //
-// //     _recalcCharniPer();
-// //   }
-// //
-// //   // ── ADD PROCESS DAYS ROW ──────────────────────────────────────────────────
-// //   void _addProcessDaysRow() {
-// //     final stockType = _stockTypeCtrl.text.trim();
-// //     final days      = _daysCtrl.text.trim();
-// //     if (stockType.isEmpty) return;
-// //
-// //     final srno = _processDaysRows.length + 1;
-// //     final row = {
-// //       'srno':      TextEditingController(text: srno.toString()),
-// //       'stockType': TextEditingController(text: stockType),
-// //       'days':      TextEditingController(text: days),
-// //     };
-// //
-// //     setState(() {
-// //       _processDaysRows.add(row);
-// //     });
-// //
-// //     _stockTypeCtrl.clear();
-// //     _daysCtrl.clear();
-// //   }
-// //
-// //   // ── DELETE CHARNI ROW ─────────────────────────────────────────────────────
-// //   void _deleteCharniRow(int index) {
-// //     final row = _charniRows[index];
-// //     row.values.forEach((c) => c.dispose());
-// //     setState(() {
-// //       _charniRows.removeAt(index);
-// //       // Renumber
-// //       for (int i = 0; i < _charniRows.length; i++) {
-// //         _charniRows[i]['srno']!.text = (i + 1).toString();
-// //       }
-// //     });
-// //     _recalcCharniPer();
-// //   }
-// //
-// //   // ── DELETE PROCESS ROW ────────────────────────────────────────────────────
-// //   void _deleteProcessRow(int index) {
-// //     final row = _processDaysRows[index];
-// //     row.values.forEach((c) => c.dispose());
-// //     setState(() {
-// //       _processDaysRows.removeAt(index);
-// //       for (int i = 0; i < _processDaysRows.length; i++) {
-// //         _processDaysRows[i]['srno']!.text = (i + 1).toString();
-// //       }
-// //     });
-// //   }
-// //
-// //   // ── SAVE ──────────────────────────────────────────────────────────────────
-// //   Future<void> _onSave() async {
-// //     final provider = context.read<RoughProvider>();
-// //
-// //     // Build values map
-// //     final values = {
-// //       'roughDate':    _dateCtrl.text,
-// //       'jno':          _jnoCtrl.text,
-// //       'kapanNo':      _knoCtrl.text,
-// //       'site':         _siteCtrl.text,
-// //       'inv':          _invCtrl.text,
-// //       'partyCode':    _partyCtrl.text,
-// //       'roughTypeCode':_typeCtrl.text,
-// //       'articalCode':  _articalCtrl.text,
-// //       'jangadCharniCode': _janCharniCtrl.text,
-// //       'exRate':       _exRateCtrl.text,
-// //       'rateDollar':   _rateDollarCtrl.text,
-// //       'amtDollar':    _amtDollarCtrl.text,
-// //       'rateRs':       _rateRsCtrl.text,
-// //       'amtRs':        _amtRsCtrl.text,
-// //       'rgExpPer':     _rgExpPerCtrl.text,
-// //       'poExpPer':     _poExpPerCtrl.text,
-// //       'rgSize':       _rgSizeCtrl.text,
-// //       'poSize':       _poSizeCtrl.text,
-// //       'lsPer':        _lsPerCtrl.text,
-// //       'mainCutNo':    _mainCutNoCtrl.text,
-// //       'dueDay':       _dueDayCtrl.text,
-// //       'dueDate':      _dueDateCtrl.text,
-// //       'remarks':      _remarksCtrl.text,
-// //     };
-// //
-// //     // Build detail models
-// //     final details = _charniRows.asMap().entries.map((e) {
-// //       final i = e.key;
-// //       final r = e.value;
-// //       return RoughDetModel(
-// //         srno:       i + 1,
-// //         charniCode: int.tryParse(r['charni']!.text),
-// //         pc:         int.tryParse(r['pc']!.text),
-// //         wt:         double.tryParse(r['wt']!.text),
-// //         per:        double.tryParse(r['per']!.text),
-// //       );
-// //     }).toList();
-// //
-// //     // Build process days models
-// //     final processDays = _processDaysRows.asMap().entries.map((e) {
-// //       final i = e.key;
-// //       final r = e.value;
-// //       return RoughProcessDaysModel(
-// //         srno:          i + 1,
-// //         stockTypeCode: int.tryParse(r['stockType']!.text),
-// //         days:          double.tryParse(r['days']!.text),
-// //       );
-// //     }).toList();
-// //
-// //     bool success;
-// //     if (_isEditMode && _selectedRough != null) {
-// //       success = await provider.updateRough(
-// //         _selectedRough!.roughMstID!,
-// //         values,
-// //         details,
-// //         processDays,
-// //       );
-// //     } else {
-// //       success = await provider.createRough(values, details, processDays);
-// //     }
-// //
-// //     if (!mounted) return;
-// //     if (success) {
-// //       _resetForm();
-// //       await ErpResultDialog.showSuccess(
-// //         context: context,
-// //         theme: _theme,
-// //         title: _isEditMode ? 'Updated' : 'Saved',
-// //         message: _isEditMode
-// //             ? 'Rough entry updated successfully.'
-// //             : 'Rough entry saved successfully.',
-// //       );
-// //     }
-// //   }
-// //
-// //   // ── DELETE ────────────────────────────────────────────────────────────────
-// //   Future<void> _onDelete() async {
-// //     if (_selectedRough?.roughMstID == null) return;
-// //     final confirm = await ErpDeleteDialog.show(
-// //       context: context,
-// //       theme: _theme,
-// //       title: 'Rough Entry',
-// //       itemName: 'JNO: ${_selectedRough!.jno}',
-// //     );
-// //     if (confirm != true || !mounted) return;
-// //
-// //     final success = await context
-// //         .read<RoughProvider>()
-// //         .deleteRough(_selectedRough!.roughMstID!);
-// //
-// //     if (success && mounted) {
-// //       _resetForm();
-// //       await ErpResultDialog.showDeleted(
-// //         context: context,
-// //         theme: _theme,
-// //         itemName: 'Rough Entry ${_selectedRough?.jno ?? ''}',
-// //       );
-// //     }
-// //   }
-// //
-// //   // ── ROW TAP ───────────────────────────────────────────────────────────────
-// //   Future<void> _onRowTap(Map<String, dynamic> row) async {
-// //     final raw = row['_raw'] as RoughModel;
-// //
-// //     // Load sub-tables
-// //     final provider = context.read<RoughProvider>();
-// //     final details     = await provider.loadDetails(raw.roughMstID!);
-// //     final processDays = await provider.loadProcessDays(raw.roughMstID!);
-// //
-// //     setState(() {
-// //       _selectedRow   = row;
-// //       _selectedRough = raw;
-// //       _isEditMode    = true;
-// //       _isEditing     = false;
-// //       _isAdding      = false;
-// //
-// //       // Populate header fields
-// //       _dateCtrl.text       = raw.roughDate ?? '';
-// //       _idCtrl.text         = raw.roughMstID?.toString() ?? '0';
-// //       _jnoCtrl.text        = raw.jno?.toString() ?? '';
-// //       _knoCtrl.text        = raw.kapanNo ?? '';
-// //       _siteCtrl.text       = raw.site ?? '';
-// //       _invCtrl.text        = raw.inv ?? '';
-// //       _partyCtrl.text      = raw.partyCode?.toString() ?? '';
-// //       _typeCtrl.text       = raw.roughTypeCode?.toString() ?? '';
-// //       _articalCtrl.text    = raw.articalCode?.toString() ?? '';
-// //       _janCharniCtrl.text  = raw.jangadCharniCode?.toString() ?? '';
-// //       _exRateCtrl.text     = raw.exRate?.toStringAsFixed(2) ?? '';
-// //       _rateDollarCtrl.text = raw.rateDollar?.toStringAsFixed(2) ?? '';
-// //       _amtDollarCtrl.text  = raw.amtDollar?.toStringAsFixed(2) ?? '';
-// //       _rateRsCtrl.text     = raw.rateRs?.toStringAsFixed(2) ?? '';
-// //       _amtRsCtrl.text      = raw.amtRs?.toStringAsFixed(2) ?? '';
-// //       _rgExpPerCtrl.text   = raw.rgExpPer?.toStringAsFixed(2) ?? '';
-// //       _poExpPerCtrl.text   = raw.poExpPer?.toStringAsFixed(2) ?? '';
-// //       _rgSizeCtrl.text     = raw.rgSize?.toStringAsFixed(2) ?? '';
-// //       _poSizeCtrl.text     = raw.poSize?.toStringAsFixed(2) ?? '';
-// //       _lsPerCtrl.text      = raw.lsPer?.toStringAsFixed(2) ?? '';
-// //       _mainCutNoCtrl.text  = raw.mainCutNo ?? '';
-// //       _dueDayCtrl.text     = raw.dueDay?.toString() ?? '';
-// //       _dueDateCtrl.text    = raw.dueDate ?? '';
-// //       _remarksCtrl.text    = raw.remarks ?? '';
-// //
-// //       // Populate charni rows
-// //       _disposeCharniRows();
-// //       _charniRows = details.map((d) {
-// //         final r = {
-// //           'srno':   TextEditingController(text: d.srno?.toString() ?? ''),
-// //           'charni': TextEditingController(text: d.charniCode?.toString() ?? ''),
-// //           'pc':     TextEditingController(text: d.pc?.toString() ?? ''),
-// //           'wt':     TextEditingController(text: d.wt?.toStringAsFixed(3) ?? ''),
-// //           'per':    TextEditingController(text: d.per?.toStringAsFixed(2) ?? ''),
-// //         };
-// //         r['wt']!.addListener(_recalcCharniPer);
-// //         return r;
-// //       }).toList();
-// //
-// //       // Populate process days rows
-// //       _disposeProcessRows();
-// //       _processDaysRows = processDays.map((p) {
-// //         return {
-// //           'srno':      TextEditingController(text: p.srno?.toString() ?? ''),
-// //           'stockType': TextEditingController(text: p.stockTypeCode?.toString() ?? ''),
-// //           'days':      TextEditingController(text: p.days?.toStringAsFixed(0) ?? ''),
-// //         };
-// //       }).toList();
-// //
-// //       if (Responsive.isMobile(context)) {
-// //         _showTableOnMobile = false;
-// //       }
-// //     });
-// //   }
-// //
-// //   // ── RESET ─────────────────────────────────────────────────────────────────
-// //   void _resetForm() {
-// //     final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
-// //     setState(() {
-// //       _isEditMode        = false;
-// //       _isAdding          = false;
-// //       _isEditing         = false;
-// //       _selectedRow       = null;
-// //       _selectedRough     = null;
-// //       _showTableOnMobile = false;
-// //
-// //       for (final c in [
-// //         _jnoCtrl, _knoCtrl, _siteCtrl, _invCtrl, _partyCtrl, _typeCtrl,
-// //         _articalCtrl, _janCharniCtrl, _exRateCtrl, _rateDollarCtrl,
-// //         _amtDollarCtrl, _rateRsCtrl, _amtRsCtrl, _rgExpPerCtrl, _poExpPerCtrl,
-// //         _rgSizeCtrl, _poSizeCtrl, _lsPerCtrl, _mainCutNoCtrl, _dueDayCtrl,
-// //         _remarksCtrl, _charniInputCtrl, _charniPcCtrl, _charniWtCtrl,
-// //         _charniPerCtrl, _stockTypeCtrl, _daysCtrl,
-// //       ]) {
-// //         c.clear();
-// //       }
-// //       _idCtrl.text       = '0';
-// //       _dateCtrl.text     = today;
-// //       _dueDateCtrl.text  = today;
-// //
-// //       _disposeCharniRows();
-// //       _charniRows = [];
-// //       _disposeProcessRows();
-// //       _processDaysRows = [];
-// //     });
-// //   }
-// //
-// //   // ── BUILD ─────────────────────────────────────────────────────────────────
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return Consumer<RoughProvider>(
-// //       builder: (context, provider, _) {
-// //         final isMobile = Responsive.isMobile(context);
-// //
-// //         if (isMobile) {
-// //           return Padding(
-// //             padding: const EdgeInsets.all(8),
-// //             child: _showTableOnMobile
-// //                 ? _buildTable(provider)
-// //                 : _buildFormArea(),
-// //           );
-// //         }
-// //
-// //         return Padding(
-// //           padding: const EdgeInsets.all(8),
-// //           child: Row(
-// //             crossAxisAlignment: CrossAxisAlignment.start,
-// //             children: [
-// //               Expanded(flex: 3, child: _buildFormArea()),
-// //               const SizedBox(width: 12),
-// //               Expanded(flex: 2, child: _buildTable(provider)),
-// //             ],
-// //           ),
-// //         );
-// //       },
-// //     );
-// //   }
-// //
-// //   // ── FORM AREA (left) ──────────────────────────────────────────────────────
-// //   Widget _buildFormArea() {
-// //     return Container(
-// //       decoration: BoxDecoration(
-// //         color: Colors.white,
-// //         borderRadius: BorderRadius.circular(16),
-// //         boxShadow: [
-// //           BoxShadow(
-// //             color: _theme.primary.withOpacity(0.08),
-// //             blurRadius: 24,
-// //             offset: const Offset(0, 8),
-// //           ),
-// //         ],
-// //       ),
-// //       child: Column(
-// //         children: [
-// //           _buildFormHeader(),
-// //           Expanded(
-// //             child: SingleChildScrollView(
-// //               padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-// //               child: Column(
-// //                 crossAxisAlignment: CrossAxisAlignment.stretch,
-// //                 children: [
-// //                   _buildHeaderRow(),
-// //                   const SizedBox(height: 6),
-// //                   // Two sub-tables side by side
-// //                   Row(
-// //                     crossAxisAlignment: CrossAxisAlignment.start,
-// //                     children: [
-// //                       Expanded(child: _buildCharniSection()),
-// //                       const SizedBox(width: 12),
-// //                       Expanded(child: _buildProcessDaysSection()),
-// //                     ],
-// //                   ),
-// //                   const SizedBox(height: 80),
-// //                 ],
-// //               ),
-// //             ),
-// //           ),
-// //           _buildFooterActions(),
-// //         ],
-// //       ),
-// //     );
-// //   }
-// //
-// //   // ── FORM HEADER ───────────────────────────────────────────────────────────
-// //   Widget _buildFormHeader() {
-// //     return Container(
-// //       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-// //       decoration: BoxDecoration(
-// //         gradient: LinearGradient(
-// //           colors: _theme.primaryGradient,
-// //           begin: Alignment.centerLeft,
-// //           end: Alignment.centerRight,
-// //         ),
-// //         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-// //       ),
-// //       child: Row(
-// //         children: [
-// //           Container(
-// //             padding: const EdgeInsets.all(6),
-// //             decoration: BoxDecoration(
-// //               color: Colors.white.withOpacity(0.2),
-// //               borderRadius: BorderRadius.circular(8),
-// //             ),
-// //             child: const Icon(Icons.diamond_outlined, color: Colors.white, size: 16),
-// //           ),
-// //           const SizedBox(width: 10),
-// //           Expanded(
-// //             child: Column(
-// //               crossAxisAlignment: CrossAxisAlignment.start,
-// //               children: [
-// //                 const Text(
-// //                   'ROUGH ENTRY',
-// //                   style: TextStyle(
-// //                     color: Colors.white,
-// //                     fontWeight: FontWeight.w700,
-// //                     fontSize: 14,
-// //                     letterSpacing: 0.3,
-// //                   ),
-// //                 ),
-// //                 Text(
-// //                   'Transaction / Rough Stock Entry',
-// //                   style: TextStyle(
-// //                     color: Colors.white.withOpacity(0.75),
-// //                     fontSize: 11,
-// //                   ),
-// //                 ),
-// //               ],
-// //             ),
-// //           ),
-// //           if (_isEditMode)
-// //             Container(
-// //               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-// //               decoration: BoxDecoration(
-// //                 color: Colors.white.withOpacity(0.2),
-// //                 borderRadius: BorderRadius.circular(20),
-// //                 border: Border.all(color: Colors.white.withOpacity(0.4)),
-// //               ),
-// //               child: const Text(
-// //                 'EDIT MODE',
-// //                 style: TextStyle(
-// //                   color: Colors.white,
-// //                   fontSize: 9,
-// //                   fontWeight: FontWeight.w700,
-// //                   letterSpacing: 1,
-// //                 ),
-// //               ),
-// //             ),
-// //         ],
-// //       ),
-// //     );
-// //   }
-// //
-// //   // ── HEADER FIELDS SECTION ─────────────────────────────────────────────────
-// //   Widget _buildHeaderRow() {
-// //     return Column(
-// //       crossAxisAlignment: CrossAxisAlignment.stretch,
-// //       children: [
-// //         // Row 1: Date, ID
-// //         _fieldRow([
-// //           _labeledField('Date', _dateCtrl, enabled: _formEnabled, isDate: true, flex: 2),
-// //           _labeledField('ID',   _idCtrl,   enabled: false, flex: 1),
-// //         ]),
-// //         const SizedBox(height: 6),
-// //         // Row 2: Jno, Kno, Site, Inv
-// //         _fieldRow([
-// //           _labeledField('Jno',  _jnoCtrl,  enabled: _formEnabled, flex: 1, isNumber: true),
-// //           _labeledField('Kno',  _knoCtrl,  enabled: _formEnabled, flex: 1),
-// //           _labeledField('Site', _siteCtrl, enabled: _formEnabled, flex: 1),
-// //           _labeledField('Inv',  _invCtrl,  enabled: _formEnabled, flex: 1),
-// //         ]),
-// //         const SizedBox(height: 6),
-// //         // Row 3: Party, Type, Artical
-// //         _fieldRow([
-// //           _labeledField('Party',   _partyCtrl,   enabled: _formEnabled, flex: 2),
-// //           _labeledField('Type',    _typeCtrl,    enabled: _formEnabled, flex: 2),
-// //           _labeledField('Artical', _articalCtrl, enabled: _formEnabled, flex: 2),
-// //         ]),
-// //         const SizedBox(height: 6),
-// //         // Row 4: Jan. Charni
-// //         _fieldRow([
-// //           _labeledField('Jan. Charni', _janCharniCtrl, enabled: _formEnabled, flex: 1),
-// //         ]),
-// //         const SizedBox(height: 6),
-// //         // Row 5: Ex Rate | Rate $ | Amt $ (auto)
-// //         _fieldRow([
-// //           _labeledField('Ex Rate',  _exRateCtrl,    enabled: _formEnabled,  flex: 1, isDecimal: true),
-// //           _labeledField('Rate \$',  _rateDollarCtrl, enabled: _formEnabled,  flex: 1, isDecimal: true),
-// //           _labeledField('Amt \$',   _amtDollarCtrl,  enabled: false,         flex: 1, isDecimal: true, autoCalc: true),
-// //         ]),
-// //         const SizedBox(height: 6),
-// //         // Row 6: Rate Rs (auto) | Amt Rs (auto)
-// //         _fieldRow([
-// //           _labeledField('Rate Rs', _rateRsCtrl, enabled: false, flex: 1, isDecimal: true, autoCalc: true),
-// //           _labeledField('Amt Rs',  _amtRsCtrl,  enabled: false, flex: 1, isDecimal: true, autoCalc: true),
-// //         ]),
-// //         const SizedBox(height: 6),
-// //         // Row 7: Rg Exp %, Po Exp %
-// //         _fieldRow([
-// //           _labeledField('Rg Exp %', _rgExpPerCtrl, enabled: _formEnabled, flex: 1, isDecimal: true),
-// //           _labeledField('Po Exp %', _poExpPerCtrl, enabled: _formEnabled, flex: 1, isDecimal: true),
-// //         ]),
-// //         const SizedBox(height: 6),
-// //         // Row 8: Rg Size, Po Size
-// //         _fieldRow([
-// //           _labeledField('Rg Size', _rgSizeCtrl, enabled: _formEnabled, flex: 1, isDecimal: true),
-// //           _labeledField('Po Size', _poSizeCtrl, enabled: _formEnabled, flex: 1, isDecimal: true),
-// //         ]),
-// //         const SizedBox(height: 6),
-// //         // Row 9: Ls %
-// //         _fieldRow([
-// //           _labeledField('Ls %', _lsPerCtrl, enabled: _formEnabled, flex: 1, isDecimal: true),
-// //         ]),
-// //         const SizedBox(height: 6),
-// //         // Row 10: Main CutNo | Due Day | Due Date (readonly)
-// //         _fieldRow([
-// //           _labeledField('Main CutNo', _mainCutNoCtrl, enabled: _formEnabled, flex: 2),
-// //           _labeledField('Due Day',    _dueDayCtrl,    enabled: _formEnabled, flex: 1, isNumber: true),
-// //           _labeledField('Due Date',   _dueDateCtrl,   enabled: false, flex: 2, autoCalc: true),
-// //         ]),
-// //         const SizedBox(height: 6),
-// //         // Row 11: Remarks
-// //         _fieldRow([
-// //           _labeledField('Remarks', _remarksCtrl, enabled: _formEnabled, flex: 1, maxLines: 2),
-// //         ]),
-// //       ],
-// //     );
-// //   }
-// //
-// //   // ── CHARNI SECTION ────────────────────────────────────────────────────────
-// //   Widget _buildCharniSection() {
-// //     return _SubTableCard(
-// //       title: 'CHARNI DETAILS',
-// //       accentColor: _theme.primary,
-// //       inputRow: _formEnabled
-// //           ? Row(
-// //         children: [
-// //           Expanded(flex: 2, child: _compactField('Charni', _charniInputCtrl)),
-// //           const SizedBox(width: 4),
-// //           Expanded(flex: 1, child: _compactField('Pc', _charniPcCtrl, isNumber: true)),
-// //           const SizedBox(width: 4),
-// //           Expanded(flex: 1, child: _compactField('Wt', _charniWtCtrl, isDecimal: true)),
-// //           const SizedBox(width: 4),
-// //           Expanded(
-// //             flex: 1,
-// //             child: _compactField('Per', _charniPerCtrl, enabled: false),
-// //           ),
-// //           const SizedBox(width: 4),
-// //           GestureDetector(
-// //             onTap: _addCharniRow,
-// //             child: Container(
-// //               padding: const EdgeInsets.all(6),
-// //               decoration: BoxDecoration(
-// //                 color: _theme.primary,
-// //                 borderRadius: BorderRadius.circular(6),
-// //               ),
-// //               child: const Icon(Icons.add, color: Colors.white, size: 16),
-// //             ),
-// //           ),
-// //         ],
-// //       )
-// //           : null,
-// //       tableHeader: const ['Sr', 'Charni', 'Pc', 'Wt', 'Per', ''],
-// //       rows: _charniRows.asMap().entries.map((e) {
-// //         final i = e.key;
-// //         final r = e.value;
-// //         return [
-// //           r['srno']!.text,
-// //           r['charni']!.text,
-// //           r['pc']!.text,
-// //           r['wt']!.text,
-// //           r['per']!.text,
-// //           '', // delete col
-// //         ];
-// //       }).toList(),
-// //       onDeleteRow: _formEnabled ? _deleteCharniRow : null,
-// //       footer: 'Total: ${_totalWt.toStringAsFixed(3)}',
-// //     );
-// //   }
-// //
-// //   // ── PROCESS DAYS SECTION ──────────────────────────────────────────────────
-// //   Widget _buildProcessDaysSection() {
-// //     return _SubTableCard(
-// //       title: 'PROCESS DAYS',
-// //       accentColor: _theme.primary,
-// //       inputRow: _formEnabled
-// //           ? Row(
-// //         children: [
-// //           Expanded(flex: 3, child: _compactField('StockType', _stockTypeCtrl)),
-// //           const SizedBox(width: 4),
-// //           Expanded(flex: 2, child: _compactField('Days', _daysCtrl, isNumber: true)),
-// //           const SizedBox(width: 4),
-// //           GestureDetector(
-// //             onTap: _addProcessDaysRow,
-// //             child: Container(
-// //               padding: const EdgeInsets.all(6),
-// //               decoration: BoxDecoration(
-// //                 color: _theme.primary,
-// //                 borderRadius: BorderRadius.circular(6),
-// //               ),
-// //               child: const Icon(Icons.add, color: Colors.white, size: 16),
-// //             ),
-// //           ),
-// //         ],
-// //       )
-// //           : null,
-// //       tableHeader: const ['Sr', 'StockType', 'Days', ''],
-// //       rows: _processDaysRows.asMap().entries.map((e) {
-// //         final i = e.key;
-// //         final r = e.value;
-// //         return [
-// //           r['srno']!.text,
-// //           r['stockType']!.text,
-// //           r['days']!.text,
-// //           '',
-// //         ];
-// //       }).toList(),
-// //       onDeleteRow: _formEnabled ? _deleteProcessRow : null,
-// //     );
-// //   }
-// //
-// //   // ── TABLE (search list) ───────────────────────────────────────────────────
-// //   Widget _buildTable(RoughProvider provider) {
-// //     return ErpDataTable(
-// //       token: token ?? '',
-// //       url: 'http://50.62.183.116:5000',
-// //       title: 'ROUGH ENTRY LIST',
-// //       columns: _tableColumns,
-// //       data: provider.tableData,
-// //       showSearch: true,
-// //       showFooterTotals: false,
-// //       selectedRow: _selectedRow,
-// //       onRowTap: _onRowTap,
-// //       emptyMessage: provider.isLoaded ? 'No entries found' : 'Loading...',
-// //     );
-// //   }
-// //
-// //   // ── FOOTER ACTIONS ────────────────────────────────────────────────────────
-// //   Widget _buildFooterActions() {
-// //     return Container(
-// //       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-// //       decoration: BoxDecoration(
-// //         border: Border(top: BorderSide(color: Colors.grey.shade200)),
-// //       ),
-// //       child: Row(
-// //         mainAxisAlignment: MainAxisAlignment.end,
-// //         children: [
-// //           // Add button
-// //           if (!_isEditMode) ...[
-// //             CustomButtons.add(
-// //               onPressed: _isAdding
-// //                   ? null
-// //                   : () => setState(() => _isAdding = true),
-// //             ),
-// //             const SizedBox(width: 8),
-// //           ],
-// //           // Edit button
-// //           if (_isEditMode) ...[
-// //             CustomButtons.edit(
-// //               onPressed: _isEditing
-// //                   ? null
-// //                   : () => setState(() => _isEditing = true),
-// //             ),
-// //             const SizedBox(width: 8),
-// //             CustomButtons.delete(
-// //               onPressed: _isEditing ? _onDelete : null,
-// //             ),
-// //             const SizedBox(width: 8),
-// //           ],
-// //           CustomButtons.cancel(onPressed: _resetForm),
-// //           const SizedBox(width: 8),
-// //           CustomButtons.save(
-// //             isOutlined: false,
-// //             onPressed: _formEnabled ? _onSave : null,
-// //           ),
-// //           if (Responsive.isMobile(context)) ...[
-// //             const SizedBox(width: 8),
-// //             CustomButtons.search(
-// //               onPressed: () => setState(() => _showTableOnMobile = true),
-// //             ),
-// //           ],
-// //         ],
-// //       ),
-// //     );
-// //   }
-// //
-// //   // ── HELPERS: labeled field ────────────────────────────────────────────────
-// //   Widget _labeledField(
-// //       String label,
-// //       TextEditingController ctrl, {
-// //         bool enabled = true,
-// //         int flex = 1,
-// //         bool isNumber  = false,
-// //         bool isDecimal = false,
-// //         bool isDate    = false,
-// //         bool autoCalc  = false,
-// //         int maxLines   = 1,
-// //       }) {
-// //     return Expanded(
-// //       flex: flex,
-// //       child: Column(
-// //         crossAxisAlignment: CrossAxisAlignment.start,
-// //         children: [
-// //           Text(
-// //             label,
-// //             style: TextStyle(
-// //               fontSize: 10,
-// //               fontWeight: FontWeight.w600,
-// //               color: autoCalc
-// //                   ? Colors.teal.shade700
-// //                   : _theme.primary.withOpacity(0.8),
-// //               letterSpacing: 0.3,
-// //             ),
-// //           ),
-// //           const SizedBox(height: 2),
-// //           TextFormField(
-// //             controller: ctrl,
-// //             enabled: enabled,
-// //             maxLines: maxLines,
-// //             keyboardType: isNumber
-// //                 ? TextInputType.number
-// //                 : isDecimal
-// //                 ? const TextInputType.numberWithOptions(decimal: true)
-// //                 : TextInputType.text,
-// //             inputFormatters: isNumber
-// //                 ? [FilteringTextInputFormatter.digitsOnly]
-// //                 : isDecimal
-// //                 ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))]
-// //                 : [],
-// //             style: TextStyle(
-// //               fontSize: 12,
-// //               color: enabled ? Colors.black87 : Colors.black54,
-// //             ),
-// //             decoration: InputDecoration(
-// //               isDense: true,
-// //               filled: true,
-// //               fillColor: autoCalc
-// //                   ? Colors.teal.withOpacity(0.06)
-// //                   : enabled
-// //                   ? Colors.white
-// //                   : const Color(0xFFF5F5F5),
-// //               contentPadding: const EdgeInsets.symmetric(
-// //                 horizontal: 8,
-// //                 vertical: 6,
-// //               ),
-// //               border: OutlineInputBorder(
-// //                 borderRadius: BorderRadius.circular(6),
-// //                 borderSide: BorderSide(color: Colors.grey.shade300),
-// //               ),
-// //               enabledBorder: OutlineInputBorder(
-// //                 borderRadius: BorderRadius.circular(6),
-// //                 borderSide: BorderSide(color: Colors.grey.shade300),
-// //               ),
-// //               focusedBorder: OutlineInputBorder(
-// //                 borderRadius: BorderRadius.circular(6),
-// //                 borderSide: BorderSide(color: _theme.primary, width: 1.5),
-// //               ),
-// //               disabledBorder: OutlineInputBorder(
-// //                 borderRadius: BorderRadius.circular(6),
-// //                 borderSide: BorderSide(
-// //                   color: autoCalc
-// //                       ? Colors.teal.withOpacity(0.3)
-// //                       : Colors.grey.shade200,
-// //                 ),
-// //               ),
-// //             ),
-// //           ),
-// //         ],
-// //       ),
-// //     );
-// //   }
-// //
-// //   Widget _fieldRow(List<Widget> children) {
-// //     return IntrinsicHeight(
-// //       child: Row(
-// //         crossAxisAlignment: CrossAxisAlignment.start,
-// //         children: children
-// //             .asMap()
-// //             .entries
-// //             .map(
-// //               (e) => Padding(
-// //             padding: EdgeInsets.only(
-// //               right: e.key < children.length - 1 ? 6 : 0,
-// //             ),
-// //             child: e.value,
-// //           ),
-// //         )
-// //             .toList(),
-// //       ),
-// //     );
-// //   }
-// //
-// //   Widget _compactField(
-// //       String hint,
-// //       TextEditingController ctrl, {
-// //         bool enabled   = true,
-// //         bool isNumber  = false,
-// //         bool isDecimal = false,
-// //       }) {
-// //     return TextFormField(
-// //       controller: ctrl,
-// //       enabled: enabled,
-// //       keyboardType: isNumber
-// //           ? TextInputType.number
-// //           : isDecimal
-// //           ? const TextInputType.numberWithOptions(decimal: true)
-// //           : TextInputType.text,
-// //       inputFormatters: isNumber
-// //           ? [FilteringTextInputFormatter.digitsOnly]
-// //           : isDecimal
-// //           ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))]
-// //           : [],
-// //       style: const TextStyle(fontSize: 11),
-// //       decoration: InputDecoration(
-// //         hintText: hint,
-// //         hintStyle: TextStyle(fontSize: 10, color: Colors.grey.shade400),
-// //         isDense: true,
-// //         filled: true,
-// //         fillColor: enabled ? Colors.white : const Color(0xFFF5F5F5),
-// //         contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-// //         border: OutlineInputBorder(
-// //           borderRadius: BorderRadius.circular(5),
-// //           borderSide: BorderSide(color: Colors.grey.shade300),
-// //         ),
-// //         enabledBorder: OutlineInputBorder(
-// //           borderRadius: BorderRadius.circular(5),
-// //           borderSide: BorderSide(color: Colors.grey.shade300),
-// //         ),
-// //         focusedBorder: OutlineInputBorder(
-// //           borderRadius: BorderRadius.circular(5),
-// //           borderSide: BorderSide(color: _theme.primary),
-// //         ),
-// //         disabledBorder: OutlineInputBorder(
-// //           borderRadius: BorderRadius.circular(5),
-// //           borderSide: BorderSide(color: Colors.grey.shade200),
-// //         ),
-// //       ),
-// //     );
-// //   }
-// // }
-// //
-// // // ── SUB TABLE CARD WIDGET ─────────────────────────────────────────────────
-// // class _SubTableCard extends StatelessWidget {
-// //   final String title;
-// //   final Color accentColor;
-// //   final Widget? inputRow;
-// //   final List<String> tableHeader;
-// //   final List<List<String>> rows;
-// //   final void Function(int index)? onDeleteRow;
-// //   final String? footer;
-// //
-// //   const _SubTableCard({
-// //     required this.title,
-// //     required this.accentColor,
-// //     required this.tableHeader,
-// //     required this.rows,
-// //     this.inputRow,
-// //     this.onDeleteRow,
-// //     this.footer,
-// //   });
-// //
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return Container(
-// //       decoration: BoxDecoration(
-// //         border: Border.all(color: accentColor.withOpacity(0.25)),
-// //         borderRadius: BorderRadius.circular(10),
-// //       ),
-// //       child: Column(
-// //         crossAxisAlignment: CrossAxisAlignment.stretch,
-// //         children: [
-// //           // Section header
-// //           Container(
-// //             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-// //             decoration: BoxDecoration(
-// //               color: accentColor.withOpacity(0.08),
-// //               borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-// //               border: Border(
-// //                 bottom: BorderSide(color: accentColor.withOpacity(0.2)),
-// //               ),
-// //             ),
-// //             child: Text(
-// //               title,
-// //               style: TextStyle(
-// //                 fontSize: 10,
-// //                 fontWeight: FontWeight.w700,
-// //                 color: accentColor,
-// //                 letterSpacing: 0.5,
-// //               ),
-// //             ),
-// //           ),
-// //           // Input row
-// //           if (inputRow != null)
-// //             Padding(
-// //               padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-// //               child: inputRow!,
-// //             ),
-// //           // Table header
-// //           Container(
-// //             color: accentColor.withOpacity(0.05),
-// //             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-// //             child: Row(
-// //               children: tableHeader.asMap().entries.map((e) {
-// //                 final isLast = e.key == tableHeader.length - 1;
-// //                 return Expanded(
-// //                   flex: isLast ? 0 : 1,
-// //                   child: isLast
-// //                       ? const SizedBox(width: 24)
-// //                       : Text(
-// //                     e.value,
-// //                     style: TextStyle(
-// //                       fontSize: 9,
-// //                       fontWeight: FontWeight.w700,
-// //                       color: accentColor.withOpacity(0.7),
-// //                       letterSpacing: 0.3,
-// //                     ),
-// //                   ),
-// //                 );
-// //               }).toList(),
-// //             ),
-// //           ),
-// //           // Table rows
-// //           ...rows.asMap().entries.map((e) {
-// //             final i = e.key;
-// //             final cols = e.value;
-// //             return Container(
-// //               decoration: BoxDecoration(
-// //                 color: i.isEven ? Colors.white : Colors.grey.shade50,
-// //                 border: Border(
-// //                   bottom: BorderSide(color: Colors.grey.shade100),
-// //                 ),
-// //               ),
-// //               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-// //               child: Row(
-// //                 children: cols.asMap().entries.map((ce) {
-// //                   final isLast = ce.key == cols.length - 1;
-// //                   return Expanded(
-// //                     flex: isLast ? 0 : 1,
-// //                     child: isLast
-// //                         ? (onDeleteRow != null
-// //                         ? GestureDetector(
-// //                       onTap: () => onDeleteRow!(i),
-// //                       child: const Icon(
-// //                         Icons.close,
-// //                         size: 14,
-// //                         color: Colors.redAccent,
-// //                       ),
-// //                     )
-// //                         : const SizedBox(width: 24))
-// //                         : Text(
-// //                       ce.value,
-// //                       style: const TextStyle(fontSize: 11),
-// //                       overflow: TextOverflow.ellipsis,
-// //                     ),
-// //                   );
-// //                 }).toList(),
-// //               ),
-// //             );
-// //           }),
-// //           // Footer
-// //           if (footer != null)
-// //             Container(
-// //               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-// //               decoration: BoxDecoration(
-// //                 color: accentColor.withOpacity(0.06),
-// //                 borderRadius: const BorderRadius.vertical(
-// //                   bottom: Radius.circular(10),
-// //                 ),
-// //                 border: Border(
-// //                   top: BorderSide(color: accentColor.withOpacity(0.15)),
-// //                 ),
-// //               ),
-// //               child: Text(
-// //                 footer!,
-// //                 textAlign: TextAlign.right,
-// //                 style: TextStyle(
-// //                   fontSize: 10,
-// //                   fontWeight: FontWeight.w700,
-// //                   color: accentColor,
-// //                 ),
-// //               ),
-// //             ),
-// //         ],
-// //       ),
-// //     );
-// //   }
-// // }
+// // lib/screens/mst_counter.dart
 //
-// import 'package:diam_mfg/models/rough_model.dart';
-// import 'package:diam_mfg/providers/article_provider.dart';
-// import 'package:diam_mfg/providers/charni_provider.dart';
-// import 'package:diam_mfg/providers/jangad_charni_provider.dart';
-// import 'package:diam_mfg/providers/party_provider.dart';
-// import 'package:diam_mfg/providers/rough_provider.dart';
-// import 'package:diam_mfg/providers/rough_type_provider.dart';
-// import 'package:diam_mfg/providers/stock_type_provider.dart';
 // import 'package:erp_data_table/erp_data_table.dart';
-// import 'package:erp_formatter/erp_formatter.dart';
 // import 'package:flutter/material.dart';
-// import 'package:intl/intl.dart';
 // import 'package:provider/provider.dart';
 // import 'package:rs_dashboard/rs_dashboard.dart';
 //
+// import '../bootstrap.dart';
+// import '../models/counter_model.dart';
+// import '../models/user_visibility_model.dart';
+// import '../providers/counter_provider.dart';
+// import '../providers/counter_display_det_provider.dart';
+// import '../providers/counter_det_provider.dart';
+// import '../providers/counter_process_provider.dart';
+// import '../providers/dept_provider.dart';
+// import '../providers/main_menuMst_provider.dart';
+// import '../providers/user_visibility_provider.dart';
+// import '../providers/counter_type_provider.dart';
+// import '../providers/division_provider.dart';
+// import '../providers/dept_group_provider.dart';
+// import '../providers/team_provider.dart';
+// import '../providers/menu_mst_provider.dart';
+// import '../providers/dept_process_provider.dart';
+// import '../utils/app_images.dart';
 // import '../utils/delete_dialogue.dart';
 // import '../utils/msg_dialogue.dart';
+// import '../providers/counter_operator_det_provider.dart';
+// import '../providers/counter_manager_det_provider.dart';
+// import '../providers/counter_dept_det_provider.dart';
+// import '../providers/counter_shape_det_provider.dart';
+// import '../providers/shape_provider.dart';
 //
-// class TrnRoughEntry extends StatefulWidget {
-//   const TrnRoughEntry({super.key});
+// class MstCounter extends StatefulWidget {
+//   const MstCounter({super.key});
 //
 //   @override
-//   State<TrnRoughEntry> createState() => _TrnRoughEntryState();
+//   State<MstCounter> createState() => _MstCounterState();
 // }
 //
-// class _TrnRoughEntryState extends State<TrnRoughEntry> {
-//   // ── Theme ──────────────────────────────────────────────────────────────────
+// class _MstCounterState extends State<MstCounter> {
 //   ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
-//
 //   ErpTheme get _theme => ErpTheme(_themeVariant);
 //
-//   // ── ErpForm global key (same as MstFirmParty) ──────────────────────────────
 //   final GlobalKey<ErpFormState> _erpFormKey = GlobalKey<ErpFormState>();
-//
-//   // ── State ──────────────────────────────────────────────────────────────────
+//   Key _formKey = UniqueKey(); // Tab lock force-reset ke liye
 //   Map<String, dynamic>? _selectedRow;
-//   RoughModel? _selectedRough;
-//   bool _isEditMode = false;
-//   Map<String, String> _formValues = {};
+//   bool _isEditMode        = false;
+//   bool _showSearch        = false;
 //   bool _showTableOnMobile = false;
+//   Map<String, String> _formValues = {};
 //
-//   // ── Sub-table rows ─────────────────────────────────────────────────────────
-//   List<RoughDetModel> _charniRows = [];
-//   List<RoughProcessDaysModel> _processDaysRows = [];
+//   // After Tab 0 save → crId/mstID set → Tab 1/2 unlock
+//   int? _savedCrId;
+//   int? _savedMstID;
 //
-//   // ── Sub-table input controllers ────────────────────────────────────────────
-//   final _charniCodeCtrl = TextEditingController();
-//   final _charniPcCtrl = TextEditingController();
-//   final _charniWtCtrl = TextEditingController();
-//   final _stockTypeCtrl = TextEditingController();
-//   final _daysCtrl = TextEditingController();
+//   int _currentTabIndex = 0;
+//
+//   // Dependent dropdowns
+//   String? _selectedDeptGroupCode;
+//   String? _selectedDeptCode;
+//   String? _selectedManType;
+//   String? _selectedEmpType;
+//
+//   // Tab 0: Display Setting
+//   Set<int> _fromSelected = {};
+//   Set<int> _toSelected   = {};
+//
+//   // Tab 1: Process
+//   Set<int> _selectedProcessCodes = {};
+//
+//   // Tab 3: Allow Operator — selected AllowCrId list
+//   Set<int> _selectedOperatorIds = {};
+//
+//   // Tab 4: Allow Manager — selected AllowCrId list
+//   Set<int> _selectedManagerIds  = {};
+//
+//   // Tab 5: Allow Department — selected DeptCode list
+//   Set<int> _selectedDeptIds = {};
+//
+//   // Tab 2: Menu Rights
+//   Set<int> _selectedMenuIds    = {};
+//   Set<int> _selectedShapeIds    = {};
+//   Set<int> _collapsedMainMenus = {};
 //
 //   final String? token = AppStorage.getString("token");
 //
-//   // ══════════════════════════════════════════════════════════════════════════
-//   //  TABLE COLUMNS
-//   // ══════════════════════════════════════════════════════════════════════════
 //   List<ErpColumnConfig> get _tableColumns => [
-//     ErpColumnConfig(key: 'roughMstID', label: 'ID', width: 70, required: true),
-//     ErpColumnConfig(
-//       key: 'roughDate',
-//       label: 'DATE',
-//       width: 110,
-//       required: true,
-//       isDate: true,
-//     ),
-//     ErpColumnConfig(key: 'jno', label: 'JNO', width: 80),
-//     ErpColumnConfig(key: 'site', label: 'SITE', width: 100),
-//     ErpColumnConfig(key: 'partyCode', label: 'PARTY', flex: 1.0),
-//     ErpColumnConfig(
-//       key: 'totWt',
-//       label: 'TOT WT',
-//       width: 100,
-//       align: ColumnAlign.right,
-//     ),
-//     ErpColumnConfig(
-//       key: 'amtDollar',
-//       label: 'AMT \$',
-//       width: 110,
-//       align: ColumnAlign.right,
-//     ),
-//     ErpColumnConfig(
-//       key: 'amtRs',
-//       label: 'AMT RS',
-//       width: 110,
-//       align: ColumnAlign.right,
-//     ),
+//     ErpColumnConfig(key: 'crId',      label: 'CR ID',  width: 80),
+//     ErpColumnConfig(key: 'crName',    label: 'NAME',   width: 180),
+//     ErpColumnConfig(key: 'logInName', label: 'LOGIN',  width: 140),
+//     ErpColumnConfig(key: 'userGrp',   label: 'GROUP',  width: 110),
+//     ErpColumnConfig(key: 'deptCode',  label: 'DEPT',   width: 90),
+//     ErpColumnConfig(key: 'active',    label: 'ACTIVE', width: 90),
 //   ];
 //
-//   // ══════════════════════════════════════════════════════════════════════════
-//   //  FORM ROWS  (ErpForm)
-//   // ══════════════════════════════════════════════════════════════════════════
-//   List<List<ErpFieldConfig>>  _formRows(PartyProvider partyProvider,RoughTypeProvider roughTypeProvider,ArticleProvider articleProvider,JangadCharaniProvider jangadCharniProvider,StockTypeProvider stockTypeProvider,CharniProvider charniProvider)=> [
-//     // ─── SECTION 0: BASIC INFORMATION ─────────────────────────────────────
-//     [
-//       ErpFieldConfig(
-//         key: 'roughDate',
-//         label: 'DATE',
-//         type: ErpFieldType.date,
-//         required: true,
-//         flex: 2,
-//         sectionTitle: 'BASIC INFORMATION',
-//         sectionIndex: 0,
-//       ),
-//       ErpFieldConfig(
-//         key: 'roughMstID',
-//         label: 'ID',
-//         type: ErpFieldType.number,
-//         readOnly: true,
-//         flex: 1,
-//         sectionIndex: 0,
-//       ),
-//     ],
-//
-//     [
-//       ErpFieldConfig(
-//         key: 'jno',
-//         label: 'JNO',
-//         type: ErpFieldType.number,
-//         flex: 1,
-//         sectionIndex: 0,
-//       ),
-//       ErpFieldConfig(key: 'kapanNo', label: 'KNO', flex: 1, sectionIndex: 0),
-//       ErpFieldConfig(key: 'site', label: 'SITE', flex: 1, sectionIndex: 0),
-//       ErpFieldConfig(key: 'inv', label: 'INV', flex: 1, sectionIndex: 0),
-//     ],
-//
-//     [
-//       ErpFieldConfig(
-//           key: 'partyCode',
-//           label: 'PARTY',
-//           type: ErpFieldType.dropdown,
-//           dropdownItems: partyProvider.list
-//               .where((element) {
-//             return element.active==true;
-//           },).map((e) {
-//             return ErpDropdownItem(
-//               label: e.partyName ?? '',
-//               value: e.partyCode?.toString() ?? '',
-//             );
-//           }).toList(),
-//           sectionIndex: 0,
-//           flex: 2
-//       ),
-//       ErpFieldConfig(
-//           key: 'roughTypeCode',
-//           label: 'TYPE',
-//           type: ErpFieldType.dropdown,
-//           dropdownItems: roughTypeProvider.roughTypes
-//               .where((element) {
-//             return element.active==true;
-//           },).map((e) {
-//             return ErpDropdownItem(
-//               label: e.roughTypeName ?? '',
-//               value: e.roughTypeCode?.toString() ?? '',
-//             );
-//           }).toList(),
-//           sectionIndex: 0,
-//           flex: 2
-//
-//       ),
-//       ErpFieldConfig(
-//           key: 'articalCode',
-//           label: 'ARTICAL',
-//           type: ErpFieldType.dropdown,
-//           dropdownItems: articleProvider.list
-//               .where((element) {
-//             return element.active==true;
-//           },).map((e) {
-//             return ErpDropdownItem(
-//               label: e.articalName ?? '',
-//               value: e.articalCode?.toString() ?? '',
-//             );
-//           }).toList(),
-//           sectionIndex: 0,
-//           flex: 2
-//
-//       ),
-//       // ErpFieldConfig(
-//       //   key: 'partyCode',
-//       //   label: 'PARTY',
-//       //   type: ErpFieldType.number,
-//       //   flex: 2,
-//       //   sectionIndex: 0,
-//       // ),
-//       // ErpFieldConfig(
-//       //   key: 'roughTypeCode',
-//       //   label: 'TYPE',
-//       //   type: ErpFieldType.number,
-//       //   flex: 2,
-//       //   sectionIndex: 0,
-//       // ),
-//       // ErpFieldConfig(
-//       //   key: 'articalCode',
-//       //   label: 'ARTICAL',
-//       //   type: ErpFieldType.number,
-//       //   flex: 2,
-//       //   sectionIndex: 0,
-//       // ),
-//     ],
-//
-//     [
-//       ErpFieldConfig(
-//           key: 'jangadCharniCode',
-//           label: 'JAN. CHARNI',
-//           type: ErpFieldType.dropdown,
-//           dropdownItems: jangadCharniProvider.list
-//               .where((element) {
-//             return element.active==true;
-//           },).map((e) {
-//             return ErpDropdownItem(
-//               label: e.jangadCharniName ?? '',
-//               value: e.jangadCharniCode?.toString() ?? '',
-//             );
-//           }).toList(),
-//           sectionIndex: 0,
-//           flex: 1
-//
-//       ),
-//       // ErpFieldConfig(
-//       //   key: 'jangadCharniCode',
-//       //   label: 'JAN. CHARNI',
-//       //   type: ErpFieldType.number,
-//       //   flex: 1,
-//       //   sectionIndex: 0,
-//       // ),
-//     ],
-//
-//     // ─── SECTION 1: RATES & AMOUNTS ───────────────────────────────────────
-//     [
-//       ErpFieldConfig(
-//         key: 'exRate',
-//         label: 'EX RATE',
-//         type: ErpFieldType.amount,
-//         flex: 1,
-//         sectionTitle: 'RATES & AMOUNTS',
-//         sectionIndex: 1,
-//       ),
-//       ErpFieldConfig(
-//         key: 'rateDollar',
-//         label: 'RATE \$',
-//         type: ErpFieldType.amount,
-//         flex: 1,
-//         sectionIndex: 1,
-//       ),
-//       ErpFieldConfig(
-//         key: 'amtDollar',
-//         label: 'AMT \$',
-//         type: ErpFieldType.amount,
-//         readOnly: true,
-//         flex: 1,
-//         sectionIndex: 1,
-//         helperText: 'Auto: Rate\$ × Tot.Wt',
-//       ),
-//     ],
-//
-//
-//     [
-//       ErpFieldConfig(
-//         key: 'rateRs',
-//         label: 'RATE RS',
-//         type: ErpFieldType.amount,
-//         readOnly: true,
-//         flex: 1,
-//         sectionIndex: 1,
-//         helperText: 'Auto: ExRate × Rate\$',
-//       ),
-//       ErpFieldConfig(
-//         key: 'amtRs',
-//         label: 'AMT RS',
-//         type: ErpFieldType.amount,
-//         readOnly: true,
-//         flex: 1,
-//         sectionIndex: 1,
-//         helperText: 'Auto: RateRs × Tot.Wt',
-//       ),
-//     ],
-//
-//     // ─── SECTION 2: EXPENSES & SIZE ───────────────────────────────────────
-//     [
-//       ErpFieldConfig(
-//         key: 'rgExpPer',
-//         label: 'RG EXP %',
-//         type: ErpFieldType.amount,
-//         flex: 1,
-//         sectionTitle: 'EXPENSES & SIZE',
-//         sectionIndex: 2,
-//       ),
-//       ErpFieldConfig(
-//         key: 'poExpPer',
-//         label: 'PO EXP %',
-//         type: ErpFieldType.amount,
-//         flex: 1,
-//         sectionIndex: 2,
-//       ),
-//     ],
-//
-//     [
-//       ErpFieldConfig(
-//         key: 'rgSize',
-//         label: 'RG SIZE',
-//         type: ErpFieldType.amount,
-//         flex: 1,
-//         sectionIndex: 2,
-//       ),
-//       ErpFieldConfig(
-//         key: 'poSize',
-//         label: 'PO SIZE',
-//         type: ErpFieldType.amount,
-//         flex: 1,
-//         sectionIndex: 2,
-//       ),
-//     ],
-//
-//     [
-//       ErpFieldConfig(
-//         key: 'lsPer',
-//         label: 'LS %',
-//         type: ErpFieldType.amount,
-//         flex: 1,
-//         sectionIndex: 2,
-//       ),
-//     ],
-//
-//     // ─── SECTION 3: OTHER ─────────────────────────────────────────────────
-//     [
-//       ErpFieldConfig(
-//         key: 'mainCutNo',
-//         label: 'MAIN CUT NO',
-//         flex: 2,
-//         sectionTitle: 'OTHER',
-//         sectionIndex: 3,
-//       ),
-//       ErpFieldConfig(
-//         key: 'dueDay',
-//         label: 'DUE DAY',
-//         type: ErpFieldType.number,
-//         flex: 1,
-//         sectionIndex: 3,
-//       ),
-//       ErpFieldConfig(
-//         key: 'dueDate',
-//         label: 'DUE DATE',
-//         type: ErpFieldType.date,
-//         readOnly: true,
-//         flex: 2,
-//         sectionIndex: 3,
-//         helperText: 'Auto: Date + Due Day',
-//       ),
-//     ],
-//
-//     [
-//       ErpFieldConfig(
-//         key: 'remarks',
-//         label: 'REMARKS',
-//         maxLines: 2,
-//         flex: 1,
-//         sectionIndex: 3,
-//       ),
-//     ],
-//     [
-//       ErpFieldConfig(
-//         key: 'charniCode',
-//         label: 'CHARNI',
-//         type: ErpFieldType.dropdown,
-//         dropdownItems: charniProvider.list
-//             .where((element) {
-//           return element.active==true;
-//         },).map((e) {
-//           return ErpDropdownItem(
-//             label: e.charniName ?? '',
-//             value: e.charniCode?.toString() ?? '',
-//           );
-//         }).toList(),
-//         flex: 2,
-//         sectionTitle: 'CHARNI ENTRY',
-//         sectionIndex: 4,
-//         isEntryField: true,
-//         isEntryRequired: true,
-//       ),
-//       // ErpFieldConfig(
-//       //   key: 'charniCode',
-//       //   label: 'CHARNI',
-//       //   type: ErpFieldType.number,
-//       //   flex: 2,
-//       //   sectionTitle: 'CHARNI ENTRY',
-//       //   sectionIndex: 4,
-//       //   isEntryField: true,
-//       //   isEntryRequired: true,
-//       // ),
-//       ErpFieldConfig(
-//         key: 'charniPc',
-//         label: 'PC',
-//         type: ErpFieldType.number,
-//         flex: 1,
-//         sectionIndex: 4,
-//         isEntryField: true,
-//       ),
-//       ErpFieldConfig(
-//         key: 'charniWt',
-//         label: 'WT',
-//         type: ErpFieldType.amount,
-//         flex: 1,
-//         sectionIndex: 4,
-//         isEntryField: true,
-//         isEntryRequired: true,
-//       ),
-//     ],
-//
-//     // ─── PROCESS DAYS ENTRY fields ─────────────────────────────────────────
-//     [
-//       ErpFieldConfig(
-//         key: 'stockTypeCode',
-//         label: 'STOCK TYPE',
-//         type: ErpFieldType.dropdown,
-//         dropdownItems: stockTypeProvider.list
-//             .where((element) {
-//           return element.active==true;
-//         },).map((e) {
-//           return ErpDropdownItem(
-//             label: e.stockTypeName ?? '',
-//             value: e.stockTypeCode?.toString() ?? '',
-//           );
-//         }).toList(),
-//         flex: 2,
-//         sectionTitle: 'PROCESS DAYS ENTRY',
-//         sectionIndex: 5,
-//         isEntryField: true,
-//         isEntryRequired: true,
-//       ),
-//       // ErpFieldConfig(
-//       //   key: 'stockTypeCode',
-//       //   label: 'STOCK TYPE',
-//       //   type: ErpFieldType.number,
-//       //   flex: 2,
-//       //   sectionTitle: 'PROCESS DAYS ENTRY',
-//       //   sectionIndex: 5,
-//       //   isEntryField: true,
-//       //   isEntryRequired: true,
-//       // ),
-//       ErpFieldConfig(
-//         key: 'entryDays',
-//         label: 'DAYS',
-//         type: ErpFieldType.number,
-//         flex: 1,
-//         sectionIndex: 5,
-//         isEntryField: true,
-//       ),
-//     ],
+//   List<ErpDropdownItem> get _ynItems => const [
+//     ErpDropdownItem(label: 'Y', value: 'Y'),
+//     ErpDropdownItem(label: 'N', value: 'N'),
 //   ];
-//   void _addCharniEntry() {
-//     final entryFields = _formRows(
-//       context.read<PartyProvider>(),
-//       context.read<RoughTypeProvider>(),
-//       context.read<ArticleProvider>(),
-//       context.read<JangadCharaniProvider>(),
-//       context.read<StockTypeProvider>(),
-//       context.read<CharniProvider>(),
-//     ).expand((r) => r).where((f) => f.isEntryField && (f.sectionIndex == 4)).toList();
 //
-//     // Validate required
-//     for (final field in entryFields.where((f) => f.isEntryRequired)) {
-//       final value = _formValues[field.key];
-//       if (value == null || value.trim().isEmpty) {
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(content: Text('${field.label} required')),
-//         );
-//         _erpFormKey.currentState?.focusField(field.key);
-//         return;
-//       }
-//     }
-//
-//     final entry = <String, dynamic>{};
-//     final srno = _charniEntryData.length + 1;
-//     entry['srno'] = srno.toString();
-//     for (final field in entryFields) {
-//       entry[field.key] = _formValues[field.key] ?? '';
-//     }
-//
-//     // ✅ RoughDetModel mein bhi add karo (save ke liye)
-//     setState(() {
-//       _charniEntryData.add(entry);
-//       _charniRows.add(RoughDetModel(
-//         srno: srno,
-//         charniCode: int.tryParse(_formValues['charniCode'] ?? ''),
-//         pc: int.tryParse(_formValues['charniPc'] ?? ''),
-//         wt: double.tryParse(_formValues['charniWt'] ?? ''),
-//         per: 0,
-//       ));
-//       _recalcCharniPer();
-//       _recalcRates();
-//       _pushCalcToForm();
-//     });
-//
-//     // Clear entry fields
-//     for (final field in entryFields) {
-//       _erpFormKey.currentState?.updateFieldValue(field.key, '');
-//       _formValues.remove(field.key);
-//     }
-//     _erpFormKey.currentState?.focusField(entryFields.first.key);
-//   }
-//
-//   void _addProcessDaysEntry() {
-//     final entryFields = _formRows(
-//       context.read<PartyProvider>(),
-//       context.read<RoughTypeProvider>(),
-//       context.read<ArticleProvider>(),
-//       context.read<JangadCharaniProvider>(),
-//       context.read<StockTypeProvider>(),
-//       context.read<CharniProvider>(),
-//
-//     ).expand((r) => r).where((f) => f.isEntryField && (f.sectionIndex == 5)).toList();
-//
-//     for (final field in entryFields.where((f) => f.isEntryRequired)) {
-//       final value = _formValues[field.key];
-//       if (value == null || value.trim().isEmpty) {
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(content: Text('${field.label} required')),
-//         );
-//         _erpFormKey.currentState?.focusField(field.key);
-//         return;
-//       }
-//     }
-//
-//     final entry = <String, dynamic>{};
-//     final srno = _processDaysEntryData.length + 1;
-//     entry['srno'] = srno.toString();
-//     for (final field in entryFields) {
-//       entry[field.key] = _formValues[field.key] ?? '';
-//     }
-//
-//     setState(() {
-//       _processDaysEntryData.add(entry);
-//       _processDaysRows.add(RoughProcessDaysModel(
-//         srno: srno,
-//         stockTypeCode: int.tryParse(_formValues['stockTypeCode'] ?? ''),
-//         days: double.tryParse(_formValues['entryDays'] ?? ''),
-//       ));
-//     });
-//
-//     for (final field in entryFields) {
-//       _erpFormKey.currentState?.updateFieldValue(field.key, '');
-//       _formValues.remove(field.key);
-//     }
-//     _erpFormKey.currentState?.focusField(entryFields.first.key);
-//   }
-//   // ══════════════════════════════════════════════════════════════════════════
-//   //  INIT / DISPOSE
-//   // ══════════════════════════════════════════════════════════════════════════
 //   @override
 //   void initState() {
 //     super.initState();
-//     WidgetsBinding.instance.addPostFrameCallback((_) {
-//       context.read<RoughProvider>().loadRoughs();
-//       context.read<PartyProvider>().loadParties();
-//       context.read<ArticleProvider>().load();
-//       context.read<StockTypeProvider>().load();
-//       context.read<CharniProvider>().load();
-//       context.read<RoughTypeProvider>().loadRoughTypes();
-//       context.read<JangadCharaniProvider>().load();
-//       final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
-//       setState(() {
-//         _formValues = {'roughDate': today, 'dueDate': today, 'roughMstID': '0'};
-//       });
-//     });
-//     _charniEntryKeys = ['srno', 'charniCode', 'pc', 'wt', 'per'];
-//     _processDaysEntryKeys = ['srno', 'stockTypeCode', 'days'];
-//   }
-//
-//   @override
-//   void dispose() {
-//     _charniCodeCtrl.dispose();
-//     _charniPcCtrl.dispose();
-//     _charniWtCtrl.dispose();
-//     _stockTypeCtrl.dispose();
-//     _daysCtrl.dispose();
-//     super.dispose();
-//   }
-//
-//   // ══════════════════════════════════════════════════════════════════════════
-//   //  CALCULATIONS
-//   // ══════════════════════════════════════════════════════════════════════════
-//
-//   double get _totalWt => _charniRows.fold(0.0, (s, r) => s + (r.wt ?? 0));
-//
-//   void _recalcRates() {
-//     final exRate = double.tryParse(_formValues['exRate'] ?? '') ?? 0;
-//     final rateDollar = double.tryParse(_formValues['rateDollar'] ?? '') ?? 0;
-//     final totWt = _totalWt;
-//     _formValues['rateRs'] = (exRate * rateDollar).toStringAsFixed(2);
-//     _formValues['amtDollar'] = (rateDollar * totWt).toStringAsFixed(2);
-//     _formValues['amtRs'] = (exRate * rateDollar * totWt).toStringAsFixed(2);
-//   }
-//
-//   void _recalcDueDate() {
-//     try {
-//       final base = DateFormat(
-//         'dd/MM/yyyy',
-//       ).parse(_formValues['roughDate'] ?? '');
-//       final days = int.tryParse(_formValues['dueDay'] ?? '') ?? 0;
-//       _formValues['dueDate'] = DateFormat(
-//         'dd/MM/yyyy',
-//       ).format(base.add(Duration(days: days)));
-//     } catch (_) {}
-//   }
-//
-//   void _recalcCharniPer() {
-//     final totWt = _totalWt;
-//     _charniRows = _charniRows.asMap().entries.map((e) {
-//       final per = totWt > 0 ? ((e.value.wt ?? 0) / totWt * 100) : 0.0;
-//       return RoughDetModel(
-//         srno: e.value.srno,
-//         charniCode: e.value.charniCode,
-//         pc: e.value.pc,
-//         wt: e.value.wt,
-//         per: per,
-//       );
-//     }).toList();
-//   }
-//
-//   /// Push auto-calc readonly values into ErpForm text controllers
-//   void _pushCalcToForm() {
-//     _erpFormKey.currentState?.updateFieldValue('rateRs', _formValues['rateRs']);
-//     _erpFormKey.currentState?.updateFieldValue(
-//       'amtDollar',
-//       _formValues['amtDollar'],
-//     );
-//     _erpFormKey.currentState?.updateFieldValue('amtRs', _formValues['amtRs']);
-//     _erpFormKey.currentState?.updateFieldValue(
-//       'dueDate',
-//       _formValues['dueDate'],
-//     );
-//   }
-//
-//   // ══════════════════════════════════════════════════════════════════════════
-//   //  CHARNI sub-table operations
-//   // ══════════════════════════════════════════════════════════════════════════
-// // ── Entry data (ErpEntryGrid ke liye) ─────────────────────────────────────
-//   final List<Map<String, dynamic>> _charniEntryData = [];
-//   final List<Map<String, dynamic>> _processDaysEntryData = [];
-//
-//   late final List<String> _charniEntryKeys;
-//   late final List<String> _processDaysEntryKeys;
-//   void _addCharniRow() {
-//     final code = int.tryParse(_charniCodeCtrl.text.trim());
-//     final pc = int.tryParse(_charniPcCtrl.text.trim());
-//     final wt = double.tryParse(_charniWtCtrl.text.trim());
-//     if (code == null && wt == null) return;
-//
-//     setState(() {
-//       _charniRows.add(
-//         RoughDetModel(
-//           srno: _charniRows.length + 1,
-//           charniCode: code,
-//           pc: pc,
-//           wt: wt,
-//           per: 0,
-//         ),
-//       );
-//       _recalcCharniPer();
-//       _recalcRates();
-//     });
-//
-//     _charniCodeCtrl.clear();
-//     _charniPcCtrl.clear();
-//     _charniWtCtrl.clear();
-//     _pushCalcToForm();
-//   }
-//
-//   void _deleteCharniRow(int index) {
-//     setState(() {
-//       _charniRows.removeAt(index);
-//       _charniRows = _charniRows
-//           .asMap()
-//           .entries
-//           .map(
-//             (e) => RoughDetModel(
-//           srno: e.key + 1,
-//           charniCode: e.value.charniCode,
-//           pc: e.value.pc,
-//           wt: e.value.wt,
-//           per: e.value.per,
-//         ),
-//       )
-//           .toList();
-//       _recalcCharniPer();
-//       _recalcRates();
-//     });
-//     _pushCalcToForm();
-//   }
-//
-//   // ══════════════════════════════════════════════════════════════════════════
-//   //  PROCESS DAYS sub-table operations
-//   // ══════════════════════════════════════════════════════════════════════════
-//
-//   void _addProcessDaysRow() {
-//     final code = int.tryParse(_stockTypeCtrl.text.trim());
-//     final days = double.tryParse(_daysCtrl.text.trim());
-//     if (code == null) return;
-//
-//     setState(() {
-//       _processDaysRows.add(
-//         RoughProcessDaysModel(
-//           srno: _processDaysRows.length + 1,
-//           stockTypeCode: code,
-//           days: days,
-//         ),
-//       );
-//     });
-//     _stockTypeCtrl.clear();
-//     _daysCtrl.clear();
-//   }
-//
-//   void _deleteProcessDaysRow(int index) {
-//     setState(() {
-//       _processDaysRows.removeAt(index);
-//       _processDaysRows = _processDaysRows
-//           .asMap()
-//           .entries
-//           .map(
-//             (e) => RoughProcessDaysModel(
-//           srno: e.key + 1,
-//           stockTypeCode: e.value.stockTypeCode,
-//           days: e.value.days,
-//         ),
-//       )
-//           .toList();
+//     WidgetsBinding.instance.addPostFrameCallback((_) async {
+//       await Future.wait([
+//         context.read<CounterTypeProvider>().load(),
+//         context.read<DivisionProvider>().loadDivisions(),
+//         context.read<DeptGroupProvider>().load(),
+//         context.read<DeptProvider>().load(),
+//         context.read<TeamProvider>().load(),
+//         context.read<UserVisibilityProvider>().load(),
+//         context.read<MainMenuMstProvider>().load(),
+//         context.read<MenuMstProvider>().load(),
+//         context.read<DeptProcessProvider>().load(),
+//         context.read<CounterOperatorDetProvider>().load(),
+//         context.read<CounterManagerDetProvider>().load(),
+//         context.read<CounterDeptDetProvider>().load(),
+//         context.read<CounterShapeDetProvider>().load(),
+//         context.read<ShapeProvider>().load(),
+//       ]);
+//       if (!mounted) return;
+//       await context.read<CounterProvider>().load();
 //     });
 //   }
 //
-//   // ══════════════════════════════════════════════════════════════════════════
-//   //  ROW TAP  (same pattern as MstFirmParty._onRowTap)
-//   // ══════════════════════════════════════════════════════════════════════════
-//   Future<void> _onRowTap(Map<String, dynamic> row) async {
-//     final raw = row['_raw'] as RoughModel;
-//     final provider = context.read<RoughProvider>();
-//
-//     final details = await provider.loadDetails(raw.roughMstID!);
-//     final processDays = await provider.loadProcessDays(raw.roughMstID!);
-//
+//   void _onRowTap(Map<String, dynamic> row) {
+//     final raw = row['_raw'] as CounterModel;
 //     setState(() {
-//       _selectedRow = row;
-//       _selectedRough = raw;
-//       _isEditMode = true;
-//       _charniRows = details;
-//       _processDaysRows = processDays;
-//
+//       _selectedRow           = row;
+//       _isEditMode            = true;
+//       _showSearch            = false;
+//       _selectedDeptGroupCode = raw.deptGroupCode?.toString();
+//       _selectedDeptCode      = raw.deptCode?.toString();
+//       _selectedManType       = raw.manType ?? 'Days';
+//       _selectedEmpType       = raw.empType ?? 'Days';
+//       _currentTabIndex       = 0;
+//       _selectedOperatorIds   = {};
+//       _selectedManagerIds    = {};
+//       _selectedDeptIds       = {};
+//       _savedCrId             = raw.crId;
+//       _savedMstID            = raw.counterMstID;
 //       _formValues = {
-//         'roughMstID': raw.roughMstID?.toString() ?? '0',
-//         'roughDate': raw.roughDate ?? '',
-//         'jno': raw.jno?.toString() ?? '',
-//         'kapanNo': raw.kapanNo ?? '',
-//         'site': raw.site ?? '',
-//         'inv': raw.inv ?? '',
-//         'partyCode': raw.partyCode?.toString() ?? '',
-//         'roughTypeCode': raw.roughTypeCode?.toString() ?? '',
-//         'articalCode': raw.articalCode?.toString() ?? '',
-//         'jangadCharniCode': raw.jangadCharniCode?.toString() ?? '',
-//         'exRate': raw.exRate?.toStringAsFixed(2) ?? '',
-//         'rateDollar': raw.rateDollar?.toStringAsFixed(2) ?? '',
-//         'amtDollar': raw.amtDollar?.toStringAsFixed(2) ?? '',
-//         'rateRs': raw.rateRs?.toStringAsFixed(2) ?? '',
-//         'amtRs': raw.amtRs?.toStringAsFixed(2) ?? '',
-//         'rgExpPer': raw.rgExpPer?.toStringAsFixed(2) ?? '',
-//         'poExpPer': raw.poExpPer?.toStringAsFixed(2) ?? '',
-//         'rgSize': raw.rgSize?.toStringAsFixed(2) ?? '',
-//         'poSize': raw.poSize?.toStringAsFixed(2) ?? '',
-//         'lsPer': raw.lsPer?.toStringAsFixed(2) ?? '',
-//         'mainCutNo': raw.mainCutNo ?? '',
-//         'dueDay': raw.dueDay?.toString() ?? '',
-//         'dueDate': raw.dueDate ?? '',
-//         'remarks': raw.remarks ?? '',
+//         'counterTypeCode': raw.counterTypeCode?.toString() ?? '',
+//         'divisionCode':    raw.divisionCode?.toString()    ?? '',
+//         'deptGroupCode':   raw.deptGroupCode?.toString()   ?? '',
+//         'deptCode':        raw.deptCode?.toString()        ?? '',
+//         'teamCode':        raw.teamCode?.toString()        ?? '',
+//         'userGrp':         raw.userGrp          ?? '',
+//         'logInName':       raw.logInName         ?? '',
+//         'crPass':          raw.crPass            ?? '',
+//         'crName':          raw.crName            ?? '',
+//         'sortID':          raw.sortID?.toString() ?? '',
+//         'active':          raw.active == true ? 'true' : 'false',
+//         'mfgDeptCode':     raw.mfgDeptCode?.toString()    ?? '',
+//         'crEdit':          raw.crEdit       ?? 'Y',
+//         'crDel':           raw.crDel        ?? 'Y',
+//         'autoRec':         raw.autoRec      ?? 'Y',
+//         'empIssRec':       raw.empIssRec    ?? 'N',
+//         'empRecWt':        raw.empRecWt     ?? 'N',
+//         'laserPlanRec':    raw.laserPlanRec ?? 'N',
+//         'polishOut':       raw.polishOut    ?? 'N',
+//         'stockLimit':      raw.stockLimit?.toString()     ?? '',
+//         'target':          raw.target?.toString()         ?? '',
+//         'kachaIss':        raw.kachaIss     ?? 'Y',
+//         'manType':         raw.manType      ?? 'Days',
+//         'manPktDayLimit':  raw.manPktDayLimit?.toString()  ?? '',
+//         'manPktHourLimit': raw.manPktHourLimit?.toString() ?? '',
+//         'empType':         raw.empType      ?? 'Days',
+//         'empPktDayLimit':  raw.empPktDayLimit?.toString()  ?? '',
+//         'empPktHourLimit': raw.empPktHourLimit?.toString() ?? '',
+//         'empPktLimit':     raw.empPktLimit?.toString()     ?? '',
 //       };
-//       _charniEntryData.clear();
-//       _charniEntryData.addAll(details.map((d) => {
-//         'srno': d.srno?.toString() ?? '',
-//         'charniCode': d.charniCode?.toString() ?? '',
-//         'pc': d.pc?.toString() ?? '',
-//         'wt': d.wt?.toStringAsFixed(3) ?? '',
-//         'per': d.per?.toStringAsFixed(2) ?? '',
-//       }));
+//     });
+//     if (raw.counterMstID != null) _loadDisplaySettings(raw.counterMstID!);
+//     _loadMenuRights(raw.crId!);
+//     _loadProcessRights(raw.crId!);
+//     _loadOperatorRights(raw.crId!);
+//     _loadManagerRights(raw.crId!);
+//     _loadDeptRights(raw.crId!);
+//     _loadShapeRights(raw.crId!);
+//     if (Responsive.isMobile(context)) setState(() => _showTableOnMobile = false);
+//   }
 //
-//       _processDaysEntryData.clear();
-//       _processDaysEntryData.addAll(processDays.map((p) => {
-//         'srno': p.srno?.toString() ?? '',
-//         'stockTypeCode': p.stockTypeCode?.toString() ?? '',
-//         'days': p.days?.toStringAsFixed(0) ?? '',
-//       }));
-//
-//       if (Responsive.isMobile(context)) _showTableOnMobile = false;
+//   Future<void> _loadDisplaySettings(int counterMstID) async {
+//     final dp = context.read<CounterDisplayDetProvider>();
+//     await dp.loadByCounter(counterMstID);
+//     final records = dp.counterList;
+//     setState(() {
+//       _fromSelected = records
+//           .where((r) => r.counterType == 'FROM' && r.userVisibilityCode != null)
+//           .map((r) => r.userVisibilityCode!).toSet();
+//       _toSelected = records
+//           .where((r) => r.counterType == 'TO' && r.userVisibilityCode != null)
+//           .map((r) => r.userVisibilityCode!).toSet();
 //     });
 //   }
 //
-//   // ══════════════════════════════════════════════════════════════════════════
-//   //  SAVE  (same pattern as MstFirmParty._onSave)
-//   // ══════════════════════════════════════════════════════════════════════════
+//   Future<void> _loadMenuRights(int crId) async {
+//     final dp = context.read<CounterDetProvider>();
+//     await dp.loadByCounter(crId);
+//     setState(() {
+//       _selectedMenuIds = dp.counterList
+//           .where((r) => r.menuMstID != null)
+//           .map((r) => r.menuMstID!).toSet();
+//     });
+//   }
+//
+//   Future<void> _loadProcessRights(int crId) async {
+//     final dp = context.read<CounterProcessProvider>();
+//     await dp.loadByCounter(crId);
+//     setState(() {
+//       _selectedProcessCodes = dp.counterList
+//           .where((r) => r.deptProcessCode != null)
+//           .map((r) => r.deptProcessCode!).toSet();
+//     });
+//   }
+//
+//   Future<void> _loadOperatorRights(int crId) async {
+//     final dp = context.read<CounterOperatorDetProvider>();
+//     await dp.loadByCrId(crId);
+//     setState(() {
+//       _selectedOperatorIds = dp.list
+//           .where((r) => r.allowCrId != null)
+//           .map((r) => r.allowCrId!).toSet();
+//     });
+//   }
+//
+//   Future<void> _loadManagerRights(int crId) async {
+//     final dp = context.read<CounterManagerDetProvider>();
+//     await dp.loadByCrId(crId);
+//     setState(() {
+//       _selectedManagerIds = dp.list
+//           .where((r) => r.allowCrId != null)
+//           .map((r) => r.allowCrId!).toSet();
+//     });
+//   }
+//
+//   Future<void> _loadDeptRights(int crId) async {
+//     final dp = context.read<CounterDeptDetProvider>();
+//     await dp.loadByCrId(crId);
+//     setState(() {
+//       _selectedDeptIds = dp.list
+//           .where((r) => r.deptCode != null)
+//           .map((r) => r.deptCode!).toSet();
+//     });
+//   }
+//   Future<void> _loadShapeRights(int crId) async {
+//     final dp = context.read<CounterShapeDetProvider>();
+//     await dp.loadByCrId(crId);
+//     setState(() {
+//       _selectedDeptIds = dp.list
+//           .where((r) => r.shapeCode != null)
+//           .map((r) => r.shapeCode!).toSet();
+//     });
+//   }
+//
+//   // ── SAVE — tab 0 only (Basic + Display Setting) ───────────────────────────
 //   Future<void> _onSave(Map<String, dynamic> values) async {
-//     final provider = context.read<RoughProvider>();
+//     // Tab 0 save karo Counter master
+//     if (_currentTabIndex == 0) {
+//       final counterProvider = context.read<CounterProvider>();
+//       CounterModel? savedCounter;
+//       if (_isEditMode && _selectedRow != null) {
+//         final raw    = _selectedRow!['_raw'] as CounterModel;
+//         savedCounter = await counterProvider.updateAndReturn(raw.crId!, values);
+//       } else {
+//         savedCounter = await counterProvider.createAndReturn(values);
+//       }
+//       if (savedCounter == null || !mounted) return;
 //
-//     // ErpForm._handleSave passes controller values; readOnly fields (rateRs,
-//     // amtDollar, amtRs, dueDate) are also collected because updateFieldValue
-//     // sets their controllers. Merge our local copy just to be safe.
-//     final merged = Map<String, dynamic>.from(values);
-//     merged['rateRs'] = _formValues['rateRs'] ?? '0';
-//     merged['amtDollar'] = _formValues['amtDollar'] ?? '0';
-//     merged['amtRs'] = _formValues['amtRs'] ?? '0';
-//     merged['dueDate'] = _formValues['dueDate'] ?? '';
+//       setState(() {
+//         _savedCrId  = savedCounter!.crId;
+//         _savedMstID = savedCounter!.counterMstID;
+//       });
 //
-//     bool success;
-//     if (_isEditMode && _selectedRough != null) {
-//       success = await provider.updateRough(
-//         _selectedRough!.roughMstID!,
-//         merged,
-//         _charniRows,
-//         _processDaysRows,
+//       // CounterDisplayDet save
+//       if (_savedMstID != null) {
+//         final displayProvider = context.read<CounterDisplayDetProvider>();
+//         await displayProvider.deleteByCounter(_savedMstID!);
+//         for (final v in _fromSelected) {
+//           await displayProvider.create({
+//             'crId': _savedMstID.toString(),
+//             'userVisibilityCode': v.toString(),
+//             'counterType': 'FROM',
+//           });
+//         }
+//         for (final v in _toSelected) {
+//           await displayProvider.create({
+//             'crId': _savedMstID.toString(),
+//             'userVisibilityCode': v.toString(),
+//             'counterType': 'TO',
+//           });
+//         }
+//       }
+//
+//       if (!mounted) return;
+//       await ErpResultDialog.showSuccess(
+//         context: context, theme: _theme,
+//         title:   _isEditMode ? 'Updated' : 'Saved',
+//         message: 'Counter saved. Process & Rights tabs are now unlocked.',
 //       );
-//     } else {
-//       success = await provider.createRough(
-//         merged,
-//         _charniRows,
-//         _processDaysRows,
+//       // Tab 0 save ho gaya — Tab 1 pe jaao aur ErpForm reinit karo correct tab pe
+//       if (mounted) {
+//         setState(() {
+//           _currentTabIndex = 1;
+//           _isEditMode = true;   // saved ho gaya — edit mode mein aa jao
+//           _formKey = UniqueKey();
+//         });
+//       }
+//     }
+//
+//     // Tab 1 save — Process
+//     else if (_currentTabIndex == 1 && _savedCrId != null) {
+//       final processProvider = context.read<CounterProcessProvider>();
+//       final processList     = context.read<DeptProcessProvider>().list;
+//       final existingProc    = List.of(processProvider.counterList);
+//       for (final r in existingProc) {
+//         if (r.counterProcessDetID != null) await processProvider.delete(r.counterProcessDetID!);
+//       }
+//       for (final procCode in _selectedProcessCodes) {
+//         final proc = processList.where((p) => p.deptProcessCode == procCode).firstOrNull;
+//         await processProvider.create({
+//           'crId':            _savedCrId.toString(),
+//           'deptCode':        (proc?.deptCode ?? 0).toString(),
+//           'deptProcessCode': procCode.toString(),
+//         });
+//       }
+//       if (!mounted) return;
+//       await ErpResultDialog.showSuccess(
+//         context: context, theme: _theme,
+//         title: 'Saved', message: 'Process rights saved successfully.',
 //       );
 //     }
 //
-//     if (!mounted) return;
-//     if (success) {
-//       _resetForm();
+//     // Tab 2 save — Menu Rights
+//     else if (_currentTabIndex == 2 && _savedCrId != null) {
+//       final detProvider = context.read<CounterDetProvider>();
+//       final menuList    = context.read<MenuMstProvider>().list;
+//       final existingDet = List.of(detProvider.counterList);
+//       for (final r in existingDet) {
+//         if (r.counterDetID != null) await detProvider.delete(r.counterDetID!);
+//       }
+//       for (final menuId in _selectedMenuIds) {
+//         final menu = menuList.where((m) => m.menuMstID == menuId).firstOrNull;
+//         await detProvider.create({
+//           'crId':          _savedCrId.toString(),
+//           'mainMenuMstID': (menu?.mainMenuMstID ?? 0).toString(),
+//           'menuMstID':     menuId.toString(),
+//         });
+//       }
+//       if (!mounted) return;
 //       await ErpResultDialog.showSuccess(
-//         context: context,
-//         theme: _theme,
-//         title: _isEditMode ? 'Updated' : 'Saved',
-//         message: _isEditMode
-//             ? 'Rough entry updated successfully.'
-//             : 'Rough entry saved successfully.',
+//         context: context, theme: _theme,
+//         title: 'Saved', message: 'Menu rights saved successfully.',
+//       );
+//     }
+//
+//     // Tab 3 save — Allow Operator
+//     else if (_currentTabIndex == 3 && _savedCrId != null) {
+//       final opProvider = context.read<CounterOperatorDetProvider>();
+//       await opProvider.deleteByCrId(_savedCrId!);
+//       for (final allowId in _selectedOperatorIds) {
+//         await opProvider.create({
+//           'crId':      _savedCrId.toString(),
+//           'allowCrId': allowId.toString(),
+//         });
+//       }
+//       if (!mounted) return;
+//       await ErpResultDialog.showSuccess(
+//         context: context, theme: _theme,
+//         title: 'Saved', message: 'Allow Operator saved successfully.',
+//       );
+//     }
+//
+//     // Tab 4 save — Allow Manager
+//     else if (_currentTabIndex == 4 && _savedCrId != null) {
+//       final mgProvider = context.read<CounterManagerDetProvider>();
+//       await mgProvider.deleteByCrId(_savedCrId!);
+//       for (final allowId in _selectedManagerIds) {
+//         await mgProvider.create({
+//           'crId':      _savedCrId.toString(),
+//           'allowCrId': allowId.toString(),
+//         });
+//       }
+//       if (!mounted) return;
+//       await ErpResultDialog.showSuccess(
+//         context: context, theme: _theme,
+//         title: 'Saved', message: 'Allow Manager saved successfully.',
+//       );
+//     }
+//
+//     // Tab 5 save — Allow Department
+//     else if (_currentTabIndex == 5 && _savedCrId != null) {
+//       final deptDetProvider = context.read<CounterDeptDetProvider>();
+//       await deptDetProvider.deleteByCrId(_savedCrId!);
+//       for (final deptCode in _selectedDeptIds) {
+//         await deptDetProvider.create({
+//           'crId':     _savedCrId.toString(),
+//           'deptCode': deptCode.toString(),
+//         });
+//       }
+//       if (!mounted) return;
+//       await ErpResultDialog.showSuccess(
+//         context: context, theme: _theme,
+//         title: 'Saved', message: 'Allow Department saved successfully.',
+//       );
+//     }
+//
+//     // Tab 6 save — Shape Lock
+//     else if (_currentTabIndex == 6 && _savedCrId != null) {
+//       final shapeProvider = context.read<CounterShapeDetProvider>();
+//       await shapeProvider.deleteByCrId(_savedCrId!);
+//       for (final shapeCode in _selectedShapeIds) {
+//         await shapeProvider.create({
+//           'allowCrId': _savedCrId.toString(),
+//           'shapeCode': shapeCode.toString(),
+//         });
+//       }
+//       if (!mounted) return;
+//       await ErpResultDialog.showSuccess(
+//         context: context, theme: _theme,
+//         title: 'Saved', message: 'Shape Lock saved successfully.',
 //       );
 //     }
 //   }
 //
-//   // ══════════════════════════════════════════════════════════════════════════
-//   //  DELETE  (same pattern as MstFirmParty._onDelete)
-//   // ══════════════════════════════════════════════════════════════════════════
 //   Future<void> _onDelete() async {
-//     if (_selectedRough?.roughMstID == null) return;
+//     final raw = _selectedRow?['_raw'] as CounterModel?;
+//     if (raw?.crId == null) return;
 //     final confirm = await ErpDeleteDialog.show(
-//       context: context,
-//       theme: _theme,
-//       title: 'Rough Entry',
-//       itemName: 'JNO: ${_selectedRough!.jno ?? ''}',
+//       context: context, theme: _theme, title: 'Counter', itemName: raw!.crName ?? '',
 //     );
 //     if (confirm != true || !mounted) return;
 //
-//     final success = await context.read<RoughProvider>().deleteRough(
-//       _selectedRough!.roughMstID!,
-//     );
+//     final crId   = raw!.crId!;
+//     final mstID  = raw.counterMstID;
 //
+//     // Sare related records delete karo pehle
+//     if (mstID != null) {
+//       await context.read<CounterDisplayDetProvider>().deleteByCounter(mstID);
+//     }
+//     await context.read<CounterDetProvider>().deleteByCrId(crId);
+//     await context.read<CounterProcessProvider>().deleteByCrId(crId);
+//     await context.read<CounterOperatorDetProvider>().deleteByCrId(crId);
+//     await context.read<CounterManagerDetProvider>().deleteByCrId(crId);
+//     await context.read<CounterDeptDetProvider>().deleteByCrId(crId);
+//     await context.read<CounterShapeDetProvider>().deleteByCrId(crId);
+//
+//     if (!mounted) return;
+//
+//     // Ab Counter master delete karo
+//     final success = await context.read<CounterProvider>().delete(crId);
 //     if (success && mounted) {
 //       _resetForm();
-//       await ErpResultDialog.showDeleted(
-//         context: context,
-//         theme: _theme,
-//         itemName: 'Rough Entry ${_selectedRough?.jno ?? ''}',
-//       );
+//       await ErpResultDialog.showDeleted(context: context, theme: _theme, itemName: raw.crName ?? '');
 //     }
 //   }
 //
-//   // ══════════════════════════════════════════════════════════════════════════
-//   //  RESET  (same pattern as MstFirmParty._resetForm)
-//   // ══════════════════════════════════════════════════════════════════════════
 //   void _resetForm() {
-//     final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
 //     setState(() {
-//       _selectedRow = null;
-//       _selectedRough = null;
-//       _isEditMode = false;
-//       _showTableOnMobile = false;
-//       _charniRows = [];
-//       _processDaysRows = [];
-//       _formValues = {'roughDate': today, 'dueDate': today, 'roughMstID': '0'};
-//       _charniCodeCtrl.clear();
-//       _charniPcCtrl.clear();
-//       _charniWtCtrl.clear();
-//       _stockTypeCtrl.clear();
-//       _charniEntryData.clear();      // ✅
-//       _processDaysEntryData.clear(); // ✅
-//       _daysCtrl.clear();
+//       _selectedRow           = null;
+//       _isEditMode            = false;
+//       _formValues            = {};
+//       _showTableOnMobile     = false;
+//       _showSearch            = false;
+//       _selectedDeptGroupCode = null;
+//       _selectedDeptCode      = null;
+//       _selectedManType       = null;
+//       _selectedEmpType       = null;
+//       _savedCrId             = null;
+//       _savedMstID            = null;
+//       _fromSelected          = {};
+//       _toSelected            = {};
+//       _selectedMenuIds       = {};
+//       _selectedProcessCodes  = {};
+//       _selectedOperatorIds   = {};
+//       _selectedManagerIds    = {};
+//       _selectedDeptIds       = {};
+//       _selectedShapeIds      = {};
+//       _currentTabIndex       = 0;
+//       _formKey               = UniqueKey();
 //     });
 //     _erpFormKey.currentState?.resetForm();
 //   }
 //
-//   // ══════════════════════════════════════════════════════════════════════════
-//   //  BUILD  (same layout as MstFirmParty.build)
-//   // ══════════════════════════════════════════════════════════════════════════
 //   @override
 //   Widget build(BuildContext context) {
-//     return Consumer<RoughProvider>(
-//       builder: (context, provider, _) {
+//     return Consumer<CounterProvider>(
+//       builder: (context, counterProvider, _) {
+//         final isMobile = Responsive.isMobile(context);
+//         if (isMobile && (_showSearch || _showTableOnMobile)) {
+//           return Padding(padding: const EdgeInsets.all(8), child: _buildTable(counterProvider));
+//         }
 //         return Padding(
 //           padding: const EdgeInsets.all(8),
-//           child: Responsive.isMobile(context)
-//               ? _showTableOnMobile
-//               ? _buildTable(provider)
-//               : _buildErpForm(context)
-//               : Row(
+//           child: Row(
 //             crossAxisAlignment: CrossAxisAlignment.start,
 //             children: [
-//               Expanded(flex: 2, child: _buildErpForm(context)),
-//               const SizedBox(width: 12),
-//               Expanded(flex: 2, child: _buildTable(provider)),
+//               Expanded(flex: _showSearch ? 2 : 1, child: _buildFormWrapper()),
+//               if (_showSearch) ...[
+//                 const SizedBox(width: 12),
+//                 Expanded(flex: 2, child: _buildTable(counterProvider)),
+//               ],
 //             ],
 //           ),
 //         );
@@ -2075,409 +508,821 @@
 //     );
 //   }
 //
-//   // ── ErpForm (LEFT) ─────────────────────────────────────────────────────────
-//   Widget _buildErpForm(BuildContext context) {
-//     final partyProvider = context.watch<PartyProvider>();
-//     final roughTypeProvider = context.watch<RoughTypeProvider>();
-//     final articleProvider = context.watch<ArticleProvider>();
-//     final jangadCharniProvider = context.watch<JangadCharaniProvider>();
-//     final stockTypeProvider = context.watch<StockTypeProvider>();
-//     final charniProvider = context.watch<CharniProvider>();
-//     return ErpForm(
-//       key: _erpFormKey,
-//       title: 'ROUGH ENTRY',
-//       subtitle: 'Transaction / Rough Stock Entry',
-//       tabBarBackgroundColor: const Color(0xfff2f0ef),
-//       tabBarSelectedColor: _theme.primaryGradient.first,
-//       tabBarSelectedTxtColor: Colors.white,
-//       rows: _formRows(partyProvider,roughTypeProvider,articleProvider,jangadCharniProvider,stockTypeProvider,charniProvider),
-//       initialValues: _formValues,
-//       isEditMode: _isEditMode,
-//       extraActions: [
-//         IconButton(
-//           tooltip: "Add Charni Entry",
-//           icon: const Icon(Icons.add_circle_outline, color: Colors.white, size: 18),
-//           onPressed: _addCharniEntry,
-//         ),
-//         IconButton(
-//           tooltip: "Add Process Days Entry",
-//           icon: const Icon(Icons.add_box_outlined, color: Colors.white, size: 18),
-//           onPressed: _addProcessDaysEntry,
-//         ),
-//       ],
-//       onFieldChanged: (key, value) {
-//         setState(() {
-//           _formValues[key] = value.toString();
-//           if (key == 'exRate' || key == 'rateDollar') {
-//             _recalcRates();
-//             _pushCalcToForm();
-//           }
-//           if (key == 'roughDate' || key == 'dueDay') {
-//             _recalcDueDate();
-//             _pushCalcToForm();
-//           }
-//         });
-//       },
-//       onSave: _onSave,
-//       onCancel: _resetForm,
-//       onDelete: _isEditMode ? _onDelete : null,
-//       onSearch: () => setState(() => _showTableOnMobile = true),
-//       detailBuilder: (ctx) {
-//         final theme = ctx.erpTheme;
-//         return Column(
-//           crossAxisAlignment: CrossAxisAlignment.stretch,
-//           children: [
-//             // ✅ Charni entries grid
-//             ErpEntryGrid(
-//               data: _charniEntryData,
-//               columns: _charniEntryKeys,
-//               title: 'CHARNI DETAILS',
-//               theme: theme,
-//             ),
-//             if (_charniEntryData.isNotEmpty && _processDaysEntryData.isNotEmpty)
-//               const SizedBox(height: 10),
-//             // ✅ Process days entries grid
-//             ErpEntryGrid(
-//               data: _processDaysEntryData,
-//               columns: _processDaysEntryKeys,
-//               title: 'PROCESS DAYS',
-//               theme: theme,
-//             ),
-//           ],
-//         );
-//       },
-//       // detailBuilder: (ctx) {
-//       //   // Use ctx.erpTheme so sub-tables respect active theme
-//       //   final theme = ctx.erpTheme;
-//       //   return Row(
-//       //     crossAxisAlignment: CrossAxisAlignment.start,
-//       //     children: [
-//       //       Expanded(child: _buildCharniTable(theme)),
-//       //       const SizedBox(width: 10),
-//       //       Expanded(child: _buildProcessDaysTable(theme)),
-//       //     ],
-//       //   );
-//       // },
-//     );
-//   }
+//   Widget _buildTable(CounterProvider p) => ErpDataTable(
+//     isReportRow: false, token: token ?? '',
+//     url: baseUrl, title: 'COUNTER LIST',
+//     columns: _tableColumns, data: p.tableData, showSearch: true,
+//     selectedRow: _selectedRow, onRowTap: _onRowTap,
+//     emptyMessage: p.isLoaded ? 'No counters found' : 'Loading...',
+//   );
 //
-//   // ── ErpDataTable (RIGHT) ───────────────────────────────────────────────────
-//   Widget _buildTable(RoughProvider provider) {
-//     return ErpDataTable(
-//       token: token ?? '',
-//       url: 'http://50.62.183.116:5000',
-//       title: 'ROUGH ENTRY LIST',
-//       columns: _tableColumns,
-//       data: provider.tableData,
-//       showSearch: true,
-//       showFooterTotals: false,
-//       selectedRow: _selectedRow,
-//       onRowTap: _onRowTap,
-//       emptyMessage: provider.isLoaded ? 'No entries found' : 'Loading...',
-//     );
-//   }
+//   // ── FORM WRAPPER ──────────────────────────────────────────────────────────
+//   Widget _buildFormWrapper() {
+//     return Consumer5<CounterTypeProvider, DivisionProvider, DeptGroupProvider,
+//         DeptProvider, TeamProvider>(
+//       builder: (context, ctP, divP, dgP, deptP, teamP, _) {
+//         final counterTypeItems = ctP.list.map((e) => ErpDropdownItem(
+//             label: e.counterTypeName ?? '', value: e.counterTypeCode?.toString() ?? '')).toList();
+//         final divisionItems = divP.divisions.map((e) => ErpDropdownItem(
+//             label: e.divisionName ?? '', value: e.divisionCode?.toString() ?? '')).toList();
+//         final deptGroupItems = dgP.list.map((e) => ErpDropdownItem(
+//             label: e.deptGroupName ?? '', value: e.deptGroupCode?.toString() ?? '')).toList();
 //
-//   // ── Charni sub-table ───────────────────────────────────────────────────────
-//   Widget _buildCharniTable(ErpTheme theme) {
-//     return _SubTableCard(
-//       title: 'CHARNI DETAILS',
-//       theme: theme,
-//       totalLabel: 'Total Wt: ${_totalWt.toStringAsFixed(3)}',
-//       inputRow: Row(
-//         children: [
-//           Expanded(
-//             flex: 2,
-//             child: _miniField('Charni', _charniCodeCtrl, theme, isNumber: true),
-//           ),
-//           const SizedBox(width: 4),
-//           Expanded(
-//             child: _miniField('Pc', _charniPcCtrl, theme, isNumber: true),
-//           ),
-//           const SizedBox(width: 4),
-//           Expanded(
-//             child: _miniField('Wt', _charniWtCtrl, theme, isDecimal: true),
-//           ),
-//           const SizedBox(width: 4),
-//           _addBtn(theme, _addCharniRow),
-//         ],
-//       ),
-//       headers: const ['Sr', 'Charni', 'Pc', 'Wt', 'Per%', ''],
-//       rows: _charniRows
-//           .map(
-//             (r) => [
-//           r.srno?.toString() ?? '',
-//           r.charniCode?.toString() ?? '',
-//           r.pc?.toString() ?? '',
-//           r.wt?.toStringAsFixed(3) ?? '',
-//           r.per?.toStringAsFixed(2) ?? '',
-//           '',
-//         ],
-//       )
-//           .toList(),
-//       onDeleteRow: _deleteCharniRow,
-//     );
-//   }
+//         final filteredDepts = _selectedDeptGroupCode != null
+//             ? deptP.list.where((e) => e.deptGroupCode?.toString() == _selectedDeptGroupCode).toList()
+//             : deptP.list;
+//         final departmentItems = filteredDepts.map((e) => ErpDropdownItem(
+//             label: e.deptName ?? '', value: e.deptCode?.toString() ?? '')).toList();
 //
-//   // ── Process Days sub-table ─────────────────────────────────────────────────
-//   Widget _buildProcessDaysTable(ErpTheme theme) {
-//     return _SubTableCard(
-//       title: 'PROCESS DAYS',
-//       theme: theme,
-//       inputRow: Row(
-//         children: [
-//           Expanded(
-//             flex: 3,
-//             child: _miniField(
-//               'StockType',
-//               _stockTypeCtrl,
-//               theme,
-//               isNumber: true,
-//             ),
-//           ),
-//           const SizedBox(width: 4),
-//           Expanded(
-//             flex: 2,
-//             child: _miniField('Days', _daysCtrl, theme, isDecimal: true),
-//           ),
-//           const SizedBox(width: 4),
-//           _addBtn(theme, _addProcessDaysRow),
-//         ],
-//       ),
-//       headers: const ['Sr', 'StockType', 'Days', ''],
-//       rows: _processDaysRows
-//           .map(
-//             (r) => [
-//           r.srno?.toString() ?? '',
-//           r.stockTypeCode?.toString() ?? '',
-//           r.days?.toStringAsFixed(0) ?? '',
-//           '',
-//         ],
-//       )
-//           .toList(),
-//       onDeleteRow: _deleteProcessDaysRow,
-//     );
-//   }
+//         // MFG Rate on Dept — same deptGroupCode filter
+//         final mfgDeptItems = filteredDepts.map((e) => ErpDropdownItem(
+//             label: e.deptName ?? '', value: e.deptCode?.toString() ?? '')).toList();
 //
-//   // ── Mini field (sub-table input row) ──────────────────────────────────────
-//   Widget _miniField(
-//       String hint,
-//       TextEditingController ctrl,
-//       ErpTheme theme, {
-//         bool isNumber = false,
-//         bool isDecimal = false,
-//       }) {
-//     return SizedBox(
-//       height: 28,
-//       child: TextField(
-//         controller: ctrl,
-//         keyboardType: isNumber
-//             ? TextInputType.number
-//             : isDecimal
-//             ? const TextInputType.numberWithOptions(decimal: true)
-//             : TextInputType.text,
-//         style: const TextStyle(fontSize: 11),
-//         decoration: InputDecoration(
-//           hintText: hint,
-//           hintStyle: TextStyle(fontSize: 10, color: theme.textLight),
-//           isDense: true,
-//           filled: true,
-//           fillColor: Colors.white,
-//           contentPadding: const EdgeInsets.symmetric(
-//             horizontal: 6,
-//             vertical: 5,
-//           ),
-//           border: OutlineInputBorder(
-//             borderRadius: BorderRadius.circular(5),
-//             borderSide: BorderSide(color: theme.border),
-//           ),
-//           enabledBorder: OutlineInputBorder(
-//             borderRadius: BorderRadius.circular(5),
-//             borderSide: BorderSide(color: theme.border),
-//           ),
-//           focusedBorder: OutlineInputBorder(
-//             borderRadius: BorderRadius.circular(5),
-//             borderSide: BorderSide(color: theme.primary),
-//           ),
-//         ),
-//         onSubmitted: (_) {
-//           if (hint == 'Wt') _addCharniRow();
-//           if (hint == 'Days') _addProcessDaysRow();
+//         final teamItems = teamP.list.map((e) => ErpDropdownItem(
+//             label: e.teamName ?? '', value: e.teamCode?.toString() ?? '')).toList();
+//
+//         return Consumer2<CounterDeptDetProvider, CounterShapeDetProvider>(
+//             builder: (context, deptDetP, shapeDetP, _) =>
+//                 Consumer5<UserVisibilityProvider, MainMenuMstProvider, MenuMstProvider, CounterOperatorDetProvider, CounterManagerDetProvider>(
+//                   builder: (context, visP, mainMenuP, menuP, opP, mgP, _) {
+//                     final tabsEnabled = _savedCrId != null;
+//                     return ErpForm(
+//                       logo:          AppImages.logo,
+//                       key:           _formKey,
+//                       title:         'COUNTER MASTER',
+//                       subtitle:      'Counter Configuration',
+//                       // ── 3 tabs ──
+//                       tabs: const ['BASIC', 'PROCESS', 'SELECT RIGHTS', 'ALLOW OPERATOR', 'ALLOW MANAGER', 'ALLOW DEPARTMENT', 'SHAPE LOCK'],
+//                       initialTabIndex:        _currentTabIndex,
+//                       tabBarBackgroundColor:  const Color(0xFFF1F5F9),
+//                       tabBarSelectedColor:    _theme.primaryGradient.first,
+//                       tabBarSelectedTxtColor: Colors.white,
+//                       onTabChanged: (i) {
+//                         if (i > 0 && !tabsEnabled) {
+//                           // Tab 0 save nahi hua — ErpForm ko wapas Tab 0 pe force karo
+//                           // key change se ErpForm reinit hoga initialTabIndex: 0 ke saath
+//                           setState(() {
+//                             _currentTabIndex = 0;
+//                             _formKey = UniqueKey();
+//                           });
+//                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+//                             content: const Text('Please save BASIC tab first.'),
+//                             backgroundColor: Colors.orange.shade700,
+//                             duration: const Duration(seconds: 2),
+//                             behavior: SnackBarBehavior.floating,
+//                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+//                             margin: const EdgeInsets.all(12),
+//                           ));
+//                           return;
+//                         }
+//                         setState(() => _currentTabIndex = i);
+//                       },
+//                       rows: _buildFormRows(
+//                         counterTypeItems: counterTypeItems,
+//                         divisionItems:    divisionItems,
+//                         deptGroupItems:   deptGroupItems,
+//                         departmentItems:  departmentItems,
+//                         teamItems:        teamItems,
+//                         mfgDeptItems:     mfgDeptItems,
+//                       ),
+//                       initialValues: _formValues,
+//                       isEditMode:    _isEditMode,
+//                       onSearch:      () => setState(() => _showSearch = !_showSearch),
+//                       onFieldChanged: (key, value) {
+//                         _formValues[key] = value;
+//                         if (key == 'deptGroupCode') {
+//                           setState(() {
+//                             _selectedDeptGroupCode = value.isEmpty ? null : value;
+//                             _formValues['deptCode']    = '';
+//                             _formValues['mfgDeptCode'] = '';
+//                             _erpFormKey.currentState?.updateFieldValue('deptCode',    null);
+//                             _erpFormKey.currentState?.updateFieldValue('mfgDeptCode', null);
+//                           });
+//                         }
+//                         if (key == 'deptCode')  setState(() => _selectedDeptCode  = value.isEmpty ? null : value);
+//                         if (key == 'manType')   setState(() => _selectedManType   = value);
+//                         if (key == 'empType')   setState(() => _selectedEmpType   = value);
+//                       },
+//                       onSave:   _onSave,
+//                       onCancel: _resetForm,
+//                       onDelete: _isEditMode ? _onDelete : null,
+//                       // ── detailBuilder — tab-aware content ──
+//                       detailBuilder: (ctx) => _buildTabDetail(visP, mainMenuP, menuP, opP, mgP, deptDetP, shapeDetP, tabsEnabled),
+//                     );
+//                   },
+//                 ));
 //         },
-//       ),
 //     );
 //   }
 //
-//   Widget _addBtn(ErpTheme theme, VoidCallback onTap) {
-//     return GestureDetector(
-//       onTap: onTap,
-//       child: Container(
-//         width: 28,
-//         height: 28,
-//         decoration: BoxDecoration(
-//           color: theme.primary,
-//           borderRadius: BorderRadius.circular(6),
+//   // ── FORM ROWS — tabIndex divides fields into tabs ─────────────────────────
+//   // tabIndex 0 = BASIC tab, other tabs show no ErpForm fields (only detailBuilder)
+//   List<List<ErpFieldConfig>> _buildFormRows({
+//     required List<ErpDropdownItem> counterTypeItems,
+//     required List<ErpDropdownItem> divisionItems,
+//     required List<ErpDropdownItem> deptGroupItems,
+//     required List<ErpDropdownItem> departmentItems,
+//     required List<ErpDropdownItem> teamItems,
+//     required List<ErpDropdownItem> mfgDeptItems,
+//   }) =>
+//       [
+//         // ── Tab 0: BASIC INFORMATION ──────────────────────────────────────
+//         [
+//           ErpFieldConfig(key: 'counterTypeCode', label: 'TYPE',       type: ErpFieldType.dropdown, dropdownItems: counterTypeItems, sectionTitle: 'BASIC INFORMATION', sectionIndex: 0, tabIndex: 0),
+//           ErpFieldConfig(key: 'divisionCode',    label: 'DIVISION',   type: ErpFieldType.dropdown, dropdownItems: divisionItems,    sectionIndex: 0, tabIndex: 0),
+//           ErpFieldConfig(key: 'deptGroupCode',   label: 'GROUP',      type: ErpFieldType.dropdown, dropdownItems: deptGroupItems,   sectionIndex: 0, tabIndex: 0),
+//           ErpFieldConfig(key: 'deptCode',        label: 'DEPARTMENT', type: ErpFieldType.dropdown, dropdownItems: departmentItems,  sectionIndex: 0, tabIndex: 0),
+//         ],
+//         [
+//           ErpFieldConfig(key: 'teamCode', label: 'TEAM',   type: ErpFieldType.dropdown, dropdownItems: teamItems, sectionIndex: 0, tabIndex: 0),
+//           ErpFieldConfig(key: 'userGrp',  label: 'RIGHTS', type: ErpFieldType.dropdown,
+//               dropdownItems: const [ErpDropdownItem(label: 'Admin', value: 'Admin'), ErpDropdownItem(label: 'User', value: 'User')],
+//               sectionIndex: 0, tabIndex: 0),
+//           ErpFieldConfig(key: 'logInName', label: 'LOGIN NAME', required: true, sectionIndex: 0, tabIndex: 0),
+//           ErpFieldConfig(key: 'crPass',    label: 'PASSWORD',                   sectionIndex: 0, tabIndex: 0),
+//         ],
+//         [
+//           ErpFieldConfig(key: 'crName',      label: 'NAME',             required: true,              sectionIndex: 0, tabIndex: 0),
+//           ErpFieldConfig(key: 'sortID',      label: 'SORT ID',          type: ErpFieldType.number,   sectionIndex: 0, tabIndex: 0),
+//           ErpFieldConfig(key: 'mfgDeptCode', label: 'MFG RATE ON DEPT', type: ErpFieldType.dropdown, dropdownItems: mfgDeptItems, sectionIndex: 0, tabIndex: 0),
+//           ErpFieldConfig(key: 'active',      label: 'ACTIVE',           type: ErpFieldType.checkbox, checkboxDbType: 'BIT', sectionIndex: 0, tabIndex: 0),
+//         ],
+//
+//         // ── Tab 0: PERMISSIONS ────────────────────────────────────────────
+//         [
+//           ErpFieldConfig(key: 'crEdit',       label: 'EDIT',           type: ErpFieldType.dropdown, dropdownItems: _ynItems, sectionTitle: 'PERMISSIONS', sectionIndex: 1, tabIndex: 0),
+//           ErpFieldConfig(key: 'crDel',        label: 'DELETE',         type: ErpFieldType.dropdown, dropdownItems: _ynItems, sectionIndex: 1, tabIndex: 0),
+//           ErpFieldConfig(key: 'autoRec',      label: 'CONFIRM REC',    type: ErpFieldType.dropdown, dropdownItems: _ynItems, sectionIndex: 1, tabIndex: 0),
+//           ErpFieldConfig(key: 'empIssRec',    label: 'EMP ISS REC',    type: ErpFieldType.dropdown, dropdownItems: _ynItems, sectionIndex: 1, tabIndex: 0),
+//           ErpFieldConfig(key: 'empRecWt',     label: 'EMP REC WT',     type: ErpFieldType.dropdown, dropdownItems: _ynItems, sectionIndex: 1, tabIndex: 0),
+//           ErpFieldConfig(key: 'laserPlanRec', label: 'LASER PLAN REC', type: ErpFieldType.dropdown, dropdownItems: _ynItems, sectionIndex: 1, tabIndex: 0),
+//         ],
+//         [
+//           ErpFieldConfig(key: 'polishOut',  label: 'POLISH OUT',  type: ErpFieldType.dropdown, dropdownItems: _ynItems, sectionIndex: 1, tabIndex: 0),
+//           ErpFieldConfig(key: 'stockLimit', label: 'STOCK LIMIT', type: ErpFieldType.number,                            sectionIndex: 1, tabIndex: 0),
+//           ErpFieldConfig(key: 'target',     label: 'TARGET',      type: ErpFieldType.number,                            sectionIndex: 1, tabIndex: 0),
+//           ErpFieldConfig(key: 'kachaIss',   label: 'KACHA ISS',   type: ErpFieldType.dropdown, dropdownItems: _ynItems, sectionIndex: 1, tabIndex: 0),
+//         ],
+//
+//         // ── Tab 0: LIMITS ─────────────────────────────────────────────────
+//         [
+//           ErpFieldConfig(key: 'manType',         label: 'MAN TYPE',           type: ErpFieldType.dropdown, dropdownItems: const [ErpDropdownItem(label: 'Days', value: 'Days'), ErpDropdownItem(label: 'Hours', value: 'Hours')], sectionTitle: 'LIMITS', sectionIndex: 2, tabIndex: 0),
+//           ErpFieldConfig(key: 'manPktDayLimit',  label: 'MAN PKT DAY LIMIT',  type: ErpFieldType.number, readOnly: _selectedManType == 'Hours', sectionIndex: 2, tabIndex: 0),
+//           ErpFieldConfig(key: 'manPktHourLimit', label: 'MAN PKT HOUR LIMIT', type: ErpFieldType.number, readOnly: _selectedManType == 'Days',  sectionIndex: 2, tabIndex: 0),
+//         ],
+//         [
+//           ErpFieldConfig(key: 'empType',         label: 'EMP TYPE',           type: ErpFieldType.dropdown, dropdownItems: const [ErpDropdownItem(label: 'Days', value: 'Days'), ErpDropdownItem(label: 'Hours', value: 'Hours')], sectionIndex: 2, tabIndex: 0),
+//           ErpFieldConfig(key: 'empPktDayLimit',  label: 'EMP PKT DAY LIMIT',  type: ErpFieldType.number, readOnly: _selectedEmpType == 'Hours', sectionIndex: 2, tabIndex: 0),
+//           ErpFieldConfig(key: 'empPktHourLimit', label: 'EMP PKT HOUR LIMIT', type: ErpFieldType.number, readOnly: _selectedEmpType == 'Days',  sectionIndex: 2, tabIndex: 0),
+//           ErpFieldConfig(key: 'empPktLimit',     label: 'EMP PKT LIMIT',      type: ErpFieldType.number,                                        sectionIndex: 2, tabIndex: 0),
+//         ],
+//
+//         // ── Tab 1 & 2: no ErpForm fields — content via detailBuilder ──────
+//         // (empty placeholder rows so ErpForm knows these tabs exist)
+//       ];
+//
+//   // ── DETAIL BUILDER — tab-aware ────────────────────────────────────────────
+//   Widget _buildTabDetail(
+//       UserVisibilityProvider visP,
+//       MainMenuMstProvider mainMenuP,
+//       MenuMstProvider menuP,
+//       CounterOperatorDetProvider opP,
+//       CounterManagerDetProvider mgP,
+//       CounterDeptDetProvider deptDetP,
+//       CounterShapeDetProvider shapeDetP,
+//       bool tabsEnabled,
+//       ) {
+//     final theme = context.erpTheme;
+//
+//     switch (_currentTabIndex) {
+//     // Tab 0: Display Setting (below form fields)
+//       case 0:
+//         return _buildDisplaySetting(visP, theme);
+//
+//     // Tab 1: Process
+//       case 1:
+//         if (!tabsEnabled) return _lockedMsg(theme);
+//         return _buildProcessTab(theme);
+//
+//     // Tab 2: Select Rights
+//       case 2:
+//         if (!tabsEnabled) return _lockedMsg(theme);
+//         return _buildMenuRightsTree(mainMenuP, menuP, theme);
+//
+//     // Tab 3: Allow Operator
+//       case 3:
+//         return _buildAllowOperatorTab(opP, theme);
+//
+//     // Tab 4: Allow Manager
+//       case 4:
+//         return _buildAllowManagerTab(mgP, theme);
+//
+//     // Tab 5: Allow Department
+//       case 5:
+//         if (!tabsEnabled) return _lockedMsg(theme);
+//         return _buildAllowDeptTab(theme);
+//
+//     // Tab 6: Shape Lock
+//       case 6:
+//         if (!tabsEnabled) return _lockedMsg(theme);
+//         return _buildShapeLockTab(theme);
+//
+//       default:
+//         return const SizedBox.shrink();
+//     }
+//   }
+//
+//   Widget _lockedMsg(ErpTheme theme) {
+//     return Padding(
+//       padding: const EdgeInsets.all(24),
+//       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+//         Icon(Icons.lock_outline_rounded, size: 32, color: theme.textLight.withOpacity(0.4)),
+//         const SizedBox(height: 8),
+//         Text('Please save the BASIC tab first.',
+//             style: TextStyle(fontSize: 12, color: theme.textLight), textAlign: TextAlign.center),
+//       ]),
+//     );
+//   }
+//
+//   // ── DISPLAY SETTING ───────────────────────────────────────────────────────
+//   Widget _buildDisplaySetting(UserVisibilityProvider visP, ErpTheme theme) {
+//     final deptItems = visP.list.where((e) => e.entryType?.toUpperCase() == 'DEPT').toList();
+//     final toItems   = deptItems.isNotEmpty ? deptItems : visP.list;
+//     if (visP.list.isEmpty) return const SizedBox.shrink();
+//
+//     return Padding(
+//       padding: const EdgeInsets.only(top: 4),
+//       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+//         _sectionHeader(theme, 'DISPLAY SETTING'),
+//         const SizedBox(height: 6),
+//         Row(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Expanded(child: _DisplayCheckboxPanel(
+//               theme: theme, title: 'From Display Setting',
+//               items: visP.list, selected: _fromSelected,
+//               onChanged: (code, val) => setState(() {
+//                 if (val) _fromSelected.add(code); else _fromSelected.remove(code);
+//               }),
+//             )),
+//             const SizedBox(width: 8),
+//             Expanded(child: _DisplayCheckboxPanel(
+//               theme: theme, title: 'To Display Setting',
+//               items: toItems, selected: _toSelected,
+//               onChanged: (code, val) => setState(() {
+//                 if (val) _toSelected.add(code); else _toSelected.remove(code);
+//               }),
+//             )),
+//           ],
 //         ),
-//         child: const Icon(Icons.add, color: Colors.white, size: 16),
-//       ),
+//       ]),
 //     );
 //   }
-// }
 //
-// // ═══════════════════════════════════════════════════════════════════════════════
-// //  _SubTableCard  —  Reusable inline entry/detail sub-table
-// // ═══════════════════════════════════════════════════════════════════════════════
-// class _SubTableCard extends StatelessWidget {
-//   final String title;
-//   final ErpTheme theme;
-//   final Widget inputRow;
-//   final List<String> headers;
-//   final List<List<String>> rows;
-//   final void Function(int index)? onDeleteRow;
-//   final String? totalLabel;
+//   // ── PROCESS TAB ───────────────────────────────────────────────────────────
+//   Widget _buildProcessTab(ErpTheme theme) {
+//     return Consumer<DeptProcessProvider>(builder: (context, procP, _) {
+//       final filtered = _selectedDeptCode != null
+//           ? procP.list.where((p) => p.deptCode?.toString() == _selectedDeptCode).toList()
+//           : procP.list;
 //
-//   const _SubTableCard({
-//     required this.title,
-//     required this.theme,
-//     required this.inputRow,
-//     required this.headers,
-//     required this.rows,
-//     this.onDeleteRow,
-//     this.totalLabel,
-//   });
+//       if (filtered.isEmpty) {
+//         return Padding(padding: const EdgeInsets.all(24),
+//           child: Text(
+//             _selectedDeptCode == null
+//                 ? 'Please select a Department in BASIC tab first.'
+//                 : 'No processes found for selected department.',
+//             style: TextStyle(fontSize: 12, color: theme.textLight), textAlign: TextAlign.center,
+//           ),
+//         );
+//       }
 //
-//   @override
-//   Widget build(BuildContext context) {
-//     final t = theme;
-//     return Container(
-//       decoration: BoxDecoration(
-//         color: t.surface,
-//         border: Border.all(color: t.primary.withOpacity(0.25)),
-//         borderRadius: BorderRadius.circular(10),
-//       ),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.stretch,
-//         children: [
-//           // Title
+//       return Padding(
+//         padding: const EdgeInsets.only(top: 4),
+//         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+//           _sectionHeader(theme, 'DEPT PROCESSES'),
+//           const SizedBox(height: 6),
 //           Container(
-//             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
 //             decoration: BoxDecoration(
-//               color: t.primary.withOpacity(0.08),
-//               borderRadius: const BorderRadius.vertical(
-//                 top: Radius.circular(10),
-//               ),
-//               border: Border(
-//                 bottom: BorderSide(color: t.primary.withOpacity(0.2)),
-//               ),
+//               color: theme.surface, borderRadius: BorderRadius.circular(10),
+//               border: Border.all(color: theme.border),
 //             ),
-//             child: Text(
-//               title,
-//               style: TextStyle(
-//                 fontSize: 10,
-//                 fontWeight: FontWeight.w700,
-//                 color: t.primary,
-//                 letterSpacing: 0.5,
-//               ),
-//             ),
-//           ),
-//
-//           // Input row
-//           Padding(
-//             padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-//             child: inputRow,
-//           ),
-//
-//           // Column headers
-//           Container(
-//             color: t.primary.withOpacity(0.05),
-//             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-//             child: Row(
-//               children: headers.asMap().entries.map((e) {
-//                 final isAction = e.key == headers.length - 1;
-//                 return isAction
-//                     ? const SizedBox(width: 20)
-//                     : Expanded(
-//                   child: Text(
-//                     e.value,
-//                     style: TextStyle(
-//                       fontSize: 9,
-//                       fontWeight: FontWeight.w700,
-//                       color: t.primary.withOpacity(0.7),
-//                       letterSpacing: 0.3,
+//             child: Column(
+//               children: filtered.asMap().entries.map((entry) {
+//                 final i = entry.key; final proc = entry.value;
+//                 final code = proc.deptProcessCode ?? 0;
+//                 final isChecked = _selectedProcessCodes.contains(code);
+//                 return InkWell(
+//                   onTap: () => setState(() {
+//                     if (isChecked) _selectedProcessCodes.remove(code);
+//                     else           _selectedProcessCodes.add(code);
+//                   }),
+//                   child: Container(
+//                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+//                     decoration: BoxDecoration(
+//                       color: isChecked ? theme.primary.withOpacity(0.07)
+//                           : i.isEven ? Colors.white : theme.bg.withOpacity(0.5),
+//                       border: Border(top: i == 0 ? BorderSide.none
+//                           : BorderSide(color: theme.border.withOpacity(0.5))),
 //                     ),
+//                     child: Row(children: [
+//                       SizedBox(width: 20, height: 26, child: Checkbox(
+//                         value: isChecked, activeColor: theme.primary,
+//                         onChanged: (v) => setState(() {
+//                           if (v == true) _selectedProcessCodes.add(code);
+//                           else _selectedProcessCodes.remove(code);
+//                         }),
+//                         visualDensity: const VisualDensity(vertical: -4, horizontal: -4),
+//                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+//                       )),
+//                       const SizedBox(width: 8),
+//                       Expanded(child: Text(proc.deptProcessName ?? '',
+//                           style: TextStyle(fontSize: 11,
+//                               color: isChecked ? theme.primary : theme.text,
+//                               fontWeight: isChecked ? FontWeight.w600 : FontWeight.normal))),
+//                       Text(code.toString(), style: TextStyle(fontSize: 9, color: theme.textLight)),
+//                     ]),
 //                   ),
 //                 );
 //               }).toList(),
 //             ),
 //           ),
+//         ]),
+//       );
+//     });
+//   }
 //
-//           // Data rows
-//           ...rows.asMap().entries.map((e) {
-//             final idx = e.key;
-//             final cols = e.value;
-//             return Container(
-//               decoration: BoxDecoration(
-//                 color: idx.isEven ? Colors.white : t.bg.withOpacity(0.5),
-//                 border: Border(
-//                   bottom: BorderSide(color: t.border.withOpacity(0.5)),
-//                 ),
-//               ),
-//               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-//               child: Row(
-//                 children: cols.asMap().entries.map((ce) {
-//                   final isAction = ce.key == cols.length - 1;
-//                   return isAction
-//                       ? SizedBox(
-//                     width: 20,
-//                     child: onDeleteRow != null
-//                         ? GestureDetector(
-//                       onTap: () => onDeleteRow!(idx),
-//                       child: Icon(
-//                         Icons.close,
-//                         size: 14,
-//                         color: Colors.red.shade400,
+//   // ── MENU RIGHTS TREE ──────────────────────────────────────────────────────
+//   Widget _buildMenuRightsTree(MainMenuMstProvider mainMenuP, MenuMstProvider menuP, ErpTheme theme) {
+//     final allMainMenus = mainMenuP.list;
+//     final allMenus     = menuP.list;
+//     if (allMainMenus.isEmpty) {
+//       return Padding(padding: const EdgeInsets.all(16),
+//           child: Text('Loading menu rights...', style: TextStyle(color: theme.textLight, fontSize: 12)));
+//     }
+//
+//     return Padding(
+//       padding: const EdgeInsets.only(top: 4),
+//       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+//         _sectionHeader(theme, 'MENU RIGHTS'),
+//         const SizedBox(height: 6),
+//         Container(
+//           decoration: BoxDecoration(
+//             color: theme.surface, borderRadius: BorderRadius.circular(10),
+//             border: Border.all(color: theme.border),
+//           ),
+//           child: Column(
+//             children: allMainMenus.map((mainMenu) {
+//               final mainMenuId  = mainMenu.mainMenuMstID ?? 0;
+//               final children    = allMenus.where((m) => m.mainMenuMstID == mainMenuId).toList();
+//               final childIds    = children.map((m) => m.menuMstID ?? 0).toSet();
+//               final allChecked  = childIds.isNotEmpty && childIds.every((id) => _selectedMenuIds.contains(id));
+//               final someChecked = childIds.any((id) => _selectedMenuIds.contains(id));
+//               final isCollapsed = _collapsedMainMenus.contains(mainMenuId);
+//
+//               return Column(
+//                 crossAxisAlignment: CrossAxisAlignment.stretch,
+//                 children: [
+//                   GestureDetector(
+//                     onTap: () => setState(() {
+//                       if (isCollapsed) _collapsedMainMenus.remove(mainMenuId);
+//                       else _collapsedMainMenus.add(mainMenuId);
+//                     }),
+//                     child: Container(
+//                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+//                       decoration: BoxDecoration(
+//                         color: theme.bg,
+//                         border: Border(top: BorderSide(color: theme.border)),
 //                       ),
-//                     )
-//                         : const SizedBox.shrink(),
-//                   )
-//                       : Expanded(
-//                     child: Text(
-//                       ce.value,
-//                       style: TextStyle(fontSize: 11, color: t.text),
-//                       overflow: TextOverflow.ellipsis,
+//                       child: Row(children: [
+//                         SizedBox(width: 20, height: 22, child: Checkbox(
+//                           value: allChecked ? true : someChecked ? null : false,
+//                           tristate: true, activeColor: theme.primary,
+//                           onChanged: (v) => setState(() {
+//                             if (v == true || someChecked) _selectedMenuIds.addAll(childIds);
+//                             else _selectedMenuIds.removeAll(childIds);
+//                           }),
+//                           visualDensity: const VisualDensity(vertical: -4, horizontal: -4),
+//                           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+//                         )),
+//                         const SizedBox(width: 4),
+//                         AnimatedRotation(
+//                           turns: isCollapsed ? -0.25 : 0,
+//                           duration: const Duration(milliseconds: 180),
+//                           child: Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: theme.primary),
+//                         ),
+//                         const SizedBox(width: 4),
+//                         Icon(Icons.folder_outlined, size: 13, color: theme.primary),
+//                         const SizedBox(width: 6),
+//                         Expanded(child: Text('Menu: ${mainMenu.mainMenuName ?? ''}',
+//                             style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: theme.primary))),
+//                         Text('${childIds.intersection(_selectedMenuIds).length}/${childIds.length}',
+//                             style: TextStyle(fontSize: 9, color: theme.textLight)),
+//                       ]),
 //                     ),
-//                   );
-//                 }).toList(),
-//               ),
-//             );
-//           }),
+//                   ),
+//                   if (!isCollapsed)
+//                     ...children.map((menu) {
+//                       final menuId    = menu.menuMstID ?? 0;
+//                       final isChecked = _selectedMenuIds.contains(menuId);
+//                       return InkWell(
+//                         onTap: () => setState(() {
+//                           if (isChecked) _selectedMenuIds.remove(menuId);
+//                           else _selectedMenuIds.add(menuId);
+//                         }),
+//                         child: Container(
+//                           padding: const EdgeInsets.only(left: 44, right: 10, top: 3, bottom: 3),
+//                           decoration: BoxDecoration(
+//                             color: isChecked ? theme.primary.withOpacity(0.06) : Colors.white,
+//                             border: Border(top: BorderSide(color: theme.border.withOpacity(0.5))),
+//                           ),
+//                           child: Row(children: [
+//                             SizedBox(width: 18, height: 22, child: Checkbox(
+//                               value: isChecked, activeColor: theme.primary,
+//                               onChanged: (v) => setState(() {
+//                                 if (v == true) _selectedMenuIds.add(menuId);
+//                                 else _selectedMenuIds.remove(menuId);
+//                               }),
+//                               visualDensity: const VisualDensity(vertical: -4, horizontal: -4),
+//                               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+//                             )),
+//                             const SizedBox(width: 8),
+//                             Icon(Icons.check_box_outline_blank_rounded, size: 11, color: theme.textLight),
+//                             const SizedBox(width: 6),
+//                             Expanded(child: Text(menu.menuName ?? '',
+//                                 style: TextStyle(fontSize: 11,
+//                                     color: isChecked ? theme.primary : theme.text,
+//                                     fontWeight: isChecked ? FontWeight.w600 : FontWeight.normal))),
+//                           ]),
+//                         ),
+//                       );
+//                     }),
+//                 ],
+//               );
+//             }).toList(),
+//           ),
+//         ),
+//       ]),
+//     );
+//   }
 //
-//           // Footer total
-//           if (totalLabel != null)
-//             Container(
-//               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+//   // ── ALLOW OPERATOR TAB (Tab 3) ───────────────────────────────────────────
+//   // Sare counters show honge — checkbox list
+//   Widget _buildAllowOperatorTab(CounterOperatorDetProvider opP, ErpTheme theme) {
+//     return Consumer<CounterProvider>(builder: (context, counterP, _) {
+//       final allCounters = counterP.list; // CounterProvider.list = List<CounterModel>
+//       if (allCounters.isEmpty) {
+//         return Padding(
+//           padding: const EdgeInsets.all(24),
+//           child: Text('No counters found.', style: TextStyle(fontSize: 12, color: theme.textLight), textAlign: TextAlign.center),
+//         );
+//       }
+//       return Padding(
+//         padding: const EdgeInsets.only(top: 4),
+//         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+//           _sectionHeader(theme, 'ALLOW OPERATOR'),
+//           const SizedBox(height: 6),
+//           _buildAllowCheckboxList(
+//             theme:      theme,
+//             items:      allCounters.map((c) => _AllowItem(crId: c.crId ?? 0, label: c.crName ?? '', subLabel: c.logInName ?? '')).toList(),
+//             selected:   _selectedOperatorIds,
+//             onChanged:  (id, val) => setState(() {
+//               if (val) _selectedOperatorIds.add(id); else _selectedOperatorIds.remove(id);
+//             }),
+//           ),
+//         ]),
+//       );
+//     });
+//   }
+//
+//   // ── ALLOW MANAGER TAB (Tab 4) ─────────────────────────────────────────────
+//   // Sirf counterTypeCode 2 & 3 wale show honge
+//   Widget _buildAllowManagerTab(CounterManagerDetProvider mgP, ErpTheme theme) {
+//     return Consumer<CounterProvider>(builder: (context, counterP, _) {
+//       final managerCounters = counterP.list
+//           .where((c) => c.counterTypeCode == 1 || c.counterTypeCode == 3)
+//           .toList();
+//       if (managerCounters.isEmpty) {
+//         return Padding(
+//           padding: const EdgeInsets.all(24),
+//           child: Text('No manager counters found (type 1 or 3).', style: TextStyle(fontSize: 12, color: theme.textLight), textAlign: TextAlign.center),
+//         );
+//       }
+//       return Padding(
+//         padding: const EdgeInsets.only(top: 4),
+//         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+//           _sectionHeader(theme, 'ALLOW MANAGER'),
+//           const SizedBox(height: 6),
+//           _buildAllowCheckboxList(
+//             theme:      theme,
+//             items:      managerCounters.map((c) => _AllowItem(crId: c.crId ?? 0, label: c.crName ?? '', subLabel: c.logInName ?? '')).toList(),
+//             selected:   _selectedManagerIds,
+//             onChanged:  (id, val) => setState(() {
+//               if (val) _selectedManagerIds.add(id); else _selectedManagerIds.remove(id);
+//             }),
+//           ),
+//         ]),
+//       );
+//     });
+//   }
+//
+//   // ── Reusable checkbox list for Allow Operator / Allow Manager ─────────────
+//   Widget _buildAllowCheckboxList({
+//     required ErpTheme theme,
+//     required List<_AllowItem> items,
+//     required Set<int> selected,
+//     required void Function(int id, bool val) onChanged,
+//   }) {
+//     return Container(
+//       decoration: BoxDecoration(
+//         color: theme.surface, borderRadius: BorderRadius.circular(10),
+//         border: Border.all(color: theme.border),
+//       ),
+//       child: Column(
+//         children: items.asMap().entries.map((entry) {
+//           final i         = entry.key;
+//           final item      = entry.value;
+//           final isChecked = selected.contains(item.crId);
+//           return InkWell(
+//             onTap: () => onChanged(item.crId, !isChecked),
+//             child: Container(
+//               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
 //               decoration: BoxDecoration(
-//                 color: t.primary.withOpacity(0.06),
-//                 borderRadius: const BorderRadius.vertical(
-//                   bottom: Radius.circular(10),
-//                 ),
-//                 border: Border(
-//                   top: BorderSide(color: t.primary.withOpacity(0.15)),
-//                 ),
+//                 color: isChecked ? theme.primary.withOpacity(0.07)
+//                     : i.isEven ? Colors.white : theme.bg.withOpacity(0.5),
+//                 border: Border(top: i == 0 ? BorderSide.none
+//                     : BorderSide(color: theme.border.withOpacity(0.5))),
 //               ),
-//               child: Text(
-//                 totalLabel!,
-//                 textAlign: TextAlign.right,
-//                 style: TextStyle(
-//                   fontSize: 10,
-//                   fontWeight: FontWeight.w700,
-//                   color: t.primary,
-//                 ),
-//               ),
-//             )
-//           else
-//             const SizedBox(height: 4),
-//         ],
+//               child: Row(children: [
+//                 SizedBox(width: 20, height: 26, child: Checkbox(
+//                   value: isChecked, activeColor: theme.primary,
+//                   onChanged: (v) => onChanged(item.crId, v ?? false),
+//                   visualDensity: const VisualDensity(vertical: -4, horizontal: -4),
+//                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+//                 )),
+//                 const SizedBox(width: 8),
+//                 Expanded(child: Text(item.label,
+//                     style: TextStyle(fontSize: 11,
+//                         color: isChecked ? theme.primary : theme.text,
+//                         fontWeight: isChecked ? FontWeight.w600 : FontWeight.normal))),
+//                 if (item.subLabel.isNotEmpty)
+//                   Text(item.subLabel,
+//                       style: TextStyle(fontSize: 9, color: theme.textLight)),
+//               ]),
+//             ),
+//           );
+//         }).toList(),
 //       ),
 //     );
+//   }
+//
+//   // ── SHAPE LOCK TAB (Tab 6) ──────────────────────────────────────────────────
+//   // Sare shapes sortID wise show honge
+//   Widget _buildShapeLockTab(ErpTheme theme) {
+//     return Consumer<ShapeProvider>(builder: (context, shapeP, _) {
+//       final allShapes = List.of(shapeP.list)
+//         ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+//
+//       if (allShapes.isEmpty) {
+//         return Padding(
+//           padding: const EdgeInsets.all(24),
+//           child: Text('No shapes found.',
+//               style: TextStyle(fontSize: 12, color: theme.textLight),
+//               textAlign: TextAlign.center),
+//         );
+//       }
+//
+//       return Padding(
+//         padding: const EdgeInsets.only(top: 4),
+//         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+//           _sectionHeader(theme, 'SHAPE LOCK'),
+//           const SizedBox(height: 6),
+//           Container(
+//             decoration: BoxDecoration(
+//               color: theme.surface, borderRadius: BorderRadius.circular(10),
+//               border: Border.all(color: theme.border),
+//             ),
+//             child: Column(
+//               children: allShapes.asMap().entries.map((entry) {
+//                 final i         = entry.key;
+//                 final shape     = entry.value;
+//                 final code      = shape.shapeCode ?? 0;
+//                 final isChecked = _selectedShapeIds.contains(code);
+//                 return InkWell(
+//                   onTap: () => setState(() {
+//                     if (isChecked) _selectedShapeIds.remove(code);
+//                     else           _selectedShapeIds.add(code);
+//                   }),
+//                   child: Container(
+//                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+//                     decoration: BoxDecoration(
+//                       color: isChecked ? theme.primary.withOpacity(0.07)
+//                           : i.isEven ? Colors.white : theme.bg.withOpacity(0.5),
+//                       border: Border(top: i == 0 ? BorderSide.none
+//                           : BorderSide(color: theme.border.withOpacity(0.5))),
+//                     ),
+//                     child: Row(children: [
+//                       SizedBox(width: 20, height: 26, child: Checkbox(
+//                         value: isChecked, activeColor: theme.primary,
+//                         onChanged: (v) => setState(() {
+//                           if (v == true) _selectedShapeIds.add(code);
+//                           else _selectedShapeIds.remove(code);
+//                         }),
+//                         visualDensity: const VisualDensity(vertical: -4, horizontal: -4),
+//                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+//                       )),
+//                       const SizedBox(width: 8),
+//                       Expanded(child: Text(shape.shapeName ?? '',
+//                           style: TextStyle(fontSize: 11,
+//                               color: isChecked ? theme.primary : theme.text,
+//                               fontWeight: isChecked ? FontWeight.w600 : FontWeight.normal))),
+//                       if (shape.sortID != null)
+//                         Text(shape.sortID.toString(),
+//                             style: TextStyle(fontSize: 9, color: theme.textLight)),
+//                     ]),
+//                   ),
+//                 );
+//               }).toList(),
+//             ),
+//           ),
+//         ]),
+//       );
+//     });
+//   }
+//
+//   // ── ALLOW DEPARTMENT TAB (Tab 5) ─────────────────────────────────────────
+//   // Sare departments sortID wise show honge
+//   Widget _buildAllowDeptTab(ErpTheme theme) {
+//     return Consumer<DeptProvider>(builder: (context, deptP, _) {
+//       // SortID wise sort karo
+//       final allDepts = List.of(deptP.list)
+//         ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+//
+//       if (allDepts.isEmpty) {
+//         return Padding(
+//           padding: const EdgeInsets.all(24),
+//           child: Text('No departments found.', style: TextStyle(fontSize: 12, color: theme.textLight), textAlign: TextAlign.center),
+//         );
+//       }
+//       return Padding(
+//         padding: const EdgeInsets.only(top: 4),
+//         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+//           _sectionHeader(theme, 'ALLOW DEPARTMENT'),
+//           const SizedBox(height: 6),
+//           _buildAllowDeptCheckboxList(theme, allDepts),
+//         ]),
+//       );
+//     });
+//   }
+//
+//   Widget _buildAllowDeptCheckboxList(ErpTheme theme, List allDepts) {
+//     return Container(
+//       decoration: BoxDecoration(
+//         color: theme.surface, borderRadius: BorderRadius.circular(10),
+//         border: Border.all(color: theme.border),
+//       ),
+//       child: Column(
+//         children: allDepts.asMap().entries.map((entry) {
+//           final i       = entry.key;
+//           final dept    = entry.value;
+//           final code    = dept.deptCode ?? 0;
+//           final isChecked = _selectedDeptIds.contains(code);
+//           return InkWell(
+//             onTap: () => setState(() {
+//               if (isChecked) _selectedDeptIds.remove(code);
+//               else           _selectedDeptIds.add(code);
+//             }),
+//             child: Container(
+//               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+//               decoration: BoxDecoration(
+//                 color: isChecked ? theme.primary.withOpacity(0.07)
+//                     : i.isEven ? Colors.white : theme.bg.withOpacity(0.5),
+//                 border: Border(top: i == 0 ? BorderSide.none
+//                     : BorderSide(color: theme.border.withOpacity(0.5))),
+//               ),
+//               child: Row(children: [
+//                 SizedBox(width: 20, height: 26, child: Checkbox(
+//                   value: isChecked, activeColor: theme.primary,
+//                   onChanged: (v) => setState(() {
+//                     if (v == true) _selectedDeptIds.add(code);
+//                     else _selectedDeptIds.remove(code);
+//                   }),
+//                   visualDensity: const VisualDensity(vertical: -4, horizontal: -4),
+//                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+//                 )),
+//                 const SizedBox(width: 8),
+//                 Expanded(child: Text(dept.deptName ?? '',
+//                     style: TextStyle(fontSize: 11,
+//                         color: isChecked ? theme.primary : theme.text,
+//                         fontWeight: isChecked ? FontWeight.w600 : FontWeight.normal))),
+//                 if ((dept.sortID ?? 0) > 0)
+//                   Text('${dept.sortID}',
+//                       style: TextStyle(fontSize: 9, color: theme.textLight)),
+//               ]),
+//             ),
+//           );
+//         }).toList(),
+//       ),
+//     );
+//   }
+//
+//   Widget _sectionHeader(ErpTheme theme, String title) {
+//     return Container(
+//       alignment: Alignment.center,
+//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+//       decoration: BoxDecoration(
+//         gradient: LinearGradient(colors: theme.primaryGradient.map((c) => c.withOpacity(0.13)).toList()),
+//         borderRadius: BorderRadius.circular(8),
+//         border: Border.all(color: theme.primary.withOpacity(0.3)),
+//       ),
+//       child: Text(title, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: theme.primary, letterSpacing: 0.8)),
+//     );
+//   }
+// }
+//
+// // ─── Allow Item helper ────────────────────────────────────────────────────────
+// class _AllowItem {
+//   final int    crId;
+//   final String label;
+//   final String subLabel;
+//   const _AllowItem({required this.crId, required this.label, required this.subLabel});
+// }
+//
+// // ─── Display Checkbox Panel ───────────────────────────────────────────────────
+// class _DisplayCheckboxPanel extends StatelessWidget {
+//   final ErpTheme theme;
+//   final String title;
+//   final List<UserVisibilityModel> items;
+//   final Set<int> selected;
+//   final void Function(int code, bool val) onChanged;
+//
+//   const _DisplayCheckboxPanel({
+//     required this.theme, required this.title,
+//     required this.items, required this.selected, required this.onChanged,
+//   });
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final t = theme;
+//     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+//       Container(
+//         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+//         decoration: BoxDecoration(
+//           gradient: LinearGradient(colors: t.primaryGradient.map((c) => c.withOpacity(0.15)).toList()),
+//           borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+//           border: Border.all(color: t.primary.withOpacity(0.3)),
+//         ),
+//         child: Row(children: [
+//           Icon(title.toLowerCase().contains('from') ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded,
+//               size: 13, color: t.primary),
+//           const SizedBox(width: 6),
+//           Expanded(child: Text(title, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: t.primary, letterSpacing: 0.4))),
+//           Container(
+//             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+//             decoration: BoxDecoration(color: t.primary, borderRadius: BorderRadius.circular(8)),
+//             child: Text('${selected.length}', style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w700)),
+//           ),
+//         ]),
+//       ),
+//       Container(
+//         constraints: const BoxConstraints(maxHeight: 200),
+//         decoration: BoxDecoration(
+//           color: t.surface, border: Border.all(color: t.border),
+//           borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+//         ),
+//         child: ListView.builder(
+//           shrinkWrap: true, itemCount: items.length,
+//           itemBuilder: (ctx, i) {
+//             final item = items[i]; final code = item.userVisibilityCode ?? 0;
+//             final isChecked = selected.contains(code); final isEven = i % 2 == 0;
+//             return InkWell(
+//               onTap: () => onChanged(code, !isChecked),
+//               child: Container(
+//                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+//                 color: isChecked ? t.primary.withOpacity(0.08) : isEven ? Colors.white : t.bg.withOpacity(0.5),
+//                 child: Row(children: [
+//                   SizedBox(width: 20, height: 24, child: Checkbox(
+//                     value: isChecked, activeColor: t.primary,
+//                     onChanged: (v) => onChanged(code, v ?? false),
+//                     visualDensity: const VisualDensity(vertical: -4, horizontal: -4),
+//                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+//                   )),
+//                   const SizedBox(width: 6),
+//                   Expanded(child: Text(item.userVisibilityName ?? '',
+//                       style: TextStyle(fontSize: 10, color: isChecked ? t.primary : t.text,
+//                           fontWeight: isChecked ? FontWeight.w600 : FontWeight.normal))),
+//                   if (item.entryType != null)
+//                     Container(
+//                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+//                       decoration: BoxDecoration(color: t.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+//                       child: Text(item.entryType!, style: TextStyle(fontSize: 7, color: t.primary, fontWeight: FontWeight.w700)),
+//                     ),
+//                 ]),
+//               ),
+//             );
+//           },
+//         ),
+//       ),
+//     ]);
 //   }
 // }

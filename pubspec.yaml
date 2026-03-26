@@ -35,13 +35,15 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   rs_dashboard:
-    path: ../rs_dashboard
+#  0.0.8
+
   erp_formatter: 1.0.1
 #    path: ../erp_formatter
 #    path: ../rs_dashboard
   erp_data_table:
-#  1.0.0
+#  1.1.3
     path: ../erp_data_table
+  collection:
   pdf:
   printing:
   excel:

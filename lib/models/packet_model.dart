@@ -13,11 +13,14 @@ class PacketMstModel {
   final String? packetRec;
   final String? entryType;
   final String? slType;
-
+  final double? totalWtDb;  // ✅ DB se aayega
+  final int?    totalPcDb;  // ✅ DB se aayega
   final List<PacketDetModel> details;
 
   PacketMstModel({
     this.packetMstID,
+    this.totalWtDb,
+    this.totalPcDb,
     this.packetDate,
     this.cutNo,
     this.clvCut,
@@ -33,8 +36,8 @@ class PacketMstModel {
   });
 
   // ── Total helpers ──────────────────────────────────────────────────────────
-  double get totalWt => details.fold(0.0, (s, d) => s + (d.wt ?? 0));
-  int    get totalPc => details.fold(0,   (s, d) => s + (d.pc ?? 0));
+  double get totalWt => totalWtDb ?? details.fold(0.0, (s, d) => s + (d.wt ?? 0));
+  int    get totalPc => totalPcDb ?? details.fold(0,   (s, d) => s + (d.pc ?? 0));
 
   factory PacketMstModel.fromJson(Map<String, dynamic> json) => PacketMstModel(
     packetMstID: json['PacketMstID'],
@@ -49,6 +52,12 @@ class PacketMstModel {
     packetRec:   json['PacketRec'],
     entryType:   json['EntryType'],
     slType:      json['SLType'],
+    totalWtDb: json['TotalWt'] != null
+        ? double.tryParse(json['TotalWt'].toString())
+        : null,
+    totalPcDb: json['TotalPc'] != null
+        ? (json['TotalPc'] as num).toInt()
+        : null,
     details: (json['details'] as List? ?? [])
         .map((e) => PacketDetModel.fromJson(e as Map<String, dynamic>))
         .toList(),
@@ -299,79 +308,121 @@ class PacketDetModel {
     length:              _d(json['Length']),
   );
 
+  // Map<String, dynamic> toJson() => {
+  //   'PacketMstID':        packetMstID,
+  //   'BCode':              bCode,
+  //   'MainBCode':          mainBCode,
+  //   'CutNo':              cutNo,
+  //   'ClvCut':             clvCut,
+  //   'LotNo':              lotNo,
+  //   'LotCode':            lotCode,
+  //   // PktNo excluded — computed column
+  //   'Srno':               srno,
+  //   'Pc':                 pc,
+  //   'Wt':                 wt,
+  //   'ColorCode':          colorCode,
+  //   'TensionsCode':       tensionsCode,
+  //   'IssRec':             issRec,
+  //   'PacketRec':          packetRec,
+  //   'LastProcess':        lastProcess,
+  //   'LastLogID':          lastLogID,
+  //   'PKTType':            pktType,
+  //   'FromCrID':           fromCrID,
+  //   'LastCrID':           lastCrID,
+  //   'SPKDeptIssMstID':    spkDeptIssMstID,
+  //   'EntryType':          entryType,
+  //   'ID':                 id,
+  //   'Jno':                jno,
+  //   'PurityCode':         purityCode,
+  //   'ShapeCode':          shapeCode,
+  //   'DmWt':               dmWt,
+  //   'DmPer':              dmPer,
+  //   'SPKPktMixMstID':     spkPktMixMstID,
+  //   'CharniCode':         charniCode,
+  //   'Size':               size,
+  //   'LastDmWt':           lastDmWt,
+  //   'LastDmPer':          lastDmPer,
+  //   'GenType':            genType,
+  //   'GhatWt':             ghatWt,
+  //   'GhatPer':            ghatPer,
+  //   'PacketDate':         packetDate,
+  //   'Sdate':              sdate,
+  //   'LogID':              logID,
+  //   'PcID':               pcID,
+  //   'CompareGroup':       compareGroup,
+  //   'CompareGrNo':        compareGrNo,
+  //   'FromToLot':          fromToLot,
+  //   'PktComparisionCode': pktComparisionCode,
+  //   'AssCrId':            assCrId,
+  //   'PktTypeCode':        pktTypeCode,
+  //   'PartName':           partName,
+  //   'CutCode':            cutCode,
+  //   'LColorCode':         lColorCode,
+  //   'Diam':               diam,
+  //   'Acuraecy':           acuraecy,
+  //   'Amt':                amt,
+  //   'PDmPer':             pDmPer,
+  //   'PDmWt':              pDmWt,
+  //   'DmType':             dmType,
+  //   'GhatDmWt':           ghatDmWt,
+  //   'GhatDmPer':          ghatDmPer,
+  //   'AmountRs':           amountRs,
+  //   'RemarksCode':        remarksCode,
+  //   'SPKPlanningDetID':   spkPlanningDetID,
+  //   'FType':              fType,
+  //   'PktValid':           pktValid,
+  //   'InValidReason':      inValidReason,
+  //   'OldPartName':        oldPartName,
+  //   'Old_PartName':       oldPartName2,
+  //   'Old_SPKPlanningDetID': oldSpkPlanningDetID,
+  //   'FluoCode':           fluoCode,
+  //   'QRCode':             qrCode,
+  //   'OrderMstID':         orderMstID,
+  //   'Length':             length,
+  // };
   Map<String, dynamic> toJson() => {
-    'PacketMstID':        packetMstID,
-    'BCode':              bCode,
-    'MainBCode':          mainBCode,
-    'CutNo':              cutNo,
-    'ClvCut':             clvCut,
-    'LotNo':              lotNo,
-    'LotCode':            lotCode,
-    // PktNo excluded — computed column
-    'Srno':               srno,
-    'Pc':                 pc,
-    'Wt':                 wt,
-    'ColorCode':          colorCode,
-    'TensionsCode':       tensionsCode,
-    'IssRec':             issRec,
-    'PacketRec':          packetRec,
-    'LastProcess':        lastProcess,
-    'LastLogID':          lastLogID,
-    'PKTType':            pktType,
-    'FromCrID':           fromCrID,
-    'LastCrID':           lastCrID,
-    'SPKDeptIssMstID':    spkDeptIssMstID,
-    'EntryType':          entryType,
-    'ID':                 id,
-    'Jno':                jno,
-    'PurityCode':         purityCode,
-    'ShapeCode':          shapeCode,
-    'DmWt':               dmWt,
-    'DmPer':              dmPer,
-    'SPKPktMixMstID':     spkPktMixMstID,
-    'CharniCode':         charniCode,
-    'Size':               size,
-    'LastDmWt':           lastDmWt,
-    'LastDmPer':          lastDmPer,
-    'GenType':            genType,
-    'GhatWt':             ghatWt,
-    'GhatPer':            ghatPer,
-    'PacketDate':         packetDate,
-    'Sdate':              sdate,
-    'LogID':              logID,
-    'PcID':               pcID,
-    'CompareGroup':       compareGroup,
-    'CompareGrNo':        compareGrNo,
-    'FromToLot':          fromToLot,
-    'PktComparisionCode': pktComparisionCode,
-    'AssCrId':            assCrId,
-    'PktTypeCode':        pktTypeCode,
-    'PartName':           partName,
-    'CutCode':            cutCode,
-    'LColorCode':         lColorCode,
-    'Diam':               diam,
-    'Acuraecy':           acuraecy,
-    'Amt':                amt,
-    'PDmPer':             pDmPer,
-    'PDmWt':              pDmWt,
-    'DmType':             dmType,
-    'GhatDmWt':           ghatDmWt,
-    'GhatDmPer':          ghatDmPer,
-    'AmountRs':           amountRs,
-    'RemarksCode':        remarksCode,
-    'SPKPlanningDetID':   spkPlanningDetID,
-    'FType':              fType,
-    'PktValid':           pktValid,
-    'InValidReason':      inValidReason,
-    'OldPartName':        oldPartName,
-    'Old_PartName':       oldPartName2,
-    'Old_SPKPlanningDetID': oldSpkPlanningDetID,
-    'FluoCode':           fluoCode,
-    'QRCode':             qrCode,
-    'OrderMstID':         orderMstID,
-    'Length':             length,
-  };
+    // ── Master link ──────────────────────────────────────────────────────────
+    if (packetMstID != null) 'PacketMstID': packetMstID,
 
+    // ── Lot identity (form se aata hai) ──────────────────────────────────────
+    if (cutNo    != null) 'CutNo':   cutNo,
+    if (lotNo    != null) 'LotNo':   lotNo,
+    if (lotCode  != null) 'LotCode': lotCode,   // default 'A' already set in model
+    if (srno     != null) 'Srno':    srno,
+    'CharniCode':         charniCode,
+    // ── Piece & Weight (form se) ──────────────────────────────────────────────
+    if (pc != null) 'Pc': pc,
+    if (wt != null) 'Wt': wt,
+
+    // ── Type / Grading (form dropdowns) ──────────────────────────────────────
+    if (pktType      != null && pktType!.isNotEmpty)  'PKTType':      pktType,
+    if (colorCode    != null) 'ColorCode':    colorCode,
+    if (tensionsCode != null) 'TensionsCode': tensionsCode,
+    if (fluoCode     != null) 'FluoCode':     fluoCode,
+
+    // ── Optional form fields (agar entry screen se aayein) ───────────────────
+    'PurityCode':            (purityCode   == null || purityCode   == 0) ? 1 : purityCode,
+    'ShapeCode':             (shapeCode    == null || shapeCode    == 0) ? 1 : shapeCode,
+
+    // if (shapeCode  != null) 'ShapeCode':  shapeCode,
+    if (charniCode != null) 'CharniCode': charniCode,
+    if (pDmPer     != null) 'PDmPer':     pDmPer,
+    if (pDmWt      != null) 'PDmWt':      pDmWt,
+    if (remarksCode!= null) 'RemarksCode':remarksCode,
+    if (orderMstID != null && orderMstID! > 0) 'OrderMstID': orderMstID,
+
+    // ── Audit / process fields (screen mein set hote hain) ───────────────────
+    if (entryType   != null) 'EntryType':   entryType,
+    if (lastProcess != null) 'LastProcess': lastProcess,
+    if (packetDate  != null) 'PacketDate':  packetDate,
+    if (pktValid    != null) 'PktValid':    pktValid,
+    if (jno         != null) 'Jno':         jno,
+    if (logID       != null) 'LogID':       logID,
+    if (pcID        != null) 'PcID':        pcID,
+
+    // ── Edit-only: PacketDetID bhejo taaki UPDATE sahi row pe lage ───────────
+    if (packetDetID != null) 'PacketDetID': packetDetID,
+  };
   static double? _d(dynamic v) {
     if (v == null) return null;
     if (v is double) return v;
@@ -386,9 +437,6 @@ class PacketDetModel {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  toTableRow extension
-// ─────────────────────────────────────────────────────────────────────────────
 extension PacketMstModelExt on PacketMstModel {
   Map<String, dynamic> toTableRow() => {
     'packetMstID': packetMstID,
@@ -397,6 +445,8 @@ extension PacketMstModelExt on PacketMstModel {
     'clvCut':      clvCut     ?? '',
     'entryType':   entryType  ?? '',
     'slType':      slType     ?? '',
+    'totalWt':     totalWt.toStringAsFixed(3),
+    'totalPc':     totalPc.toString(),
     '_raw': this,
   };
 }

@@ -797,7 +797,7 @@
 // //   Widget _buildTable(RoughProvider provider) {
 // //     return ErpDataTable(
 // //       token: token ?? '',
-// //       url: 'http://50.62.183.116:5000',
+// //       url: baseUrl,
 // //       title: 'ROUGH ENTRY LIST',
 // //       columns: _tableColumns,
 // //       data: provider.tableData,
@@ -2217,7 +2217,7 @@
 //   Widget _buildTable(RoughProvider provider) {
 //     return ErpDataTable(
 //       token: token ?? '',
-//       url: 'http://50.62.183.116:5000',
+//       url: baseUrl,
 //       title: 'ROUGH ENTRY LIST',
 //       columns: _tableColumns,
 //       data: provider.tableData,
@@ -2549,6 +2549,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
+import '../bootstrap.dart';
 import '../models/charni_model.dart';
 import '../models/stock_type_model.dart';
 import '../utils/app_images.dart';
@@ -2596,15 +2597,27 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
   //  TABLE COLUMNS
   // ══════════════════════════════════════════════════════════════════════════
   List<ErpColumnConfig> get _tableColumns => [
-    ErpColumnConfig(key: 'roughMstID', label: 'ID',     width: 70,  required: true),
-    ErpColumnConfig(key: 'roughDate',  label: 'DATE',   width: 110, required: true, isDate: true),
+    ErpColumnConfig(key: 'roughMstID', label: 'ID',     width: 90,  required: true),
+    ErpColumnConfig(key: 'roughDate',  label: 'DATE',   width: 130, required: true, isDate: true),
     ErpColumnConfig(key: 'jno',        label: 'JNO',    width: 130),
-    ErpColumnConfig(key: 'site',       label: 'SITE',   width: 150),
+    ErpColumnConfig(key: 'kapanNo',    label: 'KNO',    width: 130),  // ✅ ADD
+    ErpColumnConfig(key: 'site',       label: 'SITE',   width: 140),
     ErpColumnConfig(key: 'partyCode',  label: 'PARTY',  width: 160),
-    // ErpColumnConfig(key: 'totWt',      label: 'TOT WT', width: 100, align: ColumnAlign.right),
-    ErpColumnConfig(key: 'amtDollar',  label: 'AMT \$', width: 140, align: ColumnAlign.right),
-    ErpColumnConfig(key: 'amtRs',      label: 'AMT RS', width: 160, align: ColumnAlign.right),
+    ErpColumnConfig(key: 'amtDollar',  label: 'AMT \$', width: 160, align: ColumnAlign.right),
+    ErpColumnConfig(key: 'amtRs',      label: 'AMT RS', width: 180, align: ColumnAlign.right),
+    ErpColumnConfig(key: 'totPc',      label: 'TOT PC', width: 160,  align: ColumnAlign.right),  // ✅ ADD
+    ErpColumnConfig(key: 'totWt',      label: 'TOT WT', width: 160, align: ColumnAlign.right),  // ✅ ADD
   ];
+  // List<ErpColumnConfig> get _tableColumns => [
+  //   ErpColumnConfig(key: 'roughMstID', label: 'ID',     width: 70,  required: true),
+  //   ErpColumnConfig(key: 'roughDate',  label: 'DATE',   width: 110, required: true, isDate: true),
+  //   ErpColumnConfig(key: 'jno',        label: 'JNO',    width: 130),
+  //   ErpColumnConfig(key: 'site',       label: 'SITE',   width: 150),
+  //   ErpColumnConfig(key: 'partyCode',  label: 'PARTY',  width: 160),
+  //   // ErpColumnConfig(key: 'totWt',      label: 'TOT WT', width: 100, align: ColumnAlign.right),
+  //   ErpColumnConfig(key: 'amtDollar',  label: 'AMT \$', width: 140, align: ColumnAlign.right),
+  //   ErpColumnConfig(key: 'amtRs',      label: 'AMT RS', width: 160, align: ColumnAlign.right),
+  // ];
   List<ErpColumnConfig> get _extraColumns => [
 
     ErpColumnConfig(key: 'kapanNo',          label: 'KNO'),
@@ -2754,7 +2767,10 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
               dropdownItems: st.list.where((e) => e.active == true)
                   .map((e) => ErpDropdownItem(label: e.stockTypeName ?? '', value: e.stockTypeCode?.toString() ?? '')).toList(),
               flex: 2, sectionTitle: 'PROCESS DAYS ENTRY', sectionIndex: 5,
-              isEntryField: true, isEntryRequired: true),
+              isEntryField: true, isEntryRequired: true,    getBlockedValues: () => _processDaysRows
+                .map((r) => r.stockTypeCode?.toString() ?? '')
+                .where((v) => v.isNotEmpty)
+                .toSet(),),
           ErpFieldConfig(key: 'entryDays', label: 'DAYS', type: ErpFieldType.number,
               flex: 1, sectionIndex: 5, isEntryField: true,isEntryRequired: true,            showAddButton: true
           ),
@@ -2769,7 +2785,7 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
     super.initState();
     _charniEntryKeys      = ['srno', 'charniName', 'charniPc', 'charniWt', 'per'];
     _processDaysEntryKeys = ['srno', 'stockTypeName', 'entryDays'];
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       context.read<RoughProvider>().loadRoughs();
       context.read<PartyProvider>().loadParties();
       context.read<ArticleProvider>().load();
@@ -2777,16 +2793,34 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
       context.read<CharniProvider>().load();
       context.read<RoughTypeProvider>().loadRoughTypes();
       context.read<JangadCharaniProvider>().load();
-      _setDefaultFormValues();
+      await _setDefaultFormValues();
     });
   }
-
-  void _setDefaultFormValues() {
+  Future<void> _setDefaultFormValues() async {
     final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
-    setState(() {
-      _formValues = {'roughDate': today, 'dueDate': today, 'roughMstID': '0'};
-    });
+
+    // ✅ DB se next JNO lo
+    final nextJno = await context.read<RoughProvider>().getNextJno();
+
+    _formValues = {
+      'roughDate': today, 'dueDate': today, 'roughMstID': '0',
+      'jno':            nextJno.toString(),
+    };
+
+    if (mounted) {
+      setState(() {});
+      // ✅ Form field bhi update karo
+      Future.delayed(const Duration(milliseconds: 50), () {
+        _erpFormKey.currentState?.updateFieldValue('jno', nextJno.toString());
+      });
+    }
   }
+  // void _setDefaultFormValues() {
+  //   final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
+  //   setState(() {
+  //     _formValues = {'roughDate': today, 'dueDate': today, 'roughMstID': '0'};
+  //   });
+  // }
 
   // ══════════════════════════════════════════════════════════════════════════
   //  CALCULATIONS
@@ -3115,7 +3149,8 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
     if (success) {
       final wasEdit = _isEditMode;
       _resetForm();
-      await ErpResultDialog.showSuccess(
+      await _setDefaultFormValues();
+            await ErpResultDialog.showSuccess(
         context: context, theme: _theme,
         title: wasEdit ? 'Updated' : 'Saved',
         message: wasEdit ? 'Rough entry updated.' : 'Rough entry saved.',
@@ -3137,6 +3172,7 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
     if (success && mounted) {
       final jno = _selectedRough?.jno;
       _resetForm();
+      await _setDefaultFormValues();
       await ErpResultDialog.showDeleted(
           context: context, theme: _theme, itemName: 'Rough Entry ${jno ?? ''}');
     }
@@ -3186,7 +3222,32 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
       ),
     );
   }
+  Future<void> _onKapanChanged(String kapanNo) async {
+    final provider = context.read<RoughProvider>();
 
+    // ✅ Edit mode mein current record exclude karo
+    final isDuplicate = provider.isKapanDuplicate(
+      kapanNo,
+      excludeMstID: _selectedRough?.roughMstID,
+    );
+
+    if (isDuplicate) {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'Duplicate Kapan No',
+        message: 'Kapan No "$kapanNo" already exists in Rough entry.\n'
+            'Please enter a different Kapan No.',
+      );
+      // ✅ Field clear karo
+      _formValues.remove('kapanNo');
+      _erpFormKey.currentState?.updateFieldValue('kapanNo', '');
+      Future.delayed(
+        const Duration(milliseconds: 50),
+            () => _erpFormKey.currentState?.focusField('kapanNo'),
+      );
+    }
+  }
   // ── ErpForm ────────────────────────────────────────────────────────────────
   Widget _buildErpForm(BuildContext context) {
     final p  = context.watch<PartyProvider>();
@@ -3199,7 +3260,41 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
     return ErpForm(
       logo: AppImages.logo,
       key: _erpFormKey,
+      sectionDetailBuilder: (ctx, sectionIndex) {
+        final theme = ctx.erpTheme;
 
+        if (sectionIndex == 4 && _charniEntryData.isNotEmpty) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: ErpEntryGrid(
+              data:         _charniEntryData,
+              columns:      _charniEntryKeys,
+              title:        'CHARNI  |  Total Wt: ${_totalWt.toStringAsFixed(2)}',
+              theme:        theme,
+              onDeleteRow:  _deleteCharniRow,
+              onEditRow:    _editCharniRow,
+              editingIndex: _editingCharniIndex,
+            ),
+          );
+        }
+
+        if (sectionIndex == 5 && _processDaysEntryData.isNotEmpty) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: ErpEntryGrid(
+              data:         _processDaysEntryData,
+              columns:      _processDaysEntryKeys,
+              title:        'PROCESS DAYS',
+              theme:        theme,
+              onDeleteRow:  _deleteProcessDaysRow,
+              onEditRow:    _editProcessDaysRow,
+              editingIndex: _editingProcessDaysIndex,
+            ),
+          );
+        }
+
+        return null; // other sections ke liye kuch nahi
+      },
       title: 'ROUGH ENTRY',
       // subtitle: 'Transaction / Rough Stock Entry',
       tabBarBackgroundColor:  const Color(0xfff2f0ef),
@@ -3241,6 +3336,9 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
             _recalcDueDate(); _pushCalcToForm();
           }
         });
+        if (key == 'kapanNo' && value.toString().trim().isNotEmpty) {
+          _onKapanChanged(value.toString().trim());
+        }
       },
       onExit: () {
         context.watch<TabProvider>().closeCurrentTab();
@@ -3250,42 +3348,42 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
       onDelete: _isEditMode ? _onDelete : null,
       onSearch: () => setState(() => _showTableOnMobile = true),
 
-      detailBuilder: (ctx) {
-        final theme = ctx.erpTheme;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ── CHARNI GRID ──────────────────────────────────────────────
-            if (_charniEntryData.isNotEmpty) ...[
-              ErpEntryGrid(
-                data:         _charniEntryData,
-                columns:      _charniEntryKeys,
-                title:        'CHARNI  |  Total Wt: ${_totalWt.toStringAsFixed(2)}',
-                theme:        theme,
-                onDeleteRow:  _deleteCharniRow,
-                onEditRow:    _editCharniRow,       // ← EDIT button
-                editingIndex: _editingCharniIndex,  // ← highlight row being edited
-              ),
-              // const SizedBox(height: 10),
-            ],
-            // ── PROCESS DAYS GRID ────────────────────────────────────────
-            if (_processDaysEntryData.isNotEmpty)
-              ErpEntryGrid(
-                data:         _processDaysEntryData,
-                columns:      _processDaysEntryKeys,
-                title:        'PROCESS DAYS',
-                theme:        theme,
-                onDeleteRow:  _deleteProcessDaysRow,
-                onEditRow:    _editProcessDaysRow,
-                editingIndex: _editingProcessDaysIndex,
-              ),
-          ],
-        );
-      },
+      // detailBuilder: (ctx) {
+      //   final theme = ctx.erpTheme;
+      //   return Column(
+      //     crossAxisAlignment: CrossAxisAlignment.stretch,
+      //     children: [
+      //       // ── CHARNI GRID ──────────────────────────────────────────────
+      //       if (_charniEntryData.isNotEmpty) ...[
+      //         ErpEntryGrid(
+      //           data:         _charniEntryData,
+      //           columns:      _charniEntryKeys,
+      //           title:        'CHARNI  |  Total Wt: ${_totalWt.toStringAsFixed(2)}',
+      //           theme:        theme,
+      //           onDeleteRow:  _deleteCharniRow,
+      //           onEditRow:    _editCharniRow,       // ← EDIT button
+      //           editingIndex: _editingCharniIndex,  // ← highlight row being edited
+      //         ),
+      //         // const SizedBox(height: 10),
+      //       ],
+      //       // ── PROCESS DAYS GRID ────────────────────────────────────────
+      //       if (_processDaysEntryData.isNotEmpty)
+      //         ErpEntryGrid(
+      //           data:         _processDaysEntryData,
+      //           columns:      _processDaysEntryKeys,
+      //           title:        'PROCESS DAYS',
+      //           theme:        theme,
+      //           onDeleteRow:  _deleteProcessDaysRow,
+      //           onEditRow:    _editProcessDaysRow,
+      //           editingIndex: _editingProcessDaysIndex,
+      //         ),
+      //     ],
+      //   );
+      // },
     );
   }
 
-  // ── ErpDataTable ───────────────────────────────────────────────────────────
+
   Widget _buildTable(RoughProvider provider) {
     final partyNames = Map.fromEntries(
       context.read<PartyProvider>().list
@@ -3308,9 +3406,11 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
 
       token: token ?? '',
       // availableExtraColumns: _extraColumns,
-      url: 'http://50.62.183.116:5000',
+      url: baseUrl,
       title: 'ROUGH ENTRY LIST',
       columns: _tableColumns,
+      dateFilter: true,
+
       // data: provider.tableData,
       data: provider.tableDataWithNames(        // ← CHANGED
         partyNames:        partyNames,

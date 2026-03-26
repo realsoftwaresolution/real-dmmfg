@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
 import '../utils/msg_dialogue.dart';
@@ -64,24 +65,6 @@ class _MstDivisionState extends State<MstDivision> {
         required: true,
         sectionIndex: 0,
       ),
-    ],
-
-    [
-      ErpFieldConfig(
-        key: 'companyCode',
-        label: 'COMPANY',
-        type: ErpFieldType.dropdown,
-        dropdownItems: companyProvider.companies
-            .where((element) {
-          return element.active==true;
-        },).map((e) {
-          return ErpDropdownItem(
-            label: e.companyName ?? '',
-            value: e.companyCode?.toString() ?? '',
-          );
-        }).toList(),
-        sectionIndex: 0,
-      ),
       ErpFieldConfig(
         key: 'sortID',
         label: 'SORT ID',
@@ -89,6 +72,30 @@ class _MstDivisionState extends State<MstDivision> {
         sectionIndex: 0,
       ),
     ],
+
+    // [
+    //   // ErpFieldConfig(
+    //   //   key: 'companyCode',
+    //   //   label: 'COMPANY',
+    //   //   type: ErpFieldType.dropdown,
+    //   //   dropdownItems: companyProvider.companies
+    //   //       .where((element) {
+    //   //     return element.active==true;
+    //   //   },).map((e) {
+    //   //     return ErpDropdownItem(
+    //   //       label: e.companyName ?? '',
+    //   //       value: e.companyCode?.toString() ?? '',
+    //   //     );
+    //   //   }).toList(),
+    //   //   sectionIndex: 0,
+    //   // ),
+    //   ErpFieldConfig(
+    //     key: 'sortID',
+    //     label: 'SORT ID',
+    //     type: ErpFieldType.number,
+    //     sectionIndex: 0,
+    //   ),
+    // ],
 
     /// ── SETTINGS ──
     [
@@ -98,14 +105,36 @@ class _MstDivisionState extends State<MstDivision> {
         type: ErpFieldType.checkbox,
         sectionTitle: 'SETTINGS',
         sectionIndex: 1,
+        initialBoolValue: true
       ),
     ],
   ];
+  void _setDefaultSortId() {
+    final provider = context.read<DivisionProvider>();
+
+    int nextSortId = 1;
+    if (provider.divisions.isNotEmpty) {
+      nextSortId = provider.divisions
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+  }
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // ← pehle companies load karo aur AWAIT karo
+
       await context.read<CompanyProvider>().loadCompanies();
 
       if (!mounted) return;
@@ -113,9 +142,12 @@ class _MstDivisionState extends State<MstDivision> {
       // ← ab companies available hain, division provider ko pass karo
       final companies = context.read<CompanyProvider>().companies;
       context.read<DivisionProvider>().setCompanies(companies);
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<DivisionProvider>().setSelectedCompany(selectedCode);
 
       // ← last mein divisions load karo
       await context.read<DivisionProvider>().loadDivisions();
+      _setDefaultSortId();
     });
   }
   // ── INIT ──────────────────────────────────────────────────────────────────
@@ -142,7 +174,8 @@ class _MstDivisionState extends State<MstDivision> {
       _formValues = {
         'divisionCode': raw.divisionCode?.toString() ?? '',
         'divisionName': raw.divisionName ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'sortID': raw.sortID?.toString() ?? '',
         'active': raw.active == true ? 'true' : 'false',
       };
@@ -219,7 +252,7 @@ class _MstDivisionState extends State<MstDivision> {
 
     final success = await context
         .read<DivisionProvider>()
-        .deleteDivision(raw!.divisionCode!);
+        .deleteDivision(raw.divisionCode!);
 
     if (success && mounted) {
       _resetForm();
@@ -249,6 +282,7 @@ class _MstDivisionState extends State<MstDivision> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _setDefaultSortId();
   }
   bool _showTableOnMobile = false;
 
@@ -266,7 +300,7 @@ class _MstDivisionState extends State<MstDivision> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'DIVISION LIST',
                   columns: _tableColumns,
                   // availableExtraColumns: _extraColumns,
@@ -279,6 +313,9 @@ class _MstDivisionState extends State<MstDivision> {
                   emptyMessage:
                   provider.isLoaded ? 'No divisions found' : 'Loading...',
                 ):ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -312,6 +349,9 @@ class _MstDivisionState extends State<MstDivision> {
               Expanded(
                 flex: 2,
                 child: ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -347,7 +387,7 @@ class _MstDivisionState extends State<MstDivision> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'DIVISION LIST',
                   columns: _tableColumns,
                   // availableExtraColumns: _extraColumns,
@@ -368,29 +408,5 @@ class _MstDivisionState extends State<MstDivision> {
     );
   }
 
-  // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

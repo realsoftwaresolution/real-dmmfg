@@ -5,6 +5,7 @@ import 'package:diam_mfg/screens/mst_firm_article.dart';
 import 'package:diam_mfg/screens/mst_firm_charni.dart';
 import 'package:diam_mfg/screens/mst_firm_company.dart';
 import 'package:diam_mfg/screens/mst_firm_divison.dart';
+import 'package:diam_mfg/screens/mst_firm_employee.dart';
 import 'package:diam_mfg/screens/mst_firm_factory.dart';
 import 'package:diam_mfg/screens/mst_firm_factory_man_group.dart';
 import 'package:diam_mfg/screens/mst_firm_fluo.dart';
@@ -24,6 +25,7 @@ import 'package:diam_mfg/screens/trn_cut_create.dart';
 import 'package:diam_mfg/screens/trn_packet_create.dart';
 import 'package:diam_mfg/screens/trn_rough_assort.dart';
 import 'package:diam_mfg/screens/trn_rough_entry.dart';
+import 'package:diam_mfg/screens/trn_spk_dept_iss.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
 import '../screens/dashboard_screen.dart';
@@ -66,10 +68,12 @@ class AppRouter {
     '/2.24': (context) => const MstPc(),
     '/2.25': (context) => const MstTeamEntry(),
     '/2.26': (context) => const MstCounter(),
+    '/2.27': (context) => const MstEmployee(),
     '/3.1': (context) => const TrnRoughEntry(),
     '/3.2': (context) => const TrnRoughAssortEntry(),
     '/3.3': (context) => const TrnCutCreateEntry(),
     '/3.4': (context) => const TrnPacketCreateEntry(),
+    '/3.5': (context) => const TrnSpkDeptIssEntry(),
 
   });
 

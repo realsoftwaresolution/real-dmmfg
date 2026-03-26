@@ -122,11 +122,11 @@ class _ErpResultDialogWidgetState extends State<_ErpResultDialogWidget>
     _ctrl.forward();
 
     // Auto-close after duration if set
-    if (widget.duration != null) {
-      Future.delayed(widget.duration!, () {
-        if (mounted) Navigator.of(context).pop();
-      });
-    }
+    // if (widget.duration != null) {
+    //   Future.delayed(widget.duration!, () {
+    //     if (mounted) Navigator.of(context).pop();
+    //   });
+    // }
   }
 
   @override

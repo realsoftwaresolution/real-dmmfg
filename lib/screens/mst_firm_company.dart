@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../models/company_model.dart';
 import '../providers/company_provider.dart';
 import '../utils/app_images.dart';
@@ -77,6 +78,7 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
       label: 'ACTIVE',
       flex: 1,
       align: ColumnAlign.center,
+
     ),
     ErpColumnConfig(key: 'emailID',   label: 'EMAIL',      flex: 1.5),
     ErpColumnConfig(key: 'panNo',      label: 'PAN NO',     flex: 1.0),
@@ -321,7 +323,8 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
           type: ErpFieldType.checkbox,
           flex: 1,
           sectionIndex: 3,
-          checkboxDbType: 'BIT'
+          checkboxDbType: 'BIT',
+        initialBoolValue: true
       ),
     ]
   ];
@@ -444,7 +447,7 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
     if (confirm != true || !mounted) return;
 
     final success =
-    await context.read<CompanyProvider>().deleteCompany(raw!.companyCode!);
+    await context.read<CompanyProvider>().deleteCompany(raw.companyCode!);
 
     if (success && mounted) {
       _resetForm();
@@ -490,7 +493,7 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
                 isReportRow: false,
 
                 token: token ?? '',
-                url: 'http://50.62.183.116:5000',
+                url: baseUrl,
                 title: 'COMPANY LIST',
                 columns: _tableColumns,
                 // availableExtraColumns: _extraColumns,
@@ -504,6 +507,9 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
         ? 'No companies found'
         : 'Loading...',
               ):ErpForm(
+                onExit: () {
+                  context.read<TabProvider>().closeCurrentTab();
+                },
                 logo: AppImages.logo,
 
                 key: _erpFormKey,
@@ -533,6 +539,9 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
               Expanded(
                 flex: 2,
                 child: ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -565,7 +574,7 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'COMPANY LIST',
                   columns: _tableColumns,
                   // availableExtraColumns: _extraColumns,
@@ -587,29 +596,5 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
     );
   }
 
-  // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

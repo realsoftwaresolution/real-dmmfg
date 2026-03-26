@@ -1,14 +1,14 @@
-// lib/screens/mst_firm_company.dart
 
 import 'package:diam_mfg/models/party_model.dart';
 import 'package:diam_mfg/providers/party_provider.dart';
+import 'package:diam_mfg/providers/party_type_provider.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:erp_formatter/erp_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
-import '../models/company_model.dart';
+import '../bootstrap.dart';
 import '../providers/company_provider.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
@@ -79,7 +79,7 @@ class _MstFirmPartyState extends State<MstFirmParty> {
   ];
 
   // ── FORM ROWS ─────────────────────────────────────────────────────────────
-  List<List<ErpFieldConfig>>  _formRows (CompanyProvider companyProvider)=> [
+  List<List<ErpFieldConfig>>  _formRows (PartyTypeProvider partyTypeProvider)=> [
 
     /// ───────────────── BASIC INFORMATION ─────────────────
     [
@@ -107,69 +107,74 @@ class _MstFirmPartyState extends State<MstFirmParty> {
         flex: 3,
         sectionIndex: 0,
       ),
-    ],
-
-    [
-      ErpFieldConfig(
-        key: 'partyType',
-        label: 'PARTY TYPE',
-        type: ErpFieldType.dropdown,
-        dropdownItems: const [
-          ErpDropdownItem(label: 'Customer', value: 'Customer'),
-          ErpDropdownItem(label: 'Supplier', value: 'Supplier'),
-          ErpDropdownItem(label: 'Broker', value: 'Broker'),
-        ],
-        flex: 2,
-        sectionIndex: 0,
-      ),
-      ErpFieldConfig(
-        key: 'companyCode',
-        label: 'COMPANY',
-        type: ErpFieldType.dropdown,
-        dropdownItems: companyProvider.companies
-            .where((element) {
-          return element.active==true;
-        },).map((e) {
-          return ErpDropdownItem(
-            label: e.companyName ?? '',
-            value: e.companyCode?.toString() ?? '',
-          );
-        }).toList(),
-        // dropdownItems:companyProvider
-        //     .companies
-        //     .map((e) => e.companyName.toString())
-        //     .toList(),
-        sectionIndex: 0,
-
-      ),
       // ErpFieldConfig(
-      //   key: 'companyCode',
-      //   label: 'COMPANY CODE',
-      //   type: ErpFieldType.number,
-      //   flex: 1,
+      //   key: 'partyType',
+      //   label: 'PARTY TYPE',
+      //   type: ErpFieldType.dropdown,
+      //   dropdownItems: const [
+      //     ErpDropdownItem(label: 'Customer', value: 'Customer'),
+      //     ErpDropdownItem(label: 'Supplier', value: 'Supplier'),
+      //     ErpDropdownItem(label: 'Broker', value: 'Broker'),
+      //   ],
+      //   flex: 2,
       //   sectionIndex: 0,
       // ),
+        ErpFieldConfig(
+          key: 'partyType',
+          label: 'PARTY TYPE',
+          required: true,
+          initialDropValue: true,
+          type: ErpFieldType.dropdown,
+          dropdownItems: partyTypeProvider.list
+              .where((element) {
+            return element.active==true;
+          },).map((e) {
+            return ErpDropdownItem(
+              label: e.partyTypeName ?? '',
+              value: e.partyNameCode?.toString() ?? '',
+            );
+          }).toList(),
+          // dropdownItems:companyProvider
+          //     .companies
+          //     .map((e) => e.companyName.toString())
+          //     .toList(),
+          sectionIndex: 0,
+
+        ),
     ],
 
-    [
-      ErpFieldConfig(
-        key: 'active',
-        label: 'ACTIVE',
-        type: ErpFieldType.checkbox,
-        flex: 1,
-        sectionIndex: 0,
-        checkboxDbType: 'BIT'
-      ),
-      ErpFieldConfig(
-        key: 'mainCutCompulsory',
-        label: 'MAIN CUT COMPULSORY',
-        type: ErpFieldType.checkbox,
-        flex: 2,
-        sectionIndex: 0,
-          checkboxDbType: 'BIT'
+    // [
+    //
+    //   // ErpFieldConfig(
+    //   //   key: 'companyCode',
+    //   //   label: 'COMPANY',
+    //   //   type: ErpFieldType.dropdown,
+    //   //   dropdownItems: companyProvider.companies
+    //   //       .where((element) {
+    //   //     return element.active==true;
+    //   //   },).map((e) {
+    //   //     return ErpDropdownItem(
+    //   //       label: e.companyName ?? '',
+    //   //       value: e.companyCode?.toString() ?? '',
+    //   //     );
+    //   //   }).toList(),
+    //   //   // dropdownItems:companyProvider
+    //   //   //     .companies
+    //   //   //     .map((e) => e.companyName.toString())
+    //   //   //     .toList(),
+    //   //   sectionIndex: 0,
+    //   //
+    //   // ),
+    //   // ErpFieldConfig(
+    //   //   key: 'companyCode',
+    //   //   label: 'COMPANY CODE',
+    //   //   type: ErpFieldType.number,
+    //   //   flex: 1,
+    //   //   sectionIndex: 0,
+    //   // ),
+    // ],
 
-      ),
-    ],
+
 
     /// ───────────────── CONTACT DETAILS ─────────────────
     [
@@ -231,6 +236,27 @@ class _MstFirmPartyState extends State<MstFirmParty> {
         sectionIndex: 2,
       ),
     ],
+    [
+
+      ErpFieldConfig(
+          key: 'mainCutCompulsory',
+          label: 'MAIN CUT COMPULSORY',
+          type: ErpFieldType.checkbox,
+          flex: 2,
+          sectionIndex: 0,
+          checkboxDbType: 'BIT'
+
+      ),
+      ErpFieldConfig(
+          key: 'active',
+          label: 'ACTIVE',
+          type: ErpFieldType.checkbox,
+          flex: 1,
+          sectionIndex: 0,
+          initialBoolValue: true,
+          checkboxDbType: 'BIT'
+      ),
+    ],
   ];
   // ── INIT ──────────────────────────────────────────────────────────────────
   @override
@@ -239,6 +265,9 @@ class _MstFirmPartyState extends State<MstFirmParty> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PartyProvider>().loadParties();
       context.read<CompanyProvider>().loadCompanies();
+      context.read<PartyTypeProvider>().load();
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<PartyProvider>().setSelectedCompany(selectedCode);
     });
   }
 
@@ -254,7 +283,8 @@ class _MstFirmPartyState extends State<MstFirmParty> {
         'partyCode': raw.partyCode?.toString() ?? '',
         'partyName': raw.partyName ?? '',
         'partyType': raw.partyType ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'address': raw.address ?? '',
         'phone1': raw.phone1 ?? '',
         'phone2': raw.phone2 ?? '',
@@ -353,7 +383,7 @@ class _MstFirmPartyState extends State<MstFirmParty> {
     if (confirm != true || !mounted) return;
 
     final success =
-    await context.read<PartyProvider>().deleteParty(raw!.partyCode!);
+    await context.read<PartyProvider>().deleteParty(raw.partyCode!);
 
     if (success && mounted) {
       _resetForm();
@@ -389,7 +419,7 @@ class _MstFirmPartyState extends State<MstFirmParty> {
   // ── BUILD ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final companyProvider = context.watch<CompanyProvider>();
+    final partyTypeProvider = context.watch<PartyTypeProvider>();
 
     return Consumer<PartyProvider>(
       builder: (context, provider, _) {
@@ -400,7 +430,7 @@ class _MstFirmPartyState extends State<MstFirmParty> {
                 isReportRow: false,
 
                 token: token ?? '',
-                url: 'http://50.62.183.116:5000',
+                url: baseUrl,
                 title: 'PARTY LIST',
                 columns: _tableColumns,
                 // availableExtraColumns: _extraColumns,
@@ -414,6 +444,9 @@ class _MstFirmPartyState extends State<MstFirmParty> {
                     ? 'No Party found'
                     : 'Loading...',
               ):ErpForm(
+                onExit: () {
+                  context.read<TabProvider>().closeCurrentTab();
+                },
                 logo: AppImages.logo,
 
                 key: _erpFormKey,
@@ -424,7 +457,7 @@ class _MstFirmPartyState extends State<MstFirmParty> {
                 tabBarBackgroundColor: const Color(0xfff2f0ef),
                 tabBarSelectedColor: _theme.primaryGradient.first,
                 tabBarSelectedTxtColor: Colors.white,
-                rows: _formRows(companyProvider),
+                rows: _formRows(partyTypeProvider),
                 onSearch: () => setState(() => _showTableOnMobile = true),
 
                 // theme: _theme,
@@ -445,6 +478,9 @@ class _MstFirmPartyState extends State<MstFirmParty> {
                 flex: 2,
                 child: ErpForm(
                   logo: AppImages.logo,
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
 
                   key: _erpFormKey,
                   title: 'PARTY MASTER',
@@ -454,7 +490,7 @@ class _MstFirmPartyState extends State<MstFirmParty> {
                   tabBarBackgroundColor: const Color(0xfff2f0ef),
                   tabBarSelectedColor: _theme.primaryGradient.first,
                   tabBarSelectedTxtColor: Colors.white,
-                  rows: _formRows(companyProvider),
+                  rows: _formRows(partyTypeProvider),
                   // theme: _theme,
                   initialValues: _formValues,
                   isEditMode: _isEditMode,
@@ -476,7 +512,7 @@ class _MstFirmPartyState extends State<MstFirmParty> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'PARTY LIST',
                   columns: _tableColumns,
                   // availableExtraColumns: _extraColumns,
@@ -498,29 +534,5 @@ class _MstFirmPartyState extends State<MstFirmParty> {
     );
   }
 
-  // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

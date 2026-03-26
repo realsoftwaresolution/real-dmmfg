@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../models/dept_group_model.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
@@ -57,24 +58,6 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
         required: true,
         sectionIndex: 0,
       ),
-    ],
-
-    [
-      ErpFieldConfig(
-        key: 'companyCode',
-        label: 'COMPANY',
-        type: ErpFieldType.dropdown,
-        dropdownItems: companyProvider.companies
-            .where((element) {
-          return element.active==true;
-        },).map((e) {
-          return ErpDropdownItem(
-            label: e.companyName ?? '',
-            value: e.companyCode?.toString() ?? '',
-          );
-        }).toList(),
-        sectionIndex: 0,
-      ),
       ErpFieldConfig(
         key: 'sortID',
         label: 'SORT ID',
@@ -82,6 +65,30 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
         sectionIndex: 0,
       ),
     ],
+
+    // [
+    //   ErpFieldConfig(
+    //     key: 'companyCode',
+    //     label: 'COMPANY',
+    //     type: ErpFieldType.dropdown,
+    //     dropdownItems: companyProvider.companies
+    //         .where((element) {
+    //       return element.active==true;
+    //     },).map((e) {
+    //       return ErpDropdownItem(
+    //         label: e.companyName ?? '',
+    //         value: e.companyCode?.toString() ?? '',
+    //       );
+    //     }).toList(),
+    //     sectionIndex: 0,
+    //   ),
+    //   ErpFieldConfig(
+    //     key: 'sortID',
+    //     label: 'SORT ID',
+    //     type: ErpFieldType.number,
+    //     sectionIndex: 0,
+    //   ),
+    // ],
 
     /// ── SETTINGS ──
     [
@@ -91,6 +98,7 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
         type: ErpFieldType.checkbox,
         sectionTitle: 'SETTINGS',
         sectionIndex: 1,
+        initialBoolValue: true,
         checkboxDbType: 'BIT'
       ),
     ],
@@ -105,6 +113,28 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
   //     context.read<CompanyProvider>().loadCompanies();
   //   });
   // }
+  void _setDefaultSortId() {
+    final provider = context.read<DeptGroupProvider>();
+
+    int nextSortId = 1;
+    if (provider.list.isNotEmpty) {
+      nextSortId = provider.list
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -114,12 +144,14 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
 
       if (!mounted) return;
 
-
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<DeptGroupProvider>().setSelectedCompany(selectedCode);
       final companies = context.read<CompanyProvider>().companies;
       context.read<DeptGroupProvider>().setCompanies(companies);
 
 
       await context.read<DeptGroupProvider>().load();
+      _setDefaultSortId();
 
     });
   }
@@ -133,7 +165,8 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
       _formValues = {
         'deptGroupCode': raw.deptGroupCode?.toString() ?? '',
         'deptGroupName': raw.deptGroupName ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'sortID': raw.sortID?.toString() ?? '',
         'active': raw.active == true ? 'true' : 'false',
       };
@@ -211,7 +244,7 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
     if (confirm != true || !mounted) return;
 
     final success =
-    await context.read<DeptGroupProvider>().delete(raw!.deptGroupCode!);
+    await context.read<DeptGroupProvider>().delete(raw.deptGroupCode!);
 
     if (success && mounted) {
       _resetForm();
@@ -242,6 +275,7 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _setDefaultSortId();
   }
   bool _showTableOnMobile = false;
 
@@ -259,7 +293,7 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
                 isReportRow: false,
 
                 token: token ?? '',
-                url: 'http://50.62.183.116:5000',
+                url: baseUrl,
                 title: 'DEPT GROUP LIST',
                 columns: _tableColumns,
                 data: provider.tableData,
@@ -272,6 +306,9 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
         ? 'No Dept Group found'
         : 'Loading...',
               ):ErpForm(
+                onExit: () {
+                  context.read<TabProvider>().closeCurrentTab();
+                },
                 logo: AppImages.logo,
 
                 key: _erpFormKey,
@@ -300,6 +337,9 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
               Expanded(
                 flex: 2,
                 child: ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -331,7 +371,7 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'DEPT GROUP LIST',
                   columns: _tableColumns,
                   data: provider.tableData,
@@ -352,29 +392,5 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
     );
   }
 
-  // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

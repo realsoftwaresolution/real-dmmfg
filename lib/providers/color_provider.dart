@@ -15,7 +15,11 @@ class ColorProvider extends BaseProvider {
     _companies = companies;
     notifyListeners();
   }
+  int? _selectedCompanyCode;
 
+  void setSelectedCompany(int? code) {
+    _selectedCompanyCode = code;
+  }
   List<Map<String, dynamic>> get tableData =>
       _list.map((d) {
 
@@ -45,6 +49,8 @@ class ColorProvider extends BaseProvider {
 
   // ───── CREATE ─────
   Future<bool> create(Map<String, dynamic> formValues) async {
+    formValues['companyCode'] = _selectedCompanyCode?.toString() ?? '';
+
     final model = ColorModel.fromFormValues(formValues);
 
     final result = await request<ColorModel>(
@@ -63,6 +69,8 @@ class ColorProvider extends BaseProvider {
 
   // ───── UPDATE ─────
   Future<bool> update(int code, Map<String, dynamic> formValues) async {
+    formValues['companyCode'] = _selectedCompanyCode?.toString() ?? '';
+
     final model = ColorModel.fromFormValues(formValues);
 
     final result = await request<ColorModel>(

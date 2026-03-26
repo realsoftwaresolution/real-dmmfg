@@ -14,7 +14,11 @@ class CutProvider extends BaseProvider {
     _companies = companies;
     notifyListeners();
   }
+  int? _selectedCompanyCode;
 
+  void setSelectedCompany(int? code) {
+    _selectedCompanyCode = code;
+  }
   List<Map<String, dynamic>> get tableData =>
       _cuts.map((d) {
         // companyCode se companyName dhundho
@@ -43,6 +47,8 @@ class CutProvider extends BaseProvider {
 
   // ── CREATE ───────────────────────────────────────────────────────────────
   Future<bool> createCut(Map<String, dynamic> formValues) async {
+    formValues['companyCode'] = _selectedCompanyCode?.toString() ?? '';
+
     final model = CutModel.fromFormValues(formValues);
 
     final result = await request<CutModel>(
@@ -62,6 +68,8 @@ class CutProvider extends BaseProvider {
 
   // ── UPDATE ───────────────────────────────────────────────────────────────
   Future<bool> updateCut(int code, Map<String, dynamic> formValues) async {
+    formValues['companyCode'] = _selectedCompanyCode?.toString() ?? '';
+
     final model = CutModel.fromFormValues(formValues);
 
     final result = await request<CutModel>(

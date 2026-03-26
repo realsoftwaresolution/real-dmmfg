@@ -3,7 +3,6 @@ import 'package:diam_mfg/providers/menu_provider.dart';
 import 'package:diam_mfg/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rs_dashboard/rs_dashboard.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

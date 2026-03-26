@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../models/purity_rpt_group_model.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
@@ -59,24 +60,6 @@ class _MstPurityRptGroupState extends State<MstPurityRptGroup> {
         required: true,
         sectionIndex: 0,
       ),
-    ],
-
-    [
-      ErpFieldConfig(
-        key: 'companyCode',
-        label: 'COMPANY',
-        type: ErpFieldType.dropdown,
-        dropdownItems: companyProvider.companies
-            .where((element) {
-          return element.active==true;
-        },).map((e) {
-          return ErpDropdownItem(
-            label: e.companyName ?? '',
-            value: e.companyCode?.toString() ?? '',
-          );
-        }).toList(),
-        sectionIndex: 0,
-      ),
       ErpFieldConfig(
         key: 'sortID',
         label: 'SORT ID',
@@ -84,6 +67,30 @@ class _MstPurityRptGroupState extends State<MstPurityRptGroup> {
         sectionIndex: 0,
       ),
     ],
+
+    // [
+    //   ErpFieldConfig(
+    //     key: 'companyCode',
+    //     label: 'COMPANY',
+    //     type: ErpFieldType.dropdown,
+    //     dropdownItems: companyProvider.companies
+    //         .where((element) {
+    //       return element.active==true;
+    //     },).map((e) {
+    //       return ErpDropdownItem(
+    //         label: e.companyName ?? '',
+    //         value: e.companyCode?.toString() ?? '',
+    //       );
+    //     }).toList(),
+    //     sectionIndex: 0,
+    //   ),
+    //   ErpFieldConfig(
+    //     key: 'sortID',
+    //     label: 'SORT ID',
+    //     type: ErpFieldType.number,
+    //     sectionIndex: 0,
+    //   ),
+    // ],
 
     /// ── RATE INFO ──
     // [
@@ -110,6 +117,7 @@ class _MstPurityRptGroupState extends State<MstPurityRptGroup> {
         type: ErpFieldType.checkbox,
         sectionTitle: 'SETTINGS',
         sectionIndex: 2,
+        initialBoolValue: true,
         checkboxDbType: 'BIT'
       ),
     ],
@@ -124,6 +132,28 @@ class _MstPurityRptGroupState extends State<MstPurityRptGroup> {
   //     context.read<CompanyProvider>().loadCompanies();
   //   });
   // }
+  void _setDefaultSortId() {
+    final provider = context.read<PurityRptGroupProvider>();
+
+    int nextSortId = 1;
+    if (provider.list.isNotEmpty) {
+      nextSortId = provider.list
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -136,9 +166,11 @@ class _MstPurityRptGroupState extends State<MstPurityRptGroup> {
 
       final companies = context.read<CompanyProvider>().companies;
       context.read<PurityRptGroupProvider>().setCompanies(companies);
-
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<PurityRptGroupProvider>().setSelectedCompany(selectedCode);
 
       await context.read<PurityRptGroupProvider>().load();
+      _setDefaultSortId();
 
     });
   }
@@ -152,7 +184,8 @@ class _MstPurityRptGroupState extends State<MstPurityRptGroup> {
       _formValues = {
         'purityRptGroupCode': raw.purityRptGroupCode?.toString() ?? '',
         'purityRptGroupName': raw.purityRptGroupName ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'sortID': raw.sortID?.toString() ?? '',
         'rate': raw.rate?.toString() ?? '',
         'per': raw.per?.toString() ?? '',
@@ -233,7 +266,7 @@ class _MstPurityRptGroupState extends State<MstPurityRptGroup> {
 
     final success = await context
         .read<PurityRptGroupProvider>()
-        .delete(raw!.purityRptGroupCode!);
+        .delete(raw.purityRptGroupCode!);
 
     if (success && mounted) {
       _resetForm();
@@ -264,6 +297,7 @@ class _MstPurityRptGroupState extends State<MstPurityRptGroup> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _setDefaultSortId();
   }
   bool _showTableOnMobile = false;
 
@@ -281,7 +315,7 @@ class _MstPurityRptGroupState extends State<MstPurityRptGroup> {
                 isReportRow: false,
 
                 token: token ?? '',
-                url: 'http://50.62.183.116:5000',
+                url: baseUrl,
                 title: 'PURITY RPT GROUP LIST',
                 columns: _tableColumns,
                 data: provider.tableData,
@@ -294,6 +328,9 @@ class _MstPurityRptGroupState extends State<MstPurityRptGroup> {
                     ? 'No Purity Rpt Group found'
                     : 'Loading...',
               ):ErpForm(
+                onExit: () {
+                  context.read<TabProvider>().closeCurrentTab();
+                },
                 logo: AppImages.logo,
 
                 key: _erpFormKey,
@@ -322,6 +359,9 @@ class _MstPurityRptGroupState extends State<MstPurityRptGroup> {
               Expanded(
                 flex: 2,
                 child: ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -353,7 +393,7 @@ class _MstPurityRptGroupState extends State<MstPurityRptGroup> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'PURITY RPT GROUP LIST',
                   columns: _tableColumns,
                   data: provider.tableData,
@@ -374,29 +414,5 @@ class _MstPurityRptGroupState extends State<MstPurityRptGroup> {
     );
   }
 
-  // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

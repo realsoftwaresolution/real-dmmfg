@@ -15,6 +15,11 @@ class FactoryManGroupProvider extends BaseProvider {
     _companies = companies;
     notifyListeners();
   }
+  int? _selectedCompanyCode;
+
+  void setSelectedCompany(int? code) {
+    _selectedCompanyCode = code;
+  }
 
   List<Map<String, dynamic>> get tableData =>
       groups.map((d) {
@@ -45,6 +50,8 @@ class FactoryManGroupProvider extends BaseProvider {
 
   // ── CREATE ───────────────────────────────────────────────────────────────
   Future<bool> createGroup(Map<String, dynamic> formValues) async {
+    formValues['companyCode'] = _selectedCompanyCode?.toString() ?? '';
+
     final model = FactoryManGroupModel.fromFormValues(formValues);
 
     final result = await request<FactoryManGroupModel>(
@@ -67,6 +74,8 @@ class FactoryManGroupProvider extends BaseProvider {
       int code,
       Map<String, dynamic> formValues,
       ) async {
+    formValues['companyCode'] = _selectedCompanyCode?.toString() ?? '';
+
     final model = FactoryManGroupModel.fromFormValues(formValues);
 
     final result = await request<FactoryManGroupModel>(

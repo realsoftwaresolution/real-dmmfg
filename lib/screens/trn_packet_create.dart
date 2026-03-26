@@ -1,5 +1,6 @@
 // lib/screens/trn_packet_create_entry.dart
 
+import 'package:collection/collection.dart';
 import 'package:diam_mfg/models/cut_create_model.dart';
 import 'package:diam_mfg/models/packet_model.dart';
 import 'package:diam_mfg/providers/color_provider.dart';
@@ -14,16 +15,16 @@ import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/helper_functions.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:erp_data_table/erp_data_table.dart';
-import 'package:erp_data_table/erp_data_table/widgets/erp_buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
+
 // ── helpers ───────────────────────────────────────────────────────────────────
-String _f3(double? v) => v == null ? '0.000' : v.toStringAsFixed(2);
-String _f2(double? v) => v == null ? '0.00'  : v.toStringAsFixed(2);
-double _dv(dynamic v) => v == null ? 0 : (double.tryParse(v.toString()) ?? 0);
+String _f3(double? v) => v == null ? '0.00' : v.toStringAsFixed(2);
+
 
 // ── Lot group size ─────────────────────────────────────────────────────────────
 const int _kLotSize = 20;
@@ -78,6 +79,8 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     ErpColumnConfig(key: 'packetDate',  label: 'DATE',   width: 110, required: true, isDate: true),
     ErpColumnConfig(key: 'cutNo',       label: 'CUT NO', width: 170),
     ErpColumnConfig(key: 'entryType',   label: 'TYPE',   width: 130),
+    ErpColumnConfig(key: 'totalPc',     label: 'TOT PC',   width: 160,  align: ColumnAlign.right),  // ✅
+    ErpColumnConfig(key: 'totalWt',     label: 'TOT WT',   width: 160, align: ColumnAlign.right),  // ✅
   ];
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -89,22 +92,53 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     final colorProv   = context.read<ColorProvider>();
     final fluoProv    = context.read<FluoProvider>();
     final tensProv    = context.read<TensionsProvider>();
-
-    // ── CutNo dropdown — CutCreate records with SPK type det, pendingWt > 0 ──
+// _buildFormRows mein cutNoItems filter update karo:
     final cutNoItems = cutProv.list
-        .where((cc) =>
-    cc.details.any((d) => d.cutType == 'SPK'))
-        // &&
-        // _getPendingWtForCut(cc) > 0.0001)
-        .map((cc) => ErpDropdownItem(
-      label: 'Cut: ${cc.details.firstWhere((d) => d.cutType == 'SPK', orElse: () => cc.details.first).cutNo ?? ''}'
-          '  WT: ${_f3(_getPendingWtForCut(cc))}',
-      value: cc.details.firstWhere((d) => d.cutType == 'SPK', orElse: () => cc.details.first).cutNo ?? '',
-    ))
+        .where((cc) {
+      if (!cc.details.any((d) => d.cutType == 'SPK')) return false;
+
+      final spkDet = cc.details.firstWhere(
+            (d) => d.cutType == 'SPK',
+        orElse: () => cc.details.first,
+      );
+
+      // ✅ Edit mode mein current selected cutNo hamesha dikhao
+      if (_isEditMode && spkDet.cutNo == _formValues['cutNo']) return true;
+
+      final pendingWt = _getPendingWtForCut(cc);
+      return pendingWt > 0.0001;
+    })
+        .map((cc) {
+      final spkDet = cc.details.firstWhere(
+            (d) => d.cutType == 'SPK',
+        orElse: () => cc.details.first,
+      );
+      final pendingWt = _getPendingWtForCut(cc);
+      return ErpDropdownItem(
+        // ✅ Edit mode mein current cut ka label
+        label: 'Cut: ${spkDet.cutNo ?? ''}  Pending WT: ${_f3(pendingWt)}',
+        value: spkDet.cutNo ?? '',
+      );
+    })
         .fold<List<ErpDropdownItem>>([], (acc, item) {
       if (!acc.any((x) => x.value == item.value)) acc.add(item);
       return acc;
     });
+    // ── CutNo dropdown — CutCreate records with SPK type det, pendingWt > 0 ──
+    // final cutNoItems = cutProv.list
+    //     .where((cc) =>
+    // cc.details.any((d) => d.cutType == 'SPK'))
+    //     // &&
+    //     // _getPendingWtForCut(cc) > 0.0001)
+    //     .map((cc) => ErpDropdownItem(
+    //   label: 'Cut: ${cc.details.firstWhere((d) => d.cutType == 'SPK', orElse: () => cc.details.first).cutNo ?? ''}'
+    //       '  WT: ${_f3(_getPendingWtForCut(cc))}',
+    //   value: cc.details.firstWhere((d) => d.cutType == 'SPK', orElse: () => cc.details.first).cutNo ?? '',
+    // ))
+    //     .fold<List<ErpDropdownItem>>([], (acc, item) {
+    //   if (!acc.any((x) => x.value == item.value)) acc.add(item);
+    //   return acc;
+    // });
 
     // ── PktType dropdown — active, sorted by sortID ──────────────────────────
     final pktTypeItems = pktTypeProv.list
@@ -220,11 +254,11 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
           type: ErpFieldType.number,
           readOnly: true, flex: 1, sectionIndex: 1, isEntryField: true,
         ),
-        ErpFieldConfig(
-          key: 'entryPdmPer', label: 'PDm %',
-          type: ErpFieldType.amount,
-          flex: 1, sectionIndex: 1, isEntryField: true,
-        ),
+        // ErpFieldConfig(
+        //   key: 'entryPdmPer', label: 'PDm %',
+        //   type: ErpFieldType.amount,
+        //   flex: 1, sectionIndex: 1, isEntryField: true,
+        // ),
         ErpFieldConfig(
           key: 'entryWt', label: 'WT',
           type: ErpFieldType.amount,
@@ -235,7 +269,34 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
       ],
     ];
   }
+// Color, Tensions, Fluo ke liye alag helpers banao
+  String _colorName(int? code) {
+    if (code == null) return '';
+    final list = context.read<ColorProvider>().list;
+    try { return list.firstWhere((e) => e.colorCode == code).colorName ?? ''; }
+    catch (_) { return ''; }
+  }
 
+  String _tensionsName(int? code) {
+    if (code == null) return '';
+    final list = context.read<TensionsProvider>().list;
+    try { return list.firstWhere((e) => e.tensionsCode == code).tensionsName ?? ''; }
+    catch (_) { return ''; }
+  }
+
+  String _fluoName(int? code) {
+    if (code == null) return '';
+    final list = context.read<FluoProvider>().list;
+    try { return list.firstWhere((e) => e.fluoCode == code).fluoName ?? ''; }
+    catch (_) { return ''; }
+  }
+
+  String _pktTypeName(String? code) {
+    if (code == null || code.isEmpty) return '';
+    final list = context.read<PktTypeProvider>().list;
+    try { return list.firstWhere((e) => e.pktTypeCode?.toString() == code).pktTypeName ?? ''; }
+    catch (_) { return code; }
+  }
   // ══════════════════════════════════════════════════════════════════════════
   //  INIT
   // ══════════════════════════════════════════════════════════════════════════
@@ -269,18 +330,19 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
   //  PENDING WT CALC for a CutCreate record
   // ══════════════════════════════════════════════════════════════════════════
   double _getPendingWtForCut(CutCreateModel cc) {
-    // Total SPK wt in this cut
     final totalWt = cc.details
         .where((d) => d.cutType == 'SPK')
         .fold(0.0, (s, d) => s + (d.wt ?? 0));
 
-    // Already used in Packet records (exclude current edit)
+    final cutNo = cc.details
+        .firstWhere((d) => d.cutType == 'SPK',
+        orElse: () => cc.details.first)
+        .cutNo;
+
+    // ✅ Ab totalWt DB se aayega — 0 nahi hoga
     final usedWt = context.read<PacketProvider>().list
         .where((p) =>
-    p.cutNo == (cc.details.firstWhere(
-          (d) => d.cutType == 'SPK',
-      orElse: () => cc.details.first,
-    ).cutNo) &&
+    p.cutNo == cutNo &&
         p.packetMstID != _selectedMst?.packetMstID)
         .fold(0.0, (s, p) => s + p.totalWt);
 
@@ -355,6 +417,11 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     final nextLot = lastLot + 1;
     _entryVals['entryLotNo'] = '$nextLot';
     _erpFormKey.currentState?.updateFieldValue('entryLotNo', '$nextLot');
+    final nextLotNo = await context.read<PacketProvider>().getNextLotNo(cutNo);
+    _lotNoMap[cutNo] = nextLotNo - 1; // map mein last used store karo
+
+    _entryVals['entryLotNo'] = '$nextLotNo';
+    _erpFormKey.currentState?.updateFieldValue('entryLotNo', '$nextLotNo');
 
     setState(() {});
   }
@@ -387,7 +454,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     final fluoVal    = _entryVals['entryFluo']     ?? '';
     final lotNoStr   = _entryVals['entryLotNo']    ?? '';
     final wtStr      = _entryVals['entryWt']       ?? '';
-    final pdmPerStr  = _entryVals['entryPdmPer']   ?? '';
+    // final pdmPerStr  = _entryVals['entryPdmPer']   ?? '';
     final cutNo      = _formValues['cutNo']        ?? '';
 
     // ── Validations ───────────────────────────────────────────────────────
@@ -475,7 +542,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
       colorCode:    int.tryParse(colorVal),
       tensionsCode: int.tryParse(tensVal),
       fluoCode:     int.tryParse(fluoVal),
-      pDmPer:       double.tryParse(pdmPerStr),
+      // pDmPer:       double.tryParse(pdmPerStr),
       jno:          int.tryParse(_formValues['jno'] ?? ''),
       packetDate:   _formValues['packetDate'],
       entryType:    'Packet Create',
@@ -504,9 +571,9 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
   // ── Partial clear — keep type/color/tensions/fluo ──────────────────────
   void _partialClearEntry({required int nextLotNo}) {
     // Clear only pdm% and wt
-    _entryVals.remove('entryPdmPer');
+    // _entryVals.remove('entryPdmPer');
     _entryVals.remove('entryWt');
-    _erpFormKey.currentState?.updateFieldValue('entryPdmPer', '');
+    // _erpFormKey.currentState?.updateFieldValue('entryPdmPer', '');
     _erpFormKey.currentState?.updateFieldValue('entryWt', '');
 
     // Advance lotNo
@@ -521,7 +588,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     _erpFormKey.currentState?.updateFieldValue('entryPlusWt', _f3(plusWt));
 
     Future.delayed(const Duration(milliseconds: 50),
-            () => _erpFormKey.currentState?.focusField('entryPdmPer'));
+            () => _erpFormKey.currentState?.focusField('entryWt'));
   }
 
   // ── Edit det row ──────────────────────────────────────────────────────────
@@ -539,7 +606,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     set('entryTensions', r.tensionsCode?.toString());
     set('entryFluo',     r.fluoCode?.toString());
     set('entryLotNo',    r.lotNo?.toString());
-    set('entryPdmPer',   _f2(r.pDmPer));
+    // set('entryPdmPer',   _f2(r.pDmPer));
     set('entryWt',       _f3(r.wt));
     set('entryPc',       '1');
 
@@ -586,9 +653,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
   // ══════════════════════════════════════════════════════════════════════════
   void _syncDetGrid() {
     _detDisplay = _detRows.map((r) {
-      final colorProv = context.read<ColorProvider>();
-      final tensProv  = context.read<TensionsProvider>();
-      final fluoProv  = context.read<FluoProvider>();
+
       return {
         'bCode':    r.bCode?.toString()    ?? '',
         'srno':     r.srno?.toString()     ?? '',
@@ -596,11 +661,11 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         'lotCode':  r.lotCode              ?? 'A',
         'pc':       r.pc?.toString()       ?? '',
         'wt':       _f3(r.wt),
-        'pktType':  r.pktType              ?? '',
-        'color':    _nameFromCode(colorProv.list, r.colorCode),
-        'tensions': _nameFromCode(tensProv.list,  r.tensionsCode),
-        'fluo':     _nameFromCode(fluoProv.list,  r.fluoCode),
-        'pdmPer':   _f2(r.pDmPer),
+        'pktType':  _pktTypeName(r.pktType),  // ✅ name
+        'color':    _colorName(r.colorCode),   // ✅ name
+        'tensions': _tensionsName(r.tensionsCode), // ✅ name
+        'fluo':     _fluoName(r.fluoCode),
+        // 'pdmPer':   _f2(r.pDmPer),
       };
     }).toList();
   }
@@ -617,7 +682,8 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
 
   List<String> get _detGridColumns => [
     'bCode', 'srno', 'lotNo', 'lotCode', 'pc', 'wt',
-    'pktType', 'color', 'tensions', 'fluo', 'pdmPer',
+    'pktType', 'color', 'tensions', 'fluo',
+    // 'pdmPer',
   ];
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -682,6 +748,14 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
       _syncDetGrid();
       if (Responsive.isMobile(context)) _showTableOnMobile = false;
     });
+    for (final det in details) {
+      if (det.cutNo != null && det.lotNo != null) {
+        final current = _lotNoMap[det.cutNo!] ?? 0;
+        if (det.lotNo! > current) {
+          _lotNoMap[det.cutNo!] = det.lotNo!;
+        }
+      }
+    }
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -874,7 +948,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
                   'color':    'COLOR',
                   'tensions': 'TENSIONS',
                   'fluo':     'FLUO',
-                  'pdmPer':   'PDm %',
+                  // 'pdmPer':   'PDm %',
                 },
               ),
 
@@ -1035,18 +1109,30 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
 
   // ── ErpDataTable ───────────────────────────────────────────────────────────
   Widget _buildTable(PacketProvider prov) {
-    final data = prov.list.map((e) => e.toTableRow()).toList();
+    final pktTypeProv = context.read<PktTypeProvider>();
+
+    // final data = prov.list.map((e) => e.toTableRow()).toList();
+    final data = prov.list.map((e) {
+      final row = e.toTableRow();
+      // ✅ entryType code → name
+      row['entryType'] = pktTypeProv.list
+          .firstWhereOrNull((p) => p.pktTypeName == e.entryType || p.pktTypeCode?.toString() == e.entryType)
+          ?.pktTypeName ?? e.entryType ?? '';
+      return row;
+    }).toList();
     return ErpDataTable(
       isReportRow: false,
+      dateFilter: true,
+
       token:       token ?? '',
-      url:         'http://50.62.183.116:5000',
+      url:         baseUrl,
       title:       'PACKET CREATE LIST',
       columns:     _tableColumns,
       data:        data,
       showSearch:  true,
       searchFields: const [
         ErpSearchFieldConfig(key: 'cutNo',    label: 'CUT NO',    width: 150),
-        ErpSearchFieldConfig(key: 'entryType', label: 'ENTRY TYPE', width: 120),
+        // ErpSearchFieldConfig(key: 'entryType', label: 'ENTRY TYPE', width: 120),
       ],
       selectedRow: _selectedRow,
       onRowTap:    _onRowTap,

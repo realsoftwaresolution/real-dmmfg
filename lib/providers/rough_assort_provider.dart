@@ -12,6 +12,43 @@ class RoughAssortProvider extends BaseProvider {
   List<Map<String, dynamic>>  get tableData =>
       _list.map((e) => e.toTableRow()).toList();
 
+  Set<String> usedKapanNos({int? excludeMstID}) {
+    return list
+        .where((e) => e.roughAssortMstID != excludeMstID)
+        .map((e) => e.kapanNo ?? '')
+        .where((k) => k.isNotEmpty)
+        .toSet();
+  }
+// ── GET TOTAL WT FOR A KAPAN (all saved records except current edit) ────────
+  Future<double> getUsedWtForKapan(
+      String kapanNo, {
+        int? excludeMstID,
+      }) async {
+    // Sirf us kapan ke records filter karo
+    final records = list.where((e) =>
+    e.kapanNo == kapanNo &&
+        e.roughAssortMstID != excludeMstID,
+    ).toList();
+
+    if (records.isEmpty) return 0.0;
+
+    double totalUsed = 0.0;
+
+    for (final record in records) {
+      // Har record ki details load karo
+      final details = await loadDetails(record.roughAssortMstID!);
+      final wt = details.fold(0.0, (s, d) => s + (d.wt ?? 0));
+      totalUsed += wt;
+    }
+
+    return totalUsed;
+  }
+// Ek kapan ki already saved wt (excluding current edit)
+  double usedWtForKapan(String kapanNo, {int? excludeMstID}) {
+    // Details seedha nahi hain master mein — isliye 0 return karo
+    // Actual wt _detRows se aayega screen mein
+    return 0.0;
+  }
   // ── LOAD ALL ────────────────────────────────────────────────────────────────
   Future<void> load() async {
     final result = await request<List<RoughAssortModel>>(

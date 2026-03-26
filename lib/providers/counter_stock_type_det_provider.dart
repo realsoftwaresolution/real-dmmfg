@@ -29,7 +29,37 @@ class CounterStockTypeDetProvider extends BaseProvider {
       notifyListeners();
     }
   }
+  // ── LOAD BY CrId (AllowCrId) ───────────────────────────────────────────────
+  Future<void> loadByCrId(int crId) async {
+    final result = await request<List<CounterStockTypeDetModel>>(
+      showLoader: false,
+      call:      () => api.get('/counterStockTypeDet?allowCrId=$crId'),
+      onSuccess: (res) {
+        final data = res.data as List;
+        return data.map((e) => CounterStockTypeDetModel.fromJson(e)).toList();
+      },
+    );
+    if (result != null) {
+      _list = result;
+      notifyListeners();
+    }
+  }
 
+  // ── DELETE BY CrId (AllowCrId) ─────────────────────────────────────────────
+  Future<void> deleteByCrId(int crId) async {
+    final toDelete = _list
+        .where((e) => e.allowCrId == crId && e.counterStockTypeDetID != null)
+        .toList();
+    for (final item in toDelete) {
+      await request<bool>(
+        showLoader: false,
+        call:      () => api.delete('/counterStockTypeDet/${item.counterStockTypeDetID}'),
+        onSuccess: (_) => true,
+      );
+    }
+    _list.removeWhere((e) => e.allowCrId == crId);
+    notifyListeners();
+  }
   // ── GET BY ID ──────────────────────────────────────────────────────────────
   Future<CounterStockTypeDetModel?> getById(int id) async {
     return await request<CounterStockTypeDetModel>(

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
 import '../utils/msg_dialogue.dart';
@@ -38,6 +39,27 @@ class _MstCutState extends State<MstCut> {
     ErpColumnConfig(key: 'sortID', label: 'SORT ID', width: 160),
     ErpColumnConfig(key: 'active', label: 'ACTIVE', width: 140),
   ];
+  void _setDefaultSortId() {
+    final provider = context.read<CutProvider>();
+
+    int nextSortId = 1;
+    if (provider.cuts.isNotEmpty) {
+      nextSortId = provider.cuts
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+  }
 
   // // ── EXTRA COLUMNS ─────────────────────────────────────────────────────────
   // List<ErpColumnConfig> get _extraColumns => [
@@ -64,24 +86,6 @@ class _MstCutState extends State<MstCut> {
         required: true,
         sectionIndex: 0,
       ),
-    ],
-
-    [
-      ErpFieldConfig(
-        key: 'companyCode',
-        label: 'COMPANY',
-        type: ErpFieldType.dropdown,
-        dropdownItems: companyProvider.companies
-            .where((element) {
-          return element.active==true;
-        },).map((e) {
-          return ErpDropdownItem(
-            label: e.companyName ?? '',
-            value: e.companyCode?.toString() ?? '',
-          );
-        }).toList(),
-        sectionIndex: 0,
-      ),
       ErpFieldConfig(
         key: 'sortID',
         label: 'SORT ID',
@@ -89,6 +93,30 @@ class _MstCutState extends State<MstCut> {
         sectionIndex: 0,
       ),
     ],
+
+    // [
+    //   ErpFieldConfig(
+    //     key: 'companyCode',
+    //     label: 'COMPANY',
+    //     type: ErpFieldType.dropdown,
+    //     dropdownItems: companyProvider.companies
+    //         .where((element) {
+    //       return element.active==true;
+    //     },).map((e) {
+    //       return ErpDropdownItem(
+    //         label: e.companyName ?? '',
+    //         value: e.companyCode?.toString() ?? '',
+    //       );
+    //     }).toList(),
+    //     sectionIndex: 0,
+    //   ),
+    //   ErpFieldConfig(
+    //     key: 'sortID',
+    //     label: 'SORT ID',
+    //     type: ErpFieldType.number,
+    //     sectionIndex: 0,
+    //   ),
+    // ],
 
     /// ── SETTINGS ──
     [
@@ -98,6 +126,7 @@ class _MstCutState extends State<MstCut> {
         type: ErpFieldType.checkbox,
         sectionTitle: 'SETTINGS',
         sectionIndex: 1,
+        initialBoolValue: true,
         checkboxDbType: 'BIT'
       ),
     ],
@@ -107,16 +136,19 @@ class _MstCutState extends State<MstCut> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // ← pehle companies load karo aur AWAIT karo
+
       await context.read<CompanyProvider>().loadCompanies();
 
       if (!mounted) return;
-
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<CutProvider>().setSelectedCompany(selectedCode);
       // ← ab companies available hain, division provider ko pass karo
       final companies = context.read<CompanyProvider>().companies;
       context.read<CutProvider>().setCompanies(companies);
 
       // ← last mein divisions load karo
       await context.read<CutProvider>().loadCuts();
+      _setDefaultSortId();
     });
   }
   // ── INIT ──────────────────────────────────────────────────────────────────
@@ -139,7 +171,8 @@ class _MstCutState extends State<MstCut> {
       _formValues = {
         'cutCode': raw.cutCode?.toString() ?? '',
         'cutName': raw.cutName ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'sortID': raw.sortID?.toString() ?? '',
         'active': raw.active == true ? 'true' : 'false',
       };
@@ -213,7 +246,7 @@ class _MstCutState extends State<MstCut> {
     if (confirm != true || !mounted) return;
 
     final success =
-    await context.read<CutProvider>().deleteCut(raw!.cutCode!);
+    await context.read<CutProvider>().deleteCut(raw.cutCode!);
 
     if (success && mounted) {
       _resetForm();
@@ -244,6 +277,8 @@ class _MstCutState extends State<MstCut> {
 
     });
     _erpFormKey.currentState?.resetForm();
+    _setDefaultSortId();
+
   }
   bool _showTableOnMobile = false;
 
@@ -261,7 +296,7 @@ class _MstCutState extends State<MstCut> {
                 isReportRow: false,
 
                 token: token ?? '',
-                url: 'http://50.62.183.116:5000',
+                url: baseUrl,
                 title: 'CUT LIST',
                 columns: _tableColumns,
                 // availableExtraColumns: _extraColumns,
@@ -274,6 +309,9 @@ class _MstCutState extends State<MstCut> {
                 emptyMessage:
                 provider.isLoaded ? 'No cuts found' : 'Loading...',
               ):ErpForm(
+                onExit: () {
+                  context.read<TabProvider>().closeCurrentTab();
+                },
                 logo: AppImages.logo,
 
                 key: _erpFormKey,
@@ -307,6 +345,9 @@ class _MstCutState extends State<MstCut> {
               Expanded(
                 flex: 2,
                 child: ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -342,7 +383,7 @@ class _MstCutState extends State<MstCut> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'CUT LIST',
                   columns: _tableColumns,
                   // availableExtraColumns: _extraColumns,
@@ -363,29 +404,5 @@ class _MstCutState extends State<MstCut> {
     );
   }
 
-  // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

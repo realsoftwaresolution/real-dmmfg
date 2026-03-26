@@ -15,7 +15,11 @@ class FactoryProvider extends BaseProvider {
   /// For ErpDataTable
   List<Map<String, dynamic>> get tableData =>
       _factories.map((f) => f.toTableRow()).toList();
+  int? _selectedCompanyCode;
 
+  void setSelectedCompany(int? code) {
+    _selectedCompanyCode = code;
+  }
   // ── GET ALL ──────────────────────────────────────────────────────────────
   Future<void> loadFactories() async {
     final result = await request<List<FactoryModel>>(
@@ -36,6 +40,8 @@ class FactoryProvider extends BaseProvider {
 
   // ── CREATE ───────────────────────────────────────────────────────────────
   Future<bool> createFactory(Map<String, dynamic> formValues) async {
+    formValues['companyCode'] = _selectedCompanyCode?.toString() ?? '';
+
     final model = FactoryModel.fromFormValues(formValues);
 
     final result = await request<FactoryModel>(
@@ -58,6 +64,7 @@ class FactoryProvider extends BaseProvider {
       int factoryCode,
       Map<String, dynamic> formValues,
       ) async {
+    formValues['companyCode'] = _selectedCompanyCode?.toString() ?? '';
 
     final model = FactoryModel.fromFormValues(formValues);
 

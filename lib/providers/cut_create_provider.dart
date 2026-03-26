@@ -149,7 +149,22 @@ class CutCreateProvider extends BaseProvider {
       _loadAllDetails();
     }
   }
+  Future<int> getNextJno() async {
+    final result = await request<int>(
+      showLoader: false,
+      call: () => api.get('/cutCreate/next-jno'),
+      onSuccess: (res) => (res.data as num).toInt(),
+    );
+    return result ?? 1;
+  }
 
+// ── KAPAN DUPLICATE CHECK ─────────────────────────────────────────────────
+  bool isKapanDuplicate(String kapanNo, {int? excludeMstID}) {
+    return list.any((cc) =>
+    cc.kapanNo == kapanNo &&
+        cc.cutCreateMstID != excludeMstID
+    );
+  }
   // ── LOAD ALL DETAILS in background ──────────────────────────────────────────
   // Har master ki details load karo — SPK pending wt filter ke liye zaroori
   Future<void> _loadAllDetails() async {

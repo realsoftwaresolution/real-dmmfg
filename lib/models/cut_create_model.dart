@@ -282,7 +282,8 @@ class CutCreateModel {
   final String? pcID;
   final int?    ever;
   final int?    roughAssortDetID;
-
+  final double? totalWtDb;  // ✅ DB se
+  final int?    totalPcDb;
   final List<CutCreateDetModel> details;
 
   CutCreateModel({
@@ -295,10 +296,13 @@ class CutCreateModel {
     this.logID,
     this.pcID,
     this.ever,
+    this.totalWtDb,
+  this.totalPcDb,
     this.roughAssortDetID,
     this.details = const [],
   });
-
+  double get totalWt => totalWtDb ?? details.fold(0.0, (s, d) => s + (d.wt ?? 0));
+  int    get totalPc => totalPcDb ?? details.fold(0,   (s, d) => s + (d.pc ?? 0));
   factory CutCreateModel.fromJson(Map<String, dynamic> json) => CutCreateModel(
     cutCreateMstID:   json['CutCreateMstID'],
     // ✅ FIX 1: Date — "2026-03-12T00:00:00.000Z" ya "2026-03-12" dono handle karo
@@ -310,6 +314,12 @@ class CutCreateModel {
     logID:            json['LogID'],
     pcID:             json['PcID'],
     ever:             json['Ever'],
+    totalWtDb: json['TotalWt'] != null
+        ? double.tryParse(json['TotalWt'].toString())
+        : null,
+    totalPcDb: json['TotalPc'] != null
+        ? (json['TotalPc'] as num).toInt()
+        : null,
     roughAssortDetID: json['RoughAssortDetID'],
     details: (json['details'] as List? ?? [])
         .map((e) => CutCreateDetModel.fromJson(e as Map<String, dynamic>))
@@ -318,8 +328,8 @@ class CutCreateModel {
 
   // ── Date parser: always returns "YYYY-MM-DD" or null ──────────────────────
   // ✅ Total wt/pc of details — used for pending calculation in screen
-  double get totalWt => details.fold(0.0, (s, d) => s + (d.wt ?? 0));
-  int    get totalPc => details.fold(0,   (s, d) => s + (d.pc ?? 0));
+  // double get totalWt => details.fold(0.0, (s, d) => s + (d.wt ?? 0));
+  // int    get totalPc => details.fold(0,   (s, d) => s + (d.pc ?? 0));
 
   static String? _parseDateOnly(dynamic val) {
     if (val == null) return null;
@@ -491,44 +501,44 @@ class CutCreateDetModel {
     'CutType':          cutType,
     'KapanNo':          kapanNo,
     'CutNo':            cutNo,
-    'ClvCut':           clvCut,
-    'MfgCut':           mfgCut,
+    if(clvCut != null)'ClvCut':           clvCut,
+    if(mfgCut != null)'MfgCut':           mfgCut,
     'Pc':               pc,
     'Wt':               wt,
-    'WtLoss':           wtLoss,
-    'Out':              out,
-    'ColorCode':        colorCode,
-    'PurityCode':       purityCode,
-    'AutoPktCreate':    autoPktCreate,
-    'Finish':           finish,
-    'LastCrId':         lastCrId,
-    'FinishDate':       finishDate,
-    'CutRec':           cutRec,
-    'ClvFinish':        clvFinish,
-    'ClvFinishDate':    clvFinishDate,
-    'Signer2Code':      signer2Code,
-    'Signer3Code':      signer3Code,
-    'Labour':           labour,
+    if(wtLoss != null)'WtLoss':           wtLoss,
+    if(out != null)'Out':              out,
+    'ColorCode':  (colorCode  == null || colorCode  == 0) ? null : colorCode,
+    'PurityCode': (purityCode == null || purityCode == 0) ? null : purityCode,
+    'CharniCode': (charniCode == null || charniCode == 0) ? null : charniCode,
+    if(autoPktCreate != null)'AutoPktCreate':    autoPktCreate,
+    if(finish != null)'Finish':           finish,
+    if(lastCrId != null)'LastCrId':         lastCrId,
+    if(finishDate != null)'FinishDate':       finishDate,
+    if(cutRec != null)'CutRec':           cutRec,
+    if(clvFinish != null)'ClvFinish':        clvFinish,
+    if(clvFinishDate != null)'ClvFinishDate':    clvFinishDate,
+    if(signer2Code != null)'Signer2Code':      signer2Code,
+    if(signer3Code != null)'Signer3Code':      signer3Code,
+    if(labour != null)'Labour':           labour,
     'ComparisionCode':  comparisionCode,
-    'Rate':             rate,
-    'Urgent':           urgent,
-    'PurityType':       purityType,
-    'PoPc':             poPc,
-    'PoWt':             poWt,
-    'AvgRate':          avgRate,
-    'AvgAmt':           avgAmt,
-    'LabRate':          labRate,
-    'LabAmt':           labAmt,
-    'TotAmt':           totAmt,
-    'TotAvg':           totAvg,
-    'Diff':             diff,
-    'PcDiff':           pcDiff,
-    'RoughAssortDetID': roughAssortDetID,
-    'CharniCode':       charniCode,
-    'PMFinish':         pmFinish,
-    'PMFinishDate':     pmFinishDate,
-    'LSFinish':         lsFinish,
-    'LSFinishDate':     lsFinishDate,
+    if(rate != null)'Rate':             rate,
+    if(urgent != null)'Urgent':           urgent,
+    if(purityType != null)'PurityType':       purityType,
+    if(poPc != null)'PoPc':             poPc,
+    if(poWt != null)'PoWt':             poWt,
+    if(avgRate != null)'AvgRate':          avgRate,
+    if(avgAmt != null)'AvgAmt':           avgAmt,
+    if(labRate != null)'LabRate':          labRate,
+    if(labAmt != null)'LabAmt':           labAmt,
+    if(totAmt != null)'TotAmt':           totAmt,
+    if(totAvg != null)'TotAvg':           totAvg,
+    if(diff != null)'Diff':             diff,
+    if(pcDiff != null)'PcDiff':           pcDiff,
+    if(roughAssortDetID != null)'RoughAssortDetID': roughAssortDetID,
+    if(pmFinish != null)'PMFinish':         pmFinish,
+    if(pmFinishDate != null)'PMFinishDate':     pmFinishDate,
+    if(lsFinish != null)'LSFinish':         lsFinish,
+    if(lsFinishDate != null)'LSFinishDate':     lsFinishDate,
   };
 
   static double? _d(dynamic v) {
@@ -549,6 +559,8 @@ extension CutCreateModelExt on CutCreateModel {
     'cutCreateDate':  cutCreateDate ?? '',
     'jno':            jno?.toString() ?? '',
     'kapanNo':        kapanNo         ?? '',
+    'totalWt':        totalWt.toStringAsFixed(2),  // ✅
+    'totalPc':        totalPc.toString(),
     '_raw': this,
   };
 }

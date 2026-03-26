@@ -857,7 +857,7 @@
 //     return ErpDataTable(
 //       isReportRow: false,
 //       token:       token ?? '',
-//       url:         'http://50.62.183.116:5000',
+//       url:         baseUrl,
 //       title:       'CUT CREATE LIST',
 //       columns:     _tableColumns,
 //       data:        data,
@@ -891,6 +891,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../models/rough_assort_model.dart';
 import '../models/rough_model.dart';
 
@@ -943,6 +944,8 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
     ErpColumnConfig(key: 'cutCreateDate',  label: 'DATE',  width: 110, required: true, isDate: true),
     ErpColumnConfig(key: 'kapanNo',        label: 'KAPAN', width: 150),
     ErpColumnConfig(key: 'jno',            label: 'JNO',   width: 130),
+    ErpColumnConfig(key: 'totalPc',        label: 'TOT PC',  width: 160,  align: ColumnAlign.right),  // ✅
+    ErpColumnConfig(key: 'totalWt',        label: 'TOT WT',  width: 160, align: ColumnAlign.right),  // ✅
   ];
 
   // ── FORM ROWS ──────────────────────────────────────────────────────────────
@@ -1629,10 +1632,11 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
     return ErpDataTable(
       isReportRow: false,
       token:       token ?? '',
-      url:         'http://50.62.183.116:5000',
+      url:         baseUrl,
       title:       'CUT CREATE LIST',
       columns:     _tableColumns,
       data:        data,
+      dateFilter: true,
       showSearch:  true,
       searchFields: const [
         ErpSearchFieldConfig(key: 'kapanNo', label: 'KAPAN NO', width: 150),

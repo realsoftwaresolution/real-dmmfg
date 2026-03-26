@@ -14,7 +14,11 @@ class DivisionProvider extends BaseProvider {
     _companies = companies;
     notifyListeners();
   }
+  int? _selectedCompanyCode;
 
+  void setSelectedCompany(int? code) {
+    _selectedCompanyCode = code;
+  }
   List<Map<String, dynamic>> get tableData =>
       _divisions.map((d) {
         // companyCode se companyName dhundho
@@ -44,6 +48,8 @@ class DivisionProvider extends BaseProvider {
 
   // ── CREATE ───────────────────────────────────────────────────────────────
   Future<bool> createDivision(Map<String, dynamic> formValues) async {
+    formValues['companyCode'] = _selectedCompanyCode?.toString() ?? '';
+
     final model = DivisionModel.fromFormValues(formValues);
 
     final result = await request<DivisionModel>(
@@ -63,6 +69,8 @@ class DivisionProvider extends BaseProvider {
 
   // ── UPDATE ───────────────────────────────────────────────────────────────
   Future<bool> updateDivision(int code, Map<String, dynamic> formValues) async {
+    formValues['companyCode'] = _selectedCompanyCode?.toString() ?? '';
+
     final model = DivisionModel.fromFormValues(formValues);
 
     final result = await request<DivisionModel>(

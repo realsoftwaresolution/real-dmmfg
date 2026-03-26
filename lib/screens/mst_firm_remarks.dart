@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../models/remarks_model.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
@@ -47,27 +48,35 @@ class _MstRemarksState extends State<MstRemarks> {
       DeptProcessProvider deptProcessProvider,
       ) =>
       [
+        // [
+        //   // ErpFieldConfig(
+        //   //   key: 'remarksCode',
+        //   //   label: 'CODE',
+        //   //   type: ErpFieldType.number,
+        //   //   required: true,
+        //   //   sectionTitle: 'BASIC INFORMATION',
+        //   //   sectionIndex: 0,
+        //   // ),
+        //   ErpFieldConfig(
+        //     key: 'remarksName',
+        //     label: 'NAME',
+        //     required: true,
+        //     sectionIndex: 0,
+        //   ),
+        // ],
         [
-          // ErpFieldConfig(
-          //   key: 'remarksCode',
-          //   label: 'CODE',
-          //   type: ErpFieldType.number,
-          //   required: true,
-          //   sectionTitle: 'BASIC INFORMATION',
-          //   sectionIndex: 0,
-          // ),
           ErpFieldConfig(
             key: 'remarksName',
             label: 'NAME',
             required: true,
             sectionIndex: 0,
           ),
-        ],
-        [
           ErpFieldConfig(
             key: 'deptCode',
             label: 'DEPARTMENT',
             type: ErpFieldType.dropdown,
+            initialDropValue: true,
+            required: true,
             dropdownItems: deptProvider.list
                 .where((element) {
               return element.active==true;
@@ -82,6 +91,8 @@ class _MstRemarksState extends State<MstRemarks> {
           ErpFieldConfig(
             key: 'deptProcessCode',
             label: 'DEPT PROCESS',
+            initialDropValue: true,
+            required: true,
             type: ErpFieldType.dropdown,
             dropdownItems: deptProcessProvider.list
                 .where((element) {
@@ -96,29 +107,27 @@ class _MstRemarksState extends State<MstRemarks> {
           ),
         ],
         [
-          ErpFieldConfig(
-            key: 'companyCode',
-            label: 'COMPANY',
-            type: ErpFieldType.dropdown,
-            dropdownItems: companyProvider.companies
-                .where((element) {
-              return element.active==true;
-            },).map((e) {
-              return ErpDropdownItem(
-                label: e.companyName ?? '',
-                value: e.companyCode?.toString() ?? '',
-              );
-            }).toList(),
-            sectionIndex: 0,
-          ),
+          // ErpFieldConfig(
+          //   key: 'companyCode',
+          //   label: 'COMPANY',
+          //   type: ErpFieldType.dropdown,
+          //   dropdownItems: companyProvider.companies
+          //       .where((element) {
+          //     return element.active==true;
+          //   },).map((e) {
+          //     return ErpDropdownItem(
+          //       label: e.companyName ?? '',
+          //       value: e.companyCode?.toString() ?? '',
+          //     );
+          //   }).toList(),
+          //   sectionIndex: 0,
+          // ),
           ErpFieldConfig(
             key: 'sortID',
             label: 'SORT ID',
             type: ErpFieldType.number,
             sectionIndex: 0,
           ),
-        ],
-        [
           ErpFieldConfig(
             key: 'tops',
             label: 'TOPS',
@@ -126,6 +135,14 @@ class _MstRemarksState extends State<MstRemarks> {
             sectionIndex: 0,
           ),
         ],
+        // [
+        //   ErpFieldConfig(
+        //     key: 'tops',
+        //     label: 'TOPS',
+        //     type: ErpFieldType.number,
+        //     sectionIndex: 0,
+        //   ),
+        // ],
         [
           ErpFieldConfig(
             key: 'active',
@@ -133,6 +150,7 @@ class _MstRemarksState extends State<MstRemarks> {
             type: ErpFieldType.checkbox,
             sectionTitle: 'SETTINGS',
             sectionIndex: 1,
+            initialBoolValue: true,
             checkboxDbType: 'BIT'
           ),
         ],
@@ -148,6 +166,28 @@ class _MstRemarksState extends State<MstRemarks> {
   //     context.read<DeptProcessProvider>().load();
   //   });
   // }
+  void _setDefaultSortId() {
+    final provider = context.read<RemarksProvider>();
+
+    int nextSortId = 1;
+    if (provider.list.isNotEmpty) {
+      nextSortId = provider.list
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -162,8 +202,10 @@ class _MstRemarksState extends State<MstRemarks> {
       final companies = context.read<CompanyProvider>().companies;
       context.read<RemarksProvider>().setCompanies(companies);
 
-
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<RemarksProvider>().setSelectedCompany(selectedCode);
       await context.read<RemarksProvider>().load();
+      _setDefaultSortId();
 
     });
   }
@@ -177,7 +219,8 @@ class _MstRemarksState extends State<MstRemarks> {
         'remarksName': raw.remarksName ?? '',
         'deptCode': raw.deptCode?.toString() ?? '',
         'deptProcessCode': raw.deptProcessCode?.toString() ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'sortID': raw.sortID?.toString() ?? '',
         'tops': raw.tops?.toString() ?? '',
         'active': raw.active == true ? 'true' : 'false',
@@ -247,7 +290,7 @@ class _MstRemarksState extends State<MstRemarks> {
     // );
     if (confirm != true || !mounted) return;
     final success =
-    await context.read<RemarksProvider>().delete(raw!.remarksCode!);
+    await context.read<RemarksProvider>().delete(raw.remarksCode!);
     if (success && mounted) {
       _resetForm();
       await ErpResultDialog.showDeleted(
@@ -275,6 +318,7 @@ class _MstRemarksState extends State<MstRemarks> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _setDefaultSortId();
   }
   bool _showTableOnMobile = false;
 
@@ -293,7 +337,7 @@ class _MstRemarksState extends State<MstRemarks> {
                 isReportRow: false,
 
                 token: token ?? '',
-                url: 'http://50.62.183.116:5000',
+                url: baseUrl,
                 title: 'REMARKS LIST',
                 columns: _tableColumns,
                 data: provider.tableData,
@@ -306,6 +350,9 @@ class _MstRemarksState extends State<MstRemarks> {
                     ? 'No Remarks found'
                     : 'Loading...',
               ):ErpForm(
+                onExit: () {
+                  context.read<TabProvider>().closeCurrentTab();
+                },
                 logo: AppImages.logo,
 
                 key: _erpFormKey,
@@ -335,6 +382,9 @@ class _MstRemarksState extends State<MstRemarks> {
               Expanded(
                 flex: 2,
                 child: ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -364,7 +414,7 @@ class _MstRemarksState extends State<MstRemarks> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'REMARKS LIST',
                   columns: _tableColumns,
                   data: provider.tableData,
@@ -385,28 +435,4 @@ class _MstRemarksState extends State<MstRemarks> {
     );
   }
 
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
 }

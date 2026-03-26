@@ -16,7 +16,11 @@ class PurityRptGroupProvider extends BaseProvider {
     _companies = companies;
     notifyListeners();
   }
+  int? _selectedCompanyCode;
 
+  void setSelectedCompany(int? code) {
+    _selectedCompanyCode = code;
+  }
   List<Map<String, dynamic>> get tableData =>
       _list.map((d) {
         // companyCode se companyName dhundho
@@ -46,6 +50,8 @@ class PurityRptGroupProvider extends BaseProvider {
 
   // ───── CREATE ─────
   Future<bool> create(Map<String, dynamic> formValues) async {
+    formValues['companyCode'] = _selectedCompanyCode?.toString() ?? '';
+
     final model = PurityRptGroupModel.fromFormValues(formValues);
 
     final result = await request<PurityRptGroupModel>(
@@ -64,6 +70,8 @@ class PurityRptGroupProvider extends BaseProvider {
 
   // ───── UPDATE ─────
   Future<bool> update(int code, Map<String, dynamic> formValues) async {
+    formValues['companyCode'] = _selectedCompanyCode?.toString() ?? '';
+
     final model = PurityRptGroupModel.fromFormValues(formValues);
 
     final result = await request<PurityRptGroupModel>(

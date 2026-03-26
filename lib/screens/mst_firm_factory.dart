@@ -1,17 +1,15 @@
-// lib/screens/mst_firm_company.dart
 
 import 'package:diam_mfg/models/factory_model.dart';
-import 'package:diam_mfg/models/party_model.dart';
 import 'package:diam_mfg/providers/division_provider.dart';
 import 'package:diam_mfg/providers/factory_man_group_provider.dart';
 import 'package:diam_mfg/providers/factory_provider.dart';
-import 'package:diam_mfg/providers/party_provider.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:erp_formatter/erp_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart' show baseUrl;
 import '../models/company_model.dart';
 import '../providers/company_provider.dart';
 import '../utils/app_images.dart' show AppImages;
@@ -104,32 +102,50 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
   List<List<ErpFieldConfig>>  _formRows(CompanyProvider companyProvider,FactoryManGroupProvider factoryManGroupProvider,DivisionProvider divisionProvider) => [
 
     /// ───────── BASIC INFO ─────────
+    // [
+    //   // ErpFieldConfig(
+    //   //   key: 'factoryCode',
+    //   //   label: 'FACTORY CODE',
+    //   //   type: ErpFieldType.number,
+    //   //   required: true,
+    //   //   sectionTitle: 'BASIC INFORMATION',
+    //   //   sectionIndex: 0,
+    //   // ),
+    //   ErpFieldConfig(
+    //     key: 'factoryName',
+    //     label: 'FACTORY NAME',
+    //     required: true,
+    //     sectionIndex: 0,
+    //   ),
+    // ],
+
     [
-      // ErpFieldConfig(
-      //   key: 'factoryCode',
-      //   label: 'FACTORY CODE',
-      //   type: ErpFieldType.number,
-      //   required: true,
-      //   sectionTitle: 'BASIC INFORMATION',
-      //   sectionIndex: 0,
-      // ),
       ErpFieldConfig(
         key: 'factoryName',
         label: 'FACTORY NAME',
         required: true,
         sectionIndex: 0,
       ),
-    ],
-
-    [
       ErpFieldConfig(
         key: 'contactPerson',
         label: 'CONTACT PERSON',
         sectionIndex: 0,
       ),
+      // ErpFieldConfig(
+      //   key: 'factoryType',
+      //   label: 'TYPE',
+      //   sectionIndex: 0,
+      // ),
       ErpFieldConfig(
         key: 'factoryType',
         label: 'TYPE',
+        required: true,
+        type: ErpFieldType.dropdown,
+        initialDropValue: true,
+        dropdownItems: const [
+          ErpDropdownItem(label: 'Self', value: 'Self'),
+          ErpDropdownItem(label: 'Out', value: 'Out'),
+        ],
         sectionIndex: 0,
       ),
     ],
@@ -139,7 +155,8 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
         key: 'factoryManGroupCode',
         // label: 'MAN GROUP CODE',
         label: 'GROUP',
-
+        required: true,
+        initialDropValue: true,
         type: ErpFieldType.dropdown,
         dropdownItems: factoryManGroupProvider.groups
             .where((element) {
@@ -167,6 +184,8 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
         key: 'divisionCode',
         label: 'DIVISION CODE',
         type: ErpFieldType.dropdown,
+        required: true,
+        initialDropValue: true,
         dropdownItems: divisionProvider.divisions
             .where((element) {
           return element.active==true;
@@ -191,28 +210,28 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
       // ),
     ],
 
-    [
-      ErpFieldConfig(
-        key: 'companyCode',
-        label: 'COMPANY',
-        type: ErpFieldType.dropdown,
-        dropdownItems: companyProvider.companies
-            .where((element) {
-          return element.active==true;
-        },).map((e) {
-          return ErpDropdownItem(
-            label: e.companyName ?? '',
-            value: e.companyCode?.toString() ?? '',
-          );
-        }).toList(),
-        // dropdownItems:companyProvider
-        //     .companies
-        //     .map((e) => e.companyName.toString())
-        //     .toList(),
-        sectionIndex: 0,
-
-      ),
-    ],
+    // [
+    //   ErpFieldConfig(
+    //     key: 'companyCode',
+    //     label: 'COMPANY',
+    //     type: ErpFieldType.dropdown,
+    //     dropdownItems: companyProvider.companies
+    //         .where((element) {
+    //       return element.active==true;
+    //     },).map((e) {
+    //       return ErpDropdownItem(
+    //         label: e.companyName ?? '',
+    //         value: e.companyCode?.toString() ?? '',
+    //       );
+    //     }).toList(),
+    //     // dropdownItems:companyProvider
+    //     //     .companies
+    //     //     .map((e) => e.companyName.toString())
+    //     //     .toList(),
+    //     sectionIndex: 0,
+    //
+    //   ),
+    // ],
 
     /// ───────── CONTACT DETAILS ─────────
     [
@@ -286,6 +305,7 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
         label: 'ACTIVE',
         type: ErpFieldType.checkbox,
         checkboxDbType: 'BIT',
+        initialBoolValue: true,
         // dropdownItems: const [
         //   ErpDropdownItem(label: 'Yes', value: 'Y'),
         //   ErpDropdownItem(label: 'No', value: 'N'),
@@ -298,10 +318,13 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+
       context.read<FactoryProvider>().loadFactories();
       context.read<CompanyProvider>().loadCompanies();
       context.read<DivisionProvider>().loadDivisions();
       context.read<FactoryManGroupProvider>().loadGroups();
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<FactoryProvider>().setSelectedCompany(selectedCode);
     });
   }
 
@@ -335,7 +358,8 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
         'factoryType': raw.factoryType ?? '',
         'factoryManGroupCode': raw.factoryManGroupCode?.toString() ?? '',
         'divisionCode': raw.divisionCode?.toString() ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'rateOnShape': raw.rateOnShape == 'Y' ? 'true' : 'false',
         'rateOnCut': raw.rateOnCut == 'Y' ? 'true' : 'false',
         'diamEntry': raw.diamEntry == 'Y' ? 'true' : 'false',
@@ -425,7 +449,7 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
     if (confirm != true || !mounted) return;
 
     final success =
-    await context.read<FactoryProvider>().deleteFactory(raw!.factoryCode!);
+    await context.read<FactoryProvider>().deleteFactory(raw.factoryCode!);
 
     if (success && mounted) {
       _resetForm();
@@ -474,7 +498,7 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'FACTORY LIST',
                   columns: _tableColumns,
                   // availableExtraColumns: _extraColumns,
@@ -488,6 +512,9 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
         ? 'No Factory found'
         : 'Loading...',
                 ):ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -534,6 +561,9 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
               Expanded(
                 flex: 2,
                 child: ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -582,7 +612,7 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'FACTORY LIST',
                   columns: _tableColumns,
                   // availableExtraColumns: _extraColumns,
@@ -604,29 +634,5 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
     );
   }
 
-  // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

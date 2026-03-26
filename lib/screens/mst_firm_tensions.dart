@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../models/tensions_model.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
@@ -44,27 +45,35 @@ class _MstTensionsState extends State<MstTensions> {
   // ── FORM ROWS ─────────────────────────────────────────────────────────────
   List<List<ErpFieldConfig>> _formRows(CompanyProvider companyProvider,TensionTypeProvider tensionTypeProvider) => [
     /// ── BASIC INFO ──
+    // [
+    //   // ErpFieldConfig(
+    //   //   key: 'tensionsCode',
+    //   //   label: 'CODE',
+    //   //   type: ErpFieldType.number,
+    //   //   required: true,
+    //   //   sectionTitle: 'BASIC INFORMATION',
+    //   //   sectionIndex: 0,
+    //   // ),
+    //   ErpFieldConfig(
+    //     key: 'tensionsName',
+    //     label: 'NAME',
+    //     required: true,
+    //     sectionIndex: 0,
+    //   ),
+    // ],
+
     [
-      // ErpFieldConfig(
-      //   key: 'tensionsCode',
-      //   label: 'CODE',
-      //   type: ErpFieldType.number,
-      //   required: true,
-      //   sectionTitle: 'BASIC INFORMATION',
-      //   sectionIndex: 0,
-      // ),
       ErpFieldConfig(
         key: 'tensionsName',
         label: 'NAME',
         required: true,
         sectionIndex: 0,
       ),
-    ],
-
-    [
       ErpFieldConfig(
         key: 'tensionType',
         label: 'TENSION TYPE',
+        required: true,
+        initialDropValue: true,
         type: ErpFieldType.dropdown,
         dropdownItems: tensionTypeProvider.list
             .where((element) {
@@ -78,30 +87,36 @@ class _MstTensionsState extends State<MstTensions> {
         sectionIndex: 0,
       ),
       ErpFieldConfig(
-        key: 'companyCode',
-        label: 'COMPANY',
-        type: ErpFieldType.dropdown,
-        dropdownItems: companyProvider.companies
-            .where((element) {
-          return element.active==true;
-        },).map((e) {
-          return ErpDropdownItem(
-            label: e.companyName ?? '',
-            value: e.companyCode?.toString() ?? '',
-          );
-        }).toList(),
-        sectionIndex: 0,
-      ),
-    ],
-
-    [
-      ErpFieldConfig(
         key: 'sortID',
         label: 'SORT ID',
         type: ErpFieldType.number,
         sectionIndex: 0,
       ),
+      // ErpFieldConfig(
+      //   key: 'companyCode',
+      //   label: 'COMPANY',
+      //   type: ErpFieldType.dropdown,
+      //   dropdownItems: companyProvider.companies
+      //       .where((element) {
+      //     return element.active==true;
+      //   },).map((e) {
+      //     return ErpDropdownItem(
+      //       label: e.companyName ?? '',
+      //       value: e.companyCode?.toString() ?? '',
+      //     );
+      //   }).toList(),
+      //   sectionIndex: 0,
+      // ),
     ],
+
+    // [
+    //   ErpFieldConfig(
+    //     key: 'sortID',
+    //     label: 'SORT ID',
+    //     type: ErpFieldType.number,
+    //     sectionIndex: 0,
+    //   ),
+    // ],
 
     /// ── SETTINGS ──
     [
@@ -111,6 +126,7 @@ class _MstTensionsState extends State<MstTensions> {
         type: ErpFieldType.checkbox,
         sectionTitle: 'SETTINGS',
         sectionIndex: 1,
+        initialBoolValue: true,
         checkboxDbType: 'BIT'
       ),
     ],
@@ -125,6 +141,28 @@ class _MstTensionsState extends State<MstTensions> {
   //     context.read<CompanyProvider>().loadCompanies();
   //   });
   // }
+  void _setDefaultSortId() {
+    final provider = context.read<TensionsProvider>();
+
+    int nextSortId = 1;
+    if (provider.list.isNotEmpty) {
+      nextSortId = provider.list
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -139,8 +177,10 @@ class _MstTensionsState extends State<MstTensions> {
       final companies = context.read<CompanyProvider>().companies;
       context.read<TensionsProvider>().setCompanies(companies);
 
-
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<TensionsProvider>().setSelectedCompany(selectedCode);
       await context.read<TensionsProvider>().load();
+      _setDefaultSortId();
 
     });
   }
@@ -155,7 +195,8 @@ class _MstTensionsState extends State<MstTensions> {
         'tensionsCode': raw.tensionsCode?.toString() ?? '',
         'tensionsName': raw.tensionsName ?? '',
         'tensionType': raw.tensionType ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'sortID': raw.sortID?.toString() ?? '',
         'active': raw.active == true ? 'true' : 'false',
       };
@@ -264,6 +305,7 @@ class _MstTensionsState extends State<MstTensions> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _setDefaultSortId();
   }
   bool _showTableOnMobile = false;
 
@@ -282,7 +324,7 @@ class _MstTensionsState extends State<MstTensions> {
                 isReportRow: false,
 
                 token: token ?? '',
-                url: 'http://50.62.183.116:5000',
+                url: baseUrl,
                 title: 'TENSIONS LIST',
                 columns: _tableColumns,
                 data: provider.tableData,
@@ -295,6 +337,9 @@ class _MstTensionsState extends State<MstTensions> {
                     ? 'No Tension found'
                     : 'Loading...',
               ):ErpForm(
+                onExit: () {
+                  context.read<TabProvider>().closeCurrentTab();
+                },
                 logo: AppImages.logo,
 
                 key: _erpFormKey,
@@ -324,6 +369,9 @@ class _MstTensionsState extends State<MstTensions> {
               Expanded(
                 flex: 2,
                 child: ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -355,7 +403,7 @@ class _MstTensionsState extends State<MstTensions> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'TENSIONS LIST',
                   columns: _tableColumns,
                   data: provider.tableData,
@@ -376,29 +424,5 @@ class _MstTensionsState extends State<MstTensions> {
     );
   }
 
-  // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

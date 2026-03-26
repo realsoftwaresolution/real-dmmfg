@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
 import '../utils/msg_dialogue.dart';
@@ -65,24 +66,6 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
         required: true,
         sectionIndex: 0,
       ),
-    ],
-
-    [
-      ErpFieldConfig(
-        key: 'companyCode',
-        label: 'COMPANY',
-        type: ErpFieldType.dropdown,
-        dropdownItems: companyProvider.companies
-            .where((element) {
-          return element.active==true;
-        },).map((e) {
-          return ErpDropdownItem(
-            label: e.companyName ?? '',
-            value: e.companyCode?.toString() ?? '',
-          );
-        }).toList(),
-        sectionIndex: 0,
-      ),
       ErpFieldConfig(
         key: 'sortID',
         label: 'SORT ID',
@@ -91,14 +74,33 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
       ),
     ],
 
-    /// ── SETTINGS ──
+    // [
+    //   ErpFieldConfig(
+    //     key: 'companyCode',
+    //     label: 'COMPANY',
+    //     type: ErpFieldType.dropdown,
+    //     dropdownItems: companyProvider.companies
+    //         .where((element) {
+    //       return element.active==true;
+    //     },).map((e) {
+    //       return ErpDropdownItem(
+    //         label: e.companyName ?? '',
+    //         value: e.companyCode?.toString() ?? '',
+    //       );
+    //     }).toList(),
+    //     sectionIndex: 0,
+    //   ),
+    //
+    // ],
+
+
     [
       ErpFieldConfig(
         key: 'active',
         label: 'ACTIVE',
         type: ErpFieldType.checkbox,
         sectionTitle: 'SETTINGS',
-        sectionIndex: 1,checkboxDbType: 'BIT'      ),
+        sectionIndex: 1,checkboxDbType: 'BIT' ,initialBoolValue: true     ),
       // ErpFieldConfig(
       //   key: 'active',
       //   label: 'ACTIVE',
@@ -120,13 +122,37 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
       await context.read<CompanyProvider>().loadCompanies();
 
       if (!mounted) return;
-
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<FactoryManGroupProvider>().setSelectedCompany(selectedCode);
       // ← ab companies available hain, division provider ko pass karo
       final companies = context.read<CompanyProvider>().companies;
       context.read<FactoryManGroupProvider>().setCompanies(companies);
 
       // ← last mein divisions load karo
       await context.read<FactoryManGroupProvider>().loadGroups();
+      _setDefaultSortId(); // 👈 yaha call karo
+
+    });
+  }
+  void _setDefaultSortId() {
+    final provider = context.read<FactoryManGroupProvider>();
+
+    int nextSortId = 1;
+    if (provider.groups.isNotEmpty) {
+      nextSortId = provider.groups
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+   Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
     });
   }
   // ── INIT ──────────────────────────────────────────────────────────────────
@@ -149,7 +175,8 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
       _formValues = {
         'factoryManGroupCode': raw.factoryManGroupCode?.toString() ?? '',
         'factoryManGroupName': raw.factoryManGroupName ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'sortID': raw.sortID?.toString() ?? '',
         'active': raw.active == true ? 'true' : 'false',
       };
@@ -228,7 +255,7 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
 
     final success = await context
         .read<FactoryManGroupProvider>()
-        .deleteGroup(raw!.factoryManGroupCode!);
+        .deleteGroup(raw.factoryManGroupCode!);
 
     if (success && mounted) {
       _resetForm();
@@ -252,6 +279,7 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
 
   // ── RESET ─────────────────────────────────────────────────────────────────
   void _resetForm() {
+
     setState(() {
       _selectedRow = null;
       _isEditMode = false;
@@ -259,6 +287,8 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _setDefaultSortId(); // 👈 IMPORTANT
+
   }
   bool _showTableOnMobile = false;
 
@@ -276,7 +306,7 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
                 isReportRow: false,
 
                 token: token ?? '',
-                url: 'http://50.62.183.116:5000',
+                url: baseUrl,
                 title: 'FACTORY MAN GROUP LIST',
                 columns: _tableColumns,
                 // availableExtraColumns: _extraColumns,
@@ -289,6 +319,9 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
                 emptyMessage:
                 provider.isLoaded ? 'No groups found' : 'Loading...',
               ):ErpForm(
+                onExit: () {
+                  context.read<TabProvider>().closeCurrentTab();
+                },
                 logo: AppImages.logo,
 
                 key: _erpFormKey,
@@ -323,6 +356,9 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
               Expanded(
                 flex: 2,
                 child: ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -360,7 +396,7 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'FACTORY MAN GROUP LIST',
                   columns: _tableColumns,
                   // availableExtraColumns: _extraColumns,
@@ -381,29 +417,5 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
     );
   }
 
-  // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

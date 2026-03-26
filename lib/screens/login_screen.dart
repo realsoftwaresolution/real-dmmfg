@@ -5,8 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
 import '../providers/auth_provider.dart';
-import '../providers/menu_provider.dart';
-import '../utils/app_router.dart';
+import '../providers/company_provider.dart';
+
+import 'company_dialogue.dart';
 
 class LoginScreenV7 extends StatefulWidget {
   const LoginScreenV7({Key? key}) : super(key: key);
@@ -20,7 +21,6 @@ class _LoginScreenV7State extends State<LoginScreenV7>
   final _emailCtrl = TextEditingController(text: 'Real');
   final _passCtrl = TextEditingController(text: '123');
   bool _obscure = true;
-  bool _remember = true;
 
   late AnimationController _bgCtrl;      // starfield
   late AnimationController _floatCtrl;   // card float
@@ -77,18 +77,31 @@ class _LoginScreenV7State extends State<LoginScreenV7>
     _entryCtrl.dispose();
     super.dispose();
   }
-
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     final auth = context.read<AuthProvider>();
     final ok = await auth.login(
         username: _emailCtrl.text.trim(), password: _passCtrl.text);
     if (ok && mounted) {
-      final menuProvider=context.read<MenuProvider>();
-      // Navigator.pushReplacementNamed(context, '/dashboard');
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => DashboardLayout(menu: menuProvider.menus, router: AppRouter.router, sideHeader: 'Real-Dmmfg',)));
+      final companyProvider = context.read<CompanyProvider>();
+      await companyProvider.loadCompanies();
+      if (!mounted) return;
+
+      // ✅ Bas yahi — Dialog khud navigate karega Done pe
+      showCompanySelectionDialog(context);
     }
   }
+  // Future<void> _login() async {
+  //   if (!_formKey.currentState!.validate()) return;
+  //   final auth = context.read<AuthProvider>();
+  //   final ok = await auth.login(
+  //       username: _emailCtrl.text.trim(), password: _passCtrl.text);
+  //   if (ok && mounted) {
+  //     final menuProvider=context.read<MenuProvider>();
+  //     // Navigator.pushReplacementNamed(context, '/dashboard');
+  //     Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => DashboardLayout(menu: menuProvider.menus, router: AppRouter.router, sideHeader: 'Real-Dmmfg',)));
+  //   }
+  // }
 
   Widget _s(int i, Widget child) {
     return AnimatedBuilder(
@@ -274,53 +287,53 @@ class _LoginScreenV7State extends State<LoginScreenV7>
                               ),
                               validator: (v) => v!.isEmpty ? 'Required' : null,
                             )),
-                            const SizedBox(height: 14),
-                            _s(3, Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                GestureDetector(
-                                  onTap: () => setState(() => _remember = !_remember),
-                                  child: Row(
-                                    children: [
-                                      AnimatedContainer(
-                                        duration: const Duration(milliseconds: 200),
-                                        width: 18, height: 18,
-                                        decoration: BoxDecoration(
-                                          color: _remember
-                                              ? const Color(0xFF556EE6)
-                                              : Colors.transparent,
-                                          border: Border.all(
-                                              color: _remember
-                                                  ? const Color(0xFF556EE6)
-                                                  : Colors.white24),
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: _remember
-                                            ? const Icon(Icons.check,
-                                            size: 12, color: Colors.white)
-                                            : null,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text('Remember me',
-                                          style: TextStyle(
-                                              color: Colors.white.withOpacity(0.45),
-                                              fontSize: 13)),
-                                    ],
-                                  ),
-                                ),
-                                TextButton(
-                                  onPressed: () {},
-                                  style: TextButton.styleFrom(
-                                      minimumSize: Size.zero,
-                                      padding: const EdgeInsets.symmetric(horizontal: 4)),
-                                  child: const Text('Forgot?',
-                                      style: TextStyle(
-                                          color: Color(0xFF8B99FF), fontSize: 13)),
-                                ),
-                              ],
-                            )),
+                            // const SizedBox(height: 14),
+                            // _s(3, Row(
+                            //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            //   children: [
+                            //     GestureDetector(
+                            //       onTap: () => setState(() => _remember = !_remember),
+                            //       child: Row(
+                            //         children: [
+                            //           AnimatedContainer(
+                            //             duration: const Duration(milliseconds: 200),
+                            //             width: 18, height: 18,
+                            //             decoration: BoxDecoration(
+                            //               color: _remember
+                            //                   ? const Color(0xFF556EE6)
+                            //                   : Colors.transparent,
+                            //               border: Border.all(
+                            //                   color: _remember
+                            //                       ? const Color(0xFF556EE6)
+                            //                       : Colors.white24),
+                            //               borderRadius: BorderRadius.circular(4),
+                            //             ),
+                            //             child: _remember
+                            //                 ? const Icon(Icons.check,
+                            //                 size: 12, color: Colors.white)
+                            //                 : null,
+                            //           ),
+                            //           const SizedBox(width: 8),
+                            //           Text('Remember me',
+                            //               style: TextStyle(
+                            //                   color: Colors.white.withOpacity(0.45),
+                            //                   fontSize: 13)),
+                            //         ],
+                            //       ),
+                            //     ),
+                            //     TextButton(
+                            //       onPressed: () {},
+                            //       style: TextButton.styleFrom(
+                            //           minimumSize: Size.zero,
+                            //           padding: const EdgeInsets.symmetric(horizontal: 4)),
+                            //       child: const Text('Forgot?',
+                            //           style: TextStyle(
+                            //               color: Color(0xFF8B99FF), fontSize: 13)),
+                            //     ),
+                            //   ],
+                            // )),
                             const SizedBox(height: 26),
-                            _s(4, Consumer<AuthProvider>(
+                            _s(3, Consumer<AuthProvider>(
                               builder: (_, auth, __) => Column(
                                 children: [
                                   _SpaceButton(
@@ -358,7 +371,7 @@ class _LoginScreenV7State extends State<LoginScreenV7>
                             // const SizedBox(height: 24),
                             // _s(5, _buildSocialRow()),
                             const SizedBox(height: 20),
-                            _s(5, Center(
+                            _s(4, Center(
                               child: Text('© 2026 Real Software',
                                   style: TextStyle(
                                       color: Colors.white.withOpacity(0.2),

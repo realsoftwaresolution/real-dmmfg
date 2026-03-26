@@ -1,12 +1,11 @@
-import 'package:diam_mfg/models/rough_type_model.dart';
 import 'package:diam_mfg/providers/jangad_charni_provider.dart';
-import 'package:diam_mfg/providers/rough_type_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../models/jangad_charni_model.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
@@ -66,24 +65,6 @@ class _MstJangadCharniState extends State<MstJangadCharni> {
         required: true,
         sectionIndex: 0,
       ),
-    ],
-
-    [
-      ErpFieldConfig(
-        key: 'companyCode',
-        label: 'COMPANY',
-        type: ErpFieldType.dropdown,
-        dropdownItems: companyProvider.companies
-            .where((element) {
-          return element.active==true;
-        },).map((e) {
-          return ErpDropdownItem(
-            label: e.companyName ?? '',
-            value: e.companyCode?.toString() ?? '',
-          );
-        }).toList(),
-        sectionIndex: 0,
-      ),
       ErpFieldConfig(
         key: 'sortID',
         label: 'SORT ID',
@@ -91,6 +72,30 @@ class _MstJangadCharniState extends State<MstJangadCharni> {
         sectionIndex: 0,
       ),
     ],
+
+    // [
+    //   ErpFieldConfig(
+    //     key: 'companyCode',
+    //     label: 'COMPANY',
+    //     type: ErpFieldType.dropdown,
+    //     dropdownItems: companyProvider.companies
+    //         .where((element) {
+    //       return element.active==true;
+    //     },).map((e) {
+    //       return ErpDropdownItem(
+    //         label: e.companyName ?? '',
+    //         value: e.companyCode?.toString() ?? '',
+    //       );
+    //     }).toList(),
+    //     sectionIndex: 0,
+    //   ),
+    //   ErpFieldConfig(
+    //     key: 'sortID',
+    //     label: 'SORT ID',
+    //     type: ErpFieldType.number,
+    //     sectionIndex: 0,
+    //   ),
+    // ],
 
     /// ── SETTINGS ──
     [
@@ -100,10 +105,32 @@ class _MstJangadCharniState extends State<MstJangadCharni> {
         type: ErpFieldType.checkbox,
         sectionTitle: 'SETTINGS',
         sectionIndex: 1,
+        initialBoolValue: true,
         checkboxDbType: 'BIT'
       ),
     ],
   ];
+  void _setDefaultSortId() {
+    final provider = context.read<JangadCharaniProvider>();
+
+    int nextSortId = 1;
+    if (provider.list.isNotEmpty) {
+      nextSortId = provider.list
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+  }
 
   // ── INIT ──────────────────────────────────────────────────────────────────
   // @override
@@ -126,9 +153,12 @@ class _MstJangadCharniState extends State<MstJangadCharni> {
       // ← ab companies available hain, division provider ko pass karo
       final companies = context.read<CompanyProvider>().companies;
       context.read<JangadCharaniProvider>().setCompanies(companies);
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<JangadCharaniProvider>().setSelectedCompany(selectedCode);
 
       // ← last mein divisions load karo
       await context.read<JangadCharaniProvider>().load();
+      _setDefaultSortId();
     });
   }
   void _onRowTap(Map<String, dynamic> row) {
@@ -140,7 +170,8 @@ class _MstJangadCharniState extends State<MstJangadCharni> {
       _formValues = {
         'jangadCharniCode': raw.jangadCharniCode?.toString() ?? '',
         'jangadCharniName': raw.jangadCharniName ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'sortID': raw.sortID?.toString() ?? '',
         'active': raw.active == true ? 'true' : 'false',
       };
@@ -231,7 +262,7 @@ class _MstJangadCharniState extends State<MstJangadCharni> {
     if (confirm != true || !mounted) return;
 
     final success =
-    await context.read<JangadCharaniProvider>().delete(raw!.jangadCharniCode!);
+    await context.read<JangadCharaniProvider>().delete(raw.jangadCharniCode!);
 
     if (success && mounted) {
       _resetForm();
@@ -261,6 +292,7 @@ class _MstJangadCharniState extends State<MstJangadCharni> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _setDefaultSortId();
   }
   bool _showTableOnMobile = false;
 
@@ -278,7 +310,7 @@ class _MstJangadCharniState extends State<MstJangadCharni> {
                   isReportRow: false,
 
                   token: token ?? '',
-                url: 'http://50.62.183.116:5000',
+                url: baseUrl,
                 title: 'Jangad Charni LIST',
                 columns: _tableColumns,
                 // availableExtraColumns: _extraColumns,
@@ -292,6 +324,9 @@ class _MstJangadCharniState extends State<MstJangadCharni> {
                 ? 'No Jangad Charni found'
                     : 'Loading...',
                 ):ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -325,6 +360,9 @@ class _MstJangadCharniState extends State<MstJangadCharni> {
               Expanded(
                 flex: 2,
                 child: ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -360,7 +398,7 @@ class _MstJangadCharniState extends State<MstJangadCharni> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'Jangad Charni LIST',
                   columns: _tableColumns,
                   // availableExtraColumns: _extraColumns,
@@ -382,29 +420,4 @@ class _MstJangadCharniState extends State<MstJangadCharni> {
     );
   }
 
-  // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
 }

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../models/charni_model.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
@@ -77,6 +78,12 @@ class _MstCharniState extends State<MstCharni> {
         }).toList(),
         sectionIndex: 0,
       ),
+      ErpFieldConfig(
+        key: 'sortID',
+        label: 'SORT ID',
+        type: ErpFieldType.number,
+        sectionIndex: 0,
+      ),
     ],
 
     // [
@@ -88,29 +95,29 @@ class _MstCharniState extends State<MstCharni> {
     //
     // ],
 
-    [
-      ErpFieldConfig(
-        key: 'companyCode',
-        label: 'COMPANY',
-        type: ErpFieldType.dropdown,
-        dropdownItems: companyProvider.companies
-            .where((element) {
-          return element.active==true;
-        },).map((e) {
-          return ErpDropdownItem(
-            label: e.companyName ?? '',
-            value: e.companyCode?.toString() ?? '',
-          );
-        }).toList(),
-        sectionIndex: 0,
-      ),
-      ErpFieldConfig(
-        key: 'sortID',
-        label: 'SORT ID',
-        type: ErpFieldType.number,
-        sectionIndex: 0,
-      ),
-    ],
+    // [
+    //   ErpFieldConfig(
+    //     key: 'companyCode',
+    //     label: 'COMPANY',
+    //     type: ErpFieldType.dropdown,
+    //     dropdownItems: companyProvider.companies
+    //         .where((element) {
+    //       return element.active==true;
+    //     },).map((e) {
+    //       return ErpDropdownItem(
+    //         label: e.companyName ?? '',
+    //         value: e.companyCode?.toString() ?? '',
+    //       );
+    //     }).toList(),
+    //     sectionIndex: 0,
+    //   ),
+    //   ErpFieldConfig(
+    //     key: 'sortID',
+    //     label: 'SORT ID',
+    //     type: ErpFieldType.number,
+    //     sectionIndex: 0,
+    //   ),
+    // ],
 
     /// ── SIZE RANGE ──
     [
@@ -165,6 +172,8 @@ class _MstCharniState extends State<MstCharni> {
       ErpFieldConfig(
         key: 'deptCode',
         label: 'DEPT CODE',
+        required: true,
+        initialDropValue: true,
         type: ErpFieldType.dropdown,
         dropdownItems: deptProvider.list
             .where((element) {
@@ -192,6 +201,7 @@ class _MstCharniState extends State<MstCharni> {
         type: ErpFieldType.checkbox,
         sectionTitle: 'SETTINGS',
         sectionIndex: 2,
+        initialBoolValue: true,
         checkboxDbType: 'BIT'
       ),
       ErpFieldConfig(
@@ -215,16 +225,40 @@ class _MstCharniState extends State<MstCharni> {
   //     context.read<DeptProvider>().load();
   //   });
   // }
+  void _setDefaultSortId() {
+    final provider = context.read<CharniProvider>();
+
+    int nextSortId = 1;
+    if (provider.list.isNotEmpty) {
+      nextSortId = provider.list
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // ← pehle companies load karo aur AWAIT karo
+
       await context.read<CompanyProvider>().loadCompanies();
       context.read<ShapeProvider>().load();
       context.read<DeptProvider>().load();
       context.read<CharniGroupProvider>().load();
-
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<CharniProvider>().setSelectedCompany(selectedCode);
       if (!mounted) return;
 
       // ← ab companies available hain, division provider ko pass karo
@@ -233,6 +267,7 @@ class _MstCharniState extends State<MstCharni> {
 
       // ← last mein divisions load karo
       await context.read<CharniProvider>().load();
+      _setDefaultSortId();
 
     });
   }
@@ -248,7 +283,8 @@ class _MstCharniState extends State<MstCharni> {
         'charniName': raw.charniName ?? '',
         'charniGroup': raw.charniGroup ?? '',
         'charniRptGroupCode': raw.charniRptGroupCode?.toString() ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'sortID': raw.sortID?.toString() ?? '',
         'fromSize': raw.fromSize?.toString() ?? '',
         'toSize': raw.toSize?.toString() ?? '',
@@ -331,7 +367,7 @@ class _MstCharniState extends State<MstCharni> {
     if (confirm != true || !mounted) return;
 
     final success =
-    await context.read<CharniProvider>().delete(raw!.charniCode!);
+    await context.read<CharniProvider>().delete(raw.charniCode!);
 
     if (success && mounted) {
       _resetForm();
@@ -363,6 +399,7 @@ class _MstCharniState extends State<MstCharni> {
 
     });
     _erpFormKey.currentState?.resetForm();
+    _setDefaultSortId();
   }
   bool _showTableOnMobile = false;
 
@@ -383,7 +420,7 @@ class _MstCharniState extends State<MstCharni> {
                 isReportRow: false,
 
                 token: token ?? '',
-                url: 'http://50.62.183.116:5000',
+                url: baseUrl,
                 title: 'CHARNI LIST',
                 columns: _tableColumns,
                 data: provider.tableData,
@@ -397,6 +434,10 @@ class _MstCharniState extends State<MstCharni> {
         : 'Loading...',
               ): ErpForm(
                 logo: AppImages.logo,
+                onExit: () {
+                  context.read<TabProvider>().closeCurrentTab();
+                },
+
 
                 key: _erpFormKey,
                 title: 'CHARNI MASTER',
@@ -425,6 +466,9 @@ class _MstCharniState extends State<MstCharni> {
               Expanded(
                 flex: 2,
                 child: ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -456,7 +500,7 @@ class _MstCharniState extends State<MstCharni> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'CHARNI LIST',
                   columns: _tableColumns,
                   data: provider.tableData,
@@ -478,28 +522,4 @@ class _MstCharniState extends State<MstCharni> {
   }
 
   // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
 }

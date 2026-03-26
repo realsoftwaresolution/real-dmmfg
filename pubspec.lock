@@ -82,7 +82,7 @@ packages:
     source: hosted
     version: "1.0.0"
   collection:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: collection
       sha256: "2f5709ae4d3d59dd8f7cd309b4e023046b57d8a6c82130785d2b0e5868084e76"
@@ -143,7 +143,7 @@ packages:
       path: "../erp_data_table"
       relative: true
     source: path
-    version: "1.0.0"
+    version: "1.1.4"
   erp_formatter:
     dependency: "direct main"
     description:
@@ -491,10 +491,10 @@ packages:
     dependency: "direct main"
     description:
       name: pdf
-      sha256: "28eacad99bffcce2e05bba24e50153890ad0255294f4dd78a17075a2ba5c8416"
+      sha256: e47a275b267873d5944ad5f5ff0dcc7ac2e36c02b3046a0ffac9b72fd362c44b
       url: "https://pub.dev"
     source: hosted
-    version: "3.11.3"
+    version: "3.12.0"
   pdf_widget_wrapper:
     dependency: transitive
     description:
@@ -531,10 +531,10 @@ packages:
     dependency: "direct main"
     description:
       name: printing
-      sha256: "482cd5a5196008f984bb43ed0e47cbfdca7373490b62f3b27b3299275bf22a93"
+      sha256: "689170c9ddb1bda85826466ba80378aa8993486d3c959a71cd7d2d80cb606692"
       url: "https://pub.dev"
     source: hosted
-    version: "5.14.2"
+    version: "5.14.3"
   provider:
     dependency: "direct main"
     description:
@@ -562,10 +562,11 @@ packages:
   rs_dashboard:
     dependency: "direct main"
     description:
-      path: "../rs_dashboard"
-      relative: true
-    source: path
-    version: "0.0.6"
+      name: rs_dashboard
+      sha256: "88bf7310f4eb2b8cf4a9d236fd317b647f93affbeac09288a49ecd78fc0d32f5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.7"
   shared_preferences:
     dependency: "direct main"
     description:

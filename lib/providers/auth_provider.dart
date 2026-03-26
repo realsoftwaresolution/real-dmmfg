@@ -1,40 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:diam_mfg/models/counter_model.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
 import '../models/auth_model.dart';
 
 
-class UserModel {
-  final String id;
-  final String name;
-  final String email;
-  final String role;
-  final String? avatar;
-
-  UserModel({
-    required this.id,
-    required this.name,
-    required this.email,
-    required this.role,
-    this.avatar,
-  });
-
-  factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-    id: json['id'] ?? '',
-    name: json['name'] ?? '',
-    email: json['email'] ?? '',
-    role: json['role'] ?? 'User',
-    avatar: json['avatar'],
-  );
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'email': email,
-    'role': role,
-    'avatar': avatar,
-  };
-}
 class AppStorageKeys {
   static const String authToken = 'auth_token';
   static const String userData = 'user_data';
@@ -45,17 +14,20 @@ class AppStorageKeys {
 
 class AuthProvider extends BaseProvider {
 
-  UserModel? _user;
+  CounterModel? _user;
   String? _token;
   bool _isAuthenticated = false;
   bool _isInitialized = false;
-  UserModel? get user => _user;
+  CounterModel? get user => _user;
   bool get isLoggedIn => _token != null;
   bool get isAuthenticated => _isAuthenticated;
   bool get isInitialized => _isInitialized;
   /// ============================================================
   /// 🔥 APP START SESSION CHECK
   /// ============================================================
+  ///
+
+
   Future<void> checkSession() async {
 
     await RSAuthSession.restore(); // restore token
@@ -67,11 +39,11 @@ class AuthProvider extends BaseProvider {
     }
 
     /// Try to validate token with server
-    final result = await request<UserModel>(
+    final result = await request<CounterModel>(
       showLoader: false,
       call: () => api.get("/counter/me"), // create this API (or any protected API)
       onSuccess: (res) {
-        return UserModel.fromJson(res.data);
+        return CounterModel.fromJson(res.data);
       },
     );
 
@@ -120,7 +92,7 @@ class AuthProvider extends BaseProvider {
     if (result == null) return false;
 
     _token = result.token;
-    _user = UserModel.fromJson(result.user);
+    _user = CounterModel.fromJson(result.user);
     _isAuthenticated = true;
 
     /// Save Session
@@ -141,7 +113,7 @@ class AuthProvider extends BaseProvider {
 
     if (token != null && userJson != null) {
       _token = token;
-      _user = UserModel.fromJson(userJson);
+      _user = CounterModel.fromJson(userJson);
       notifyListeners();
     }
   }

@@ -15,6 +15,11 @@ class RoughTypeProvider extends BaseProvider {
     _companies = companies;
     notifyListeners();
   }
+  int? _selectedCompanyCode;
+
+  void setSelectedCompany(int? code) {
+    _selectedCompanyCode = code;
+  }
 
   List<Map<String, dynamic>> get tableData =>
       _roughTypes.map((d) {
@@ -46,6 +51,8 @@ class RoughTypeProvider extends BaseProvider {
 
   // ── CREATE ───────────────────────────────────────────────────────────────
   Future<bool> createRoughType(Map<String, dynamic> formValues) async {
+    formValues['companyCode'] = _selectedCompanyCode?.toString() ?? '';
+
     final model = RoughTypeModel.fromFormValues(formValues);
 
     final result = await request<RoughTypeModel>(
@@ -65,6 +72,8 @@ class RoughTypeProvider extends BaseProvider {
 
   // ── UPDATE ───────────────────────────────────────────────────────────────
   Future<bool> updateRoughType(int code, Map<String, dynamic> formValues) async {
+    formValues['companyCode'] = _selectedCompanyCode?.toString() ?? '';
+
     final model = RoughTypeModel.fromFormValues(formValues);
 
     final result = await request<RoughTypeModel>(

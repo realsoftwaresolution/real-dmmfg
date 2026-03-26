@@ -16,7 +16,7 @@ class CounterDisplayDetModel {
   factory CounterDisplayDetModel.fromJson(Map<String, dynamic> json) =>
       CounterDisplayDetModel(
         counterDisplayDetID: json['CounterDisplayDetID'],
-        crId:                json['CrId'],
+        crId: json['CrId'] ?? json['crId'] ?? json['CRID'],
         userVisibilityCode:  json['UserVisibilityCode'],
         counterType:         json['CounterType'],
       );

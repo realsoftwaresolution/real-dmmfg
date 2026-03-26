@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'package:diam_mfg/models/counter_dept_det_model.dart';
-import 'package:diam_mfg/models/dept_model.dart';
 import 'package:diam_mfg/providers/article_provider.dart';
 import 'package:diam_mfg/providers/auth_provider.dart';
 import 'package:diam_mfg/providers/charni_group_provider.dart';
@@ -9,6 +7,7 @@ import 'package:diam_mfg/providers/color_group_provider.dart';
 import 'package:diam_mfg/providers/color_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/counter_dept_det_provider.dart';
+import 'package:diam_mfg/providers/counter_det_provider.dart';
 import 'package:diam_mfg/providers/counter_display_det_provider.dart';
 import 'package:diam_mfg/providers/counter_manager_det_provider.dart';
 import 'package:diam_mfg/providers/counter_operator_det_provider.dart';
@@ -23,7 +22,11 @@ import 'package:diam_mfg/providers/cut_provider.dart';
 import 'package:diam_mfg/providers/dept_group_provider.dart';
 import 'package:diam_mfg/providers/dept_process_provider.dart';
 import 'package:diam_mfg/providers/dept_provider.dart';
+import 'package:diam_mfg/providers/designation_provider.dart';
 import 'package:diam_mfg/providers/division_provider.dart';
+import 'package:diam_mfg/providers/employee_dept_det_provider.dart';
+import 'package:diam_mfg/providers/employee_manager_det_provider.dart';
+import 'package:diam_mfg/providers/employee_provider.dart';
 import 'package:diam_mfg/providers/factory_provider.dart';
 import 'package:diam_mfg/providers/fluo_provider.dart';
 import 'package:diam_mfg/providers/holiday_provider.dart';
@@ -33,6 +36,7 @@ import 'package:diam_mfg/providers/main_menuMst_provider.dart';
 import 'package:diam_mfg/providers/menu_mst_provider.dart';
 import 'package:diam_mfg/providers/packet_provider.dart';
 import 'package:diam_mfg/providers/party_provider.dart';
+import 'package:diam_mfg/providers/party_type_provider.dart';
 import 'package:diam_mfg/providers/pc_provider.dart';
 import 'package:diam_mfg/providers/pkt_type_provider.dart';
 import 'package:diam_mfg/providers/purity_group_provider.dart';
@@ -47,6 +51,7 @@ import 'package:diam_mfg/providers/rough_provider.dart';
 import 'package:diam_mfg/providers/rough_type_provider.dart';
 import 'package:diam_mfg/providers/shape_group_provider.dart';
 import 'package:diam_mfg/providers/shape_provider.dart';
+import 'package:diam_mfg/providers/spk_dept_iss_provider.dart';
 import 'package:diam_mfg/providers/stock_type_provider.dart';
 import 'package:diam_mfg/providers/team_provider.dart';
 import 'package:diam_mfg/providers/tension_type_provider.dart';
@@ -58,6 +63,7 @@ import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../providers/menu_provider.dart';
 import 'providers/factory_man_group_provider.dart';
+String baseUrl='http://50.62.183.116:5000';
 
 Future<void> bootstrap({
   required FutureOr<Widget> Function() fn,
@@ -135,6 +141,13 @@ Future<void> bootstrap({
           ChangeNotifierProvider<UserVisibilityProvider>.value(value: UserVisibilityProvider()),
           ChangeNotifierProvider<TestProvider>.value(value: TestProvider()),
           ChangeNotifierProvider<CounterDisplayDetProvider>.value(value: CounterDisplayDetProvider()),
+          ChangeNotifierProvider<CounterDetProvider>.value(value: CounterDetProvider()),
+          ChangeNotifierProvider<PartyTypeProvider>.value(value: PartyTypeProvider()),
+          ChangeNotifierProvider<SpkDeptIssProvider>.value(value: SpkDeptIssProvider()),
+          ChangeNotifierProvider<EmployeeProvider>.value(value: EmployeeProvider()),
+          ChangeNotifierProvider<DesignationProvider>.value(value: DesignationProvider()),
+          ChangeNotifierProvider<EmployeeDeptDetProvider>.value(value: EmployeeDeptDetProvider()),
+          ChangeNotifierProvider<EmployeeManagerDetProvider>.value(value: EmployeeManagerDetProvider()),
 
 
 

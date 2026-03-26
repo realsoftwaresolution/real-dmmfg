@@ -17,7 +17,28 @@ class CompanyProvider extends BaseProvider {
 
   List<Map<String, dynamic>> get tableData =>
       _companies.map((c) => c.toTableRow()).toList();
+  int? _selectedCompanyCode;
+  int? get selectedCompanyCode => _selectedCompanyCode;
 
+  CompanyModel? get selectedCompany => _selectedCompanyCode == null
+      ? null
+      : _companies.firstWhere(
+        (c) => c.companyCode == _selectedCompanyCode,
+    orElse: () => _companies.first,
+  );
+
+  void selectCompany(int code) {
+    _selectedCompanyCode = code;
+    notifyListeners();
+  }
+
+  /// Call this on logout to reset selection
+  void clearSelection() {
+    _selectedCompanyCode = null;
+    _companies = [];
+    _isLoaded = false;
+    notifyListeners();
+  }
   // ── GET ALL ──────────────────────────────────────────────────────────────
   Future<void> loadCompanies() async {
     final result = await request<List<CompanyModel>>(

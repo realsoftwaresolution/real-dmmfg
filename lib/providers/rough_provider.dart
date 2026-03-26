@@ -9,6 +9,7 @@ class RoughProvider extends BaseProvider {
 
   List<Map<String, dynamic>> get tableData =>
       _roughs.map((e) => e.toTableRow()).toList();
+  final Map<int, int> _roughTotPc = {}; // roughMstID → totPc
 
   Future<void> loadRoughs() async {
     final result = await request<List<RoughModel>>(
@@ -24,7 +25,23 @@ class RoughProvider extends BaseProvider {
       notifyListeners();
     }
   }
+// ── GET NEXT JNO ─────────────────────────────────────────────────────────
+  Future<int> getNextJno() async {
+    final result = await request<int>(
+      showLoader: false,
+      call: () => api.get('/rough/next-jno'),
+      onSuccess: (res) => (res.data as num).toInt(),
+    );
+    return result ?? 1;
+  }
 
+// ── KAPAN DUPLICATE CHECK ─────────────────────────────────────────────────
+  bool isKapanDuplicate(String kapanNo, {int? excludeMstID}) {
+    return roughs.any((cc) =>
+    cc.kapanNo == kapanNo &&
+        cc.roughMstID != excludeMstID
+    );
+  }
   Future<bool> createRough(
       Map<String, dynamic> values,
       List<RoughDetModel> details,
@@ -92,8 +109,14 @@ class RoughProvider extends BaseProvider {
         return list.map((e) => RoughDetModel.fromJson(e)).toList();
       },
     );
+    if (result != null) {
+      // ✅ totPc cache karo
+      _roughTotPc[roughMstID] = result.fold(0, (s, r) => s + (r.pc ?? 0));
+      notifyListeners();
+    }
     return result ?? [];
   }
+  int getTotPc(int? roughMstID) => _roughTotPc[roughMstID] ?? 0;
 
   Future<List<RoughProcessDaysModel>> loadProcessDays(int roughMstID) async {
     final result = await request<List<RoughProcessDaysModel>>(
@@ -144,22 +167,45 @@ class RoughProvider extends BaseProvider {
     required Map<String, String> articleNames,
     required Map<String, String> jangadCharniNames,
   }) {
-    return _roughs.map((e) {
-
-      final row = e.toTableRow();
-
-      return {
-        ...row,
-
-        /// Replace codes with names
-        'partyCode': partyNames[row['partyCode']] ?? row['partyCode'],
-        'roughTypeCode': roughTypeNames[row['roughTypeCode']] ?? row['roughTypeCode'],
-        'articalCode': articleNames[row['articalCode']] ?? row['articalCode'],
-        'jangadCharniCode': jangadCharniNames[row['jangadCharniCode']] ?? row['jangadCharniCode'],
-      };
-
+    return roughs.map((r) => {
+      'roughMstID':       r.roughMstID,
+      'roughDate':        r.roughDate        ?? '',
+      'jno':              r.jno?.toString()  ?? '',
+      'kapanNo':          r.kapanNo          ?? '',
+      'site':             r.site             ?? '',
+      'partyCode':        partyNames[r.partyCode?.toString()] ?? r.partyCode?.toString() ?? '',
+      'roughTypeCode':    roughTypeNames[r.roughTypeCode?.toString()] ?? '',
+      'articalCode':      articleNames[r.articalCode?.toString()] ?? '',
+      'jangadCharniCode': jangadCharniNames[r.jangadCharniCode?.toString()] ?? '',
+      'amtDollar':        r.amtDollar?.toStringAsFixed(2) ?? '',
+      'amtRs':            r.amtRs?.toStringAsFixed(2)     ?? '',
+      'totWt':            r.totWt?.toStringAsFixed(3)     ?? '',
+      'totPc':            r.totPc.toString(),
+      '_raw': r,
     }).toList();
   }
+  // List<Map<String, dynamic>> tableDataWithNames({
+  //   required Map<String, String> partyNames,
+  //   required Map<String, String> roughTypeNames,
+  //   required Map<String, String> articleNames,
+  //   required Map<String, String> jangadCharniNames,
+  // }) {
+  //   return _roughs.map((e) {
+  //
+  //     final row = e.toTableRow();
+  //
+  //     return {
+  //       ...row,
+  //
+  //       /// Replace codes with names
+  //       'partyCode': partyNames[row['partyCode']] ?? row['partyCode'],
+  //       'roughTypeCode': roughTypeNames[row['roughTypeCode']] ?? row['roughTypeCode'],
+  //       'articalCode': articleNames[row['articalCode']] ?? row['articalCode'],
+  //       'jangadCharniCode': jangadCharniNames[row['jangadCharniCode']] ?? row['jangadCharniCode'],
+  //     };
+  //
+  //   }).toList();
+  // }
 }
 
 extension RoughModelExt on RoughModel {

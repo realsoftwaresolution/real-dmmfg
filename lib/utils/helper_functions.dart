@@ -1,9 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 import '../models/purity_model.dart';
-import '../providers/purity_provider.dart';
 
 String? formatDate(String? date) {
   if (date == null || date.isEmpty) return null;

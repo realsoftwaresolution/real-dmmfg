@@ -880,7 +880,7 @@
 //     return ErpDataTable(
 //       isReportRow: false,
 //       token:       token ?? '',
-//       url:         'http://50.62.183.116:5000',
+//       url:         baseUrl,
 //       title:       'ROUGH ASSORT LIST',
 //       columns:     _tableColumns,
 //       data:        data,
@@ -910,6 +910,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../models/purity_group_model.dart';
 import '../models/purity_model.dart';
 import '../models/rough_model.dart';
@@ -974,19 +975,33 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
   // ══════════════════════════════════════════════════════════════════════════
   //  FORM ROWS
   // ══════════════════════════════════════════════════════════════════════════
-  List<List<ErpFieldConfig>> _formRows(RoughProvider rp) {
+  List<List<ErpFieldConfig>> _formRows(RoughProvider rp,RoughAssortProvider assortProv) {
     // KapanNo dropdown
+    // final kapanItems = rp.roughs
+    //     .where((e) => e.kapanNo != null && e.kapanNo!.isNotEmpty)
+    //     .map((e) => ErpDropdownItem(
+    //   label: 'Kapan No: ${e.kapanNo!}  Jno: ${e.jno ?? ''}  Wt: ${e.totWt??""}',
+    //   value: e.kapanNo!,
+    // ))
+    //     .fold<List<ErpDropdownItem>>([], (acc, item) {
+    //   if (!acc.any((x) => x.value == item.value)) acc.add(item);
+    //   return acc;
+    // });
+    final usedKapans = assortProv.usedKapanNos(
+      excludeMstID: _selectedMst?.roughAssortMstID,
+    );
+
     final kapanItems = rp.roughs
         .where((e) => e.kapanNo != null && e.kapanNo!.isNotEmpty)
+        .where((e) => !_fullyUsedKapans.contains(e.kapanNo)) // ✅ fully used hide
         .map((e) => ErpDropdownItem(
-      label: 'Kapan No: ${e.kapanNo!}  Jno: ${e.jno ?? ''}  Wt: ${e.totWt??""}',
+      label: 'Kapan No: ${e.kapanNo!}  Jno: ${e.jno ?? ''}  Wt: ${e.totWt ?? ""}',
       value: e.kapanNo!,
     ))
         .fold<List<ErpDropdownItem>>([], (acc, item) {
       if (!acc.any((x) => x.value == item.value)) acc.add(item);
       return acc;
     });
-
     return [
       // ── SECTION 0: MASTER ─────────────────────────────────────────────────
       [
@@ -1130,15 +1145,46 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       context.read<RoughAssortProvider>().load();
       context.read<RoughProvider>().loadRoughs();
       context.read<PurityGroupProvider>().load();
       context.read<PurityProvider>().load();
       _setDefaultFormValues();
+      await _loadFullyUsedKapans(); // ✅
+
     });
   }
+  Set<String> _fullyUsedKapans = {};
 
+// initState ke baad call karo
+  Future<void> _loadFullyUsedKapans() async {
+    final rp         = context.read<RoughProvider>();
+    final assortProv = context.read<RoughAssortProvider>();
+
+    final Set<String> fullyUsed = {};
+
+    for (final rough in rp.roughs) {
+      final kapanNo = rough.kapanNo;
+      if (kapanNo == null || kapanNo.isEmpty) continue;
+
+      final totWt = rough.totWt ?? 0;
+      if (totWt <= 0) continue;
+
+      final usedWt = await assortProv.getUsedWtForKapan(
+        kapanNo,
+        excludeMstID: _selectedMst?.roughAssortMstID,
+      );
+
+      if (usedWt >= totWt - 0.001) { // ✅ fully used
+        fullyUsed.add(kapanNo);
+      }
+    }
+
+    if (mounted) {
+      setState(() => _fullyUsedKapans = fullyUsed);
+    }
+  }
   void _setDefaultFormValues() {
     final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
     setState(() {
@@ -1148,30 +1194,62 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
       };
     });
   }
+  Future<void> _onKapanSelected(String kapanNo) async {
+    final rp         = context.read<RoughProvider>();
+    final assortProv = context.read<RoughAssortProvider>();
 
-  // ══════════════════════════════════════════════════════════════════════════
-  //  KAPAN SELECT → auto fill JNO + KNO WT
-  // ══════════════════════════════════════════════════════════════════════════
-  void _onKapanSelected(String kapanNo) {
-    final rp = context.read<RoughProvider>();
     final match = rp.roughs.firstWhere(
           (e) => e.kapanNo == kapanNo,
       orElse: () => RoughModel(),
     );
-    final jno    = match.jno?.toString() ?? '';
-    final totWt  = match.totWt ?? 0;
-    final usedWt = _detRows.fold(0.0, (s, r) => s + (r.wt ?? 0));
+
+    final totWt = match.totWt ?? 0;
+    final jno   = match.jno?.toString() ?? '';
+
+    // ✅ Already saved wt fetch karo — current edit exclude
+    final alreadySavedWt = await assortProv.getUsedWtForKapan(
+      kapanNo,
+      excludeMstID: _selectedMst?.roughAssortMstID,
+    );
+
+    if (!mounted) return;
+
+    // ✅ Current form rows ka wt
+    final formUsedWt = _detRows.fold(0.0, (s, r) => s + (r.wt ?? 0));
+
+    final effectiveKnoWt = totWt - alreadySavedWt;
 
     setState(() {
       _formValues['jno'] = jno;
-      _knoWt             = _f3(totWt);
-      _pendingWt         = _f3(totWt - usedWt);
+      _knoWt     = _f3(totWt);
+      _pendingWt = _f3(effectiveKnoWt - formUsedWt);
     });
-    _erpFormKey.currentState?.updateFieldValue('jno', jno);
 
-    // ✅ FIX 1: Recalc per whenever kapan changes (knoWt changes)
+    _erpFormKey.currentState?.updateFieldValue('jno', jno);
     _recalcEntry();
-  }
+  }  // ══════════════════════════════════════════════════════════════════════════
+  //  KAPAN SELECT → auto fill JNO + KNO WT
+  // ══════════════════════════════════════════════════════════════════════════
+  // void _onKapanSelected(String kapanNo) {
+  //   final rp = context.read<RoughProvider>();
+  //   final match = rp.roughs.firstWhere(
+  //         (e) => e.kapanNo == kapanNo,
+  //     orElse: () => RoughModel(),
+  //   );
+  //   final jno    = match.jno?.toString() ?? '';
+  //   final totWt  = match.totWt ?? 0;
+  //   final usedWt = _detRows.fold(0.0, (s, r) => s + (r.wt ?? 0));
+  //
+  //   setState(() {
+  //     _formValues['jno'] = jno;
+  //     _knoWt             = _f3(totWt);
+  //     _pendingWt         = _f3(totWt - usedWt);
+  //   });
+  //   _erpFormKey.currentState?.updateFieldValue('jno', jno);
+  //
+  //   // ✅ FIX 1: Recalc per whenever kapan changes (knoWt changes)
+  //   _recalcEntry();
+  // }
 
   // ══════════════════════════════════════════════════════════════════════════
   //  ENTRY CALC  — includes per = entryWt / knoWt × 100
@@ -1223,12 +1301,40 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
   // ══════════════════════════════════════════════════════════════════════════
   //  PENDING WT UPDATE
   // ══════════════════════════════════════════════════════════════════════════
-  void _recalcPendingWt() {
-    final kno  = double.tryParse(_knoWt) ?? 0;
-    final used = _detRows.fold(0.0, (s, r) => s + (r.wt ?? 0));
-    setState(() => _pendingWt = _f3(kno - used));
-  }
+  // void _recalcPendingWt() {
+  //   final kno  = double.tryParse(_knoWt) ?? 0;
+  //   final used = _detRows.fold(0.0, (s, r) => s + (r.wt ?? 0));
+  //   setState(() => _pendingWt = _f3(kno - used));
+  // }
+  Future<void> _recalcPendingWt() async {
+    final rp         = context.read<RoughProvider>();
+    final assortProv = context.read<RoughAssortProvider>();
+    final kapanNo    = _formValues['kapanNo'] ?? '';
 
+    if (kapanNo.isEmpty) return;
+
+    final match  = rp.roughs.firstWhere(
+          (e) => e.kapanNo == kapanNo,
+      orElse: () => RoughModel(),
+    );
+    final totWt = match.totWt ?? 0;
+
+    // ✅ Saved wt from other records
+    final alreadySavedWt = await assortProv.getUsedWtForKapan(
+      kapanNo,
+      excludeMstID: _selectedMst?.roughAssortMstID,
+    );
+
+    if (!mounted) return;
+
+    final formUsedWt     = _detRows.fold(0.0, (s, r) => s + (r.wt ?? 0));
+    final effectiveKnoWt = totWt - alreadySavedWt;
+
+    setState(() {
+      _knoWt     = _f3(effectiveKnoWt);
+      _pendingWt = _f3(effectiveKnoWt - formUsedWt);
+    });
+  }
   // ══════════════════════════════════════════════════════════════════════════
   //  ADD / EDIT / DELETE DETAIL ROW
   // ══════════════════════════════════════════════════════════════════════════
@@ -1301,8 +1407,9 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
         _detRows.add(newRow);
       }
       _syncDetGrid();
-      _recalcPendingWt();
     });
+    _recalcPendingWt();
+
     _clearEntryFields();
   }
   Future<void> _showWtExceededDialog({
@@ -1384,9 +1491,10 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
       ))
           .toList();
       _syncDetGrid();
-      _recalcPendingWt();
       if (_editingDetIndex == idx) _editingDetIndex = null;
     });
+    _recalcPendingWt();
+
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1516,6 +1624,8 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
       _syncDetGrid();
       if (Responsive.isMobile(context)) _showTableOnMobile = false;
     });
+    await _loadFullyUsedKapans(); // ✅ current kapan wapas aayega dropdown mein
+
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1624,6 +1734,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
   // ── ErpForm ────────────────────────────────────────────────────────────────
   Widget _buildForm(BuildContext context) {
     final rp = context.watch<RoughProvider>();
+    final ra = context.watch<RoughAssortProvider>();
 
     // final pg = context.watch<PurityGroupProvider>();
     //
@@ -1645,7 +1756,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
     ))
         .toList();
 
-    final rows = _formRows(rp);
+    final rows = _formRows(rp,ra);
     for (final row in rows) {
       for (int i = 0; i < row.length; i++) {
         if (row[i].key == 'purityCode') {
@@ -1682,7 +1793,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
           _formValues[key] = value.toString();
           _entryVals[key]  = value.toString();
 
-          if (key == 'kapanNo') {
+          if (key == 'kapanNo'&& value.toString().isNotEmpty) {
             _onKapanSelected(value.toString());
           }
 
@@ -1866,7 +1977,9 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
     return ErpDataTable(
       isReportRow: false,
       token:       token ?? '',
-      url:         'http://50.62.183.116:5000',
+      dateFilter: true,
+
+      url:         baseUrl,
       title:       'ROUGH ASSORT LIST',
       columns:     _tableColumns,
       data:        data,

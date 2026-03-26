@@ -1,11 +1,13 @@
 import 'package:diam_mfg/providers/dept_process_provider.dart';
 import 'package:diam_mfg/providers/dept_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/providers/stock_type_provider.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../models/dept_process_model.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
@@ -45,30 +47,39 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
   List<List<ErpFieldConfig>> _formRows(
       CompanyProvider companyProvider,
       DeptProvider deptProvider,
+      StockTypeProvider stockProvider,
       ) =>
       [
         /// ── SECTION 0: BASIC INFORMATION ──
+        // [
+        //   // ErpFieldConfig(
+        //   //   key: 'deptProcessCode',
+        //   //   label: 'CODE',
+        //   //   type: ErpFieldType.number,
+        //   //   required: true,
+        //   //   sectionTitle: 'BASIC INFORMATION',
+        //   //   sectionIndex: 0,
+        //   // ),
+        //   ErpFieldConfig(
+        //     key: 'deptProcessName',
+        //     label: 'NAME',
+        //     required: true,
+        //     sectionIndex: 0,
+        //   ),
+        // ],
         [
-          // ErpFieldConfig(
-          //   key: 'deptProcessCode',
-          //   label: 'CODE',
-          //   type: ErpFieldType.number,
-          //   required: true,
-          //   sectionTitle: 'BASIC INFORMATION',
-          //   sectionIndex: 0,
-          // ),
           ErpFieldConfig(
             key: 'deptProcessName',
             label: 'NAME',
             required: true,
             sectionIndex: 0,
           ),
-        ],
-        [
           ErpFieldConfig(
             key: 'deptCode',
             label: 'DEPARTMENT',
             type: ErpFieldType.dropdown,
+            initialDropValue: true,
+            required: true,
             dropdownItems: deptProvider.list
                 .where((element) {
               return element.active==true;
@@ -81,40 +92,63 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
             sectionIndex: 0,
           ),
           ErpFieldConfig(
-            key: 'companyCode',
-            label: 'COMPANY',
-            type: ErpFieldType.dropdown,
-            dropdownItems: companyProvider.companies
-                .where((element) {
-              return element.active==true;
-            },).map((e) {
-              return ErpDropdownItem(
-                label: e.companyName ?? '',
-                value: e.companyCode?.toString() ?? '',
-              );
-            }).toList(),
-            sectionIndex: 0,
-          ),
-        ],
-        [
-          ErpFieldConfig(
             key: 'sortID',
             label: 'SORT ID',
             type: ErpFieldType.number,
             sectionIndex: 0,
           ),
           // ErpFieldConfig(
-          //   key: 'tops',
-          //   label: 'TOPS',
-          //   type: ErpFieldType.number,
+          //   key: 'companyCode',
+          //   label: 'COMPANY',
+          //   type: ErpFieldType.dropdown,
+          //   dropdownItems: companyProvider.companies
+          //       .where((element) {
+          //     return element.active==true;
+          //   },).map((e) {
+          //     return ErpDropdownItem(
+          //       label: e.companyName ?? '',
+          //       value: e.companyCode?.toString() ?? '',
+          //     );
+          //   }).toList(),
           //   sectionIndex: 0,
           // ),
         ],
+        // [
+        //   ErpFieldConfig(
+        //     key: 'sortID',
+        //     label: 'SORT ID',
+        //     type: ErpFieldType.number,
+        //     sectionIndex: 0,
+        //   ),
+        //   // ErpFieldConfig(
+        //   //   key: 'tops',
+        //   //   label: 'TOPS',
+        //   //   type: ErpFieldType.number,
+        //   //   sectionIndex: 0,
+        //   // ),
+        // ],
         [
 
+          // ErpFieldConfig(
+          //   key: 'stockType',
+          //   label: 'STOCK TYPE',
+          //   sectionIndex: 0,
+          // ),
           ErpFieldConfig(
             key: 'stockType',
             label: 'STOCK TYPE',
+            required: true,
+            initialDropValue: true,
+            type: ErpFieldType.dropdown,
+            dropdownItems: stockProvider.list
+                .where((element) {
+              return element.active==true;
+            },).map((e) {
+              return ErpDropdownItem(
+                label: e.stockTypeName ?? '',
+                value: e.stockTypeCode?.toString() ?? '',
+              );
+            }).toList(),
             sectionIndex: 0,
           ),
           // ErpFieldConfig(
@@ -260,6 +294,14 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
             checkboxDbType: 'YN',
 
           ),
+          ErpFieldConfig(
+            key: 'countInCostingProduction',
+            label: 'COUNT IN COSTING PROD',
+            type: ErpFieldType.checkbox,
+            sectionIndex: 2,
+            checkboxDbType: 'YN',
+
+          ),
         ],
         // [
         //   ErpFieldConfig(
@@ -315,24 +357,24 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
         //
         //   ),
         // ],
-        [
-          ErpFieldConfig(
-            key: 'countInCostingProduction',
-            label: 'COUNT IN COSTING PROD',
-            type: ErpFieldType.checkbox,
-            sectionIndex: 2,
-            checkboxDbType: 'YN',
-
-          ),
-          // ErpFieldConfig(
-          //   key: 'checkerPlanCheck',
-          //   label: 'CHECKER PLAN CHECK',
-          //   type: ErpFieldType.checkbox,
-          //   sectionIndex: 2,
-          //   checkboxDbType: 'YN',
-          //
-          // ),
-        ],
+        // [
+        //   ErpFieldConfig(
+        //     key: 'countInCostingProduction',
+        //     label: 'COUNT IN COSTING PROD',
+        //     type: ErpFieldType.checkbox,
+        //     sectionIndex: 2,
+        //     checkboxDbType: 'YN',
+        //
+        //   ),
+        //   // ErpFieldConfig(
+        //   //   key: 'checkerPlanCheck',
+        //   //   label: 'CHECKER PLAN CHECK',
+        //   //   type: ErpFieldType.checkbox,
+        //   //   sectionIndex: 2,
+        //   //   checkboxDbType: 'YN',
+        //   //
+        //   // ),
+        // ],
 
         /// ── SECTION 3: SETTINGS ──
         [
@@ -342,6 +384,7 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
             type: ErpFieldType.checkbox,
             sectionTitle: 'SETTINGS',
             sectionIndex: 3,
+            initialBoolValue: true,
             checkboxDbType: 'BIT'
           ),
           // ErpFieldConfig(
@@ -364,14 +407,37 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
   //     context.read<DeptProvider>().load();
   //   });
   // }
+  void _setDefaultSortId() {
+    final provider = context.read<DeptProcessProvider>();
+
+    int nextSortId = 1;
+    if (provider.list.isNotEmpty) {
+      nextSortId = provider.list
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+  }
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+
       context.read<DeptProvider>().load();
 
       await context.read<CompanyProvider>().loadCompanies();
-
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<DeptProcessProvider>().setSelectedCompany(selectedCode);
       if (!mounted) return;
 
 
@@ -380,6 +446,7 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
 
 
       await context.read<DeptProcessProvider>().load();
+      _setDefaultSortId();
 
     });
   }
@@ -395,7 +462,8 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
         'deptProcessCode': raw.deptProcessCode?.toString() ?? '',
         'deptProcessName': raw.deptProcessName ?? '',
         'deptCode': raw.deptCode?.toString() ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'sortID': raw.sortID?.toString() ?? '',
         'tops': raw.tops?.toString() ?? '0',
         'delRights': raw.delRights == 'Y' ? 'true' : 'false',
@@ -404,17 +472,17 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
         'planPcAsRatePc': raw.planPcAsRatePc ?? '',
         'rateOnShape': raw.rateOnShape ?? '',
         'getSarinOptData': raw.getSarinOptData ?? '',
-        'active': raw.active == true ? 'Y' : 'N',
-        'machineActive': raw.machineActive == true ? 'Y' : 'N',
-        'remarksSelect': raw.remarksSelect == true ? 'Y' : 'N',
+        'active': raw.active == true ? 'true' : 'false',
+        'machineActive': raw.machineActive == true ? 'true' : 'false',
+        'remarksSelect': raw.remarksSelect == true ? 'true' : 'false',
         'multiTimeIss': raw.multiTimeIss ?? 'N',
         'multiTimeDeptIss': raw.multiTimeDeptIss ?? 'N',
-        'jnoRecPc': raw.jnoRecPc == true ? 'Y' : 'N',
-        'jnoKPc': raw.jnoKPc == true ? 'Y' : 'N',
-        'jnoLastPc': raw.jnoLastPc == true ? 'Y' : 'N',
-        'jnoExtraPc': raw.jnoExtraPc == true ? 'Y' : 'N',
-        'lsMarkPc': raw.lsMarkPc == true ? 'Y' : 'N',
-        'diaPcMinus': raw.diaPcMinus == true ? 'Y' : 'N',
+        'jnoRecPc': raw.jnoRecPc == true ? 'true' : 'false',
+        'jnoKPc': raw.jnoKPc == true ? 'true' : 'false',
+        'jnoLastPc': raw.jnoLastPc == true ? 'true' : 'false',
+        'jnoExtraPc': raw.jnoExtraPc == true ? 'true' : 'false',
+        'lsMarkPc': raw.lsMarkPc == true ? 'true' : 'false',
+        'diaPcMinus': raw.diaPcMinus == true ? 'true' : 'false',
         'proDirectIss': raw.proDirectIss ?? 'Y',
         'remarksRate': raw.remarksRate ?? 'N',
         'displayRatePc': raw.displayRatePc ?? 'N',
@@ -501,7 +569,7 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
 
     final success = await context
         .read<DeptProcessProvider>()
-        .delete(raw!.deptProcessCode!);
+        .delete(raw.deptProcessCode!);
 
     if (success && mounted) {
       _resetForm();
@@ -532,6 +600,7 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _setDefaultSortId();
   }
   bool _showTableOnMobile = false;
 
@@ -540,6 +609,7 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
   Widget build(BuildContext context) {
     final companyProvider = context.watch<CompanyProvider>();
     final deptProvider = context.watch<DeptProvider>();
+    final stockProvider = context.watch<StockTypeProvider>();
 
     return Consumer<DeptProcessProvider>(
       builder: (context, provider, _) {
@@ -550,7 +620,7 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
                 isReportRow: false,
 
                 token: token ?? '',
-                url: 'http://50.62.183.116:5000',
+                url: baseUrl,
                 title: 'DEPT PROCESS LIST',
                 columns: _tableColumns,
                 data: provider.tableData,
@@ -563,6 +633,9 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
         ? 'No Dept Process found'
         : 'Loading...',
               ):ErpForm(
+                onExit: () {
+                  context.read<TabProvider>().closeCurrentTab();
+                },
                 logo: AppImages.logo,
 
                 key: _erpFormKey,
@@ -573,7 +646,7 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
                 tabBarBackgroundColor: const Color(0xfff2f0ef),
                 tabBarSelectedColor: _theme.primaryGradient.first,
                 tabBarSelectedTxtColor: Colors.white,
-                rows: _formRows(companyProvider, deptProvider),
+                rows: _formRows(companyProvider, deptProvider,stockProvider),
                 // theme: _theme,
                 initialValues: _formValues,
                 isEditMode: _isEditMode,
@@ -600,7 +673,7 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
                   tabBarBackgroundColor: const Color(0xfff2f0ef),
                   tabBarSelectedColor: _theme.primaryGradient.first,
                   tabBarSelectedTxtColor: Colors.white,
-                  rows: _formRows(companyProvider, deptProvider),
+                  rows: _formRows(companyProvider, deptProvider,stockProvider),
                   // theme: _theme,
                   initialValues: _formValues,
                   isEditMode: _isEditMode,
@@ -622,7 +695,7 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'DEPT PROCESS LIST',
                   columns: _tableColumns,
                   data: provider.tableData,
@@ -643,29 +716,5 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
     );
   }
 
-  // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

@@ -10,7 +10,11 @@ class PartyProvider extends BaseProvider {
 
   List<Map<String, dynamic>> get tableData =>
       _parties.map((e) => e.toTableRow()).toList();
+  int? _selectedCompanyCode;
 
+  void setSelectedCompany(int? code) {
+    _selectedCompanyCode = code;
+  }
   Future<void> loadParties() async {
     final result = await request<List<PartyModel>>(
       call: () => api.get('/party'),
@@ -28,6 +32,7 @@ class PartyProvider extends BaseProvider {
     }
   }
   Future<bool> createParty(Map<String, dynamic> values) async {
+    values['companyCode'] = _selectedCompanyCode?.toString() ?? '';
 
     final model = PartyModel(
       partyCode: int.tryParse(values['partyCode'] ?? ''),
@@ -99,6 +104,8 @@ class PartyProvider extends BaseProvider {
   //   return false;
   // }
   Future<bool> updateParty(int code, Map<String, dynamic> values) async {
+    values['companyCode'] = _selectedCompanyCode?.toString() ?? '';
+
     // ← fromJson ki jagah createParty jaisa manual mapping karo
     final model = PartyModel(
       partyCode: code,

@@ -29,7 +29,15 @@ class PacketProvider extends BaseProvider {
       notifyListeners();
     }
   }
-
+// PacketProvider mein method add karo:
+  Future<int> getNextLotNo(String cutNo) async {
+    final result = await request<int>(
+      showLoader: false,
+      call: () => api.get('/packetCreate/next-lot-no/$cutNo'),
+      onSuccess: (res) => (res.data as num).toInt(),
+    );
+    return result ?? 1;
+  }
   // ── CREATE ────────────────────────────────────────────────────────────────
   // API returns { mst: {}, det: [] }
   Future<bool> create(

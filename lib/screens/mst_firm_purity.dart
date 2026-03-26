@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../models/purity_model.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
@@ -52,28 +53,36 @@ class _MstPurityState extends State<MstPurity> {
       ) =>
       [
         /// ── BASIC INFO ──
+        // [
+        //   // ErpFieldConfig(
+        //   //   key: 'purityCode',
+        //   //   label: 'CODE',
+        //   //   type: ErpFieldType.number,
+        //   //   required: true,
+        //   //   sectionTitle: 'BASIC INFORMATION',
+        //   //   sectionIndex: 0,
+        //   // ),
+        //   ErpFieldConfig(
+        //     key: 'purityName',
+        //     label: 'NAME',
+        //     required: true,
+        //     sectionIndex: 0,
+        //   ),
+        // ],
+
         [
-          // ErpFieldConfig(
-          //   key: 'purityCode',
-          //   label: 'CODE',
-          //   type: ErpFieldType.number,
-          //   required: true,
-          //   sectionTitle: 'BASIC INFORMATION',
-          //   sectionIndex: 0,
-          // ),
           ErpFieldConfig(
             key: 'purityName',
             label: 'NAME',
             required: true,
             sectionIndex: 0,
           ),
-        ],
-
-        [
           ErpFieldConfig(
             key: 'purityGroupCode',
             label: 'PURITY GROUP',
             type: ErpFieldType.dropdown,
+            required: true,
+            initialDropValue: true,
             dropdownItems: purityGroupProvider.list
                 .where((element) {
               return element.active==true;
@@ -89,6 +98,8 @@ class _MstPurityState extends State<MstPurity> {
             key: 'purityRptGroupCode',
             label: 'PURITY RPT GROUP',
             type: ErpFieldType.dropdown,
+            required: true,
+            initialDropValue: true,
             dropdownItems: purityRptGroupProvider.list
                 .where((element) {
               return element.active==true;
@@ -100,24 +111,6 @@ class _MstPurityState extends State<MstPurity> {
             }).toList(),
             sectionIndex: 0,
           ),
-        ],
-
-        [
-          ErpFieldConfig(
-            key: 'companyCode',
-            label: 'COMPANY',
-            type: ErpFieldType.dropdown,
-            dropdownItems: companyProvider.companies
-                .where((element) {
-              return element.active==true;
-            },).map((e) {
-              return ErpDropdownItem(
-                label: e.companyName ?? '',
-                value: e.companyCode?.toString() ?? '',
-              );
-            }).toList(),
-            sectionIndex: 0,
-          ),
           ErpFieldConfig(
             key: 'sortID',
             label: 'SORT ID',
@@ -125,6 +118,30 @@ class _MstPurityState extends State<MstPurity> {
             sectionIndex: 0,
           ),
         ],
+
+        // [
+        //   ErpFieldConfig(
+        //     key: 'companyCode',
+        //     label: 'COMPANY',
+        //     type: ErpFieldType.dropdown,
+        //     dropdownItems: companyProvider.companies
+        //         .where((element) {
+        //       return element.active==true;
+        //     },).map((e) {
+        //       return ErpDropdownItem(
+        //         label: e.companyName ?? '',
+        //         value: e.companyCode?.toString() ?? '',
+        //       );
+        //     }).toList(),
+        //     sectionIndex: 0,
+        //   ),
+        //   ErpFieldConfig(
+        //     key: 'sortID',
+        //     label: 'SORT ID',
+        //     type: ErpFieldType.number,
+        //     sectionIndex: 0,
+        //   ),
+        // ],
 
         /// ── GRADING & REPORT ──
         // [
@@ -158,6 +175,7 @@ class _MstPurityState extends State<MstPurity> {
             label: 'ACTIVE',
             type: ErpFieldType.checkbox,
             sectionIndex: 2,
+            initialBoolValue: true,
             checkboxDbType: 'BIT'
           ),
           ErpFieldConfig(
@@ -181,6 +199,28 @@ class _MstPurityState extends State<MstPurity> {
   //     context.read<PurityRptGroupProvider>().load();
   //   });
   // }
+  void _setDefaultSortId() {
+    final provider = context.read<PurityProvider>();
+
+    int nextSortId = 1;
+    if (provider.list.isNotEmpty) {
+      nextSortId = provider.list
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -195,9 +235,12 @@ class _MstPurityState extends State<MstPurity> {
       // ← ab companies available hain, division provider ko pass karo
       final companies = context.read<CompanyProvider>().companies;
       context.read<PurityProvider>().setCompanies(companies);
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<PurityProvider>().setSelectedCompany(selectedCode);
 
       // ← last mein divisions load karo
       await context.read<PurityProvider>().load();
+      _setDefaultSortId();
 
     });
   }
@@ -213,7 +256,8 @@ class _MstPurityState extends State<MstPurity> {
         'purityName': raw.purityName ?? '',
         'purityGroupCode': raw.purityGroupCode?.toString() ?? '',
         'purityRptGroupCode': raw.purityRptGroupCode?.toString() ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'sortID': raw.sortID?.toString() ?? '',
         'labourRate': raw.labourRate?.toString() ?? '',
         'pg': raw.pg == true ? 'true' : 'false',
@@ -295,7 +339,7 @@ class _MstPurityState extends State<MstPurity> {
     if (confirm != true || !mounted) return;
 
     final success =
-    await context.read<PurityProvider>().delete(raw!.purityCode!);
+    await context.read<PurityProvider>().delete(raw.purityCode!);
 
     if (success && mounted) {
       _resetForm();
@@ -326,6 +370,7 @@ class _MstPurityState extends State<MstPurity> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _setDefaultSortId();
   }
   bool _showTableOnMobile = false;
 
@@ -345,7 +390,7 @@ class _MstPurityState extends State<MstPurity> {
                 isReportRow: false,
 
                 token: token ?? '',
-                url: 'http://50.62.183.116:5000',
+                url: baseUrl,
                 title: 'PURITY LIST',
                 columns: _tableColumns,
                 data: provider.tableData,
@@ -358,6 +403,9 @@ class _MstPurityState extends State<MstPurity> {
                     ? 'No Purity found'
                     : 'Loading...',
               ):ErpForm(
+                onExit: () {
+                  context.read<TabProvider>().closeCurrentTab();
+                },
                 logo: AppImages.logo,
 
                 key: _erpFormKey,
@@ -391,6 +439,9 @@ class _MstPurityState extends State<MstPurity> {
               Expanded(
                 flex: 2,
                 child: ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -426,7 +477,7 @@ class _MstPurityState extends State<MstPurity> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'PURITY LIST',
                   columns: _tableColumns,
                   data: provider.tableData,
@@ -447,29 +498,4 @@ class _MstPurityState extends State<MstPurity> {
     );
   }
 
-  // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
 }

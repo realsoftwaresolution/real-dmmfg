@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart' show baseUrl;
 import '../models/shape_group_model.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
@@ -57,24 +58,6 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
         required: true,
         sectionIndex: 0,
       ),
-    ],
-
-    [
-      ErpFieldConfig(
-        key: 'companyCode',
-        label: 'COMPANY',
-        type: ErpFieldType.dropdown,
-        dropdownItems: companyProvider.companies
-            .where((element) {
-          return element.active==true;
-        },).map((e) {
-          return ErpDropdownItem(
-            label: e.companyName ?? '',
-            value: e.companyCode?.toString() ?? '',
-          );
-        }).toList(),
-        sectionIndex: 0,
-      ),
       ErpFieldConfig(
         key: 'sortID',
         label: 'SORT ID',
@@ -82,6 +65,30 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
         sectionIndex: 0,
       ),
     ],
+
+    // [
+    //   ErpFieldConfig(
+    //     key: 'companyCode',
+    //     label: 'COMPANY',
+    //     type: ErpFieldType.dropdown,
+    //     dropdownItems: companyProvider.companies
+    //         .where((element) {
+    //       return element.active==true;
+    //     },).map((e) {
+    //       return ErpDropdownItem(
+    //         label: e.companyName ?? '',
+    //         value: e.companyCode?.toString() ?? '',
+    //       );
+    //     }).toList(),
+    //     sectionIndex: 0,
+    //   ),
+    //   ErpFieldConfig(
+    //     key: 'sortID',
+    //     label: 'SORT ID',
+    //     type: ErpFieldType.number,
+    //     sectionIndex: 0,
+    //   ),
+    // ],
 
     /// ── SETTINGS ──
     [
@@ -91,6 +98,7 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
         type: ErpFieldType.checkbox,
         sectionTitle: 'SETTINGS',
         sectionIndex: 1,
+        initialBoolValue: true,
         checkboxDbType: 'BIT'
       ),
     ],
@@ -105,6 +113,28 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
   //     context.read<CompanyProvider>().loadCompanies();
   //   });
   // }
+  void _setDefaultSortId() {
+    final provider = context.read<ShapeGroupProvider>();
+
+    int nextSortId = 1;
+    if (provider.list.isNotEmpty) {
+      nextSortId = provider.list
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -118,8 +148,10 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
       final companies = context.read<CompanyProvider>().companies;
       context.read<ShapeGroupProvider>().setCompanies(companies);
 
-
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<ShapeGroupProvider>().setSelectedCompany(selectedCode);
       await context.read<ShapeGroupProvider>().load();
+      _setDefaultSortId();
 
     });
   }
@@ -133,7 +165,8 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
       _formValues = {
         'shapeGroupCode': raw.shapeGroupCode?.toString() ?? '',
         'shapeGroupName': raw.shapeGroupName ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'sortID': raw.sortID?.toString() ?? '',
         'active': raw.active == true ? 'true' : 'false',
       };
@@ -211,7 +244,7 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
     if (confirm != true || !mounted) return;
 
     final success =
-    await context.read<ShapeGroupProvider>().delete(raw!.shapeGroupCode!);
+    await context.read<ShapeGroupProvider>().delete(raw.shapeGroupCode!);
 
     if (success && mounted) {
       _resetForm();
@@ -242,6 +275,7 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _setDefaultSortId();
   }
   bool _showTableOnMobile = false;
 
@@ -259,7 +293,7 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
                 isReportRow: false,
 
                 token: token ?? '',
-                url: 'http://50.62.183.116:5000',
+                url: baseUrl,
                 title: 'SHAPE GROUP LIST',
                 columns: _tableColumns,
                 data: provider.tableData,
@@ -272,6 +306,9 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
                     ? 'No Shape Group found'
                     : 'Loading...',
               ):ErpForm(
+                onExit: () {
+                  context.read<TabProvider>().closeCurrentTab();
+                },
                 logo: AppImages.logo,
 
                 key: _erpFormKey,
@@ -301,6 +338,9 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
               Expanded(
                 flex: 2,
                 child: ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -332,7 +372,7 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'SHAPE GROUP LIST',
                   columns: _tableColumns,
                   data: provider.tableData,
@@ -353,29 +393,5 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
     );
   }
 
-  // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

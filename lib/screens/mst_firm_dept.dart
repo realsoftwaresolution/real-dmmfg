@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
+import '../bootstrap.dart';
 import '../models/dept_model.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
@@ -48,27 +49,35 @@ class _MstDeptState extends State<MstDept> {
       ) =>
       [
         /// ── SECTION 0: BASIC INFORMATION ──
+        // [
+        //   // ErpFieldConfig(
+        //   //   key: 'deptCode',
+        //   //   label: 'CODE',
+        //   //   type: ErpFieldType.number,
+        //   //   required: true,
+        //   //   sectionTitle: 'BASIC INFORMATION',
+        //   //   sectionIndex: 0,
+        //   // ),
+        //   ErpFieldConfig(
+        //     key: 'deptName',
+        //     label: 'NAME',
+        //     required: true,
+        //     sectionIndex: 0,
+        //   ),
+        // ],
         [
-          // ErpFieldConfig(
-          //   key: 'deptCode',
-          //   label: 'CODE',
-          //   type: ErpFieldType.number,
-          //   required: true,
-          //   sectionTitle: 'BASIC INFORMATION',
-          //   sectionIndex: 0,
-          // ),
           ErpFieldConfig(
             key: 'deptName',
             label: 'NAME',
             required: true,
             sectionIndex: 0,
           ),
-        ],
-        [
           ErpFieldConfig(
             key: 'deptGroupCode',
             label: 'DEPT GROUP',
             type: ErpFieldType.dropdown,
+            initialDropValue: true,
+            required: true,
             dropdownItems: deptGroupProvider.list
                 .where((element) {
               return element.active==true;
@@ -81,32 +90,38 @@ class _MstDeptState extends State<MstDept> {
             sectionIndex: 0,
           ),
           ErpFieldConfig(
-            key: 'companyCode',
-            label: 'COMPANY',
-            type: ErpFieldType.dropdown,
-            dropdownItems: companyProvider.companies
-                .where((element) {
-              return element.active==true;
-            },).map((e) {
-              return ErpDropdownItem(
-                label: e.companyName ?? '',
-                value: e.companyCode?.toString() ?? '',
-              );
-            }).toList(),
-            sectionIndex: 0,
-          ),
-        ],
-        [
-          ErpFieldConfig(
             key: 'sortID',
             label: 'SORT ID',
             type: ErpFieldType.number,
             sectionIndex: 0,
           ),
+          // ErpFieldConfig(
+          //   key: 'companyCode',
+          //   label: 'COMPANY',
+          //   type: ErpFieldType.dropdown,
+          //   dropdownItems: companyProvider.companies
+          //       .where((element) {
+          //     return element.active==true;
+          //   },).map((e) {
+          //     return ErpDropdownItem(
+          //       label: e.companyName ?? '',
+          //       value: e.companyCode?.toString() ?? '',
+          //     );
+          //   }).toList(),
+          //   sectionIndex: 0,
+          // ),
+        ],
+        [
+
           ErpFieldConfig(
             key: 'salaryDeptName',
             label: 'SALARY DEPT NAME',
             sectionIndex: 0,
+          ),
+          ErpFieldConfig(
+            key: 'rateSizeOn',
+            label: 'RATE SIZE ON',
+            sectionIndex: 1,
           ),
         ],
 
@@ -136,18 +151,18 @@ class _MstDeptState extends State<MstDept> {
         //     sectionIndex: 1,
         //   ),
         // ],
-        [
-          ErpFieldConfig(
-            key: 'rateSizeOn',
-            label: 'RATE SIZE ON',
-            sectionIndex: 1,
-          ),
-          // ErpFieldConfig(
-          //   key: 'wtLossCheckWith',
-          //   label: 'WT LOSS CHECK WITH',
-          //   sectionIndex: 1,
-          // ),
-        ],
+        // [
+        //   ErpFieldConfig(
+        //     key: 'rateSizeOn',
+        //     label: 'RATE SIZE ON',
+        //     sectionIndex: 1,
+        //   ),
+        //   // ErpFieldConfig(
+        //   //   key: 'wtLossCheckWith',
+        //   //   label: 'WT LOSS CHECK WITH',
+        //   //   sectionIndex: 1,
+        //   // ),
+        // ],
         [
           // ErpFieldConfig(
           //   key: 'checkCharniSize',
@@ -316,6 +331,7 @@ class _MstDeptState extends State<MstDept> {
             type: ErpFieldType.checkbox,
             sectionTitle: 'SETTINGS',
             sectionIndex: 3,
+            initialBoolValue: true,
             checkboxDbType: 'BIT'
           ),
           // ErpFieldConfig(
@@ -339,22 +355,47 @@ class _MstDeptState extends State<MstDept> {
   //     context.read<DeptGroupProvider>().load();
   //   });
   // }
+  void _setDefaultSortId() {
+    final provider = context.read<DeptProvider>();
+
+    int nextSortId = 1;
+    if (provider.list.isNotEmpty) {
+      nextSortId = provider.list
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+
       context.read<DeptGroupProvider>().load();
 
       await context.read<CompanyProvider>().loadCompanies();
 
       if (!mounted) return;
 
-
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<DeptProvider>().setSelectedCompany(selectedCode);
       final companies = context.read<CompanyProvider>().companies;
       context.read<DeptProvider>().setCompanies(companies);
 
 
       await context.read<DeptProvider>().load();
+      _setDefaultSortId();
 
     });
   }
@@ -369,7 +410,8 @@ class _MstDeptState extends State<MstDept> {
         'deptCode': raw.deptCode?.toString() ?? '',
         'deptName': raw.deptName ?? '',
         'deptGroupCode': raw.deptGroupCode?.toString() ?? '',
-        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
+            ?? raw.companyCode?.toString() ?? '',
         'sortID': raw.sortID?.toString() ?? '',
         'salaryDeptName': raw.salaryDeptName ?? '',
         'active': raw.active == true ? 'true' : 'false',
@@ -474,7 +516,7 @@ class _MstDeptState extends State<MstDept> {
     if (confirm != true || !mounted) return;
 
     final success =
-    await context.read<DeptProvider>().delete(raw!.deptCode!);
+    await context.read<DeptProvider>().delete(raw.deptCode!);
 
     if (success && mounted) {
       _resetForm();
@@ -505,6 +547,7 @@ class _MstDeptState extends State<MstDept> {
       _showTableOnMobile=false;
     });
     _erpFormKey.currentState?.resetForm();
+    _setDefaultSortId();
   }
   bool _showTableOnMobile = false;
 
@@ -523,7 +566,7 @@ class _MstDeptState extends State<MstDept> {
                 isReportRow: false,
 
                 token: token ?? '',
-                url: 'http://50.62.183.116:5000',
+                url: baseUrl,
                 title: 'DEPARTMENT LIST',
                 columns: _tableColumns,
                 data: provider.tableData,
@@ -536,6 +579,9 @@ class _MstDeptState extends State<MstDept> {
         ? 'No Department found'
         : 'Loading...',
               ):ErpForm(
+                onExit: () {
+                  context.read<TabProvider>().closeCurrentTab();
+                },
                 logo: AppImages.logo,
 
                 key: _erpFormKey,
@@ -565,6 +611,9 @@ class _MstDeptState extends State<MstDept> {
               Expanded(
                 flex: 2,
                 child: ErpForm(
+                  onExit: () {
+                    context.read<TabProvider>().closeCurrentTab();
+                  },
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
@@ -596,7 +645,7 @@ class _MstDeptState extends State<MstDept> {
                   isReportRow: false,
 
                   token: token ?? '',
-                  url: 'http://50.62.183.116:5000',
+                  url: baseUrl,
                   title: 'DEPARTMENT LIST',
                   columns: _tableColumns,
                   data: provider.tableData,
@@ -617,29 +666,5 @@ class _MstDeptState extends State<MstDept> {
     );
   }
 
-  // ── TOP BAR ───────────────────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Spacer(),
-          ErpThemeSwitcher(
-            current: _themeVariant,
-            onChanged: (v) => setState(() => _themeVariant = v),
-          ),
-        ],
-      ),
-    );
-  }
+
 }
