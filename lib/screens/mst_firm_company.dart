@@ -489,24 +489,7 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
         return Padding(
           padding: const EdgeInsets.all(8),
           child:
-              Responsive.isMobile(context)?_showTableOnMobile?ErpDataTable(
-                isReportRow: false,
-
-                token: token ?? '',
-                url: baseUrl,
-                title: 'COMPANY LIST',
-                columns: _tableColumns,
-                // availableExtraColumns: _extraColumns,
-                data: provider.tableData,
-                // theme: _theme,
-                showSearch: true,
-                showFooterTotals: false,
-                selectedRow: _selectedRow,
-                onRowTap: _onRowTap,
-                emptyMessage: provider.isLoaded
-        ? 'No companies found'
-        : 'Loading...',
-              ):ErpForm(
+              Responsive.isMobile(context)?_showTableOnMobile? buildErpDataTable(provider):ErpForm(
                 onExit: () {
                   context.read<TabProvider>().closeCurrentTab();
                 },
@@ -570,30 +553,34 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
               // ── RIGHT: Table ───────────────────────────────────────
               Expanded(
                 flex: 2,
-                child: ErpDataTable(
-                  isReportRow: false,
-
-                  token: token ?? '',
-                  url: baseUrl,
-                  title: 'COMPANY LIST',
-                  columns: _tableColumns,
-                  // availableExtraColumns: _extraColumns,
-                  data: provider.tableData,
-                  // theme: _theme,
-                  showSearch: true,
-                  showFooterTotals: false,
-                  selectedRow: _selectedRow,
-                  onRowTap: _onRowTap,
-                  emptyMessage: provider.isLoaded
-                      ? 'No companies found'
-                      : 'Loading...',
-                ),
+                child: buildErpDataTable(provider),
               ),
             ],
           ),
         );
       },
     );
+  }
+
+  ErpDataTable buildErpDataTable(CompanyProvider provider) {
+    return ErpDataTable(
+                isReportRow: false,
+
+                token: token ?? '',
+                url: baseUrl,
+                title: 'COMPANY LIST',
+                columns: _tableColumns,
+                // availableExtraColumns: _extraColumns,
+                data: provider.tableData,
+                // theme: _theme,
+                showSearch: true,
+                showFooterTotals: false,
+                selectedRow: _selectedRow,
+                onRowTap: _onRowTap,
+                emptyMessage: provider.isLoaded
+                    ? 'No companies found'
+                    : 'Loading...',
+              );
   }
 
 

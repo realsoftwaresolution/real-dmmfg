@@ -3137,24 +3137,60 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
     merged['roughDate'] = toIso(merged['roughDate']?.toString());
     merged['dueDate']   = toIso(merged['dueDate']?.toString());
 
-    bool success;
-    if (_isEditMode && _selectedRough != null) {
-      success = await provider.updateRough(
-          _selectedRough!.roughMstID!, merged, _charniRows, _processDaysRows);
-    } else {
-      success = await provider.createRough(merged, _charniRows, _processDaysRows);
-    }
 
-    if (!mounted) return;
-    if (success) {
-      final wasEdit = _isEditMode;
-      _resetForm();
-      await _setDefaultFormValues();
-            await ErpResultDialog.showSuccess(
-        context: context, theme: _theme,
-        title: wasEdit ? 'Updated' : 'Saved',
-        message: wasEdit ? 'Rough entry updated.' : 'Rough entry saved.',
+    print('valuessfskfjskfjskfkdjs');
+    print(values);
+    print(_formValues);
+
+    // ✅ Edit mode mein current record exclude karo
+    final isDuplicate = provider.isKapanDuplicate(
+      values['kapanNo'],
+      excludeMstID: _selectedRough?.roughMstID,
+    );
+
+    if (isDuplicate) {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'Duplicate Kapan No',
+        message: 'Kapan No "${values['kapanNo']}" already exists in Rough entry.\n'
+            'Please enter a different Kapan No.',
       );
+      // ✅ Field clear karo
+      _formValues.remove('kapanNo');
+      _erpFormKey.currentState?.updateFieldValue('kapanNo', '');
+      Future.delayed(
+        const Duration(milliseconds: 50),
+            () => _erpFormKey.currentState?.focusField('kapanNo'),
+      );
+    }else if(_charniEntryData.isEmpty){
+      await ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'Charni Entry Required',
+        message: 'Charni entry is required to proceed.\n'
+            'Please complete the Charni entry first.',
+      );
+    }else{
+      bool success;
+      if (_isEditMode && _selectedRough != null) {
+        success = await provider.updateRough(
+            _selectedRough!.roughMstID!, merged, _charniRows, _processDaysRows);
+      } else {
+        success = await provider.createRough(merged, _charniRows, _processDaysRows);
+      }
+
+      if (!mounted) return;
+      if (success) {
+        final wasEdit = _isEditMode;
+        _resetForm();
+        await _setDefaultFormValues();
+        await ErpResultDialog.showSuccess(
+          context: context, theme: _theme,
+          title: wasEdit ? 'Updated' : 'Saved',
+          message: wasEdit ? 'Rough entry updated.' : 'Rough entry saved.',
+        );
+      }
     }
   }
 
@@ -3336,9 +3372,9 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
             _recalcDueDate(); _pushCalcToForm();
           }
         });
-        if (key == 'kapanNo' && value.toString().trim().isNotEmpty) {
-          _onKapanChanged(value.toString().trim());
-        }
+        // if (key == 'kapanNo' && value.toString().trim().isNotEmpty) {
+        //   _onKapanChanged(value.toString().trim());
+        // }
       },
       onExit: () {
         context.watch<TabProvider>().closeCurrentTab();

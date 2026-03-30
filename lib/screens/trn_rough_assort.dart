@@ -1633,32 +1633,41 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
   // ══════════════════════════════════════════════════════════════════════════
   Future<void> _onSave(Map<String, dynamic> values) async {
     final prov = context.read<RoughAssortProvider>();
-
-    String toIso(String? v) {
-      if (v == null || v.isEmpty) return '';
-      try { return DateFormat('yyyy-MM-dd').format(DateFormat('dd/MM/yyyy').parse(v)); }
-      catch (_) { return v; }
-    }
-
-    final merged = Map<String, dynamic>.from(values);
-    merged['roughAssortDate'] = toIso(merged['roughAssortDate']?.toString());
-
-    bool success;
-    if (_isEditMode && _selectedMst != null) {
-      success = await prov.update(_selectedMst!.roughAssortMstID!, merged, _detRows);
-
-    } else {
-      success = await prov.create(merged, _detRows);
-    }
-    if (!mounted) return;
-    if (success) {
-      final wasEdit = _isEditMode;
-      _resetForm();
-      await ErpResultDialog.showSuccess(
-        context: context, theme: _theme,
-        title: wasEdit ? 'Updated' : 'Saved',
-        message: wasEdit ? 'Rough Assort Entry updated.' : 'Rough Assort Entry saved.',
+    if(_detDisplay.isEmpty){
+      await ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'Purity Required',
+        message: 'Purity entry is required to proceed.\n'
+            'Please enter purity before continuing.',
       );
+    }else{
+      String toIso(String? v) {
+        if (v == null || v.isEmpty) return '';
+        try { return DateFormat('yyyy-MM-dd').format(DateFormat('dd/MM/yyyy').parse(v)); }
+        catch (_) { return v; }
+      }
+
+      final merged = Map<String, dynamic>.from(values);
+      merged['roughAssortDate'] = toIso(merged['roughAssortDate']?.toString());
+
+      bool success;
+      if (_isEditMode && _selectedMst != null) {
+        success = await prov.update(_selectedMst!.roughAssortMstID!, merged, _detRows);
+
+      } else {
+        success = await prov.create(merged, _detRows);
+      }
+      if (!mounted) return;
+      if (success) {
+        final wasEdit = _isEditMode;
+        _resetForm();
+        await ErpResultDialog.showSuccess(
+          context: context, theme: _theme,
+          title: wasEdit ? 'Updated' : 'Saved',
+          message: wasEdit ? 'Rough Assort Entry updated.' : 'Rough Assort Entry saved.',
+        );
+      }
     }
   }
 
