@@ -868,6 +868,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
   // ── ErpForm ────────────────────────────────────────────────────────────────
   Widget _buildForm(BuildContext context) {
     return ErpForm(
+      screenName: 'PACKET_CREATE_ENTRY',
       addButtonSections: const {1},
       logo:       AppImages.logo,
       key:        _erpFormKey,

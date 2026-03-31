@@ -207,7 +207,7 @@ class SpkDeptIssProvider extends BaseProvider {
       logID:           toI(v['logID']?.toString()),
       pcID:            v['pcID'],
       ever:            toI(v['ever']?.toString()),
-      entryType:       v['entryType'],
+      entryType:       v['entryType'] ?? 'deptIss',
       repairing:       v['repairing'],
       formType:        v['formType'],
       proType:         v['proType'],
