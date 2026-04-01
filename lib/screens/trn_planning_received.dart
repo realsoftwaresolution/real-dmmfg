@@ -1,5 +1,3 @@
-// lib/screens/trn_spk_dept_iss_entry.dart
-
 import 'package:collection/collection.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
 import 'package:diam_mfg/providers/counter_manager_det_provider.dart';
@@ -28,6 +26,7 @@ import '../providers/auth_provider.dart';
 import '../providers/counter_display_det_provider.dart';
 import '../providers/purity_provider.dart';
 import '../providers/shape_provider.dart';
+import '../providers/trn_planning_received_provider.dart';
 import '../providers/user_visibility_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -40,18 +39,18 @@ String _f3(double? v) => v == null ? '0.000' : v.toStringAsFixed(3);
 //  WIDGET
 // ─────────────────────────────────────────────────────────────────────────────
 
-class TrnSpkDeptIssEntry extends StatefulWidget {
-  const TrnSpkDeptIssEntry({super.key});
+class TrnPlanningReceivedEntry extends StatefulWidget {
+  const TrnPlanningReceivedEntry({super.key});
 
   @override
-  State<TrnSpkDeptIssEntry> createState() => _TrnSpkDeptIssEntryState();
+  State<TrnPlanningReceivedEntry> createState() => _TrnPlanningReceivedEntryState();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
+class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
   // ── Theme ──────────────────────────────────────────────────────────────────
   final ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
   ErpTheme get _theme => ErpTheme(_themeVariant);
@@ -248,7 +247,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.wait([
-        context.read<SpkDeptIssProvider>().load(),
+        context.read<TrnPlanningReceivedProvider>().load(),
         context.read<CounterProvider>().load(),
         context.read<CounterManagerDetProvider>().load(),
         context.read<DeptProvider>().load(),
@@ -466,7 +465,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _onBCodeScanned(String bCode) async {
-    final rows = await context.read<SpkDeptIssProvider>().fetchByBCode(
+    final rows = await context.read<TrnPlanningReceivedProvider>().fetchByBCode(
       bCode: bCode,
       fromCrId: _fromCrId!.toString(),
     );
@@ -530,7 +529,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     final kWt = double.tryParse(_entryVals['kwt'] ?? '') ?? 0;
     final issPc = int.tryParse(_entryVals['issPc'] ?? '') ?? 0;
     final kPc = int.tryParse(_entryVals['kpc'] ?? '') ?? 0;
- 
+
     // ✅ UPDATED FORMULA
     final lossWt = issWt - recWt - kWt;
 
@@ -974,7 +973,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
   Future<void> _onRowTap(Map<String, dynamic> row) async {
     final raw = row['_raw'] as SpkDeptIssMstModel;
-    final prov = context.read<SpkDeptIssProvider>();
+    final prov = context.read<TrnPlanningReceivedProvider>();
     final details = await prov.loadDetails(raw.spkDeptIssMstID!);
     if (!mounted) return;
 
@@ -1046,7 +1045,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _onSave(Map<String, dynamic> values) async {
-    final prov = context.read<SpkDeptIssProvider>();
+    final prov = context.read<TrnPlanningReceivedProvider>();
 
     String toIso(String? v) {
       if (v == null || v.isEmpty) return '';
@@ -1108,7 +1107,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     if (confirm != true || !mounted) return;
 
     final success = await context
-        .read<SpkDeptIssProvider>()
+        .read<TrnPlanningReceivedProvider>()
         .delete(_selectedMst!.spkDeptIssMstID!);
 
     if (success && mounted) {
@@ -1718,7 +1717,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SpkDeptIssProvider>(
+    return Consumer<TrnPlanningReceivedProvider>(
       builder: (ctx, prov, _) => Padding(
         padding: const EdgeInsets.all(8),
         child: Responsive.isMobile(context)
@@ -1975,7 +1974,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   //  TABLE WIDGET
   // ─────────────────────────────────────────────────────────────────────────
 
-  Widget _buildTable(SpkDeptIssProvider prov) {
+  Widget _buildTable(TrnPlanningReceivedProvider prov) {
     final counterProv = context.read<CounterProvider>();
     final procProv = context.read<DeptProcessProvider>();
 

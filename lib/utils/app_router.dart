@@ -1,3 +1,4 @@
+import 'package:diam_mfg/screens/admin_menu_create.dart';
 import 'package:diam_mfg/screens/mst_firm_color.dart';
 import 'package:diam_mfg/screens/mst_firm_dept_group.dart';
 import 'package:diam_mfg/screens/mst_firm_dept_process.dart';
@@ -23,6 +24,7 @@ import 'package:diam_mfg/screens/mst_firm_team.dart';
 import 'package:diam_mfg/screens/mst_firm_tensions.dart';
 import 'package:diam_mfg/screens/trn_cut_create.dart';
 import 'package:diam_mfg/screens/trn_packet_create.dart';
+import 'package:diam_mfg/screens/trn_planning_received.dart';
 import 'package:diam_mfg/screens/trn_rough_assort.dart';
 import 'package:diam_mfg/screens/trn_rough_entry.dart';
 import 'package:diam_mfg/screens/trn_spk_dept_iss.dart';
@@ -74,6 +76,8 @@ class AppRouter {
     '/3.3': (context) => const TrnCutCreateEntry(),
     '/3.4': (context) => const TrnPacketCreateEntry(),
     '/3.5': (context) => const TrnSpkDeptIssEntry(),
+    '/3.28': (context) => const TrnPlanningReceivedEntry(),
+    '/4': (context) => const AdminMenuCreateScreen(),
 
   });
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:diam_mfg/providers/admin_menu_provider.dart';
 import 'package:diam_mfg/providers/article_provider.dart';
 import 'package:diam_mfg/providers/auth_provider.dart';
 import 'package:diam_mfg/providers/charni_group_provider.dart';
@@ -57,6 +58,7 @@ import 'package:diam_mfg/providers/team_provider.dart';
 import 'package:diam_mfg/providers/tension_type_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
 import 'package:diam_mfg/providers/test_provider.dart';
+import 'package:diam_mfg/providers/trn_planning_received_provider.dart';
 import 'package:diam_mfg/providers/user_visibility_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -144,10 +146,12 @@ Future<void> bootstrap({
           ChangeNotifierProvider<CounterDetProvider>.value(value: CounterDetProvider()),
           ChangeNotifierProvider<PartyTypeProvider>.value(value: PartyTypeProvider()),
           ChangeNotifierProvider<SpkDeptIssProvider>.value(value: SpkDeptIssProvider()),
+          ChangeNotifierProvider<TrnPlanningReceivedProvider>.value(value: TrnPlanningReceivedProvider()),
           ChangeNotifierProvider<EmployeeProvider>.value(value: EmployeeProvider()),
           ChangeNotifierProvider<DesignationProvider>.value(value: DesignationProvider()),
           ChangeNotifierProvider<EmployeeDeptDetProvider>.value(value: EmployeeDeptDetProvider()),
           ChangeNotifierProvider<EmployeeManagerDetProvider>.value(value: EmployeeManagerDetProvider()),
+          ChangeNotifierProvider<AdminMenuProvider>.value(value: AdminMenuProvider()),
 
 
 
