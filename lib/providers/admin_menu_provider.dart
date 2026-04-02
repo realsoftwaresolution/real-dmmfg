@@ -116,6 +116,40 @@ class AdminMenuProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  String get generatedRouteCode {
+    if (_selectedMainMenu == null) return '';
+
+    final prefixMap = {
+      0: '2',
+      1: '3',
+      2: '4',
+      3: '5',
+    };
+
+    final prefix = prefixMap[_selectedMainMenu!.id] ?? '9';
+
+    final groupMenus = _allMenus.where((m) {
+      return m.mainMenuMstID == _selectedMainMenu!.id &&
+          m.routeCode.startsWith('$prefix.');
+    }).toList();
+
+    final numbers = groupMenus.map((m) {
+      final rc = m.routeCode.trim();
+      if (rc.contains('.')) {
+        final last = rc.split('.').last.trim();
+        return int.tryParse(last) ?? 0;
+      }
+      return 0;
+    }).toList();
+
+    final max = numbers.isEmpty ? 0 : numbers.reduce((a, b) => a > b ? a : b);
+
+    final next = (max + 1).toString().padLeft(2, '0');
+
+    return '$prefix.$next';
+  }
+
+
   int get _nextMenuMstID {
     final grouped = menusInSelectedGroup;
     if (grouped.isEmpty) return 1;
@@ -144,6 +178,7 @@ class AdminMenuProvider extends ChangeNotifier {
       'FormName': _formName,
       'SortID': _sortID,
       'DashBoard': _dashBoard,
+      'RouteCode': generatedRouteCode, // ✅ ADD THIS
     };
 
     try {

@@ -80,12 +80,34 @@ class _AdminMenuCreateScreenState extends State<AdminMenuCreateScreen> {
 // ════════════════════════════════════════════════
 // FORM PANEL
 // ════════════════════════════════════════════════
-class _FormPanel extends StatelessWidget {
+class _FormPanel extends StatefulWidget {
   final AdminMenuProvider provider;
   const _FormPanel({required this.provider});
 
   @override
+  State<_FormPanel> createState() => _FormPanelState();
+}
+
+class _FormPanelState extends State<_FormPanel> {
+  late TextEditingController _routeController;
+
+  void initState() {
+    super.initState();
+    _routeController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _routeController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final provider = widget.provider;
+
+    // 🔥 AUTO UPDATE CONTROLLER
+    _routeController.text = provider.generatedRouteCode;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Form(
@@ -180,6 +202,16 @@ class _FormPanel extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 5),
+
+            _TextInputField(
+              label: 'Route Code',
+              hint: '',
+              initialValue: '',
+              controller: _routeController, // ✅ IMPORTANT
+              onChanged: (_) {},
+              readOnly: true,
             ),
             const SizedBox(height: 20),
 
@@ -612,16 +644,20 @@ Widget _sectionHeader(String title) => Padding(
 class _TextInputField extends StatelessWidget {
   final String label;
   final String hint;
+  final bool readOnly;
   final String initialValue;
   final ValueChanged<String> onChanged;
   final FormFieldValidator<String>? validator;
+  final TextEditingController? controller;
 
   const _TextInputField({
     required this.label,
+     this.readOnly = false,
     required this.hint,
     required this.initialValue,
     required this.onChanged,
     this.validator,
+    this.controller, // ✅ NEW
   });
 
   @override
@@ -632,12 +668,14 @@ class _TextInputField extends StatelessWidget {
         _label(label),
         const SizedBox(height: 6),
         TextFormField(
-          initialValue: initialValue,
+          controller: controller, // ✅ ADD THIS
+          initialValue: controller == null ? initialValue : null,
           decoration: _inputDecoration(hint),
           onChanged: onChanged,
           validator: validator,
           onSaved: (v) => onChanged(v ?? ''),
-        ),
+          readOnly: readOnly,
+        )
       ],
     );
   }

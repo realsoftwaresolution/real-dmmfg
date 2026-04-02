@@ -15,6 +15,7 @@ class MenuMstModel {
   final int?    sortID;
   final String? dashBoard;
   final String? shortCutKey;
+  final String? routeCode;
 
   MenuMstModel({
     this.menuSRNO,
@@ -29,6 +30,7 @@ class MenuMstModel {
     this.sortID,
     this.dashBoard,
     this.shortCutKey,
+    this.routeCode,
   });
 
   factory MenuMstModel.fromJson(Map<String, dynamic> json) => MenuMstModel(
@@ -44,6 +46,7 @@ class MenuMstModel {
     sortID:         json['SortID'],
     dashBoard:      json['DashBoard'],
     shortCutKey:    json['ShortCutKey'],
+    routeCode:    json['RouteCode'].toString().trim(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -57,6 +60,7 @@ class MenuMstModel {
     'SortID':         sortID,
     'DashBoard':      dashBoard,
     'ShortCutKey':    shortCutKey,
+    'RouteCode':    routeCode,
   };
 
   Map<String, dynamic> toTableRow() => {
@@ -82,7 +86,7 @@ class MenuMstModel {
     shortCutKey:    v['shortCutKey'],
   );
   RSMenuItem toMenuItem() {
-    print("menuImage: $menuImage -> routeCode: $routeCode");
+    print("menuImage: $menuImage -> routeCode: $routeCode -> menuName: $menuName");
     return RSMenuItem(
       id: menuSRNO.toString(),
       title: menuName ?? '',
@@ -90,59 +94,41 @@ class MenuMstModel {
       route: "/$routeCode",
     );
   }
-  String get routeCode {
-    if (menuImage == null) return '';
-
-    try {
-      final value = menuImage.toString();
-
-      // Buffer format → {type: Buffer, data: [50,46,52]}
-      if (value.contains('data')) {
-        final start = value.indexOf('[');
-        final end = value.indexOf(']');
-        final numbers = value.substring(start + 1, end).split(',');
-
-        final bytes = numbers.map((e) => int.parse(e.trim())).toList();
-
-        return String.fromCharCodes(bytes);
-      }
-
-      return value;
-    } catch (e) {
-      return '';
-    }
-  }
   String get iconPath {
     switch (routeCode) {
       case '2':
         return 'assets/images/2_black.png';
       case '3':
         return 'assets/images/3.png';
-      case '3.1':
+      case '3.01':
         return 'assets/images/3.1.png';
-      case '3.2':
+      case '3.02':
         return 'assets/images/3.2.png';
-      case '3.3':
+      case '3.03':
         return 'assets/images/3.3.png';
-      case '3.4':
+      case '3.04':
         return 'assets/images/3.4.png';
-      case '2.1':
+        case '3.05':
+        return 'assets/images/3.4.png';
+        case '3.06':
+        return 'assets/images/3.4.png';
+      case '2.01':
         return 'assets/images/2.1_black.png';
-      case '2.2':
+      case '2.02':
         return 'assets/images/2.2_black.png';
-      case '2.3':
+      case '2.03':
         return 'assets/images/2.3_black.png';
-      case '2.4':
+      case '2.04':
         return 'assets/images/2.4_black.png';
-      case '2.5':
+      case '2.05':
         return 'assets/images/2.5_black.png';
-      case '2.6':
+      case '2.06':
         return 'assets/images/2.6_black.png';
-      case '2.7':
+      case '2.07':
         return 'assets/images/2.7_black.png';
-      case '2.8':
+      case '2.08':
         return 'assets/images/2.8_black.png';
-      case '2.9':
+      case '2.09':
         return 'assets/images/2.9_black.png';
       case '2.10':
         return 'assets/images/2.10_black.png';

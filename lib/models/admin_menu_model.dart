@@ -5,6 +5,7 @@ class AdminMenuModel {
   final int mainMenuMstID;
   final int valid;
   final String formName;
+  final String routeCode;
   final int sortID;
   final String dashBoard;
   final List<int>? menuImageBuffer; // raw buffer bytes from API
@@ -19,6 +20,7 @@ class AdminMenuModel {
     required this.sortID,
     required this.dashBoard,
     this.menuImageBuffer,
+    required this.routeCode,
   });
 
   factory AdminMenuModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,7 @@ class AdminMenuModel {
       formName: json['FormName'] ?? '',
       sortID: json['SortID'] ?? 1,
       dashBoard: json['DashBoard'] ?? 'CLICK',
+      routeCode: (json['RouteCode'] ?? '').toString().trim(), // ✅ FIX
       menuImageBuffer: imageBuffer,
     );
   }
@@ -57,4 +60,6 @@ class MainMenuGroup {
 final List<MainMenuGroup> mainMenuGroups = [
   MainMenuGroup(id: 0, name: 'Master'),
   MainMenuGroup(id: 1, name: 'Transaction'),
+  MainMenuGroup(id: 2, name: 'Reports'),
+  MainMenuGroup(id: 3, name: 'Utility'),
 ];

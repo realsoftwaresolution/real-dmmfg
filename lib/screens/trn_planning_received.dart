@@ -7,7 +7,6 @@ import 'package:diam_mfg/providers/dept_group_provider.dart';
 import 'package:diam_mfg/providers/dept_process_provider.dart';
 import 'package:diam_mfg/providers/employee_provider.dart';
 import 'package:diam_mfg/providers/remarks_provider.dart';
-import 'package:diam_mfg/providers/spk_dept_iss_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
@@ -1298,7 +1297,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
             readOnly: _lockMasterFields || _isEditMode),
         ErpFieldConfig(
             key: 'fromDept',
-            label: 'DEPT',
+            label: 'MANAGER',
             type: ErpFieldType.text,
             readOnly: true,
             sectionIndex: 0),
@@ -1311,7 +1310,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
             sectionIndex: 0),
         ErpFieldConfig(
             key: 'toDept',
-            label: 'DEPT',
+            label: 'MANAGER',
             type: ErpFieldType.text,
             readOnly: true,
             sectionIndex: 0),
@@ -1746,7 +1745,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
       autoStartAdding: _isAdding,
       addButtonSections: const {3},
       logo: AppImages.logo,
-      title: 'DEPT ISSUE ENTRY',
+      title: 'PLANNING RECEIVED ENTRY',
       tabBarBackgroundColor: const Color(0xfff2f0ef),
       tabBarSelectedColor: _theme.primaryGradient.first,
       tabBarSelectedTxtColor: Colors.white,
@@ -2026,7 +2025,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
       isReportRow: false,
       token: token ?? '',
       url: baseUrl,
-      title: 'DEPT ISSUE LIST',
+      title: 'PLANNING RECEIVED LIST',
       columns: _tableColumns,
       data: data,
       showSearch: true,
