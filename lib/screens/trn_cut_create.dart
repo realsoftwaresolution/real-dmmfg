@@ -876,6 +876,8 @@
 
 // lib/screens/trn_cut_create_entry.dart
 
+import 'dart:convert';
+
 import 'package:diam_mfg/models/cut_create_model.dart';
 import 'package:diam_mfg/providers/cut_create_provider.dart';
 import 'package:diam_mfg/providers/purity_provider.dart';
@@ -954,12 +956,13 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
       CutCreateProvider   cutProv,
       ) {
     final pu = context.read<PurityProvider>();
-
     // ✅ FIX 2: Kapan dropdown — sirf woh kapan dikhao jinki
     //           RoughAssort total wt > already used wt in CutCreate
     final kapanItems = rap.list
         .where((assort) {
+
       if (assort.kapanNo == null || assort.kapanNo!.isEmpty) return false;
+      print('${jsonEncode(assort)} -${jsonEncode(assort.details)}');
       if (!assort.details.any((d) => d.purityCode == 2)) return false;
 
       // Assort total wt for this kapan

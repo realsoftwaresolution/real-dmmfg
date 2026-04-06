@@ -313,6 +313,7 @@ class SpkDeptIssMstModel {
   final int?    totPkt;
   final String? users;
   final int?    jnoFirst;
+  final int?    bCode;
 
   // Replace karo:
   double get totalWt => totalWtDb ?? details.fold(0.0, (s, d) => s + (d.totalWt ?? 0));
@@ -344,6 +345,7 @@ class SpkDeptIssMstModel {
     this.details = const [],
     this.totalWtDb,
     this.totalPcDb,
+    this.bCode,
   });
 
   factory SpkDeptIssMstModel.fromJson(Map<String, dynamic> json) =>
@@ -367,6 +369,7 @@ class SpkDeptIssMstModel {
         formType1:       json['FormType1'],
         nukCrId:         json['NukCrId'],
         planType:        json['PlanType'],
+        bCode:        json['BCode'],
         totPkt:   json['TotPkt']  != null ? (json['TotPkt']  as num).toInt() : null,
         users:    json['Users']?.toString(),
         jnoFirst: json['Jno']     != null ? (json['Jno']     as num).toInt() : null,
@@ -400,6 +403,7 @@ class SpkDeptIssMstModel {
     'FormType1':       formType1,
     'NukCrId':         nukCrId,
     'PlanType':        planType,
+    'BCode':        bCode,
   };
 
   static String? _dateOnly(dynamic v) {
@@ -551,6 +555,7 @@ class SpkDeptIssDetModel {
   final double? optAmount;
   final double? lsAmount;
   final int?    orderMstID;
+  final List<Map<String, dynamic>>? sarinData;
 
   const SpkDeptIssDetModel({
     this.spkDeptIssDetID,
@@ -691,6 +696,7 @@ class SpkDeptIssDetModel {
     this.optAmount,
     this.lsAmount,
     this.orderMstID,
+    this.sarinData,
   });
 
   factory SpkDeptIssDetModel.fromJson(Map<String, dynamic> json) =>
@@ -833,6 +839,9 @@ class SpkDeptIssDetModel {
         optAmount:        _d(json['OptAmount']),
         lsAmount:         _d(json['LsAmount']),
         orderMstID:       json['OrderMstID'],
+        sarinData: (json['sarinData'] as List?)
+            ?.map((e) => Map<String, dynamic>.from(e as Map))
+            .toList(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -850,6 +859,7 @@ class SpkDeptIssDetModel {
     'IssPc':            issPc,
     'IssWt':            issWt,
     'RecPc':            recPc,
+    'sarinData':            sarinData,
     if (fromDeptCode != null) 'FromDeptCode': fromDeptCode,
     if (toDeptCode   != null) 'ToDeptCode':   toDeptCode,
     'RecWt':            recWt,

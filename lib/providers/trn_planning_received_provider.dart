@@ -50,40 +50,47 @@ class TrnPlanningReceivedProvider extends BaseProvider {
       notifyListeners();
     }
   }
-// BCode scan → PacketDet rows fetch
+
+  // Store scanned det rows (which carry sarinData)
+  List<SpkDeptIssDetModel> _scannedDetList = [];
+  List<SpkDeptIssDetModel> get scannedDetList => _scannedDetList;
+
+  void clearScannedDetList() {
+    _scannedDetList = [];
+    notifyListeners();
+  }
+
   Future<List<SpkDeptIssDetModel>> fetchByBCode({
     required String bCode,
-    required String    fromCrId,
+    required String fromCrId,
   }) async {
     final result = await request<List<SpkDeptIssDetModel>>(
       showLoader: false,
       call: () => api.get(
         '/spkDeptIss/scan-bcode',
-
         query: {
-          'bCode':     bCode,
-          'lastCrId':  fromCrId.toString(),
+          'bCode': bCode,
+          'lastCrId': fromCrId.toString(),
+          'screenName': 'PLANNING_RECEIVED',
         },
       ),
       onSuccess: (res) {
         final data = res.data;
         final list = data is List ? data : [data];
-        return list
+        final parsed = list
             .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
             .toList();
+
+        // Store so the sarin table can read sarinData
+        _scannedDetList = parsed;
+        notifyListeners();
+
+        return parsed;
       },
-      // onSuccess: (res) {
-      //   final list = res.data as List? ?? [];
-      //
-      //   print('listttt----${list}');
-      //
-      //   return list
-      //       .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
-      //       .toList();
-      // },
     );
     return result ?? [];
   }
+
   // ── CREATE ────────────────────────────────────────────────────────────────
   Future<bool> create(
       Map<String, dynamic>       values,
@@ -207,9 +214,9 @@ class TrnPlanningReceivedProvider extends BaseProvider {
       logID:           toI(v['logID']?.toString()),
       pcID:            v['pcID'],
       ever:            toI(v['ever']?.toString()),
-      entryType:       v['entryType'] ?? 'deptIss',
+      entryType:       v['entryType'],
       repairing:       v['repairing'],
-      formType:        v['formType'],
+      formType:        v['formType'] ?? 'PLANNING_RECEIVED',
       proType:         v['proType'],
       formType1:       v['formType1'],
       nukCrId:         toI(v['nukCrId']?.toString()),

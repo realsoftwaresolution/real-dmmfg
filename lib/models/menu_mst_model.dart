@@ -86,7 +86,7 @@ class MenuMstModel {
     shortCutKey:    v['shortCutKey'],
   );
   RSMenuItem toMenuItem() {
-    print("menuImage: $menuImage -> routeCode: $routeCode -> menuName: $menuName");
+    // print("menuImage: $menuImage -> routeCode: $routeCode -> menuName: $menuName");
     return RSMenuItem(
       id: menuSRNO.toString(),
       title: menuName ?? '',
