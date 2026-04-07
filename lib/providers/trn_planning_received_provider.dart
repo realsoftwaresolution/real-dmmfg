@@ -80,9 +80,19 @@ class TrnPlanningReceivedProvider extends BaseProvider {
         final parsed = list
             .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
             .toList();
-
-        // Store so the sarin table can read sarinData
-        _scannedDetList = parsed;
+        for (var item in parsed) {
+          if(parsed[0].sarinData!.isNotEmpty){
+            final index = _scannedDetList.indexWhere(
+                    (e) => e.bCode.toString() == item.bCode.toString());
+            print(_scannedDetList);
+            print(index);
+            if (index == -1) {
+              _scannedDetList.add(item);
+            } else {
+              _scannedDetList[index] = item; // update existing
+            }
+          }
+        }
         notifyListeners();
 
         return parsed;

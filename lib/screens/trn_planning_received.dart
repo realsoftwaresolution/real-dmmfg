@@ -458,7 +458,6 @@ class _TrnPlanningReceivedEntryState
     set('purityCode', r.purityCode?.toString());
 
     setState(() => _scannedDet = r);
-    print('r.sarinData ${r.sarinData}');
     // ── Now also update the BarCode table with sarinData from scanned row ──
     if (r.sarinData != null && r.sarinData!.isNotEmpty) {
       // sarinData is already on the model; _buildTableByBarCodeData
@@ -1760,6 +1759,7 @@ class _TrnPlanningReceivedEntryState
 
     Future<void> _onRowTap(Map<String, dynamic> row) async {
       final raw = row['_raw'] as SpkDeptIssMstModel;
+      print('raw.bCode?.toString() ${raw.bCode?.toString()}');
       setState(() {
         _selectedRow = row;
         _highlightedBCode = raw.bCode?.toString(); // ← directly from _raw
@@ -1782,16 +1782,17 @@ class _TrnPlanningReceivedEntryState
   }
   Widget _buildTableByBarCodeData(TrnPlanningReceivedProvider prov) {
     final List<Map<String, dynamic>> data = [];
-
     // sarinData lives on SpkDeptIssDetModel from the scan response
-    for (final det in prov.scannedDetList) {
-      final sarinList = det.sarinData ?? [];
+    if(prov.scannedDetList.isNotEmpty){
+      for (final det in prov.scannedDetList) {
+        final sarinList = det.sarinData ?? [];
 
-      if (sarinList.isEmpty) {
-        data.add(_buildDetSarinRow(det: det, sarin: null));
-      } else {
-        for (final sarin in sarinList) {
-          data.add(_buildDetSarinRow(det: det, sarin: sarin));
+        if (sarinList.isEmpty) {
+          data.add(_buildDetSarinRow(det: det, sarin: null));
+        } else {
+          for (final sarin in sarinList) {
+            data.add(_buildDetSarinRow(det: det, sarin: sarin));
+          }
         }
       }
     }
@@ -1838,6 +1839,7 @@ class _TrnPlanningReceivedEntryState
       'tHmm':          sarin?['THmm']?.toString() ?? '',
       'disc':          sarin?['DISC']?.toString() ?? '',
       'rec':           sarin?['Rec']?.toString() ?? '',
+      'bCode':           sarin?['BCode']?.toString() ?? '',
     };
   }
 }

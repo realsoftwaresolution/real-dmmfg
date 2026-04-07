@@ -841,7 +841,7 @@ class SpkDeptIssDetModel {
         orderMstID:       json['OrderMstID'],
         sarinData: (json['sarinData'] as List?)
             ?.map((e) => Map<String, dynamic>.from(e as Map))
-            .toList(),
+            .toList() ?? [],
       );
 
   Map<String, dynamic> toJson() => {
