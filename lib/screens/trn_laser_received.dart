@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:collection/collection.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
 import 'package:diam_mfg/providers/counter_manager_det_provider.dart';
@@ -10,6 +8,7 @@ import 'package:diam_mfg/providers/dept_process_provider.dart';
 import 'package:diam_mfg/providers/employee_provider.dart';
 import 'package:diam_mfg/providers/remarks_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
+import 'package:diam_mfg/providers/trn_laser_received_provider.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/helper_functions.dart';
@@ -27,7 +26,6 @@ import '../providers/auth_provider.dart';
 import '../providers/counter_display_det_provider.dart';
 import '../providers/purity_provider.dart';
 import '../providers/shape_provider.dart';
-import '../providers/trn_planning_received_provider.dart';
 import '../providers/user_visibility_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -40,20 +38,18 @@ String _f3(double? v) => v == null ? '0.000' : v.toStringAsFixed(3);
 //  WIDGET
 // ─────────────────────────────────────────────────────────────────────────────
 
-class TrnPlanningReceivedEntry extends StatefulWidget {
-  const TrnPlanningReceivedEntry({super.key});
+class TrnLaserReceivedEntry extends StatefulWidget {
+  const TrnLaserReceivedEntry({super.key});
 
   @override
-  State<TrnPlanningReceivedEntry> createState() =>
-      _TrnPlanningReceivedEntryState();
+  State<TrnLaserReceivedEntry> createState() => _TrnLaserReceivedEntryState();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _TrnPlanningReceivedEntryState
-    extends State<TrnPlanningReceivedEntry> {
+class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
   // ── Theme ──────────────────────────────────────────────────────────────────
   final ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
   ErpTheme get _theme => ErpTheme(_themeVariant);
@@ -67,7 +63,6 @@ class _TrnPlanningReceivedEntryState
   final String? token = AppStorage.getString('token');
 
   // ── Selection state ────────────────────────────────────────────────────────
-  String? _highlightedBCode; // ← tracks which bCode to highlight in barcode table
   Map<String, dynamic>? _selectedRow;
   SpkDeptIssMstModel? _selectedMst;
   SpkDeptIssDetModel? _scannedDet;
@@ -84,7 +79,6 @@ class _TrnPlanningReceivedEntryState
   int? _fromCrId;
   String? _fromDeptName;
   int? _fromDeptCode;
-  String? _filteredBCode; // ← add this with your other state variables
 
   int? _toCrId;
   String? _toDeptName;
@@ -99,6 +93,7 @@ class _TrnPlanningReceivedEntryState
   // ── Display fields (from UserVisibility) ───────────────────────────────────
   List<UserVisibilityModel> _fromDisplayFields = [];
   List<UserVisibilityModel> _toDisplayFields = [];
+  String? _selectedRadioCode;
 
   // ─────────────────────────────────────────────────────────────────────────
   //  PROVIDER SHORTCUTS
@@ -107,8 +102,7 @@ class _TrnPlanningReceivedEntryState
   CounterDisplayDetProvider get _displayProv =>
       context.read<CounterDisplayDetProvider>();
 
-  UserVisibilityProvider get _visProv =>
-      context.read<UserVisibilityProvider>();
+  UserVisibilityProvider get _visProv => context.read<UserVisibilityProvider>();
 
   // ─────────────────────────────────────────────────────────────────────────
   //  LOOKUP HELPERS
@@ -199,12 +193,15 @@ class _TrnPlanningReceivedEntryState
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  //  MERGED FIELD HELPER
+  //  MERGED FIELD HELPERS
   // ─────────────────────────────────────────────────────────────────────────
 
+  /// Returns DEPT-scoped entry fields (excluding CHARNI, TENSIONS, ALL),
+  /// de-duped by name. TO-fields win over FROM-fields on name collision.
   Map<String, UserVisibilityModel> _getMergedFields() {
     const excluded = {'CHARNI', 'TENSIONS', 'ALL'};
     final merged = <String, UserVisibilityModel>{};
+
     for (final f in [..._fromDisplayFields, ..._toDisplayFields]) {
       if (f.entryType != 'DEPT') continue;
       final name = (f.userVisibilityName ?? '').toUpperCase();
@@ -212,6 +209,32 @@ class _TrnPlanningReceivedEntryState
       merged[name] = f;
     }
     return merged;
+  }
+
+  /// Returns radio-option fields (BCODE, ID, JNO, CUT LOT, QR CODE) sourced
+  /// from EITHER _fromDisplayFields OR _toDisplayFields — whichever has them.
+  /// FROM-fields are checked first; TO-fields fill in anything missing.
+  /// This means radio buttons appear as long as at least one list carries them,
+  /// even if the other list is empty or doesn't have those field names.
+  Map<String, UserVisibilityModel> _getRadioFields() {
+    const radioNames = {'BCODE', 'ID', 'JNO', 'CUT LOT', 'QR CODE'};
+    final result = <String, UserVisibilityModel>{};
+
+    // FROM first — these are the "scan source" fields
+    for (final f in _fromDisplayFields) {
+      final name = (f.userVisibilityName ?? '').toUpperCase();
+      if (radioNames.contains(name)) result[name] = f;
+    }
+
+    // TO fills in any radio names not already found in FROM
+    for (final f in _toDisplayFields) {
+      final name = (f.userVisibilityName ?? '').toUpperCase();
+      if (radioNames.contains(name) && !result.containsKey(name)) {
+        result[name] = f;
+      }
+    }
+
+    return result;
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -223,6 +246,7 @@ class _TrnPlanningReceivedEntryState
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.wait([
+        context.read<TrnLaserReceivedProvider>().load(),
         context.read<CounterProvider>().load(),
         context.read<CounterManagerDetProvider>().load(),
         context.read<DeptProvider>().load(),
@@ -240,6 +264,7 @@ class _TrnPlanningReceivedEntryState
       if (!mounted) return;
       _setDefaultFormValues();
 
+      // Auto-fill FROM from logged-in user
       final loggedUser = context.read<AuthProvider>().user;
       if (loggedUser?.crId != null) {
         _onFromSelected(loggedUser!.crId!.toString());
@@ -279,6 +304,10 @@ class _TrnPlanningReceivedEntryState
         counterType: 'FROM',
       );
     });
+
+    if (_fromDisplayFields.isNotEmpty) {
+      debugPrint('FROM → ${_fromDisplayFields.first.userVisibilityName}');
+    }
   }
 
   Future<void> _loadToDisplayFields(int crId) async {
@@ -295,8 +324,13 @@ class _TrnPlanningReceivedEntryState
         counterType: 'TO',
       );
     });
+
+    if (_toDisplayFields.isNotEmpty) {
+      debugPrint('TO → ${_toDisplayFields.first.userVisibilityName}');
+    }
   }
 
+  /// Shared logic for building a sorted, validated UserVisibilityModel list.
   List<UserVisibilityModel> _buildVisibilityList({
     required List<dynamic> rawList,
     required String counterType,
@@ -327,10 +361,8 @@ class _TrnPlanningReceivedEntryState
     if (crId == null) return;
 
     try {
-      final counter = context
-          .read<CounterProvider>()
-          .list
-          .firstWhere((c) => c.crId == crId);
+      final counter =
+      context.read<CounterProvider>().list.firstWhere((c) => c.crId == crId);
       final deptName = _deptNameFor(counter.deptCode);
 
       setState(() {
@@ -358,10 +390,8 @@ class _TrnPlanningReceivedEntryState
     if (crId == null) return;
 
     try {
-      final counter = context
-          .read<CounterProvider>()
-          .list
-          .firstWhere((c) => c.crId == crId);
+      final counter =
+      context.read<CounterProvider>().list.firstWhere((c) => c.crId == crId);
       final deptName = _deptNameFor(counter.deptCode);
 
       setState(() {
@@ -391,26 +421,39 @@ class _TrnPlanningReceivedEntryState
     await _loadToDisplayFields(_toCrId!);
     if (!mounted) return;
 
+    // Ensure form-value maps have entries for all dynamic fields
     for (final f in _toDisplayFields) {
       if (f.userVisibilityCode == null) continue;
       _formValues['entry_${f.userVisibilityCode}'] ??= '';
       _formValues['to_${f.userVisibilityCode}'] ??= '';
+      debugPrint('_toDisplayFields ${f.userVisibilityCode}');
     }
     for (final f in _fromDisplayFields) {
       if (f.userVisibilityCode == null) continue;
       _formValues['from_${f.userVisibilityCode}'] ??= '';
     }
 
+    // Use _getRadioFields so radio options appear even if only one list has them
+    final radioFields = _getRadioFields();
+    final firstRadio = radioFields.values.firstOrNull;
+
     setState(() {
+      // Process is considered selected if either list has fields to show
       _processSelected =
           _toDisplayFields.isNotEmpty || _fromDisplayFields.isNotEmpty;
       _isAdding = _processSelected;
 
+      // Preserve master-field display values after rebuild
       _formValues['deptName'] = _toDeptName ?? '';
       _formValues['toDept'] = _toDeptName ?? '';
       _formValues['fromDept'] = _fromDeptName ?? '';
       _formValues['toCrId'] = _toCrId?.toString() ?? '';
       _formValues['fromCrId'] = _fromCrId?.toString() ?? '';
+
+      if (firstRadio != null) {
+        _selectedRadioCode = firstRadio.userVisibilityCode.toString();
+        _formValues['scanType'] = _selectedRadioCode!;
+      }
     });
 
     _rebuildForm();
@@ -421,9 +464,7 @@ class _TrnPlanningReceivedEntryState
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _onBCodeScanned(String bCode) async {
-    final rows = await context
-        .read<TrnPlanningReceivedProvider>()
-        .fetchByBCode(
+    final rows = await context.read<TrnLaserReceivedProvider>().fetchByBCode(
       bCode: bCode,
       fromCrId: _fromCrId!.toString(),
     );
@@ -463,12 +504,6 @@ class _TrnPlanningReceivedEntryState
     set('purityCode', r.purityCode?.toString());
 
     setState(() => _scannedDet = r);
-    // ── Now also update the BarCode table with sarinData from scanned row ──
-    if (r.sarinData != null && r.sarinData!.isNotEmpty) {
-      // sarinData is already on the model; _buildTableByBarCodeData
-      // reads from prov.list which uses e.sarinData — so just rebuild
-      setState(() {});
-    }
 
     Future.delayed(
       const Duration(milliseconds: 100),
@@ -480,6 +515,7 @@ class _TrnPlanningReceivedEntryState
   //  CALCULATIONS
   // ─────────────────────────────────────────────────────────────────────────
 
+  /// DM WT = (Rec WT > 0 ? Rec WT : Iss WT) × DM % / 100
   void _calcDmWt() {
     final recWt = double.tryParse(_entryVals['recwt'] ?? '') ?? 0;
     final issWt = double.tryParse(_entryVals['issWt'] ?? '') ?? 0;
@@ -490,15 +526,20 @@ class _TrnPlanningReceivedEntryState
     _erpFormKey.currentState?.updateFieldValue('dmwt', _f3(dmWt));
   }
 
+  /// Loss WT = Iss WT − K WT,  Loss PC = Iss PC − K PC
   void _calcLoss() {
     final issWt = double.tryParse(_entryVals['issWt'] ?? '') ?? 0;
-    final recWt = double.tryParse(_entryVals['recwt'] ?? '') ?? 0;
+    final recWt = double.tryParse(_entryVals['recwt'] ?? '') ?? 0; // 👈 ADD THIS
     final kWt = double.tryParse(_entryVals['kwt'] ?? '') ?? 0;
     final issPc = int.tryParse(_entryVals['issPc'] ?? '') ?? 0;
     final kPc = int.tryParse(_entryVals['kpc'] ?? '') ?? 0;
+
+    // ✅ UPDATED FORMULA
     final lossWt = issWt - recWt - kWt;
+
     _entryVals['losswt'] = _f3(lossWt);
     _entryVals['losspc'] = '${issPc - kPc}';
+
     _erpFormKey.currentState?.updateFieldValue('losswt', _f3(lossWt));
     _erpFormKey.currentState?.updateFieldValue('losspc', '${issPc - kPc}');
   }
@@ -510,14 +551,21 @@ class _TrnPlanningReceivedEntryState
   void _addEntry() {
     final merged = _getMergedFields();
 
+    // Resolve selected scan-type name from radio fields (either list)
+    final selectedName = () {
+      final f = _getRadioFields().values.firstWhereOrNull(
+              (f) => f.userVisibilityCode.toString() == _selectedRadioCode);
+      return (f?.userVisibilityName ?? '').toUpperCase();
+    }();
+
     // BCODE guard — must scan before adding
-    if (_scannedDet == null && _editingDetIndex == null) {
-      _isBCodePending = false;
-      Future.delayed(
-        const Duration(milliseconds: 50),
-            () => _erpFormKey.currentState?.focusField('scanValue'),
-      );
-      return;
+    if (selectedName == 'BCODE' && _editingDetIndex == null) {
+      if (_scannedDet == null) {
+        _isBCodePending = false;
+        Future.delayed(const Duration(milliseconds: 50),
+                () => _erpFormKey.currentState?.focusField('scanValue'));
+        return;
+      }
     }
 
     final issPc = int.tryParse(_entryVals['issPc'] ?? '') ?? 0;
@@ -532,9 +580,9 @@ class _TrnPlanningReceivedEntryState
 
     final hasRecPair =
         merged.containsKey('REC PC') || merged.containsKey('REC WT');
-    final hasKPair =
-        merged.containsKey('K PC') || merged.containsKey('K WT');
+    final hasKPair = merged.containsKey('K PC') || merged.containsKey('K WT');
 
+    // Total PC / WT must not exceed issued
     if (hasRecPair || hasKPair) {
       if (totalPc > issPc && issPc > 0) {
         _showSnack(
@@ -548,6 +596,7 @@ class _TrnPlanningReceivedEntryState
       }
     }
 
+    // Pair completeness — PC requires WT and vice-versa
     if (hasRecPair) {
       final recPcStr = _entryVals['recpc'] ?? '';
       final recWtStr = _entryVals['recwt'] ?? '';
@@ -614,6 +663,7 @@ class _TrnPlanningReceivedEntryState
 
     _clearEntryFields();
 
+    // Return focus to scan field
     WidgetsBinding.instance.addPostFrameCallback(
             (_) => _erpFormKey.currentState?.focusField('scanValue'));
 
@@ -622,6 +672,7 @@ class _TrnPlanningReceivedEntryState
     _erpFormKey.currentState?.setFieldReadOnly('deptProcessCode', true);
   }
 
+  /// Build a detail row for an existing (edit) record.
   SpkDeptIssDetModel _buildEditedRow({
     required int? srno,
     required SpkDeptIssDetModel existing,
@@ -633,6 +684,7 @@ class _TrnPlanningReceivedEntryState
     return SpkDeptIssDetModel(
       srno: srno,
       spkDeptIssMstID: existing.spkDeptIssMstID,
+      // Preserved scan data
       id: existing.id,
       jno: existing.jno,
       bCode: existing.bCode,
@@ -652,7 +704,9 @@ class _TrnPlanningReceivedEntryState
       toDeptCode: _toDeptCodeVal,
       fromCrId: _fromCrId,
       toCrId: _toCrId,
-      deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
+      deptProcessCode:
+      int.tryParse(_formValues['deptProcessCode'] ?? ''),
+      // User-entered fields
       pc: int.tryParse(_entryVals['orgPc'] ?? '') ?? existing.pc,
       wt: double.tryParse(_entryVals['orgWt'] ?? '') ?? existing.wt,
       issPc: int.tryParse(issPcStr),
@@ -680,6 +734,7 @@ class _TrnPlanningReceivedEntryState
     );
   }
 
+  /// Build a detail row for a new (add) record.
   SpkDeptIssDetModel _buildNewRow({
     required int? srno,
     required String issPcStr,
@@ -705,7 +760,8 @@ class _TrnPlanningReceivedEntryState
       toDeptCode: _toDeptCodeVal,
       fromCrId: _fromCrId,
       toCrId: _toCrId,
-      deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
+      deptProcessCode:
+      int.tryParse(_formValues['deptProcessCode'] ?? ''),
       charniCode: int.tryParse(_formValues['charniCode'] ?? ''),
       tensionsCode: int.tryParse(_formValues['tensionsCode'] ?? ''),
       pc: int.tryParse(_entryVals['orgPc'] ?? ''),
@@ -774,6 +830,7 @@ class _TrnPlanningReceivedEntryState
   void _deleteDetRow(int idx) {
     setState(() {
       _detRows.removeAt(idx);
+      // Re-number srno
       _detRows = _detRows.asMap().entries.map((e) {
         final v = e.value;
         return SpkDeptIssDetModel(
@@ -861,9 +918,8 @@ class _TrnPlanningReceivedEntryState
   void _syncDetGrid() {
     final merged = _getMergedFields();
 
-    final cols = <String>[
-      'srno', 'bCode', 'pktNo', 'cutNo', 'orgPc', 'orgWt', 'issPc', 'issWt'
-    ];
+    // Build column list based on what fields are actually configured
+    final cols = <String>['srno', 'bCode', 'pktNo', 'cutNo', 'orgPc', 'orgWt', 'issPc', 'issWt'];
 
     void addIfPresent(String key1, String key2, List<String> colKeys) {
       if (merged.containsKey(key1) || merged.containsKey(key2)) {
@@ -916,79 +972,12 @@ class _TrnPlanningReceivedEntryState
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  //  DET TABLE COLUMNS
-  // ─────────────────────────────────────────────────────────────────────────
-
-  List<ErpColumnConfig> get _detTableColumns => [
-    ErpColumnConfig(key: 'srno', label: 'SR NO', width: 70),
-    ErpColumnConfig(key: 'bCode', label: 'BCODE', width: 130),
-    ErpColumnConfig(key: 'pktNo', label: 'PKT NO', width: 100),
-    ErpColumnConfig(key: 'cutNo', label: 'CUT NO', width: 100),
-    ErpColumnConfig(
-        key: 'orgPc', label: 'ORG PC', width: 90,
-        align: ColumnAlign.right),
-    ErpColumnConfig(
-        key: 'orgWt', label: 'ORG WT', width: 100,
-        align: ColumnAlign.right),
-    ErpColumnConfig(
-        key: 'issPc', label: 'ISS PC', width: 90,
-        align: ColumnAlign.right),
-    ErpColumnConfig(
-        key: 'issWt', label: 'ISS WT', width: 100,
-        align: ColumnAlign.right),
-    ErpColumnConfig(
-        key: 'recPc', label: 'REC PC', width: 90,
-        align: ColumnAlign.right),
-    ErpColumnConfig(
-        key: 'recWt', label: 'REC WT', width: 100,
-        align: ColumnAlign.right),
-    ErpColumnConfig(
-        key: 'dmPer', label: 'DM PER', width: 90,
-        align: ColumnAlign.right),
-    ErpColumnConfig(
-        key: 'dmWt', label: 'DM WT', width: 100,
-        align: ColumnAlign.right),
-    ErpColumnConfig(
-        key: 'kPc', label: 'K PC', width: 80,
-        align: ColumnAlign.right),
-    ErpColumnConfig(
-        key: 'kWt', label: 'K WT', width: 90,
-        align: ColumnAlign.right),
-    ErpColumnConfig(
-        key: 'brPc', label: 'BR PC', width: 80,
-        align: ColumnAlign.right),
-    ErpColumnConfig(
-        key: 'brWt', label: 'BR WT', width: 90,
-        align: ColumnAlign.right),
-    ErpColumnConfig(
-        key: 'lossPc', label: 'LOSS PC', width: 90,
-        align: ColumnAlign.right),
-    ErpColumnConfig(
-        key: 'lossWt', label: 'LOSS WT', width: 100,
-        align: ColumnAlign.right),
-    ErpColumnConfig(
-        key: 'topsPc', label: 'TOPS PC', width: 90,
-        align: ColumnAlign.right),
-    ErpColumnConfig(
-        key: 'topsWt', label: 'TOPS WT', width: 100,
-        align: ColumnAlign.right),
-    ErpColumnConfig(key: 'remarks', label: 'REMARKS', width: 120),
-    ErpColumnConfig(key: 'employee', label: 'EMPLOYEE', width: 130),
-    ErpColumnConfig(key: 'signer', label: 'SIGNER', width: 120),
-    ErpColumnConfig(
-        key: 'jnoRecPc', label: 'JNO REC PC', width: 110,
-        align: ColumnAlign.right),
-    ErpColumnConfig(key: 'shapeCode', label: 'SHAPE', width: 100),
-    ErpColumnConfig(key: 'purityCode', label: 'PURITY', width: 100),
-  ];
-
-  // ─────────────────────────────────────────────────────────────────────────
-  //  ROW TAP
+  //  ROW TAP (load existing record)
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _onRowTap(Map<String, dynamic> row) async {
     final raw = row['_raw'] as SpkDeptIssMstModel;
-    final prov = context.read<TrnPlanningReceivedProvider>();
+    final prov = context.read<TrnLaserReceivedProvider>();
     final details = await prov.loadDetails(raw.spkDeptIssMstID!);
     if (!mounted) return;
 
@@ -1000,6 +989,13 @@ class _TrnPlanningReceivedEntryState
       await _loadFromDisplayFields(_fromCrId!);
     }
     if (!mounted) return;
+
+    // Set first radio option — use _getRadioFields so it works even if
+    // only one of the two lists contains these field names
+    final firstRadio = _getRadioFields().values.firstOrNull;
+    if (firstRadio != null) {
+      _selectedRadioCode = firstRadio.userVisibilityCode.toString();
+    }
 
     final lastDet = details.isNotEmpty ? details.last : null;
 
@@ -1027,6 +1023,7 @@ class _TrnPlanningReceivedEntryState
           'charniCode': lastDet!.charniCode!.toString(),
         if (lastDet?.tensionsCode != null)
           'tensionsCode': lastDet!.tensionsCode!.toString(),
+        if (_selectedRadioCode != null) 'scanType': _selectedRadioCode!,
       };
 
       _syncDetGrid();
@@ -1035,6 +1032,7 @@ class _TrnPlanningReceivedEntryState
     _rebuildForm();
   }
 
+  /// Format an ISO time string to "hh:mm a".
   String _formatTime(String? raw) {
     if (raw == null || raw.isEmpty) {
       return DateFormat('hh:mm a').format(DateTime.now());
@@ -1051,7 +1049,7 @@ class _TrnPlanningReceivedEntryState
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _onSave(Map<String, dynamic> values) async {
-    final prov = context.read<TrnPlanningReceivedProvider>();
+    final prov = context.read<TrnLaserReceivedProvider>();
 
     String toIso(String? v) {
       if (v == null || v.isEmpty) return '';
@@ -1066,9 +1064,7 @@ class _TrnPlanningReceivedEntryState
     int? toDeptCode;
     if (_toCrId != null) {
       try {
-        toDeptCode = context
-            .read<CounterProvider>()
-            .list
+        toDeptCode = context.read<CounterProvider>().list
             .firstWhere((c) => c.crId == _toCrId)
             .deptCode;
       } catch (_) {}
@@ -1083,8 +1079,7 @@ class _TrnPlanningReceivedEntryState
       ..['deptCode'] = toDeptCode?.toString() ?? '';
 
     final success = _isEditMode && _selectedMst != null
-        ? await prov.update(
-        _selectedMst!.spkDeptIssMstID!, merged, _detRows)
+        ? await prov.update(_selectedMst!.spkDeptIssMstID!, merged, _detRows)
         : await prov.create(merged, _detRows);
 
     if (!mounted) return;
@@ -1095,8 +1090,7 @@ class _TrnPlanningReceivedEntryState
         context: context,
         theme: _theme,
         title: wasEdit ? 'Updated' : 'Saved',
-        message:
-        wasEdit ? 'Dept Issue updated.' : 'Dept Issue saved.',
+        message: wasEdit ? 'Laser Received updated.' : 'Laser Received saved.',
       );
     }
   }
@@ -1111,22 +1105,20 @@ class _TrnPlanningReceivedEntryState
     final confirm = await ErpDeleteDialog.show(
       context: context,
       theme: _theme,
-      title: 'Dept Issue',
+      title: 'Laser Received',
       itemName: 'ID: ${_selectedMst!.spkDeptIssMstID}',
     );
     if (confirm != true || !mounted) return;
 
     final success = await context
-        .read<TrnPlanningReceivedProvider>()
+        .read<TrnLaserReceivedProvider>()
         .delete(_selectedMst!.spkDeptIssMstID!);
 
     if (success && mounted) {
       final id = _selectedMst?.spkDeptIssMstID;
       _resetForm();
       await ErpResultDialog.showDeleted(
-          context: context,
-          theme: _theme,
-          itemName: 'Dept Issue $id');
+          context: context, theme: _theme, itemName: 'Laser Received $id');
     }
   }
 
@@ -1137,8 +1129,6 @@ class _TrnPlanningReceivedEntryState
   void _resetForm() {
     _erpFormKey.currentState?.resetForm();
     _entryVals.clear();
-    final prov = context.read<TrnPlanningReceivedProvider>();
-    prov.clearForReset(); // 🔥 THIS LINE
     setState(() {
       _selectedRow = _selectedMst = null;
       _isEditMode = _showTableOnMobile = false;
@@ -1152,13 +1142,11 @@ class _TrnPlanningReceivedEntryState
       _processSelected = false;
       _lockMasterFields = false;
       _scannedDet = null;
+      _selectedRadioCode = null;
       _toDisplayFields.clear();
       _fromDisplayFields.clear();
       _erpFormKey = GlobalKey<ErpFormState>();
       _formValues.clear();
-      _filteredBCode = null; // ← ADD THIS
-      _highlightedBCode = null;
-
     });
     _setDefaultFormValues();
   }
@@ -1167,8 +1155,12 @@ class _TrnPlanningReceivedEntryState
     setState(() => _erpFormKey = GlobalKey<ErpFormState>());
   }
 
-  void _showSnack(String msg) => ScaffoldMessenger.of(context)
-      .showSnackBar(SnackBar(content: Text(msg)));
+  // ─────────────────────────────────────────────────────────────────────────
+  //  SNACKBAR
+  // ─────────────────────────────────────────────────────────────────────────
+
+  void _showSnack(String msg) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
 
   // ─────────────────────────────────────────────────────────────────────────
   //  BUILD FORM ROWS
@@ -1184,6 +1176,7 @@ class _TrnPlanningReceivedEntryState
     final isFromSelected = _fromCrId != null;
     final isToSelected = _toCrId != null;
 
+    // ── FROM dropdown ────────────────────────────────────────────────────────
     final fromItems = counterProv.list
         .where((c) {
       final grp = _deptGroupNameFor(c.deptGroupCode).toUpperCase();
@@ -1195,6 +1188,7 @@ class _TrnPlanningReceivedEntryState
     ))
         .toList();
 
+    // ── TO dropdown — allowCrIds from CounterManagerDet ───────────────────
     final toItems = _fromCrId == null
         ? <ErpDropdownItem>[]
         : mgDetProv.list
@@ -1206,8 +1200,7 @@ class _TrnPlanningReceivedEntryState
         final c =
         counterProv.list.firstWhere((c) => c.crId == allowId);
         return ErpDropdownItem(
-          label:
-          '${c.crName ?? ''}  |  ${_deptNameFor(c.deptCode)}',
+          label: '${c.crName ?? ''}  |  ${_deptNameFor(c.deptCode)}',
           value: c.crId?.toString() ?? '',
         );
       } catch (_) {
@@ -1216,6 +1209,7 @@ class _TrnPlanningReceivedEntryState
       }
     }).toList();
 
+    // ── PROCESS dropdown — intersection of FROM-issue ∩ TO-receive codes ──
     final processItems = (_fromCrId == null || _toCrId == null)
         ? <ErpDropdownItem>[]
         : () {
@@ -1224,11 +1218,13 @@ class _TrnPlanningReceivedEntryState
       m.crId == _fromCrId && m.deptProcessCode != null)
           .map((m) => m.deptProcessCode!)
           .toSet();
+
       final recvCodes = mgDetProv.list
           .where((m) =>
       m.allowCrId == _toCrId && m.deptProcessCode != null)
           .map((m) => m.deptProcessCode!)
           .toSet();
+
       return issueCodes.intersection(recvCodes).map((code) {
         String label = '$code';
         try {
@@ -1242,6 +1238,7 @@ class _TrnPlanningReceivedEntryState
       }).toList();
     }();
 
+    // ── CHARNI dropdown ───────────────────────────────────────────────────
     final charniItems = charniProv.list
         .where((e) => e.active == true)
         .map((e) => ErpDropdownItem(
@@ -1250,6 +1247,7 @@ class _TrnPlanningReceivedEntryState
     ))
         .toList();
 
+    // ── TENSIONS dropdown ─────────────────────────────────────────────────
     final tensItems = tensProv.list.where((e) => e.active == true).toList()
       ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
     final tensDropdown = tensItems
@@ -1259,6 +1257,7 @@ class _TrnPlanningReceivedEntryState
     ))
         .toList();
 
+    // ── Merged DEPT fields (deduped) ──────────────────────────────────────
     final Map<String, UserVisibilityModel> merged = {};
     for (final f in [..._fromDisplayFields, ..._toDisplayFields]) {
       final name = (f.userVisibilityName ?? '').toUpperCase();
@@ -1267,8 +1266,11 @@ class _TrnPlanningReceivedEntryState
       merged[name] = f;
     }
 
-    // ── MASTER SECTION ────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────
+    //  MASTER SECTION (sectionIndex 0)
+    // ─────────────────────────────────────────────────────────────────────
     final List<List<ErpFieldConfig>> rows = [
+      // Row 1 — date / time / ID
       [
         ErpFieldConfig(
             key: 'spkDeptIssDate',
@@ -1289,6 +1291,7 @@ class _TrnPlanningReceivedEntryState
             readOnly: true,
             sectionIndex: 0),
       ],
+      // Row 2 — FROM / TO / PROCESS
       [
         ErpFieldConfig(
             key: 'fromCrId',
@@ -1299,7 +1302,7 @@ class _TrnPlanningReceivedEntryState
             readOnly: _lockMasterFields || _isEditMode),
         ErpFieldConfig(
             key: 'fromDept',
-            label: 'MANAGER',
+            label: 'DEPT',
             type: ErpFieldType.text,
             readOnly: true,
             sectionIndex: 0),
@@ -1308,12 +1311,11 @@ class _TrnPlanningReceivedEntryState
             label: 'TO',
             type: ErpFieldType.dropdown,
             dropdownItems: toItems,
-            readOnly:
-            !isFromSelected || _lockMasterFields || _isEditMode,
+            readOnly: !isFromSelected || _lockMasterFields || _isEditMode,
             sectionIndex: 0),
         ErpFieldConfig(
             key: 'toDept',
-            label: 'MANAGER',
+            label: 'DEPT',
             type: ErpFieldType.text,
             readOnly: true,
             sectionIndex: 0),
@@ -1322,8 +1324,7 @@ class _TrnPlanningReceivedEntryState
             label: 'PROCESS',
             type: ErpFieldType.dropdown,
             dropdownItems: processItems,
-            readOnly:
-            !isToSelected || _lockMasterFields || _isEditMode,
+            readOnly: !isToSelected || _lockMasterFields || _isEditMode,
             sectionIndex: 0),
         ErpFieldConfig(
             key: 'deptName',
@@ -1343,21 +1344,230 @@ class _TrnPlanningReceivedEntryState
             width: 200),
       ]
     ];
+
+
+    // ─────────────────────────────────────────────────────────────────────
+    //  ENTRY SECTION (sectionIndex 3)
+    // ─────────────────────────────────────────────────────────────────────
+    if (_processSelected) {
+      // Use _getRadioFields so radio options appear even when only one of
+      // _fromDisplayFields or _toDisplayFields contains these field names.
+      final radioFieldsMap = _getRadioFields();
+
+      final radioItems = radioFieldsMap.values
+          .map((f) => ErpRadioOption(
+        label: f.userVisibilityName ?? '',
+        value: f.userVisibilityCode.toString(),
+      ))
+          .toList();
+
+      // Resolve currently selected radio name from whichever list has it
+      final selectedField = radioFieldsMap.values.firstWhereOrNull(
+              (f) => f.userVisibilityCode.toString() == _selectedRadioCode);
+      final selectedName =
+      (selectedField?.userVisibilityName ?? '').toUpperCase();
+
+      // Compute radio widget width based on option count
+      final radioWidth = switch (radioItems.length) {
+        <= 1 => 150.0,
+        2 => 200.0,
+        3 => 300.0,
+        4 => 400.0,
+        _ => 500.0,
+      };
+
+
+      // CUT LOT extra fields
+      if (selectedName == 'CUT LOT') {
+        rows.add([
+          ErpFieldConfig(
+              key: 'cutNo',
+              label: 'CUT NO',
+              type: ErpFieldType.text,
+              isEntryField: true,
+              sectionIndex: 3),
+          ErpFieldConfig(
+              key: 'cutFrom',
+              label: 'FROM',
+              type: ErpFieldType.text,
+              isEntryField: true,
+              sectionIndex: 3),
+          ErpFieldConfig(
+              key: 'cutTo',
+              label: 'TO',
+              type: ErpFieldType.text,
+              isEntryField: true,
+              sectionIndex: 3),
+        ]);
+      }
+
+      // Main entry fields (ORG / ISS / PC-WT pairs / extras) — all in one row
+      final singleRow = <ErpFieldConfig>[];
+
+      final pairs = [
+        ['REC PC', 'REC WT'],
+        ['K PC', 'K WT'],
+        ['BR PC', 'BR WT'],
+        ['TOPS PC', 'TOPS WT'],
+        ['LOSS PC', 'LOSS WT'],
+        ['DM PER', 'DM WT'],
+      ];
+
+      final hasAnyPair = pairs.any(
+              (p) => merged.containsKey(p[0]) || merged.containsKey(p[1]));
+
+      // Fixed ORG / ISS fields (only when there are PC-WT pairs)
+      if (hasAnyPair) {
+        singleRow.addAll([
+          ErpFieldConfig(
+              key: 'orgPc',
+              label: 'ORG PC',
+              type: ErpFieldType.number,
+              readOnly: true,
+              isEntryField: true,
+              sectionIndex: 3,
+              flex: 1),
+          ErpFieldConfig(
+              key: 'orgWt',
+              label: 'ORG WT',
+              type: ErpFieldType.amount,
+              readOnly: true,
+              isEntryField: true,
+              sectionIndex: 3,
+              flex: 1),
+          ErpFieldConfig(
+              key: 'issPc',
+              label: 'ISS PC',
+              type: ErpFieldType.number,
+              readOnly: true,
+              isEntryField: true,
+              sectionIndex: 3,
+              flex: 1),
+          ErpFieldConfig(
+              key: 'issWt',
+              label: 'ISS WT',
+              type: ErpFieldType.amount,
+              readOnly: true,
+              isEntryField: true,
+              showAddButton: true,
+              sectionIndex: 3,
+              flex: 1),
+        ]);
+      }
+
+      // PC-WT pairs
+      for (final pair in pairs) {
+        if (merged.containsKey(pair[0]) || merged.containsKey(pair[1])) {
+          singleRow.add(ErpFieldConfig(
+              key: pair[0].replaceAll(' ', '').toLowerCase(),
+              label: pair[0],
+              type: ErpFieldType.text,
+              readOnly: pair[0] == 'LOSS PC',
+              isEntryField: true,
+              sectionIndex: 3,
+              flex: 1));
+          singleRow.add(ErpFieldConfig(
+              key: pair[1].replaceAll(' ', '').toLowerCase(),
+              label: pair[1],
+              type: ErpFieldType.text,
+              readOnly: pair[1] == 'DM WT' || pair[1] == 'LOSS WT',
+              isEntryField: true,
+              sectionIndex: 3,
+              flex: 1));
+        }
+      }
+
+      // EMPLOYEE
+      if (merged.containsKey('EMPLOYEE')) {
+        singleRow.add(ErpFieldConfig(
+            key: 'employee',
+            label: 'EMPLOYEE',
+            type: ErpFieldType.dropdown,
+            dropdownItems: context.read<EmployeeProvider>().list
+                .map((e) => ErpDropdownItem(
+              label: e.employeeName ?? '',
+              value: e.employeeCode?.toString() ?? '',
+            ))
+                .toList(),
+            isEntryField: true,
+            sectionIndex: 3,
+            flex: 2));
+      }
+
+      // SIGNER
+      if (merged.containsKey('SIGNER')) {
+        final signerCounters = context.read<CounterProvider>().list.where(
+                (c) => _deptNameFor(c.deptCode).toUpperCase() == 'SIGNER');
+        singleRow.add(ErpFieldConfig(
+            key: 'signer',
+            label: 'SIGNER',
+            type: ErpFieldType.dropdown,
+            isEntryField: true,
+            dropdownItems: signerCounters
+                .map((e) => ErpDropdownItem(
+              label: e.logInName ?? '',
+              value: e.crId?.toString() ?? '',
+            ))
+                .toList(),
+            sectionIndex: 3,
+            flex: 2));
+      }
+
+      // REMARKS (filtered by selected process)
+      if (merged.containsKey('REMARKS')) {
+        final selectedProcess =
+        int.tryParse(_formValues['deptProcessCode'] ?? '');
+        final remarksItems = context.read<RemarksProvider>().list
+            .where((e) =>
+        e.active == true &&
+            (selectedProcess == null ||
+                e.deptProcessCode == selectedProcess))
+            .map((e) => ErpDropdownItem(
+          label: e.remarksName ?? '',
+          value: e.remarksCode?.toString() ?? '',
+        ))
+            .toList();
+        singleRow.add(ErpFieldConfig(
+            key: 'remarks',
+            label: 'REMARKS',
+            type: ErpFieldType.dropdown,
+            isEntryField: true,
+            dropdownItems: remarksItems,
+            sectionIndex: 3,
+            flex: 2));
+      }
+
+      // DUE DAY
+      if (merged.containsKey('DUE DAY')) {
+        singleRow.add(ErpFieldConfig(
+            key: 'dueDay',
+            label: 'DUE DAY',
+            type: ErpFieldType.text,
+            isEntryField: true,
+            showAddButton: true,
+            sectionIndex: 3,
+            flex: 1));
+      }
+
+      if (singleRow.isNotEmpty) rows.add(singleRow);
+    }
+
     return _sanitizeRows(rows);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  //  SANITIZE ROWS
+  //  SANITIZE ROWS (null-safety wrapper)
   // ─────────────────────────────────────────────────────────────────────────
 
-  List<List<ErpFieldConfig>> _sanitizeRows(List<List<ErpFieldConfig>> rows) {
+  List<List<ErpFieldConfig>> _sanitizeRows(
+      List<List<ErpFieldConfig>> rows) {
     return rows.map((section) {
       return section.whereType<ErpFieldConfig>().map((field) {
         final safeItems = (field.dropdownItems ?? [])
             .whereType<ErpDropdownItem>()
-            .where(
-                (item) => item.value.isNotEmpty && item.label.isNotEmpty)
+            .where((item) => item.value.isNotEmpty && item.label.isNotEmpty)
             .toList();
+
         if (safeItems.length == (field.dropdownItems?.length ?? 0)) {
           return field;
         }
@@ -1380,23 +1590,32 @@ class _TrnPlanningReceivedEntryState
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  //  TABLE COLUMNS (master list)
+  //  TABLE COLUMNS
   // ─────────────────────────────────────────────────────────────────────────
 
   List<ErpColumnConfig> get _tableColumns => [
     ErpColumnConfig(
         key: 'spkDeptIssMstID', label: 'ID', width: 70, required: true),
     ErpColumnConfig(
-        key: 'spkDeptIssDate', label: 'DATE', width: 160, isDate: true),
+        key: 'spkDeptIssDate',
+        label: 'DATE',
+        width: 160,
+        isDate: true),
     ErpColumnConfig(key: 'spkDeptIssTime', label: 'TIME', width: 140),
-    ErpColumnConfig(key: 'fromName', label: 'FROM MGR', width: 180),
-    ErpColumnConfig(key: 'fromDeptName', label: 'FROM DEPT', width: 180),
+    ErpColumnConfig(
+        key: 'fromName', label: 'FROM MGR', width: 180),
+    ErpColumnConfig(
+        key: 'fromDeptName', label: 'FROM DEPT', width: 180),
     ErpColumnConfig(key: 'toName', label: 'TO MGR', width: 160),
     ErpColumnConfig(key: 'toDeptName', label: 'TO DEPT', width: 160),
-    ErpColumnConfig(key: 'processName', label: 'PROCESS', width: 150),
+    ErpColumnConfig(
+        key: 'processName', label: 'PROCESS', width: 150),
     ErpColumnConfig(key: 'deptName', label: 'DEPT', width: 140),
     ErpColumnConfig(
-        key: 'jno', label: 'JNO', width: 140, align: ColumnAlign.right),
+        key: 'jno',
+        label: 'JNO',
+        width: 140,
+        align: ColumnAlign.right),
     ErpColumnConfig(
         key: 'totPkt',
         label: 'TOT PKT',
@@ -1414,28 +1633,51 @@ class _TrnPlanningReceivedEntryState
         align: ColumnAlign.right),
   ];
 
-  List<ErpColumnConfig> get _tableColumnsByBarCode => [
-    ErpColumnConfig(label: 'Sarin ID',     key: 'sarinPolID'),
-    ErpColumnConfig(label: 'Stone ID',     key: 'stoneID'),
-    ErpColumnConfig(label: 'Polish Wt',    key: 'polishWT'),
-    ErpColumnConfig(label: 'Polish %',     key: 'polishPer'),
-    ErpColumnConfig(label: 'Shape',        key: 'shape'),
-    ErpColumnConfig(label: 'Cut',          key: 'cut'),
-    ErpColumnConfig(label: 'Color',        key: 'color'),
-    ErpColumnConfig(label: 'Clarity',      key: 'clarity'),
-    ErpColumnConfig(label: 'Total Wt',     key: 'tWT'),
-    ErpColumnConfig(label: 'Rate',         key: 'rate'),
-    ErpColumnConfig(label: 'Amt',          key: 'amt'),
-    ErpColumnConfig(label: 'Lot Code',     key: 'lotCode'),
-    ErpColumnConfig(label: 'Kapan No',     key: 'kapanNo'),
-    ErpColumnConfig(label: 'Sr Num',       key: 'srNum'),
-    ErpColumnConfig(label: 'Crown Height', key: 'crownHeight'),
-    ErpColumnConfig(label: 'Operator',     key: 'operatorName'),
-    ErpColumnConfig(label: 'THmm',         key: 'tHmm'),
-    ErpColumnConfig(label: 'Disc',         key: 'disc'),
-    ErpColumnConfig(label: 'Rec',          key: 'rec'),
-  ];
+  // ─────────────────────────────────────────────────────────────────────────
+  //  FOOTER TOTALS
+  // ─────────────────────────────────────────────────────────────────────────
 
+  Map<String, dynamic> get _footerTotals => {
+    'count': _detRows.length,
+    'issPc': _detRows.fold(0, (s, r) => s + (r.issPc ?? 0)),
+    'issWt': _detRows.fold(0.0, (s, r) => s + (r.issWt ?? 0)),
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  COL LABEL
+  // ─────────────────────────────────────────────────────────────────────────
+
+  String _colLabel(String key) {
+    const labels = {
+      'srno': 'SR NO',
+      'bCode': 'BCODE',
+      'pktNo': 'PKT NO',
+      'cutNo': 'CUT NO',
+      'orgPc': 'ORG PC',
+      'orgWt': 'ORG WT',
+      'issPc': 'ISS PC',
+      'issWt': 'ISS WT',
+      'recPc': 'REC PC',
+      'recWt': 'REC WT',
+      'dmWt': 'DM WT',
+      'dmPer': 'DM PER',
+      'kPc': 'K PC',
+      'kWt': 'K WT',
+      'brPc': 'BR PC',
+      'brWt': 'BR WT',
+      'lossPc': 'LOSS PC',
+      'lossWt': 'LOSS WT',
+      'topsPc': 'TOPS PC',
+      'topsWt': 'TOPS WT',
+      'remarks': 'REMARKS',
+      'employee': 'EMPLOYEE',
+      'signer': 'SIGNER',
+      'jnoRecPc': 'JNO REC PC',
+      'shapeCode': 'SHAPE',
+      'purityCode': 'PURITY',
+    };
+    return labels[key] ?? key;
+  }
 
   // ─────────────────────────────────────────────────────────────────────────
   //  BUILD
@@ -1443,39 +1685,16 @@ class _TrnPlanningReceivedEntryState
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<TrnPlanningReceivedProvider>(
+    return Consumer<TrnLaserReceivedProvider>(
       builder: (ctx, prov, _) => Padding(
         padding: const EdgeInsets.all(8),
         child: Responsive.isMobile(context)
-            ? (_showTableOnMobile
-            ? _buildTable(prov)
-            : _buildForm(context,prov))
+            ? (_showTableOnMobile ? _buildTable(prov) : _buildForm(context))
             : Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (!_showTableOnMobile)
-              Expanded(
-                flex: 2,
-                child: Column(
-                  children: [
-                    Flexible( // 👈 instead of plain widget
-                      flex: 1,
-                      child: _buildForm(context, prov),
-                    ),
-
-                    Flexible(
-                      flex: 2,
-                      child: Row(
-                        children: [
-                          Expanded(child: _buildTableDefaultData(prov)),
-                          SizedBox(width: 15),
-                          Expanded(child: _buildTableByBarCodeData(prov)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              Expanded(flex: 2, child: _buildForm(context)),
             if (_showTableOnMobile)
               Expanded(flex: 2, child: _buildTable(prov)),
           ],
@@ -1488,14 +1707,14 @@ class _TrnPlanningReceivedEntryState
   //  FORM WIDGET
   // ─────────────────────────────────────────────────────────────────────────
 
-  Widget _buildForm(BuildContext context,prov) {
+  Widget _buildForm(BuildContext context) {
     return ErpForm(
       key: _erpFormKey,
       isShowSearch: true,
       autoStartAdding: _isAdding,
       addButtonSections: const {3},
       logo: AppImages.logo,
-      title: 'PLANNING RECEIVED ENTRY',
+      title: 'LASER RECEIVED ENTRY',
       tabBarBackgroundColor: const Color(0xfff2f0ef),
       tabBarSelectedColor: _theme.primaryGradient.first,
       tabBarSelectedTxtColor: Colors.white,
@@ -1505,48 +1724,51 @@ class _TrnPlanningReceivedEntryState
 
       onEntryAdd: (sectionIndex) {
         if (sectionIndex != 3) return;
-        if (_scannedDet == null && _editingDetIndex == null) {
-          Future.delayed(
-            const Duration(milliseconds: 50),
-                () => _erpFormKey.currentState?.focusField('scanValue'),
-          );
+
+        // Resolve selected scan-type from radio fields (either list)
+        final selectedName = () {
+          final f = _getRadioFields().values.firstWhereOrNull(
+                  (f) => f.userVisibilityCode.toString() == _selectedRadioCode);
+          return (f?.userVisibilityName ?? '').toUpperCase();
+        }();
+
+        if (selectedName == 'BCODE' &&
+            _scannedDet == null &&
+            _editingDetIndex == null) {
+          Future.delayed(const Duration(milliseconds: 50),
+                  () => _erpFormKey.currentState?.focusField('scanValue'));
           return;
         }
-        // _addEntry();
+        _addEntry();
       },
 
       onFieldChanged: (key, value) {
         _formValues[key] = value.toString();
+        debugPrint('onFieldChanged: $key');
 
         switch (key) {
           case 'fromCrId':
             _onFromSelected(value.toString());
-            Future.delayed(
-                const Duration(milliseconds: 50),
-                    () =>
-                    _erpFormKey.currentState?.focusField('toCrId'));
+            Future.delayed(const Duration(milliseconds: 50),
+                    () => _erpFormKey.currentState?.focusField('toCrId'));
 
           case 'toCrId':
             _onToSelected(value.toString());
-            Future.delayed(
-                const Duration(milliseconds: 50),
-                    () => _erpFormKey.currentState
-                    ?.focusField('deptProcessCode'));
+            Future.delayed(const Duration(milliseconds: 50),
+                    () => _erpFormKey.currentState?.focusField('deptProcessCode'));
 
           case 'deptProcessCode':
             _onProcessSelected(value.toString());
-            Future.delayed(
-                const Duration(milliseconds: 100),
-                    () =>
-                    _erpFormKey.currentState?.focusField('scanValue'));
+            Future.delayed(const Duration(milliseconds: 100),
+                    () => _erpFormKey.currentState?.focusField('scanValue'));
 
           case 'scanValue':
             _entryVals[key] = value.toString();
+
           case 'dmper':
             final dmPerVal = double.tryParse(value.toString()) ?? 0;
             if (dmPerVal > 100) {
-              _erpFormKey.currentState
-                  ?.updateFieldValue('dmper', '100');
+              _erpFormKey.currentState?.updateFieldValue('dmper', '100');
               _entryVals['dmper'] = '100';
             } else {
               _entryVals[key] = value.toString();
@@ -1570,39 +1792,60 @@ class _TrnPlanningReceivedEntryState
         }
       },
 
-      onFieldSubmitted: (key, value) async {
+      onFieldSubmitted: (key, value) {
         if (key != 'scanValue') return;
 
         final scanVal = value.toString().trim();
         if (scanVal.isEmpty) return;
-        if (_fromCrId == null) return;
-        setState(() => _filteredBCode = scanVal);
+        if (_selectedRadioCode == null || _fromCrId == null) return;
 
-        // Duplicate check
+        final merged = _getMergedFields();
+        if (merged.isEmpty) return;
+
+        final selectedField = merged.values.firstWhereOrNull(
+                (f) => f.userVisibilityCode.toString() == _selectedRadioCode);
+        final selectedName =
+        (selectedField?.userVisibilityName ?? '').toUpperCase();
+
+        if (selectedName == 'BCODE') {
+          // Duplicate check before scanning
+          if (_editingDetIndex == null) {
+            final isDuplicate =
+            _detRows.any((r) => r.bCode?.toString() == scanVal);
+            if (isDuplicate) {
+              ErpResultDialog.showError(
+                context: context,
+                theme: _theme,
+                title: 'Duplicate',
+                message: 'This bCode already added.',
+              );
+              _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+              _entryVals['scanValue'] = '';
+              Future.delayed(
+                  const Duration(milliseconds: 100),
+                      () =>
+                      _erpFormKey.currentState?.focusField('scanValue'));
+              return;
+            }
+          }
+          _isBCodePending = true;
+          _onBCodeScanned(scanVal);
+          return;
+        }
+
+        // Non-BCODE duplicate check
         if (_editingDetIndex == null) {
-          final isDuplicate =
-          _detRows.any((r) => r.bCode?.toString() == scanVal);
+          final isDuplicate = _detRows.any(
+                  (r) => r.id?.toString() == scanVal || r.jno?.toString() == scanVal);
           if (isDuplicate) {
             ErpResultDialog.showError(
               context: context,
               theme: _theme,
               title: 'Duplicate',
-              message: 'This bCode already added.',
+              message: 'This entry already added.',
             );
-            _erpFormKey.currentState
-                ?.updateFieldValue('scanValue', '');
-            _entryVals['scanValue'] = '';
-            Future.delayed(
-              const Duration(milliseconds: 100),
-                  () => _erpFormKey.currentState?.focusField('scanValue'),
-            );
-            return;
           }
         }
-
-        _isBCodePending = true;
-       await context.read<TrnPlanningReceivedProvider>().load();
-        _onBCodeScanned(scanVal);
       },
 
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
@@ -1611,10 +1854,57 @@ class _TrnPlanningReceivedEntryState
       onDelete: _isEditMode ? _onDelete : null,
       onSearch: () => setState(() => _showTableOnMobile = true),
 
+      detailBuilder: (ctx) {
+        final t = ctx.erpTheme;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_detDisplay.isNotEmpty)
+              ErpEntryGrid(
+                data: _detDisplay,
+                columns: _activeDetColumns,
+                title: 'DETAILS',
+                theme: t,
+                onDeleteRow: _deleteDetRow,
+                onEditRow: _editDetRow,
+                editingIndex: _editingDetIndex,
+                columnLabels: {
+                  for (final c in _activeDetColumns) c: _colLabel(c)
+                },
+                columnAlignments: const {
+                  'orgPc': TextAlign.right,
+                  'orgWt': TextAlign.right,
+                  'issPc': TextAlign.right,
+                  'issWt': TextAlign.right,
+                  'recPc': TextAlign.right,
+                  'recWt': TextAlign.right,
+                  'dmPer': TextAlign.right,
+                  'dmWt': TextAlign.right,
+                  'kPc': TextAlign.right,
+                  'kWt': TextAlign.right,
+                  'brPc': TextAlign.right,
+                  'brWt': TextAlign.right,
+                  'lossPc': TextAlign.right,
+                  'lossWt': TextAlign.right,
+                  'topsPc': TextAlign.right,
+                  'topsWt': TextAlign.right,
+                  'remarks': TextAlign.right,
+                  'employee': TextAlign.right,
+                  'signer': TextAlign.right,
+                  'jnoRecPc': TextAlign.right,
+                  'shapeCode': TextAlign.right,
+                  'purityCode': TextAlign.right,
+                },
+                footerTotCount: 'Tot: ${_detRows.length}',
+                footerTotals: _buildFooterTotals(),
+              ),
+          ],
+        );
+      },
     );
   }
 
-  /// Footer totals for detail grid.
+  /// Compute footer totals map for ErpEntryGrid.
   Map<String, String> _buildFooterTotals() {
     double fold(double Function(SpkDeptIssDetModel) fn) =>
         _detRows.fold(0.0, (s, r) => s + fn(r));
@@ -1649,10 +1939,10 @@ class _TrnPlanningReceivedEntryState
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  //  MASTER TABLE WIDGET
+  //  TABLE WIDGET
   // ─────────────────────────────────────────────────────────────────────────
 
-  Widget _buildTable(TrnPlanningReceivedProvider prov) {
+  Widget _buildTable(TrnLaserReceivedProvider prov) {
     final counterProv = context.read<CounterProvider>();
     final procProv = context.read<DeptProcessProvider>();
 
@@ -1661,15 +1951,13 @@ class _TrnPlanningReceivedEntryState
       String fromDeptName = '', toDeptName = '';
 
       try {
-        final c =
-        counterProv.list.firstWhere((c) => c.crId == e.fromCrID);
+        final c = counterProv.list.firstWhere((c) => c.crId == e.fromCrID);
         fromName = c.crName ?? '';
         fromDeptName = _deptNameFor(c.deptCode);
       } catch (_) {}
 
       try {
-        final c =
-        counterProv.list.firstWhere((c) => c.crId == e.toCrID);
+        final c = counterProv.list.firstWhere((c) => c.crId == e.toCrID);
         toName = c.crName ?? '';
         toDeptName = _deptNameFor(c.deptCode);
       } catch (_) {}
@@ -1683,7 +1971,7 @@ class _TrnPlanningReceivedEntryState
 
       final dets = prov.detMap[e.spkDeptIssMstID] ?? [];
 
-      return e.toTableRow()
+      final row = e.toTableRow()
         ..['fromName'] = fromName
         ..['fromDeptName'] = fromDeptName
         ..['toName'] = toName
@@ -1698,13 +1986,15 @@ class _TrnPlanningReceivedEntryState
             '${dets.fold<int>(0, (s, r) => s + (r.totalPc ?? 0))}'
         ..['totalWt'] = _f3(
             dets.fold<double>(0.0, (s, r) => s + (r.totalWt ?? 0.0)));
+
+      return row;
     }).toList();
 
     return ErpDataTable(
       isReportRow: false,
       token: token ?? '',
       url: baseUrl,
-      title: 'PLANNING RECEIVED LIST',
+      title: 'LASER RECEIVED LIST',
       columns: _tableColumns,
       data: data,
       showSearch: true,
@@ -1717,164 +2007,5 @@ class _TrnPlanningReceivedEntryState
       onRowTap: _onRowTap,
       emptyMessage: prov.isLoaded ? 'No entries found' : 'Loading...',
     );
-  }
-  Widget _buildTableDefaultData(TrnPlanningReceivedProvider prov) {
-    final counterProv = context.read<CounterProvider>();
-    final procProv = context.read<DeptProcessProvider>();
-
-    // // ← Show EMPTY until a bCode is scanned, then filter
-    // if (_filteredBCode == null || _filteredBCode!.isEmpty) {
-    //   return ErpDataTable(
-    //     isReportRow: false,
-    //     token: token ?? '',
-    //     url: baseUrl,
-    //     title: 'PLANNING RECEIVED LIST',
-    //     columns: _tableColumns,
-    //     data: const [],                          // ← always empty until scan
-    //     showHeader: false,
-    //     showSearch: false,
-    //     selectedRow: null,
-    //     onRowTap: (_) {},
-    //     emptyMessage: 'Scan a BCode to view records',  // ← helpful hint
-    //   );
-    // }
-
-    final filteredList = prov.list
-        .where((e) => e.bCode?.toString() == _filteredBCode)
-        .toList();
-
-    final data = filteredList.map((e) {
-      String fromName = '', toName = '', processName = '';
-      String fromDeptName = '', toDeptName = '';
-
-      try {
-        final c =
-        counterProv.list.firstWhere((c) => c.crId == e.fromCrID);
-        fromName = c.crName ?? '';
-        fromDeptName = _deptNameFor(c.deptCode);
-      } catch (_) {}
-
-      try {
-        final c =
-        counterProv.list.firstWhere((c) => c.crId == e.toCrID);
-        toName = c.crName ?? '';
-        toDeptName = _deptNameFor(c.deptCode);
-      } catch (_) {}
-
-      try {
-        processName = procProv.list
-            .firstWhere((p) => p.deptProcessCode == e.deptProcessCode)
-            .deptProcessName ??
-            '';
-      } catch (_) {}
-
-      final dets = prov.detMap[e.spkDeptIssMstID] ?? [];
-
-      return e.toTableRow()
-        ..['fromName'] = fromName
-        ..['fromDeptName'] = fromDeptName
-        ..['toName'] = toName
-        ..['toDeptName'] = toDeptName
-        ..['deptName'] = toDeptName
-        ..['processName'] = processName
-        ..['spkDeptIssTime'] = _formatTime(e.stime)
-        ..['jno'] =
-        dets.isNotEmpty ? (dets.first.jno?.toString() ?? '') : ''
-        ..['totPkt'] = '${dets.length}'
-        ..['totalPc'] =
-            '${dets.fold<int>(0, (s, r) => s + (r.totalPc ?? 0))}'
-        ..['totalWt'] = _f3(
-            dets.fold<double>(0.0, (s, r) => s + (r.totalWt ?? 0.0)))
-      ..['bCode'] = e.bCode?.toString() ?? ''; // ← ADD THIS
-
-    }).toList();
-
-    Future<void> _onRowTap(Map<String, dynamic> row) async {
-      final raw = row['_raw'] as SpkDeptIssMstModel;
-      print('raw.bCode?.toString() ${raw.bCode?.toString()}');
-      setState(() {
-        _selectedRow = row;
-        _highlightedBCode = raw.bCode?.toString(); // ← directly from _raw
-      });
-    }
-
-    return ErpDataTable(
-      isReportRow: false,
-      token: token ?? '',
-      url: baseUrl,
-      title: 'PLANNING RECEIVED LIST',
-      columns: _tableColumns,
-      data: data,
-      showHeader: false,
-      showSearch: false,
-      selectedRow: _selectedRow,
-      onRowTap: (val) => _onRowTap(val),
-      emptyMessage: prov.isLoaded ? 'No entries found' : 'Loading...',
-    );
-  }
-
-
-
-  Widget _buildTableByBarCodeData(TrnPlanningReceivedProvider prov) {
-    final List<Map<String, dynamic>> data = [];
-    // sarinData lives on SpkDeptIssDetModel from the scan response
-    if(prov.scannedDetList.isNotEmpty){
-      for (final det in prov.scannedDetList) {
-        final sarinList = det.sarinData ?? [];
-
-        if (sarinList.isEmpty) {
-          data.add(_buildDetSarinRow(det: det, sarin: null));
-        } else {
-          for (final sarin in sarinList) {
-            data.add(_buildDetSarinRow(det: det, sarin: sarin));
-          }
-        }
-      }
-    }
-    return ErpDataTable(
-      isReportRow: false,
-      token: token ?? '',
-      url: baseUrl,
-      title: 'SARIN DATA',
-      columns: _tableColumnsByBarCode,
-      data: data,
-      showHeader: false,
-      showSearch: false,
-      selectedRow: _selectedRow,
-      isAllowHighlight: true,       // ← enable highlight
-      highlightKey: 'bCode',        // ← match by bCode field
-      highlightValue: _highlightedBCode,  // ← NEW param
-      onRowTap: (val) => {},
-      emptyMessage: prov.isLoaded ? 'Planning received data not found' : 'Loading...',
-    );
-  }
-
-  Map<String, dynamic> _buildDetSarinRow({
-    required SpkDeptIssDetModel det,
-    required Map<String, dynamic>? sarin,
-  }) {
-    return {
-      // ── Sarin fields ────────────────────────────────────────────────────
-      'sarinPolID':    sarin?['SarinPolID']?.toString() ?? '',
-      'stoneID':       sarin?['StoneID']?.toString() ?? '',
-      'polishWT':      sarin?['PolishWT']?.toString() ?? '',
-      'polishPer':     sarin?['PolishPer']?.toString() ?? '',
-      'shape':         sarin?['SHAPE']?.toString() ?? '',
-      'cut':           sarin?['CUT']?.toString() ?? '',
-      'color':         sarin?['Color']?.toString() ?? '',
-      'clarity':       sarin?['Clarity']?.toString() ?? '',
-      'tWT':           sarin?['TWT']?.toString() ?? '',
-      'rate':          sarin?['Rate']?.toString() ?? '',
-      'amt':           sarin?['AMT']?.toString() ?? '',
-      'lotCode':       sarin?['LotCode']?.toString() ?? '',
-      'kapanNo':       sarin?['KapanNo']?.toString() ?? '',
-      'srNum':         (sarin?['SrNum'] ?? '').toString().trim(),
-      'crownHeight':   (sarin?['CrownHeight'] ?? '').toString().trim(),
-      'operatorName':  sarin?['operatorName']?.toString() ?? '',
-      'tHmm':          sarin?['THmm']?.toString() ?? '',
-      'disc':          sarin?['DISC']?.toString() ?? '',
-      'rec':           sarin?['Rec']?.toString() ?? '',
-      'bCode':           sarin?['BCode']?.toString() ?? '',
-    };
   }
 }

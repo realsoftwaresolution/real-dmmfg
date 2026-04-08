@@ -1,10 +1,7 @@
-// lib/providers/spk_dept_iss_provider.dart
-
 import 'package:rs_dashboard/rs_dashboard.dart';
-
 import '../models/spkDeptIss_mst_model.dart';
 
-class TrnPlanningReceivedProvider extends BaseProvider {
+class TrnLaserReceivedProvider extends BaseProvider {
   List<SpkDeptIssMstModel> _list     = [];
   bool                     _isLoaded = false;
 
@@ -78,7 +75,7 @@ class TrnPlanningReceivedProvider extends BaseProvider {
         query: {
           'bCode': bCode,
           'lastCrId': fromCrId.toString(),
-          'screenName': 'PLANNING_RECEIVED',
+          'screenName': 'LASER_RECEIVED',
         },
       ),
       onSuccess: (res) {
@@ -232,7 +229,7 @@ class TrnPlanningReceivedProvider extends BaseProvider {
       ever:            toI(v['ever']?.toString()),
       entryType:       v['entryType'],
       repairing:       v['repairing'],
-      formType:        v['formType'] ?? 'PLANNING_RECEIVED',
+      formType:        v['formType'] ?? 'LASER_RECEIVED',
       proType:         v['proType'],
       formType1:       v['formType1'],
       nukCrId:         toI(v['nukCrId']?.toString()),

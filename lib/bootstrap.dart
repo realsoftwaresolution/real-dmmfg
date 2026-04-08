@@ -58,6 +58,7 @@ import 'package:diam_mfg/providers/team_provider.dart';
 import 'package:diam_mfg/providers/tension_type_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
 import 'package:diam_mfg/providers/test_provider.dart';
+import 'package:diam_mfg/providers/trn_laser_received_provider.dart';
 import 'package:diam_mfg/providers/trn_planning_received_provider.dart';
 import 'package:diam_mfg/providers/user_visibility_provider.dart';
 import 'package:flutter/material.dart';
@@ -147,6 +148,7 @@ Future<void> bootstrap({
           ChangeNotifierProvider<PartyTypeProvider>.value(value: PartyTypeProvider()),
           ChangeNotifierProvider<SpkDeptIssProvider>.value(value: SpkDeptIssProvider()),
           ChangeNotifierProvider<TrnPlanningReceivedProvider>.value(value: TrnPlanningReceivedProvider()),
+          ChangeNotifierProvider<TrnLaserReceivedProvider>.value(value: TrnLaserReceivedProvider()),
           ChangeNotifierProvider<EmployeeProvider>.value(value: EmployeeProvider()),
           ChangeNotifierProvider<DesignationProvider>.value(value: DesignationProvider()),
           ChangeNotifierProvider<EmployeeDeptDetProvider>.value(value: EmployeeDeptDetProvider()),

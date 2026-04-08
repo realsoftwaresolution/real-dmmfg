@@ -475,7 +475,12 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     _isBCodePending = false;
 
     if (rows.isEmpty) {
-      _showSnack('BCode "$bCode" not found!');
+      ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'BCode',
+        message: 'BCode "$bCode" not found!',
+      );
       _entryVals['scanValue'] = '';
       _erpFormKey.currentState?.updateFieldValue('scanValue', '');
       Future.delayed(

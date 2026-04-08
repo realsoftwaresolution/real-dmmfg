@@ -23,6 +23,7 @@ import 'package:diam_mfg/screens/mst_firm_shape_group.dart';
 import 'package:diam_mfg/screens/mst_firm_team.dart';
 import 'package:diam_mfg/screens/mst_firm_tensions.dart';
 import 'package:diam_mfg/screens/trn_cut_create.dart';
+import 'package:diam_mfg/screens/trn_laser_received.dart';
 import 'package:diam_mfg/screens/trn_packet_create.dart';
 import 'package:diam_mfg/screens/trn_planning_received.dart';
 import 'package:diam_mfg/screens/trn_rough_assort.dart';
@@ -77,6 +78,7 @@ class AppRouter {
     '/3.04': (context) => const TrnPacketCreateEntry(),
     '/3.05': (context) => const TrnSpkDeptIssEntry(),
     '/3.06': (context) => const TrnPlanningReceivedEntry(),
+    '/3.07': (context) => const TrnLaserReceivedEntry(),
     '/4': (context) => const AdminMenuCreateScreen(),
 
   });
