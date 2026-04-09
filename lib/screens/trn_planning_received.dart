@@ -223,6 +223,7 @@ class _TrnPlanningReceivedEntryState
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.wait([
+      context.read<TrnPlanningReceivedProvider>().load(),
         context.read<CounterProvider>().load(),
         context.read<CounterManagerDetProvider>().load(),
         context.read<DeptProvider>().load(),
@@ -421,6 +422,14 @@ class _TrnPlanningReceivedEntryState
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _onBCodeScanned(String bCode) async {
+
+    final data = await context
+        .read<TrnPlanningReceivedProvider>()
+        .fetchByBCodePlanningList(
+      bCode: bCode,
+      fromCrId: _fromCrId!.toString(),
+    );
+
     final rows = await context
         .read<TrnPlanningReceivedProvider>()
         .fetchByBCode(
@@ -1435,8 +1444,34 @@ class _TrnPlanningReceivedEntryState
     ErpColumnConfig(label: 'Disc',         key: 'disc'),
     ErpColumnConfig(label: 'Rec',          key: 'rec'),
   ];
-
-
+  List<ErpColumnConfig> get _columnLabels => [
+    ErpColumnConfig(label: 'Sr No', key: 'srno'),
+    ErpColumnConfig(label: 'Barcode', key: 'bCode'),
+    ErpColumnConfig(label: 'Pkt No', key: 'pktNo'),
+    ErpColumnConfig(label: 'Cut No', key: 'cutNo'),
+    ErpColumnConfig(label: 'Org Pc', key: 'orgPc'),
+    ErpColumnConfig(label: 'Org Wt', key: 'orgWt'),
+    ErpColumnConfig(label: 'Iss Pc', key: 'issPc'),
+    ErpColumnConfig(label: 'Iss Wt', key: 'issWt'),
+    ErpColumnConfig(label: 'Rec Pc', key: 'recPc'),
+    ErpColumnConfig(label: 'Rec Wt', key: 'recWt'),
+    ErpColumnConfig(label: 'DM %', key: 'dmPer'),
+    ErpColumnConfig(label: 'DM Wt', key: 'dmWt'),
+    ErpColumnConfig(label: 'K Pc', key: 'kPc'),
+    ErpColumnConfig(label: 'K Wt', key: 'kWt'),
+    ErpColumnConfig(label: 'BR Pc', key: 'brPc'),
+    ErpColumnConfig(label: 'BR Wt', key: 'brWt'),
+    ErpColumnConfig(label: 'Loss Pc', key: 'lossPc'),
+    ErpColumnConfig(label: 'Loss Wt', key: 'lossWt'),
+    ErpColumnConfig(label: 'Tops Pc', key: 'topsPc'),
+    ErpColumnConfig(label: 'Tops Wt', key: 'topsWt'),
+    ErpColumnConfig(label: 'Remarks', key: 'remarks'),
+    ErpColumnConfig(label: 'Employee', key: 'employee'),
+    ErpColumnConfig(label: 'Signer', key: 'signer'),
+    ErpColumnConfig(label: 'JNO Rec Pc', key: 'jnoRecPc'),
+    ErpColumnConfig(label: 'Shape', key: 'shapeCode'),
+    ErpColumnConfig(label: 'Purity', key: 'purityCode'),
+  ];
   // ─────────────────────────────────────────────────────────────────────────
   //  BUILD
   // ─────────────────────────────────────────────────────────────────────────
@@ -1601,7 +1636,6 @@ class _TrnPlanningReceivedEntryState
         }
 
         _isBCodePending = true;
-       await context.read<TrnPlanningReceivedProvider>().load();
         _onBCodeScanned(scanVal);
       },
 
@@ -1719,82 +1753,42 @@ class _TrnPlanningReceivedEntryState
     );
   }
   Widget _buildTableDefaultData(TrnPlanningReceivedProvider prov) {
-    final counterProv = context.read<CounterProvider>();
-    final procProv = context.read<DeptProcessProvider>();
 
-    // // ← Show EMPTY until a bCode is scanned, then filter
-    // if (_filteredBCode == null || _filteredBCode!.isEmpty) {
-    //   return ErpDataTable(
-    //     isReportRow: false,
-    //     token: token ?? '',
-    //     url: baseUrl,
-    //     title: 'PLANNING RECEIVED LIST',
-    //     columns: _tableColumns,
-    //     data: const [],                          // ← always empty until scan
-    //     showHeader: false,
-    //     showSearch: false,
-    //     selectedRow: null,
-    //     onRowTap: (_) {},
-    //     emptyMessage: 'Scan a BCode to view records',  // ← helpful hint
-    //   );
-    // }
-
-    final filteredList = prov.list
-        .where((e) => e.bCode?.toString() == _filteredBCode)
-        .toList();
-
-    final data = filteredList.map((e) {
-      String fromName = '', toName = '', processName = '';
-      String fromDeptName = '', toDeptName = '';
-
-      try {
-        final c =
-        counterProv.list.firstWhere((c) => c.crId == e.fromCrID);
-        fromName = c.crName ?? '';
-        fromDeptName = _deptNameFor(c.deptCode);
-      } catch (_) {}
-
-      try {
-        final c =
-        counterProv.list.firstWhere((c) => c.crId == e.toCrID);
-        toName = c.crName ?? '';
-        toDeptName = _deptNameFor(c.deptCode);
-      } catch (_) {}
-
-      try {
-        processName = procProv.list
-            .firstWhere((p) => p.deptProcessCode == e.deptProcessCode)
-            .deptProcessName ??
-            '';
-      } catch (_) {}
-
-      final dets = prov.detMap[e.spkDeptIssMstID] ?? [];
-
-      return e.toTableRow()
-        ..['fromName'] = fromName
-        ..['fromDeptName'] = fromDeptName
-        ..['toName'] = toName
-        ..['toDeptName'] = toDeptName
-        ..['deptName'] = toDeptName
-        ..['processName'] = processName
-        ..['spkDeptIssTime'] = _formatTime(e.stime)
-        ..['jno'] =
-        dets.isNotEmpty ? (dets.first.jno?.toString() ?? '') : ''
-        ..['totPkt'] = '${dets.length}'
-        ..['totalPc'] =
-            '${dets.fold<int>(0, (s, r) => s + (r.totalPc ?? 0))}'
-        ..['totalWt'] = _f3(
-            dets.fold<double>(0.0, (s, r) => s + (r.totalWt ?? 0.0)))
-      ..['bCode'] = e.bCode?.toString() ?? ''; // ← ADD THIS
-
+    final data = prov.planningDetList.map((r) => {
+      'srno': r.srno?.toString() ?? '',
+      'bCode': r.bCode ?? '',
+      'pktNo': r.pktNo ?? '',
+      'cutNo': r.cutNo ?? '',
+      'orgPc': r.pc?.toString() ?? '',
+      'orgWt': _f3(r.wt),
+      'issPc': r.issPc?.toString() ?? '',
+      'issWt': _f3(r.issWt),
+      'recPc': r.recPc?.toString() ?? '',
+      'recWt': _f3(r.recWt),
+      'dmPer': r.dmPer?.toStringAsFixed(2) ?? '',
+      'dmWt': _f3(r.dmWt),
+      'kPc': r.kPc?.toString() ?? '',
+      'kWt': _f3(r.kWt),
+      'brPc': r.brPc?.toString() ?? '',
+      'brWt': _f3(r.brWt),
+      'lossPc': r.lossPc?.toString() ?? '',
+      'lossWt': _f3(r.lossWt),
+      'topsPc': r.topsPc?.toString() ?? '',
+      'topsWt': _f3(r.topsWt),
+      'employee': _employeeNameFor(r.employeeCode),
+      'signer': _signerNameFor(r.signerCode),
+      'remarks': _remarksNameFor(r.remarksCode),
+      'jnoRecPc': r.jnoRecPc?.toString() ?? '',
+      'shapeCode': _shapeNameFor(r.shapeCode),
+      'purityCode': _purityNameFor(r.purityCode),
     }).toList();
 
     Future<void> _onRowTap(Map<String, dynamic> row) async {
-      final raw = row['_raw'] as SpkDeptIssMstModel;
-      print('raw.bCode?.toString() ${raw.bCode?.toString()}');
+      print('raw.bCode?.toString() $row');
+      final raw = row;
       setState(() {
         _selectedRow = row;
-        _highlightedBCode = raw.bCode?.toString(); // ← directly from _raw
+        _highlightedBCode = raw['bCode']; // ← directly from _raw
       });
     }
 
@@ -1803,7 +1797,7 @@ class _TrnPlanningReceivedEntryState
       token: token ?? '',
       url: baseUrl,
       title: 'PLANNING RECEIVED LIST',
-      columns: _tableColumns,
+      columns: _columnLabels,
       data: data,
       showHeader: false,
       showSearch: false,

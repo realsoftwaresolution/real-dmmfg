@@ -1302,7 +1302,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
             readOnly: _lockMasterFields || _isEditMode),
         ErpFieldConfig(
             key: 'fromDept',
-            label: 'DEPT',
+            label: 'MANAGER',
             type: ErpFieldType.text,
             readOnly: true,
             sectionIndex: 0),
@@ -1315,7 +1315,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
             sectionIndex: 0),
         ErpFieldConfig(
             key: 'toDept',
-            label: 'DEPT',
+            label: 'MANAGER',
             type: ErpFieldType.text,
             readOnly: true,
             sectionIndex: 0),
@@ -1335,6 +1335,12 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       ],
       [
         ErpFieldConfig(
+            key: 'remark',
+            label: 'REMARK',
+            type: ErpFieldType.text,
+            width: 250,
+            sectionIndex: 3),
+        ErpFieldConfig(
             key: 'scanValue',
             label: 'BCODE',
             type: ErpFieldType.text,
@@ -1349,208 +1355,120 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     // ─────────────────────────────────────────────────────────────────────
     //  ENTRY SECTION (sectionIndex 3)
     // ─────────────────────────────────────────────────────────────────────
-    if (_processSelected) {
-      // Use _getRadioFields so radio options appear even when only one of
-      // _fromDisplayFields or _toDisplayFields contains these field names.
-      final radioFieldsMap = _getRadioFields();
+      final singleRow = <ErpFieldConfig>[
+        // ORG
+        ErpFieldConfig(
+            key: 'orgPc',
+            label: 'ORG PC',
+            type: ErpFieldType.number,
+            readOnly: true,
+            isEntryField: true,
+            sectionIndex: 3,
+            flex: 1),
+        ErpFieldConfig(
+            key: 'orgWt',
+            label: 'ORG WT',
+            type: ErpFieldType.amount,
+            readOnly: true,
+            isEntryField: true,
+            sectionIndex: 3,
+            flex: 1),
 
-      final radioItems = radioFieldsMap.values
-          .map((f) => ErpRadioOption(
-        label: f.userVisibilityName ?? '',
-        value: f.userVisibilityCode.toString(),
-      ))
-          .toList();
+        // ISS
+        ErpFieldConfig(
+            key: 'issPc',
+            label: 'ISS PC',
+            type: ErpFieldType.number,
+            readOnly: true,
+            isEntryField: true,
+            sectionIndex: 3,
+            flex: 1),
+        ErpFieldConfig(
+            key: 'issWt',
+            label: 'ISS WT',
+            type: ErpFieldType.amount,
+            readOnly: true,
+            isEntryField: true,
+            sectionIndex: 3,
+            flex: 1),
 
-      // Resolve currently selected radio name from whichever list has it
-      final selectedField = radioFieldsMap.values.firstWhereOrNull(
-              (f) => f.userVisibilityCode.toString() == _selectedRadioCode);
-      final selectedName =
-      (selectedField?.userVisibilityName ?? '').toUpperCase();
+        // REC
+        ErpFieldConfig(
+            key: 'recPc',
+            label: 'REC PC',
+            type: ErpFieldType.number,
+            isEntryField: true,
+            sectionIndex: 3,
+            flex: 1),
+        ErpFieldConfig(
+            key: 'recWt',
+            label: 'REC WT',
+            type: ErpFieldType.amount,
+            isEntryField: true,
+            sectionIndex: 3,
+            flex: 1),
 
-      // Compute radio widget width based on option count
-      final radioWidth = switch (radioItems.length) {
-        <= 1 => 150.0,
-        2 => 200.0,
-        3 => 300.0,
-        4 => 400.0,
-        _ => 500.0,
-      };
+        // DM
+        ErpFieldConfig(
+            key: 'dmPer',
+            label: 'DM PER',
+            type: ErpFieldType.number,
+            isEntryField: true,
+            sectionIndex: 3,
+            flex: 1),
+        ErpFieldConfig(
+            key: 'dmWt',
+            label: 'DM WT',
+            type: ErpFieldType.amount,
+            readOnly: true,
+            isEntryField: true,
+            sectionIndex: 3,
+            flex: 1),
 
+        // LOSS WT
+        ErpFieldConfig(
+            key: 'lossWt',
+            label: 'LOSS WT',
+            type: ErpFieldType.amount,
+            readOnly: true,
+            isEntryField: true,
+            sectionIndex: 3,
+            flex: 1),
 
-      // CUT LOT extra fields
-      if (selectedName == 'CUT LOT') {
-        rows.add([
-          ErpFieldConfig(
-              key: 'cutNo',
-              label: 'CUT NO',
-              type: ErpFieldType.text,
-              isEntryField: true,
-              sectionIndex: 3),
-          ErpFieldConfig(
-              key: 'cutFrom',
-              label: 'FROM',
-              type: ErpFieldType.text,
-              isEntryField: true,
-              sectionIndex: 3),
-          ErpFieldConfig(
-              key: 'cutTo',
-              label: 'TO',
-              type: ErpFieldType.text,
-              isEntryField: true,
-              sectionIndex: 3),
-        ]);
-      }
+        // TOPS
+        ErpFieldConfig(
+            key: 'topsPc',
+            label: 'TOPS PC',
+            type: ErpFieldType.number,
+            isEntryField: true,
+            sectionIndex: 3,
+            flex: 1),
+        ErpFieldConfig(
+            key: 'topsWt',
+            label: 'TOPS WT',
+            type: ErpFieldType.amount,
+            isEntryField: true,
+            sectionIndex: 3,
+            flex: 1),
 
-      // Main entry fields (ORG / ISS / PC-WT pairs / extras) — all in one row
-      final singleRow = <ErpFieldConfig>[];
-
-      final pairs = [
-        ['REC PC', 'REC WT'],
-        ['K PC', 'K WT'],
-        ['BR PC', 'BR WT'],
-        ['TOPS PC', 'TOPS WT'],
-        ['LOSS PC', 'LOSS WT'],
-        ['DM PER', 'DM WT'],
+        // PARTY NAME (Dropdown)
+        ErpFieldConfig(
+          key: 'partName',
+          label: 'PART NAME',
+          type: ErpFieldType.dropdown,
+          isEntryField: true,
+          showAddButton: true,
+          sectionIndex: 3,
+          flex: 2,
+          dropdownItems: context.read<CounterProvider>().list.map((e) =>
+              ErpDropdownItem(
+                label: e.logInName ?? '',
+                value: e.crId?.toString() ?? '',
+              )).toList(),
+        ),
       ];
 
-      final hasAnyPair = pairs.any(
-              (p) => merged.containsKey(p[0]) || merged.containsKey(p[1]));
-
-      // Fixed ORG / ISS fields (only when there are PC-WT pairs)
-      if (hasAnyPair) {
-        singleRow.addAll([
-          ErpFieldConfig(
-              key: 'orgPc',
-              label: 'ORG PC',
-              type: ErpFieldType.number,
-              readOnly: true,
-              isEntryField: true,
-              sectionIndex: 3,
-              flex: 1),
-          ErpFieldConfig(
-              key: 'orgWt',
-              label: 'ORG WT',
-              type: ErpFieldType.amount,
-              readOnly: true,
-              isEntryField: true,
-              sectionIndex: 3,
-              flex: 1),
-          ErpFieldConfig(
-              key: 'issPc',
-              label: 'ISS PC',
-              type: ErpFieldType.number,
-              readOnly: true,
-              isEntryField: true,
-              sectionIndex: 3,
-              flex: 1),
-          ErpFieldConfig(
-              key: 'issWt',
-              label: 'ISS WT',
-              type: ErpFieldType.amount,
-              readOnly: true,
-              isEntryField: true,
-              showAddButton: true,
-              sectionIndex: 3,
-              flex: 1),
-        ]);
-      }
-
-      // PC-WT pairs
-      for (final pair in pairs) {
-        if (merged.containsKey(pair[0]) || merged.containsKey(pair[1])) {
-          singleRow.add(ErpFieldConfig(
-              key: pair[0].replaceAll(' ', '').toLowerCase(),
-              label: pair[0],
-              type: ErpFieldType.text,
-              readOnly: pair[0] == 'LOSS PC',
-              isEntryField: true,
-              sectionIndex: 3,
-              flex: 1));
-          singleRow.add(ErpFieldConfig(
-              key: pair[1].replaceAll(' ', '').toLowerCase(),
-              label: pair[1],
-              type: ErpFieldType.text,
-              readOnly: pair[1] == 'DM WT' || pair[1] == 'LOSS WT',
-              isEntryField: true,
-              sectionIndex: 3,
-              flex: 1));
-        }
-      }
-
-      // EMPLOYEE
-      if (merged.containsKey('EMPLOYEE')) {
-        singleRow.add(ErpFieldConfig(
-            key: 'employee',
-            label: 'EMPLOYEE',
-            type: ErpFieldType.dropdown,
-            dropdownItems: context.read<EmployeeProvider>().list
-                .map((e) => ErpDropdownItem(
-              label: e.employeeName ?? '',
-              value: e.employeeCode?.toString() ?? '',
-            ))
-                .toList(),
-            isEntryField: true,
-            sectionIndex: 3,
-            flex: 2));
-      }
-
-      // SIGNER
-      if (merged.containsKey('SIGNER')) {
-        final signerCounters = context.read<CounterProvider>().list.where(
-                (c) => _deptNameFor(c.deptCode).toUpperCase() == 'SIGNER');
-        singleRow.add(ErpFieldConfig(
-            key: 'signer',
-            label: 'SIGNER',
-            type: ErpFieldType.dropdown,
-            isEntryField: true,
-            dropdownItems: signerCounters
-                .map((e) => ErpDropdownItem(
-              label: e.logInName ?? '',
-              value: e.crId?.toString() ?? '',
-            ))
-                .toList(),
-            sectionIndex: 3,
-            flex: 2));
-      }
-
-      // REMARKS (filtered by selected process)
-      if (merged.containsKey('REMARKS')) {
-        final selectedProcess =
-        int.tryParse(_formValues['deptProcessCode'] ?? '');
-        final remarksItems = context.read<RemarksProvider>().list
-            .where((e) =>
-        e.active == true &&
-            (selectedProcess == null ||
-                e.deptProcessCode == selectedProcess))
-            .map((e) => ErpDropdownItem(
-          label: e.remarksName ?? '',
-          value: e.remarksCode?.toString() ?? '',
-        ))
-            .toList();
-        singleRow.add(ErpFieldConfig(
-            key: 'remarks',
-            label: 'REMARKS',
-            type: ErpFieldType.dropdown,
-            isEntryField: true,
-            dropdownItems: remarksItems,
-            sectionIndex: 3,
-            flex: 2));
-      }
-
-      // DUE DAY
-      if (merged.containsKey('DUE DAY')) {
-        singleRow.add(ErpFieldConfig(
-            key: 'dueDay',
-            label: 'DUE DAY',
-            type: ErpFieldType.text,
-            isEntryField: true,
-            showAddButton: true,
-            sectionIndex: 3,
-            flex: 1));
-      }
-
-      if (singleRow.isNotEmpty) rows.add(singleRow);
-    }
+      rows.add(singleRow);
 
     return _sanitizeRows(rows);
   }

@@ -19,7 +19,6 @@ class TrnPlanningReceivedProvider extends BaseProvider {
   void clearForReset() {
     _scannedDetList.clear();   // clear barcode scan data
     detMap.clear();            // clear details map (important)
-    _list.clear();            // clear details map (important)
     notifyListeners();
   }
 
@@ -61,6 +60,8 @@ class TrnPlanningReceivedProvider extends BaseProvider {
   // Store scanned det rows (which carry sarinData)
   List<SpkDeptIssDetModel> _scannedDetList = [];
   List<SpkDeptIssDetModel> get scannedDetList => _scannedDetList;
+  List<SpkDeptIssDetModel> _planningDetList = [];
+  List<SpkDeptIssDetModel> get planningDetList => _planningDetList;
 
   void clearScannedDetList() {
     _scannedDetList = [];
@@ -93,7 +94,7 @@ class TrnPlanningReceivedProvider extends BaseProvider {
                     (e) => e.bCode.toString() == item.bCode.toString());
             print(index);
             if (index == -1) {
-              _scannedDetList.add(item);
+              _scannedDetList.insert(0,item);
             } else {
               _scannedDetList[index] = item; // update existing
             }
@@ -104,6 +105,47 @@ class TrnPlanningReceivedProvider extends BaseProvider {
         return parsed;
       },
     );
+    return result ?? [];
+  }
+
+  Future<List<SpkDeptIssDetModel>> fetchByBCodePlanningList({
+    required String bCode,
+    required String fromCrId,
+  }) async {
+    final result = await request<List<SpkDeptIssDetModel>>(
+      showLoader: false,
+      call: () => api.get(
+        '/spkDeptIss/scan-bcode-wise-planning-list',
+        query: {
+          'bCode': bCode,
+          'lastCrId': fromCrId,
+          'screenName': 'PLANNING_RECEIVED',
+        },
+      ),
+      onSuccess: (res) {
+        final data = res.data;
+        final list = data is List ? data : [data];
+
+        final parsed = list
+            .map((e) {
+          try {
+            return SpkDeptIssDetModel.fromJson(
+                e as Map<String, dynamic>);
+          } catch (err) {
+            print('❌ Parse Error: $err');
+            return null;
+          }
+        })
+            .whereType<SpkDeptIssDetModel>()
+            .toList();
+
+        _planningDetList = parsed;
+        notifyListeners();
+
+        return parsed;
+      },
+    );
+
     return result ?? [];
   }
 
