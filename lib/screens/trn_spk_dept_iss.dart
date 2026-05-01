@@ -663,7 +663,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       _syncDetGrid();
     });
 
-    _clearEntryFields();
+    // _clearEntryFields();
 
     // Return focus to scan field
     WidgetsBinding.instance.addPostFrameCallback(
@@ -789,7 +789,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
       dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
       entryType: 'I',
-      formType: 'SPK',
+      formType: 'DEPT_ISS',
       pktType: 'A',
     );
   }
@@ -1079,7 +1079,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       ..['fromCrID'] = _fromCrId?.toString() ?? ''
       ..['toCrID'] = _toCrId?.toString() ?? ''
       ..['deptCode'] = toDeptCode?.toString() ?? '';
-
     final success = _isEditMode && _selectedMst != null
         ? await prov.update(_selectedMst!.spkDeptIssMstID!, merged, _detRows)
         : await prov.create(merged, _detRows);
@@ -1723,6 +1722,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
   @override
   Widget build(BuildContext context) {
+    print(_entryVals);
     return Consumer<SpkDeptIssProvider>(
       builder: (ctx, prov, _) => Padding(
         padding: const EdgeInsets.all(8),
@@ -1806,14 +1806,14 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
           case 'dmper':
             final dmPerVal = double.tryParse(value.toString()) ?? 0;
             if (dmPerVal > 100) {
-              _erpFormKey.currentState?.updateFieldValue('dmper', '100');
+              _erpFormKey.currentState?.updateFieldValue('dmPer', '100');
               _entryVals['dmper'] = '100';
             } else {
               _entryVals[key] = value.toString();
             }
             _calcDmWt();
 
-          case 'recwt':
+          case 'recWt':
             _entryVals[key] = value.toString();
             _calcDmWt();
 
@@ -1983,8 +1983,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   Widget _buildTable(SpkDeptIssProvider prov) {
     final counterProv = context.read<CounterProvider>();
     final procProv = context.read<DeptProcessProvider>();
-
-    final data = prov.list.map((e) {
+    final data = prov.list.where((e) => e.formType == 'SPK').map((e) {
+      print(e.formType);
       String fromName = '', toName = '', processName = '';
       String fromDeptName = '', toDeptName = '';
 

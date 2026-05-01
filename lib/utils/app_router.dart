@@ -23,7 +23,9 @@ import 'package:diam_mfg/screens/mst_firm_shape_group.dart';
 import 'package:diam_mfg/screens/mst_firm_team.dart';
 import 'package:diam_mfg/screens/mst_firm_tensions.dart';
 import 'package:diam_mfg/screens/trn_cut_create.dart';
+import 'package:diam_mfg/screens/trn_factory_issue.dart';
 import 'package:diam_mfg/screens/trn_laser_received.dart';
+import 'package:diam_mfg/screens/trn_makable_entry.dart';
 import 'package:diam_mfg/screens/trn_packet_create.dart';
 import 'package:diam_mfg/screens/trn_planning_received.dart';
 import 'package:diam_mfg/screens/trn_rough_assort.dart';
@@ -35,6 +37,7 @@ import '../screens/dashboard_screen.dart';
 import '../screens/mst_firm_dept.dart';
 import '../screens/mst_firm_cut.dart';
 import '../screens/mst_firm_shape.dart';
+import '../screens/trn_factory_receive.dart';
 import '../screens/user_master.dart';
 
 
@@ -79,6 +82,9 @@ class AppRouter {
     '/3.05': (context) => const TrnSpkDeptIssEntry(),
     '/3.06': (context) => const TrnPlanningReceivedEntry(),
     '/3.07': (context) => const TrnLaserReceivedEntry(),
+    '/3.08': (context) => const TrnMakableEntry(),
+    '/3.09': (context) => const TrnFactoryIssueEntry(),
+    '/3.10': (context) => const FactoryReceiveEntry(),
     '/4': (context) => const AdminMenuCreateScreen(),
 
   });

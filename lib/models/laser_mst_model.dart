@@ -1,4 +1,4 @@
-class SpkDeptIssMstModel {
+class LaserMstModel {
   final int?    spkDeptIssMstID;
   final String? spkDeptIssDate;
   final int?    fromCrID;
@@ -19,7 +19,7 @@ class SpkDeptIssMstModel {
   final int?    nukCrId;
   final String? planType;
 
-  final List<SpkDeptIssDetModel> details;
+  final List<LaserDetModel> details;
 
   // ── totals from DB ─────────────────────────────────────────────────────────
   final double? totalWtDb;
@@ -34,7 +34,7 @@ class SpkDeptIssMstModel {
   double get totalWt => totalWtDb ?? details.fold(0.0, (s, d) => s + (d.totalWt ?? 0));
   int    get totalPc => totalPcDb ?? details.fold(0,   (s, d) => s + (d.totalPc ?? 0));
 
-  const SpkDeptIssMstModel({
+  const LaserMstModel({
     this.spkDeptIssMstID,
     this.spkDeptIssDate,
     this.fromCrID,
@@ -63,8 +63,8 @@ class SpkDeptIssMstModel {
     this.bCode,
   });
 
-  factory SpkDeptIssMstModel.fromJson(Map<String, dynamic> json) =>
-      SpkDeptIssMstModel(
+  factory LaserMstModel.fromJson(Map<String, dynamic> json) =>
+      LaserMstModel(
         spkDeptIssMstID: json['SPKDeptIssMstID'],
         spkDeptIssDate:  _dateOnly(json['SPKDeptIssDate']),
         fromCrID:        json['FromCrID'],
@@ -95,7 +95,7 @@ class SpkDeptIssMstModel {
             ? (json['TotalPc'] as num).toInt()
             : null,
         details: (json['details'] as List? ?? [])
-            .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
+            .map((e) => LaserDetModel.fromJson(e as Map<String, dynamic>))
             .toList(),
       );
 
@@ -129,9 +129,9 @@ class SpkDeptIssMstModel {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SpkDeptIssDetModel
+//  LaserDetModel
 // ─────────────────────────────────────────────────────────────────────────────
-class SpkDeptIssDetModel {
+class LaserDetModel {
   final int?    spkDeptIssDetID;
   final int?    spkDeptIssMstID;
   final int?    srno;
@@ -190,7 +190,6 @@ class SpkDeptIssDetModel {
   final int?    cutCode;
   final int?    purityCode;
   final int?    colorCode;
-  final int?    length;
   final double? diam;
   final double? acuraecy;
   final double? amt;
@@ -201,7 +200,6 @@ class SpkDeptIssDetModel {
   final double? plDmWt;
   final double? plDmPer;
   final double? diffDmWt;
-  final int?    charniCode;
   final double? mackRoughWt;
   final double? rateRs;
   final double? amountRs;
@@ -272,12 +270,8 @@ class SpkDeptIssDetModel {
   final double? lsAmount;
   final int?    orderMstID;
   final List<Map<String, dynamic>>? sarinData;
-  final dynamic recutEmp;
-  final dynamic planPurity;
-  final dynamic planShape;
-  final dynamic orderMstId;
 
-  const SpkDeptIssDetModel({
+  const LaserDetModel({
     this.spkDeptIssDetID,
     this.spkDeptIssMstID,
     this.srno,
@@ -287,7 +281,6 @@ class SpkDeptIssDetModel {
     this.pktNo,
     this.cutNo,
     this.clvCut,
-    this.length,
     this.fromDeptCode,
     this.toDeptCode,
     this.pc,
@@ -350,7 +343,6 @@ class SpkDeptIssDetModel {
     this.plDmWt,
     this.plDmPer,
     this.diffDmWt,
-    this.charniCode,
     this.mackRoughWt,
     this.rateRs,
     this.amountRs,
@@ -418,14 +410,10 @@ class SpkDeptIssDetModel {
     this.lsAmount,
     this.orderMstID,
     this.sarinData,
-    this.orderMstId,
-    this.planPurity,
-    this.planShape,
-    this.recutEmp,
   });
 
-  factory SpkDeptIssDetModel.fromJson(Map<String, dynamic> json) =>
-      SpkDeptIssDetModel(
+  factory LaserDetModel.fromJson(Map<String, dynamic> json) =>
+      LaserDetModel(
         spkDeptIssDetID:  json['SPKDeptIssDetID'],
         spkDeptIssMstID:  json['SPKDeptIssMstID'],
         srno:             json['Srno'],
@@ -497,7 +485,6 @@ class SpkDeptIssDetModel {
         plDmWt:           _d(json['PlDmWt']),
         plDmPer:          _d(json['PlDmPer']),
         diffDmWt:         _d(json['DiffDmWt']),
-        charniCode:       json['CharniCode'],
         mackRoughWt:      _d(json['MackRoughWt']),
         rateRs:           _d(json['RateRs']),
         amountRs:         _d(json['AmountRs']),
@@ -564,10 +551,6 @@ class SpkDeptIssDetModel {
         optAmount:        _d(json['OptAmount']),
         lsAmount:         _d(json['LsAmount']),
         orderMstID:       json['OrderMstID'],
-        recutEmp:       json['RecutEmp'],
-        planShape:       json['PlanShape'],
-        planPurity:       json['PlanPurity'],
-        length:       json['Length'],
         sarinData: (json['sarinData'] as List?)
             ?.map((e) => Map<String, dynamic>.from(e as Map))
             .toList() ?? [],
@@ -587,7 +570,6 @@ class SpkDeptIssDetModel {
     'Wt':               wt,
     'IssPc':            issPc,
     'IssWt':            issWt,
-    'Length':            length,
     'RecPc':            recPc,
     'sarinData':            sarinData,
     if (fromDeptCode != null) 'FromDeptCode': fromDeptCode,
@@ -651,7 +633,6 @@ class SpkDeptIssDetModel {
     if (plDmWt           != null) 'PlDmWt':           plDmWt,
     if (plDmPer          != null) 'PlDmPer':          plDmPer,
     if (diffDmWt         != null) 'DiffDmWt':         diffDmWt,
-    if (charniCode       != null) 'CharniCode':       charniCode,
     if (mackRoughWt      != null) 'MackRoughWt':      mackRoughWt,
     if (rateRs           != null) 'RateRs':           rateRs,
     if (amountRs         != null) 'AmountRs':         amountRs,
@@ -718,10 +699,6 @@ class SpkDeptIssDetModel {
     if (optAmount        != null) 'OptAmount':        optAmount,
     if (lsAmount         != null) 'LsAmount':         lsAmount,
     if (orderMstID       != null) 'OrderMstID':       orderMstID,
-
-    if (planPurity       != null) 'PlanPurity':       planPurity,
-    if (recutEmp       != null) 'RecutEmp':       recutEmp,
-    if (planShape       != null) 'PlanShape':       planShape,
   };
 
   static double? _d(dynamic v) {
@@ -731,7 +708,7 @@ class SpkDeptIssDetModel {
     return double.tryParse(v.toString());
   }
 }
-extension SpkDeptIssMstExt on SpkDeptIssMstModel {
+extension SpkDeptIssMstExt on LaserMstModel {
   Map<String, dynamic> toTableRow() => {
     'spkDeptIssMstID': spkDeptIssMstID,
     'spkDeptIssDate':  spkDeptIssDate ?? '',
@@ -748,19 +725,3 @@ extension SpkDeptIssMstExt on SpkDeptIssMstModel {
     '_raw': this,
   };
 }
-// ─────────────────────────────────────────────────────────────────────────────
-//  toTableRow extension
-// ─────────────────────────────────────────────────────────────────────────────
-// extension SpkDeptIssMstExt on SpkDeptIssMstModel {
-//   Map<String, dynamic> toTableRow() => {
-//     'spkDeptIssMstID': spkDeptIssMstID,
-//     'spkDeptIssDate':  spkDeptIssDate ?? '',
-//     'fromCrID':        fromCrID?.toString() ?? '',
-//     'toCrID':          toCrID?.toString() ?? '',
-//     'deptProcessCode': deptProcessCode?.toString() ?? '',
-//     'entryType':       entryType ?? '',
-//     'totalPc':         totalPc.toString(),
-//     'totalWt':         totalWt.toStringAsFixed(3),
-//     '_raw': this,
-//   };
-// }

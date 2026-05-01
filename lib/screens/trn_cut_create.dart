@@ -1372,6 +1372,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
 
   // ── SAVE ───────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    print('valuesasdadasd $values');
     final prov = context.read<CutCreateProvider>();
 
     String toIso(String? v) {

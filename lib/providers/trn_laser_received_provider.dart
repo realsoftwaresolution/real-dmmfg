@@ -1,17 +1,18 @@
+import 'package:diam_mfg/models/laser_mst_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
-import '../models/spkDeptIss_mst_model.dart';
 
 class TrnLaserReceivedProvider extends BaseProvider {
-  List<SpkDeptIssMstModel> _list     = [];
+  List<LaserMstModel> _list     = [];
   bool                     _isLoaded = false;
 
   bool                         get isLoaded => _isLoaded;
-  List<SpkDeptIssMstModel>     get list     => List.unmodifiable(_list);
+  List<LaserMstModel>     get list     => List.unmodifiable(_list);
   List<Map<String, dynamic>>   get tableData =>
       _list.map((e) => e.toTableRow()).toList();
 // Provider mein ye map maintain karo
 // detMap declare karo (class level)
-  Map<int, List<SpkDeptIssDetModel>> detMap = {};
+  Map<int, List<LaserDetModel>> detMap = {};
 
   void clearForReset() {
     _scannedDetList.clear();   // clear barcode scan data
@@ -21,14 +22,14 @@ class TrnLaserReceivedProvider extends BaseProvider {
   }
 
 // SIRF EK loadDetails rakho — dono merge karo:
-  Future<List<SpkDeptIssDetModel>> loadDetails(int mstID) async {
-    final result = await request<List<SpkDeptIssDetModel>>(
+  Future<List<LaserDetModel>> loadDetails(int mstID) async {
+    final result = await request<List<LaserDetModel>>(
       call: () => api.get('/spkDeptIss/$mstID'),
       onSuccess: (res) {
         final data   = res.data;
         final rawDet = (data is Map ? data['det'] : data) as List? ?? [];
         return rawDet
-            .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
+            .map((e) => LaserDetModel.fromJson(e as Map<String, dynamic>))
             .toList();
       },
     );
@@ -39,12 +40,12 @@ class TrnLaserReceivedProvider extends BaseProvider {
   }
   // ── LOAD ALL ──────────────────────────────────────────────────────────────
   Future<void> load() async {
-    final result = await request<List<SpkDeptIssMstModel>>(
+    final result = await request<List<LaserMstModel>>(
       call: () => api.get('/spkDeptIss'),
       onSuccess: (res) {
         final list = res.data as List;
         return list
-            .map((e) => SpkDeptIssMstModel.fromJson(e as Map<String, dynamic>))
+            .map((e) => LaserMstModel.fromJson(e as Map<String, dynamic>))
             .toList();
       },
     );
@@ -56,19 +57,19 @@ class TrnLaserReceivedProvider extends BaseProvider {
   }
 
   // Store scanned det rows (which carry sarinData)
-  List<SpkDeptIssDetModel> _scannedDetList = [];
-  List<SpkDeptIssDetModel> get scannedDetList => _scannedDetList;
+  List<LaserDetModel> _scannedDetList = [];
+  List<LaserDetModel> get scannedDetList => _scannedDetList;
 
   void clearScannedDetList() {
     _scannedDetList = [];
     notifyListeners();
   }
 
-  Future<List<SpkDeptIssDetModel>> fetchByBCode({
+  Future<List<LaserDetModel>> fetchByBCode({
     required String bCode,
     required String fromCrId,
   }) async {
-    final result = await request<List<SpkDeptIssDetModel>>(
+    final result = await request<List<LaserDetModel>>(
       showLoader: false,
       call: () => api.get(
         '/spkDeptIss/scan-bcode',
@@ -79,13 +80,13 @@ class TrnLaserReceivedProvider extends BaseProvider {
         },
       ),
       onSuccess: (res) {
-        final data = res.data;
+        final data = res.data['data'];
         final list = data is List ? data : [data];
         final parsed = list
-            .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
+            .map((e) => LaserDetModel.fromJson(e as Map<String, dynamic>))
             .toList();
         for (var item in parsed) {
-          if(parsed[0].sarinData!.isNotEmpty){
+          if(parsed[0].sarinData!.isNotEmpty) {
             final index = _scannedDetList.indexWhere(
                     (e) => e.bCode.toString() == item.bCode.toString());
             print(index);
@@ -97,20 +98,51 @@ class TrnLaserReceivedProvider extends BaseProvider {
           }
         }
         notifyListeners();
-
         return parsed;
       },
     );
     return result ?? [];
   }
 
+
+  Future<List<LaserDetModel>> laserSelectData({
+    required String bCode,
+    required String fromCrId,
+    required  gridData,
+  }) async {
+    final result = await request<List<LaserDetModel>>(
+      showLoader: false,
+      call: () => api.post(
+        '/spkDeptIss/laser-data-list-select',
+        data: {
+          'bCode': bCode,
+          'lastCrId': fromCrId.toString(),
+          'screenName': 'LASER_RECEIVED', // ✅ match backend condition
+          'gridData': gridData,
+          'FormType':  'LASERREC',
+        },
+      ),
+      onSuccess: (res) {
+        final responseData = res.data;
+        if (kDebugMode) {
+          print('responseData -- ${responseData.toString()}');
+        }
+        notifyListeners();
+        return responseData;
+      },
+    );
+    print('result');
+    return result ?? [];
+  }
+
+
   // ── CREATE ────────────────────────────────────────────────────────────────
   Future<bool> create(
       Map<String, dynamic>       values,
-      List<SpkDeptIssDetModel>   details,
+      List<LaserDetModel>   details,
       ) async {
     final model  = _buildModel(values);
-    final result = await request<SpkDeptIssMstModel>(
+    final result = await request<LaserMstModel>(
       call: () => api.post('/spkDeptIss', data: {
         ...model.toJson(),
         'details': details.map((e) => e.toJson()).toList(),
@@ -129,10 +161,10 @@ class TrnLaserReceivedProvider extends BaseProvider {
   Future<bool> update(
       int                        id,
       Map<String, dynamic>       values,
-      List<SpkDeptIssDetModel>   details,
+      List<LaserDetModel>   details,
       ) async {
     final model  = _buildModel(values);
-    final result = await request<SpkDeptIssMstModel>(
+    final result = await request<LaserMstModel>(
       call: () => api.put('/spkDeptIss/$id', data: {
         ...model.toJson(),
         'details': details.map((e) => e.toJson()).toList(),
@@ -163,14 +195,14 @@ class TrnLaserReceivedProvider extends BaseProvider {
   }
 
   // ── LOAD DETAILS ──────────────────────────────────────────────────────────
-  // Future<List<SpkDeptIssDetModel>> loadDetails(int mstID) async {
-  //   final result = await request<List<SpkDeptIssDetModel>>(
+  // Future<List<LaserDetModel>> loadDetails(int mstID) async {
+  //   final result = await request<List<LaserDetModel>>(
   //     call: () => api.get('/spkDeptIss/$mstID'),
   //     onSuccess: (res) {
   //       final data   = res.data;
   //       final rawDet = (data is Map ? data['det'] : data) as List? ?? [];
   //       return rawDet
-  //           .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
+  //           .map((e) => LaserDetModel.fromJson(e as Map<String, dynamic>))
   //           .toList();
   //     },
   //   );
@@ -178,19 +210,19 @@ class TrnLaserReceivedProvider extends BaseProvider {
   // }
 
   // ── PARSE { mst, det } response ───────────────────────────────────────────
-  // SpkDeptIssMstModel _parseMstResponse(dynamic data) {
+  // LaserMstModel _parseMstResponse(dynamic data) {
   //   if (data is Map) {
   //     if (data.containsKey('mst')) {
   //       final mst    = Map<String, dynamic>.from(data['mst'] as Map);
   //       final rawDet = data['det'] as List? ?? [];
   //       mst['details'] = rawDet;
-  //       return SpkDeptIssMstModel.fromJson(mst);
+  //       return LaserMstModel.fromJson(mst);
   //     }
-  //     return SpkDeptIssMstModel.fromJson(Map<String, dynamic>.from(data));
+  //     return LaserMstModel.fromJson(Map<String, dynamic>.from(data));
   //   }
   //   throw Exception('Unexpected response format');
   // }
-  SpkDeptIssMstModel _parseMstResponse(dynamic data) {
+  LaserMstModel _parseMstResponse(dynamic data) {
     if (data is Map) {
       Map<String, dynamic> mstJson;
       if (data.containsKey('mst')) {
@@ -207,15 +239,15 @@ class TrnLaserReceivedProvider extends BaseProvider {
       } else {
         mstJson = Map<String, dynamic>.from(data);
       }
-      return SpkDeptIssMstModel.fromJson(mstJson);
+      return LaserMstModel.fromJson(mstJson);
     }
     throw Exception('Unexpected response format');
   }
   // ── BUILD MODEL from form values ──────────────────────────────────────────
-  SpkDeptIssMstModel _buildModel(Map<String, dynamic> v) {
+  LaserMstModel _buildModel(Map<String, dynamic> v) {
     int? toI(String? s) => s == null || s.isEmpty ? null : int.tryParse(s);
 
-    return SpkDeptIssMstModel(
+    return LaserMstModel(
       spkDeptIssDate:  v['spkDeptIssDate'],
       fromCrID:        toI(v['fromCrID']?.toString()),
       toCrID:          toI(v['toCrID']?.toString()),
@@ -229,7 +261,7 @@ class TrnLaserReceivedProvider extends BaseProvider {
       ever:            toI(v['ever']?.toString()),
       entryType:       v['entryType'],
       repairing:       v['repairing'],
-      formType:        v['formType'] ?? 'LASER_RECEIVED',
+      formType:        v['formType'] ?? 'LASERREC',
       proType:         v['proType'],
       formType1:       v['formType1'],
       nukCrId:         toI(v['nukCrId']?.toString()),

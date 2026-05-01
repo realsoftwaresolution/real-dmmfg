@@ -389,7 +389,6 @@ class PacketDetModel {
     if (lotNo    != null) 'LotNo':   lotNo,
     if (lotCode  != null) 'LotCode': lotCode,   // default 'A' already set in model
     if (srno     != null) 'Srno':    srno,
-    'CharniCode':         charniCode,
     // ── Piece & Weight (form se) ──────────────────────────────────────────────
     if (pc != null) 'Pc': pc,
     if (wt != null) 'Wt': wt,

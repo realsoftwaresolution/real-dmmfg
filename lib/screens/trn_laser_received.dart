@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:diam_mfg/models/laser_mst_model.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
 import 'package:diam_mfg/providers/counter_manager_det_provider.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
@@ -14,13 +15,13 @@ import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/helper_functions.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:erp_data_table/erp_data_table.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
 import '../bootstrap.dart';
-import '../models/spkDeptIss_mst_model.dart';
 import '../models/user_visibility_model.dart';
 import '../providers/auth_provider.dart';
 import '../providers/counter_display_det_provider.dart';
@@ -64,8 +65,8 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
 
   // ── Selection state ────────────────────────────────────────────────────────
   Map<String, dynamic>? _selectedRow;
-  SpkDeptIssMstModel? _selectedMst;
-  SpkDeptIssDetModel? _scannedDet;
+  LaserMstModel? _selectedMst;
+  LaserDetModel? _scannedDet;
 
   // ── UI flags ───────────────────────────────────────────────────────────────
   bool _isEditMode = false;
@@ -85,7 +86,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
   int? _toDeptCodeVal;
 
   // ── Detail rows ────────────────────────────────────────────────────────────
-  List<SpkDeptIssDetModel> _detRows = [];
+  List<LaserDetModel> _detRows = [];
   List<Map<String, dynamic>> _detDisplay = [];
   List<String> _activeDetColumns = [];
   int? _editingDetIndex;
@@ -94,7 +95,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
   List<UserVisibilityModel> _fromDisplayFields = [];
   List<UserVisibilityModel> _toDisplayFields = [];
   String? _selectedRadioCode;
-
+  bool _isMackable = false;
   // ─────────────────────────────────────────────────────────────────────────
   //  PROVIDER SHORTCUTS
   // ─────────────────────────────────────────────────────────────────────────
@@ -468,7 +469,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       bCode: bCode,
       fromCrId: _fromCrId!.toString(),
     );
-
     if (!mounted) return;
     _isBCodePending = false;
 
@@ -499,6 +499,10 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     set('orgWt', _f3(r.wt));
     set('issPc', r.issPc?.toString());
     set('issWt', _f3(r.issWt));
+    set('recPc', r.recPc?.toString());
+    set('recWt', _f3(r.recWt));
+    set('dmWt', _f3(r.dmWt));
+    set('dmPer', _f3(r.dmPer));
     set('jnoRecPc', r.jnoRecPc?.toString());
     set('shapeCode', r.shapeCode?.toString());
     set('purityCode', r.purityCode?.toString());
@@ -517,40 +521,31 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
 
   /// DM WT = (Rec WT > 0 ? Rec WT : Iss WT) × DM % / 100
   void _calcDmWt() {
-    final recWt = double.tryParse(_entryVals['recwt'] ?? '') ?? 0;
+    final recWt = double.tryParse(_entryVals['recWt'] ?? '') ?? 0;
     final issWt = double.tryParse(_entryVals['issWt'] ?? '') ?? 0;
     final base = recWt > 0 ? recWt : issWt;
-    final dmPer = double.tryParse(_entryVals['dmper'] ?? '') ?? 0;
+    final dmPer = double.tryParse(_entryVals['dmPer'] ?? '') ?? 0;
     final dmWt = base * dmPer / 100;
-    _entryVals['dmwt'] = _f3(dmWt);
-    _erpFormKey.currentState?.updateFieldValue('dmwt', _f3(dmWt));
+    _entryVals['dmWt'] = _f3(dmWt);
+    _erpFormKey.currentState?.updateFieldValue('dmWt', _f3(dmWt));
   }
 
-  /// Loss WT = Iss WT − K WT,  Loss PC = Iss PC − K PC
   void _calcLoss() {
     final issWt = double.tryParse(_entryVals['issWt'] ?? '') ?? 0;
-    final recWt = double.tryParse(_entryVals['recwt'] ?? '') ?? 0; // 👈 ADD THIS
-    final kWt = double.tryParse(_entryVals['kwt'] ?? '') ?? 0;
-    final issPc = int.tryParse(_entryVals['issPc'] ?? '') ?? 0;
-    final kPc = int.tryParse(_entryVals['kpc'] ?? '') ?? 0;
+    final recWt = double.tryParse(_entryVals['recWt'] ?? '') ?? 0;
+    final topsWt = double.tryParse(_entryVals['topsWt'] ?? '') ?? 0;
 
-    // ✅ UPDATED FORMULA
-    final lossWt = issWt - recWt - kWt;
+    final lossWt = issWt - (recWt + topsWt);
 
-    _entryVals['losswt'] = _f3(lossWt);
-    _entryVals['losspc'] = '${issPc - kPc}';
-
-    _erpFormKey.currentState?.updateFieldValue('losswt', _f3(lossWt));
-    _erpFormKey.currentState?.updateFieldValue('losspc', '${issPc - kPc}');
+    _entryVals['lossWt'] = _f3(lossWt);
+    _erpFormKey.currentState?.updateFieldValue('lossWt', _f3(lossWt));
   }
 
   // ─────────────────────────────────────────────────────────────────────────
   //  ADD / EDIT ENTRY
   // ─────────────────────────────────────────────────────────────────────────
 
-  void _addEntry() {
-    final merged = _getMergedFields();
-
+  Future<void> _addEntry() async {
     // Resolve selected scan-type name from radio fields (either list)
     final selectedName = () {
       final f = _getRadioFields().values.firstWhereOrNull(
@@ -567,65 +562,13 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         return;
       }
     }
-
+    print(_entryVals);
     final issPc = int.tryParse(_entryVals['issPc'] ?? '') ?? 0;
     final issWt = double.tryParse(_entryVals['issWt'] ?? '') ?? 0;
-    final recPc = int.tryParse(_entryVals['recpc'] ?? '') ?? 0;
-    final recWt = double.tryParse(_entryVals['recwt'] ?? '') ?? 0;
+    final recPc = int.tryParse(_entryVals['recPc'] ?? '') ?? 0;
+    final recWt = double.tryParse(_entryVals['recWt'] ?? '') ?? 0;
     final kPc = int.tryParse(_entryVals['kpc'] ?? '') ?? 0;
     final kWt = double.tryParse(_entryVals['kwt'] ?? '') ?? 0;
-
-    final totalPc = recPc + kPc;
-    final totalWt = recWt + kWt;
-
-    final hasRecPair =
-        merged.containsKey('REC PC') || merged.containsKey('REC WT');
-    final hasKPair = merged.containsKey('K PC') || merged.containsKey('K WT');
-
-    // Total PC / WT must not exceed issued
-    if (hasRecPair || hasKPair) {
-      if (totalPc > issPc && issPc > 0) {
-        _showSnack(
-            'Rec PC ($recPc) + K PC ($kPc) = $totalPc cannot exceed Iss PC ($issPc)');
-        return;
-      }
-      if (totalWt > issWt + 0.0005 && issWt > 0) {
-        _showSnack(
-            'Rec Wt (${_f3(recWt)}) + K Wt (${_f3(kWt)}) = ${_f3(totalWt)} cannot exceed Iss Wt (${_f3(issWt)})');
-        return;
-      }
-    }
-
-    // Pair completeness — PC requires WT and vice-versa
-    if (hasRecPair) {
-      final recPcStr = _entryVals['recpc'] ?? '';
-      final recWtStr = _entryVals['recwt'] ?? '';
-      if (recPcStr.isNotEmpty && recWtStr.isEmpty) {
-        _showSnack('Rec WT required when Rec PC entered!');
-        _erpFormKey.currentState?.focusField('recwt');
-        return;
-      }
-      if (recWtStr.isNotEmpty && recPcStr.isEmpty) {
-        _showSnack('Rec PC required when Rec WT entered!');
-        _erpFormKey.currentState?.focusField('recpc');
-        return;
-      }
-    }
-
-    if (hasKPair) {
-      final kPcStr = _entryVals['kpc'] ?? '';
-      final kWtStr = _entryVals['kwt'] ?? '';
-      if (kPcStr.isNotEmpty && kWtStr.isEmpty) {
-        _showSnack('K WT required when K PC entered!');
-        _erpFormKey.currentState?.focusField('kwt');
-        return;
-      }
-      if (kWtStr.isNotEmpty && kPcStr.isEmpty) {
-        _showSnack('K PC required when K WT entered!');
-        _erpFormKey.currentState?.focusField('kpc');
-        return;
-      }
-    }
 
     final issPcStr = _entryVals['issPc'] ?? '';
     final issWtStr = _entryVals['issWt'] ?? '';
@@ -664,8 +607,11 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     _clearEntryFields();
 
     // Return focus to scan field
-    WidgetsBinding.instance.addPostFrameCallback(
-            (_) => _erpFormKey.currentState?.focusField('scanValue'));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 50), () {
+        _erpFormKey.currentState?.focusField('recWt');
+      });
+    });
 
     _erpFormKey.currentState?.setFieldReadOnly('fromCrId', true);
     _erpFormKey.currentState?.setFieldReadOnly('toCrId', true);
@@ -673,22 +619,33 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
   }
 
   /// Build a detail row for an existing (edit) record.
-  SpkDeptIssDetModel _buildEditedRow({
+  LaserDetModel _buildEditedRow({
     required int? srno,
-    required SpkDeptIssDetModel existing,
+    required LaserDetModel existing,
     required String issPcStr,
     required String issWtStr,
     required int recPc,
     required double recWt,
   }) {
-    return SpkDeptIssDetModel(
+    final isFirstRow = srno == 1;
+    final recWtVal = double.tryParse(_entryVals['recWt'] ?? '0') ?? 0;
+    final topsWtVal = double.tryParse(_entryVals['topsWt'] ?? '0') ?? 0;
+
+// ✅ ONLY row-level calculation
+    final issWtVal = double.tryParse(_entryVals['issWt'] ?? '0') ?? 0;
+    final lossWtVal = issWtVal - (recWtVal + topsWtVal);
+    final lossPerVal = issWtVal > 0
+        ? (lossWtVal / issWtVal) * 100
+        : 0.0;
+
+    return LaserDetModel(
       srno: srno,
       spkDeptIssMstID: existing.spkDeptIssMstID,
       // Preserved scan data
       id: existing.id,
       jno: existing.jno,
-      bCode: existing.bCode,
-      pktNo: existing.pktNo,
+      bCode: isFirstRow ? existing.bCode : '0',
+      pktNo: isFirstRow ? existing.pktNo : '',
       cutNo: existing.cutNo,
       clvCut: existing.clvCut,
       shapeCode: existing.shapeCode,
@@ -715,40 +672,60 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       recWt: recWt,
       totalPc: recPc,
       totalWt: recWt,
-      dmWt: double.tryParse(_entryVals['dmwt'] ?? ''),
-      dmPer: double.tryParse(_entryVals['dmper'] ?? ''),
+      dmWt: double.tryParse(_entryVals['dmWt'] ?? '0'),
+      dmPer: double.tryParse(_entryVals['dmPer'] ?? '0'),
       kPc: int.tryParse(_entryVals['kpc'] ?? ''),
       kWt: double.tryParse(_entryVals['kwt'] ?? ''),
       brPc: int.tryParse(_entryVals['brpc'] ?? ''),
       brWt: double.tryParse(_entryVals['brwt'] ?? ''),
-      lossPc: int.tryParse(_entryVals['losspc'] ?? ''),
-      lossWt: double.tryParse(_entryVals['losswt'] ?? ''),
-      topsPc: int.tryParse(_entryVals['topspc'] ?? ''),
-      topsWt: double.tryParse(_entryVals['topswt'] ?? ''),
-      charniCode: int.tryParse(_formValues['charniCode'] ?? ''),
+      lossWt: lossWtVal,
+      lossPer: lossPerVal,
+      topsPc: int.tryParse(_entryVals['topsPc'] ?? ''),
+      topsWt: double.tryParse(_entryVals['topsWt'] ?? ''),
       tensionsCode: int.tryParse(_formValues['tensionsCode'] ?? ''),
       employeeCode: int.tryParse(_entryVals['employee'] ?? ''),
       signerCode: int.tryParse(_entryVals['signer'] ?? ''),
       remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
       dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
+      partName: int.tryParse(_entryVals['partName'] ?? '0')
     );
   }
 
   /// Build a detail row for a new (add) record.
-  SpkDeptIssDetModel _buildNewRow({
+  LaserDetModel _buildNewRow({
     required int? srno,
     required String issPcStr,
     required String issWtStr,
     required int recPc,
     required double recWt,
   }) {
-    return SpkDeptIssDetModel(
+    final isFirstRow = srno == 1;
+
+    final recWtVal = double.tryParse(_entryVals['recWt'] ?? '0') ?? 0;
+    final topsWtVal = double.tryParse(_entryVals['topsWt'] ?? '0') ?? 0;
+
+// ✅ ONLY row-level calculation
+    final issWtVal = double.tryParse(_entryVals['issWt'] ?? '0') ?? 0;
+
+    final lossWtVal = issWtVal - (recWtVal + topsWtVal);
+
+    final lossPerVal = issWtVal > 0
+        ? (lossWtVal / issWtVal) * 100
+        : 0.0;
+
+
+    return LaserDetModel(
       srno: srno,
       id: _scannedDet?.id,
       jno: _scannedDet?.jno,
       jnoRecPc: _scannedDet?.jnoRecPc,
-      bCode: _scannedDet?.bCode ?? _entryVals['scanValue'],
-      pktNo: _scannedDet?.pktNo,
+      bCode: isFirstRow
+          ? (_scannedDet?.bCode ?? _entryVals['scanValue'])
+          : '0',
+
+      pktNo: isFirstRow
+          ? _scannedDet?.pktNo
+          : '',
       cutNo: _scannedDet?.cutNo,
       clvCut: _scannedDet?.clvCut,
       shapeCode: _scannedDet?.shapeCode,
@@ -762,7 +739,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       toCrId: _toCrId,
       deptProcessCode:
       int.tryParse(_formValues['deptProcessCode'] ?? ''),
-      charniCode: int.tryParse(_formValues['charniCode'] ?? ''),
       tensionsCode: int.tryParse(_formValues['tensionsCode'] ?? ''),
       pc: int.tryParse(_entryVals['orgPc'] ?? ''),
       wt: double.tryParse(_entryVals['orgWt'] ?? ''),
@@ -772,23 +748,24 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       recWt: recWt,
       totalPc: recPc,
       totalWt: recWt,
-      dmWt: double.tryParse(_entryVals['dmwt'] ?? ''),
-      dmPer: double.tryParse(_entryVals['dmper'] ?? ''),
+      dmWt: double.tryParse(_entryVals['dmWt'] ?? '0'),
+      dmPer: double.tryParse(_entryVals['dmPer'] ?? '0'),
       kPc: int.tryParse(_entryVals['kpc'] ?? ''),
       kWt: double.tryParse(_entryVals['kwt'] ?? ''),
       brPc: int.tryParse(_entryVals['brpc'] ?? ''),
       brWt: double.tryParse(_entryVals['brwt'] ?? ''),
-      lossPc: int.tryParse(_entryVals['losspc'] ?? ''),
-      lossWt: double.tryParse(_entryVals['losswt'] ?? ''),
-      topsPc: int.tryParse(_entryVals['topspc'] ?? ''),
-      topsWt: double.tryParse(_entryVals['topswt'] ?? ''),
+      lossWt: lossWtVal,
+      lossPer: lossPerVal,
+      topsPc: int.tryParse(_entryVals['topsPc'] ?? ''),
+      topsWt: double.tryParse(_entryVals['topsWt'] ?? ''),
       employeeCode: int.tryParse(_entryVals['employee'] ?? ''),
       signerCode: int.tryParse(_entryVals['signer'] ?? ''),
-      remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
+      remarksCode: int.tryParse(_entryVals['remark'] ?? ''),
       dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
       entryType: 'I',
-      formType: 'SPK',
+      formType: 'LASER_RECEIVED',
       pktType: 'A',
+        partName: int.tryParse(_entryVals['partName'] ?? '0')
     );
   }
 
@@ -809,70 +786,110 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     set('orgWt', _f3(r.wt));
     set('issPc', r.issPc?.toString());
     set('issWt', _f3(r.issWt));
-    set('recpc', r.recPc?.toString());
-    set('recwt', _f3(r.recWt));
-    set('dmper', r.dmPer?.toStringAsFixed(2));
-    set('dmwt', _f3(r.dmWt));
+    set('recPc', r.recPc?.toString());
+    set('recWt', _f3(r.recWt));
+    set('dmPer', r.dmPer?.toStringAsFixed(2));
+    set('dmWt', _f3(r.dmWt));
     set('kpc', r.kPc?.toString());
     set('kwt', _f3(r.kWt));
     set('brpc', r.brPc?.toString());
     set('brwt', _f3(r.brWt));
-    set('losspc', r.lossPc?.toString());
-    set('losswt', _f3(r.lossWt));
-    set('topspc', r.topsPc?.toString());
-    set('topswt', _f3(r.topsWt));
+    set('lossPc', r.lossPc?.toString());
+    set('lossWt', _f3(r.lossWt));
+    set('topsPc', r.topsPc?.toString());
+    set('topsWt', _f3(r.topsWt));
     set('employee', r.employeeCode?.toString());
     set('signer', r.signerCode?.toString());
     set('remarks', r.remarksCode?.toString());
     set('dueDay', r.dueDay?.toString());
+    set('partName', r.partName?.toString());
   }
+
 
   void _deleteDetRow(int idx) {
     setState(() {
+      if (_detRows.isEmpty) return;
+
+      // ✅ Correct types
+      final double firstIssWt = _detRows.first.issWt ?? 0.0;
+      final int firstIssPc = _detRows.first.issPc ?? 0;
+      dynamic bCode = _detRows.first.bCode ?? 0;
+      dynamic pktNo = _detRows.first.pktNo ?? 0;
+
       _detRows.removeAt(idx);
-      // Re-number srno
+
+      if (_detRows.isEmpty) {
+        _syncDetGrid();
+        return;
+      }
+
       _detRows = _detRows.asMap().entries.map((e) {
+        final i = e.key;
         final v = e.value;
-        return SpkDeptIssDetModel(
-          srno: e.key + 1,
+
+        final double issWt = (i == 0) ? firstIssWt : 0.0;
+        final int issPc = (i == 0) ? firstIssPc : 0;
+
+        final double recWt = v.recWt ?? 0;
+        final double topsWt = v.topsWt ?? 0;
+
+        final double lossWt = issWt - (recWt + topsWt);
+        final double lossPer =
+        issWt > 0 ? (lossWt / issWt) * 100 : 0.0;
+
+        return LaserDetModel(
+          srno: i + 1,
           spkDeptIssMstID: v.spkDeptIssMstID,
           id: v.id,
           jno: v.jno,
-          bCode: v.bCode,
-          pktNo: v.pktNo,
+
+          bCode: i == 0 ? bCode : '0',
+          pktNo: i == 0 ? pktNo : '',
+          partName: v.partName,
           cutNo: v.cutNo,
           pc: v.pc,
           wt: v.wt,
-          issPc: v.issPc,
-          issWt: v.issWt,
+
+          issPc: issPc,     // ✅ int
+          issWt: issWt,     // ✅ double
+
           recPc: v.recPc,
           recWt: v.recWt,
+
           dmPer: v.dmPer,
           dmWt: v.dmWt,
+
           kPc: v.kPc,
           kWt: v.kWt,
           brPc: v.brPc,
           brWt: v.brWt,
+
           lossPc: v.lossPc,
-          lossWt: v.lossWt,
+          lossWt: lossWt,
+          lossPer: lossPer,
+
           topsPc: v.topsPc,
           topsWt: v.topsWt,
+
           totalPc: v.totalPc,
           totalWt: v.totalWt,
-          charniCode: v.charniCode,
+
           tensionsCode: v.tensionsCode,
           employeeCode: v.employeeCode,
           signerCode: v.signerCode,
           remarksCode: v.remarksCode,
           dueDay: v.dueDay,
+
           fromCrId: v.fromCrId,
           toCrId: v.toCrId,
           fromDeptCode: v.fromDeptCode,
           toDeptCode: v.toDeptCode,
           deptProcessCode: v.deptProcessCode,
+
           entryType: v.entryType,
           formType: v.formType,
           pktType: v.pktType,
+
           shapeCode: v.shapeCode,
           purityCode: v.purityCode,
           colorCode: v.colorCode,
@@ -881,8 +898,11 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         );
       }).toList();
 
+      if (_editingDetIndex == idx) {
+        _editingDetIndex = null;
+      }
+
       _syncDetGrid();
-      if (_editingDetIndex == idx) _editingDetIndex = null;
     });
   }
 
@@ -891,24 +911,18 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _clearEntryFields() {
-    const keys = [
-      'orgPc', 'orgWt', 'issPc', 'issWt',
-      'recpc', 'recwt',
-      'dmwt', 'dmper',
-      'kpc', 'kwt',
-      'brpc', 'brwt',
-      'losspc', 'losswt',
-      'topspc', 'topswt',
-      'employee', 'signer', 'remarks', 'dueDay',
-      'scanValue',
+    const alwaysClear = [
+      'recWt',
+      'topsPc',
+      'topsWt',
+      'partName',
     ];
-    for (final k in keys) {
+
+    // Always clear basic fields
+    for (final k in alwaysClear) {
       _entryVals.remove(k);
       _erpFormKey.currentState?.updateFieldValue(k, '');
     }
-    _scannedDet = null;
-    _isBCodePending = false;
-    _entryVals['scanValue'] = '';
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -916,67 +930,87 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _syncDetGrid() {
-    final merged = _getMergedFields();
+    _activeDetColumns = [
+      'srno',
+      'bCode',
+      'pktNo',
+      'cutNo',
+      'recPc',
+      'recWt',
+      'mackRoughWt',   // Plan RgWt
+      'dmWt',
+      'diffPoWt',      // Plan PoWt
+      'dmPer',
+      'lossWt',
+      'lossPer',
+      'partName',
+      'shapeCode',
+      'oldShapeCode',  // Plan Shape
+      'purityCode',
+      'oldPurityCode', // Plan Purity
+      'colorCode',
+      'oldColorCode',  // Plan Color
+      'diam',
+      'acuraecy',      // Accuracy (note: typo in model)
+      'sarinOpt',      // Sarin Operator
+      'sarinMachine',
+      'qrCode',
+    ];
+    double totalLossWt = _detRows.isNotEmpty
+        ? (_detRows.first.issWt ?? 0) -
+        (_detRows.fold(0.0, (s, r) => s + (r.recWt ?? 0)) +
+            _detRows.fold(0.0, (s, r) => s + (r.topsWt ?? 0)))
+        : 0.0;
 
-    // Build column list based on what fields are actually configured
-    final cols = <String>['srno', 'bCode', 'pktNo', 'cutNo', 'orgPc', 'orgWt', 'issPc', 'issWt'];
+    double totalIssWt = _detRows.isNotEmpty
+        ? (_detRows.first.issWt ?? 0)
+        : 0.0;
 
-    void addIfPresent(String key1, String key2, List<String> colKeys) {
-      if (merged.containsKey(key1) || merged.containsKey(key2)) {
-        cols.addAll(colKeys);
-      }
-    }
+    _detDisplay = _detRows.map((r) {
+      final isFirst = r.srno == 1;   // ← add this
 
-    addIfPresent('REC PC', 'REC WT', ['recPc', 'recWt']);
-    addIfPresent('DM PER', 'DM WT', ['dmPer', 'dmWt']);
-    addIfPresent('K PC', 'K WT', ['kPc', 'kWt']);
-    addIfPresent('BR PC', 'BR WT', ['brPc', 'brWt']);
-    addIfPresent('LOSS PC', 'LOSS WT', ['lossPc', 'lossWt']);
-    addIfPresent('TOPS PC', 'TOPS WT', ['topsPc', 'topsWt']);
-
-    if (merged.containsKey('REMARKS')) cols.add('remarks');
-    if (merged.containsKey('EMPLOYEE')) cols.add('employee');
-    if (merged.containsKey('SIGNER')) cols.add('signer');
-
-    cols.addAll(['jnoRecPc', 'shapeCode', 'purityCode']);
-    _activeDetColumns = cols;
-
-    _detDisplay = _detRows.map((r) => {
-      'srno': r.srno?.toString() ?? '',
-      'bCode': r.bCode ?? '',
-      'pktNo': r.pktNo ?? '',
-      'cutNo': r.cutNo ?? '',
-      'orgPc': r.pc?.toString() ?? '',
-      'orgWt': _f3(r.wt),
-      'issPc': r.issPc?.toString() ?? '',
-      'issWt': _f3(r.issWt),
-      'recPc': r.recPc?.toString() ?? '',
-      'recWt': _f3(r.recWt),
-      'dmPer': r.dmPer?.toStringAsFixed(2) ?? '',
-      'dmWt': _f3(r.dmWt),
-      'kPc': r.kPc?.toString() ?? '',
-      'kWt': _f3(r.kWt),
-      'brPc': r.brPc?.toString() ?? '',
-      'brWt': _f3(r.brWt),
-      'lossPc': r.lossPc?.toString() ?? '',
-      'lossWt': _f3(r.lossWt),
-      'topsPc': r.topsPc?.toString() ?? '',
-      'topsWt': _f3(r.topsWt),
-      'employee': _employeeNameFor(r.employeeCode),
-      'signer': _signerNameFor(r.signerCode),
-      'remarks': _remarksNameFor(r.remarksCode),
-      'jnoRecPc': r.jnoRecPc?.toString() ?? '',
-      'shapeCode': _shapeNameFor(r.shapeCode),
-      'purityCode': _purityNameFor(r.purityCode),
+      return {
+        'srno':         r.srno?.toString() ?? '',
+        'bCode':        r.bCode ?? '',
+        'pktNo':        r.pktNo ?? '',
+        'cutNo':        r.cutNo ?? '',
+        'recPc':        r.recPc?.toString() ?? '',
+        'recWt':        _f3(r.recWt),
+        'mackRoughWt':  _f3(r.mackRoughWt),
+        'dmWt':         _f3(r.dmWt),
+        'diffPoWt':     _f3(r.diffPoWt),
+        'dmPer':        r.dmPer?.toStringAsFixed(2) ?? '',
+        'lossWt': isFirst ? _f3(totalLossWt) : '0.000',
+        'lossPer': isFirst
+            ? (totalIssWt > 0 ? (totalLossWt / totalIssWt) * 100 : 0)
+            .toStringAsFixed(2)
+            : '0.00',
+        'partName':     r.partName?.toString() ?? '',
+        'shapeCode':    r.shapeCode,
+        'oldShapeCode': r.oldShapeCode,
+        'purityCode':   r.purityCode,
+        'oldPurityCode':r.oldPurityCode,
+        'colorCode':    r.colorCode?.toString() ?? '',
+        'oldColorCode': r.oldColorCode?.toString() ?? '',
+        'diam':         r.diam?.toStringAsFixed(2) ?? '0',
+        'acuraecy':     r.acuraecy?.toStringAsFixed(2) ?? '',
+        'sarinOpt':     r.sarinOpt ?? '',
+        'sarinMachine': r.sarinMachine ?? '',
+        'qrCode':       r.qrCode ?? '',
+        'remarkCode':       _entryVals['remark'] ?? '',
+        'fType':       _isMackable ? 'MACKABLE' : 'SUBPACKET',
+        'FormType':       'LASERREC',
+      };
     }).toList();
   }
+
 
   // ─────────────────────────────────────────────────────────────────────────
   //  ROW TAP (load existing record)
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _onRowTap(Map<String, dynamic> row) async {
-    final raw = row['_raw'] as SpkDeptIssMstModel;
+    final raw = row['_raw'] as LaserMstModel;
     final prov = context.read<TrnLaserReceivedProvider>();
     final details = await prov.loadDetails(raw.spkDeptIssMstID!);
     if (!mounted) return;
@@ -1019,8 +1053,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         'toDept': _toDeptName ?? '',
         'deptProcessCode': raw.deptProcessCode?.toString() ?? '',
         'deptName': _toDeptName ?? '',
-        if (lastDet?.charniCode != null)
-          'charniCode': lastDet!.charniCode!.toString(),
         if (lastDet?.tensionsCode != null)
           'tensionsCode': lastDet!.tensionsCode!.toString(),
         if (_selectedRadioCode != null) 'scanType': _selectedRadioCode!,
@@ -1041,57 +1073,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       return DateFormat('hh:mm a').format(DateTime.parse(raw));
     } catch (_) {
       return raw;
-    }
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  //  SAVE
-  // ─────────────────────────────────────────────────────────────────────────
-
-  Future<void> _onSave(Map<String, dynamic> values) async {
-    final prov = context.read<TrnLaserReceivedProvider>();
-
-    String toIso(String? v) {
-      if (v == null || v.isEmpty) return '';
-      try {
-        return DateFormat('yyyy-MM-dd')
-            .format(DateFormat('dd/MM/yyyy').parse(v));
-      } catch (_) {
-        return v;
-      }
-    }
-
-    int? toDeptCode;
-    if (_toCrId != null) {
-      try {
-        toDeptCode = context.read<CounterProvider>().list
-            .firstWhere((c) => c.crId == _toCrId)
-            .deptCode;
-      } catch (_) {}
-    }
-
-    final merged = Map<String, dynamic>.from(values)
-      ..['Stime'] = DateFormat('hh:mm a').format(DateTime.now())
-      ..['Sdate'] = DateFormat('yyyy-MM-dd').format(DateTime.now())
-      ..['spkDeptIssDate'] = toIso(values['spkDeptIssDate']?.toString())
-      ..['fromCrID'] = _fromCrId?.toString() ?? ''
-      ..['toCrID'] = _toCrId?.toString() ?? ''
-      ..['deptCode'] = toDeptCode?.toString() ?? '';
-
-    final success = _isEditMode && _selectedMst != null
-        ? await prov.update(_selectedMst!.spkDeptIssMstID!, merged, _detRows)
-        : await prov.create(merged, _detRows);
-
-    if (!mounted) return;
-    if (success) {
-      final wasEdit = _isEditMode;
-      _resetForm();
-      await ErpResultDialog.showSuccess(
-        context: context,
-        theme: _theme,
-        title: wasEdit ? 'Updated' : 'Saved',
-        message: wasEdit ? 'Laser Received updated.' : 'Laser Received saved.',
-      );
     }
   }
 
@@ -1165,14 +1146,24 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
   // ─────────────────────────────────────────────────────────────────────────
   //  BUILD FORM ROWS
   // ─────────────────────────────────────────────────────────────────────────
-
   List<List<ErpFieldConfig>> _buildFormRows() {
     final counterProv = context.read<CounterProvider>();
     final mgDetProv = context.read<CounterManagerDetProvider>();
     final procProv = context.read<DeptProcessProvider>();
     final charniProv = context.read<CharniProvider>();
     final tensProv = context.read<TensionsProvider>();
-
+    final remarkProv = context.read<RemarksProvider>();
+//CUT
+    final remarkItems = remarkProv.list.where((e) => e.active == true).toList()
+      ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+    final remarkDropdown = remarkItems
+        .map(
+          (e) => ErpDropdownItem(
+        label: e.remarksName ?? '',
+        value: e.remarksCode?.toString() ?? '',
+      ),
+    )
+        .toList();
     final isFromSelected = _fromCrId != null;
     final isToSelected = _toCrId != null;
 
@@ -1237,16 +1228,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
             label: label, value: code.toString());
       }).toList();
     }();
-
-    // ── CHARNI dropdown ───────────────────────────────────────────────────
-    final charniItems = charniProv.list
-        .where((e) => e.active == true)
-        .map((e) => ErpDropdownItem(
-      label: e.charniName ?? '',
-      value: e.charniCode?.toString() ?? '',
-    ))
-        .toList();
-
     // ── TENSIONS dropdown ─────────────────────────────────────────────────
     final tensItems = tensProv.list.where((e) => e.active == true).toList()
       ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
@@ -1337,21 +1318,33 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         ErpFieldConfig(
             key: 'remark',
             label: 'REMARK',
-            type: ErpFieldType.text,
+            type: ErpFieldType.dropdown,
+            dropdownItems: remarkDropdown,
             width: 250,
-            sectionIndex: 3),
+            sectionIndex: 3
+        ),
+        ErpFieldConfig(
+            key: 'mackable',
+            label: _isMackable ? 'MACKABLE' : 'SUBPACKET',
+            type: ErpFieldType.checkbox,
+            width: 200,
+            sectionIndex: 3
+        ),
         ErpFieldConfig(
             key: 'scanValue',
             label: 'BCODE',
             type: ErpFieldType.text,
             isEntryField: true,
-            readOnly: false,
+            readOnly: _detDisplay.isNotEmpty,
             sectionIndex: 3,
-            width: 200),
+            width: 200
+        ),
       ]
     ];
 
-
+    final isFirstRow = _detRows.isEmpty || _editingDetIndex == 0;
+    final isEditing = _editingDetIndex != null;
+    final isOtherRowEditing = isEditing && _editingDetIndex != 0;
     // ─────────────────────────────────────────────────────────────────────
     //  ENTRY SECTION (sectionIndex 3)
     // ─────────────────────────────────────────────────────────────────────
@@ -1403,7 +1396,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         ErpFieldConfig(
             key: 'recWt',
             label: 'REC WT',
-            type: ErpFieldType.amount,
+            type: ErpFieldType.text,
             isEntryField: true,
             sectionIndex: 3,
             flex: 1),
@@ -1414,6 +1407,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
             label: 'DM PER',
             type: ErpFieldType.number,
             isEntryField: true,
+            readOnly: true,
             sectionIndex: 3,
             flex: 1),
         ErpFieldConfig(
@@ -1435,36 +1429,37 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
             sectionIndex: 3,
             flex: 1),
 
-        // TOPS
+        // TOPS PC
         ErpFieldConfig(
-            key: 'topsPc',
-            label: 'TOPS PC',
-            type: ErpFieldType.number,
-            isEntryField: true,
-            sectionIndex: 3,
-            flex: 1),
-        ErpFieldConfig(
-            key: 'topsWt',
-            label: 'TOPS WT',
-            type: ErpFieldType.amount,
-            isEntryField: true,
-            sectionIndex: 3,
-            flex: 1),
+          key: 'topsPc',
+          label: 'TOPS PC',
+          type: ErpFieldType.number,
+          isEntryField: true,
+          readOnly: !isFirstRow,
+          sectionIndex: 3,
+          flex: 1,
+        ),
 
-        // PARTY NAME (Dropdown)
+// TOPS WT
+        ErpFieldConfig(
+          key: 'topsWt',
+          label: 'TOPS WT',
+          type: ErpFieldType.amount,
+          isEntryField: true,
+          readOnly: !isFirstRow,
+          sectionIndex: 3,
+          flex: 1,
+        ),
+
+// PART NAME
         ErpFieldConfig(
           key: 'partName',
           label: 'PART NAME',
-          type: ErpFieldType.dropdown,
+          type: ErpFieldType.amount,
           isEntryField: true,
           showAddButton: true,
           sectionIndex: 3,
-          flex: 2,
-          dropdownItems: context.read<CounterProvider>().list.map((e) =>
-              ErpDropdownItem(
-                label: e.logInName ?? '',
-                value: e.crId?.toString() ?? '',
-              )).toList(),
+          flex: 1,
         ),
       ];
 
@@ -1552,47 +1547,42 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
   ];
 
   // ─────────────────────────────────────────────────────────────────────────
-  //  FOOTER TOTALS
-  // ─────────────────────────────────────────────────────────────────────────
-
-  Map<String, dynamic> get _footerTotals => {
-    'count': _detRows.length,
-    'issPc': _detRows.fold(0, (s, r) => s + (r.issPc ?? 0)),
-    'issWt': _detRows.fold(0.0, (s, r) => s + (r.issWt ?? 0)),
-  };
-
-  // ─────────────────────────────────────────────────────────────────────────
   //  COL LABEL
   // ─────────────────────────────────────────────────────────────────────────
 
   String _colLabel(String key) {
     const labels = {
-      'srno': 'SR NO',
-      'bCode': 'BCODE',
-      'pktNo': 'PKT NO',
-      'cutNo': 'CUT NO',
-      'orgPc': 'ORG PC',
-      'orgWt': 'ORG WT',
-      'issPc': 'ISS PC',
-      'issWt': 'ISS WT',
-      'recPc': 'REC PC',
-      'recWt': 'REC WT',
-      'dmWt': 'DM WT',
-      'dmPer': 'DM PER',
-      'kPc': 'K PC',
-      'kWt': 'K WT',
-      'brPc': 'BR PC',
-      'brWt': 'BR WT',
-      'lossPc': 'LOSS PC',
-      'lossWt': 'LOSS WT',
-      'topsPc': 'TOPS PC',
-      'topsWt': 'TOPS WT',
-      'remarks': 'REMARKS',
-      'employee': 'EMPLOYEE',
-      'signer': 'SIGNER',
-      'jnoRecPc': 'JNO REC PC',
-      'shapeCode': 'SHAPE',
-      'purityCode': 'PURITY',
+      // left grid
+      'srno':          'SR NO',
+      'bCode':         'BCODE',
+      'pktNo':         'PKT NO',
+      'cutNo':         'CUT NO',
+      'recPc':         'REC PC',
+      'recWt':         'REC WT',
+      'mackRoughWt':   'PLAN RGWT',
+      'dmWt':          'DM WT',
+      'diffPoWt':      'PLAN POWT',
+      'dmPer':         'DM PER',
+      'lossWt':        'LOSS WT',
+      'lossPer':       'LOSS PER',
+      'partName':      'PART NAME',
+      'shapeCode':     'SHAPE',
+      'oldShapeCode':  'PLAN SHAPE',
+      'purityCode':    'PURITY',
+      'oldPurityCode': 'PLAN PURITY',
+      'colorCode':     'COLOR',
+      'oldColorCode':  'PLAN COLOR',
+      'diam':          'DIAM',
+      'acuraecy':      'ACCURACY',
+      'sarinOpt':      'SARIN OPERATOR',
+      'sarinMachine':  'SARIN MACHINE',
+      'qrCode':        'QRCODE',
+      // right grid
+      'rPartName':     'PART',
+      'rColor':        'COLOR',
+      'rPurity':       'PURITY',
+      'rRgWt':         'RGWT',
+      'rPoWt':         'POWT',
     };
     return labels[key] ?? key;
   }
@@ -1624,6 +1614,30 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
   // ─────────────────────────────────────────────────────────────────────────
   //  FORM WIDGET
   // ─────────────────────────────────────────────────────────────────────────
+  bool _validateEntry() {
+    final recWt = double.tryParse(_entryVals['recWt'] ?? '');
+    final recPc = int.tryParse(_entryVals['recPc'] ?? '');
+    final topsWt = double.tryParse(_entryVals['topsWt'] ?? '0') ?? 0;
+
+    if (recWt == null || recWt <= 0) {
+      _showSnack('Enter valid RecWt');
+      _erpFormKey.currentState?.focusField('recWt');
+      return false;
+    }
+
+    if (recPc == null || recPc <= 0) {
+      _showSnack('Enter valid RecPc');
+      _erpFormKey.currentState?.focusField('recPc');
+      return false;
+    }
+
+    if (topsWt < 0) {
+      _showSnack('TopsWt cannot be negative');
+      _erpFormKey.currentState?.focusField('topsWt');
+      return false;
+    }
+    return true;
+  }
 
   Widget _buildForm(BuildContext context) {
     return ErpForm(
@@ -1632,6 +1646,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       autoStartAdding: _isAdding,
       addButtonSections: const {3},
       logo: AppImages.logo,
+      isShowSaveButton: false,
       title: 'LASER RECEIVED ENTRY',
       tabBarBackgroundColor: const Color(0xfff2f0ef),
       tabBarSelectedColor: _theme.primaryGradient.first,
@@ -1642,25 +1657,11 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
 
       onEntryAdd: (sectionIndex) {
         if (sectionIndex != 3) return;
-
-        // Resolve selected scan-type from radio fields (either list)
-        final selectedName = () {
-          final f = _getRadioFields().values.firstWhereOrNull(
-                  (f) => f.userVisibilityCode.toString() == _selectedRadioCode);
-          return (f?.userVisibilityName ?? '').toUpperCase();
-        }();
-
-        if (selectedName == 'BCODE' &&
-            _scannedDet == null &&
-            _editingDetIndex == null) {
-          Future.delayed(const Duration(milliseconds: 50),
-                  () => _erpFormKey.currentState?.focusField('scanValue'));
-          return;
-        }
+        if (!_validateEntry()) return;   // ✅ ADD THIS
         _addEntry();
       },
 
-      onFieldChanged: (key, value) {
+      onFieldChanged: (key, value) async {
         _formValues[key] = value.toString();
         debugPrint('onFieldChanged: $key');
 
@@ -1678,9 +1679,18 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
           case 'deptProcessCode':
             _onProcessSelected(value.toString());
             Future.delayed(const Duration(milliseconds: 100),
-                    () => _erpFormKey.currentState?.focusField('scanValue'));
+                    () => _erpFormKey.currentState?.focusField('remark'));
+          case 'mackable':
+            final isChecked = value == true || value.toString() == 'true';
 
-          case 'scanValue':
+            setState(() {
+              _isMackable = isChecked;
+            });
+
+            _entryVals[key] = isChecked.toString();
+            break;
+
+            case 'scanValue':
             _entryVals[key] = value.toString();
 
           case 'dmper':
@@ -1693,10 +1703,21 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
             }
             _calcDmWt();
 
-          case 'recwt':
+          case 'recWt':
             _entryVals[key] = value.toString();
-            _calcDmWt();
-
+            if(value.toString() == '+') {
+              final data = await context.read<TrnLaserReceivedProvider>().laserSelectData(
+                bCode: _entryVals['scanValue'] ?? '',
+                fromCrId: _fromCrId!.toString(),
+                gridData: _detDisplay
+              );
+              if (kDebugMode) {
+                print('data -- $data');
+              }
+            }else{
+              _calcDmWt();
+            }
+            break;
           case 'kwt':
             _entryVals[key] = value.toString();
             _calcLoss();
@@ -1767,55 +1788,93 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       },
 
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
-      onSave: _onSave,
+      // onSave: _onSave,
       onCancel: _resetForm,
       onDelete: _isEditMode ? _onDelete : null,
       onSearch: () => setState(() => _showTableOnMobile = true),
 
       detailBuilder: (ctx) {
         final t = ctx.erpTheme;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+
+        // ── RIGHT grid ─────────────────────────────────────────────────────────
+        const rightColumns = ['rPartName', 'rColor', 'rPurity', 'rRgWt', 'rPoWt'];
+
+        final rightDisplay = _detRows.map((r) => {
+          'rPartName': r.partName?.toString() ?? '-',
+          'rColor':    r.colorCode?.toString() ?? '-',
+          'rPurity':   _purityNameFor(r.purityCode),
+          'rRgWt':     _f3(r.mackRoughWt),
+          'rPoWt':     _f3(r.diffPoWt),
+        }).toList();
+
+        const leftAlignments = <String, TextAlign>{
+          'recPc':        TextAlign.right,
+          'recWt':        TextAlign.right,
+          'mackRoughWt':  TextAlign.right,
+          'dmWt':         TextAlign.right,
+          'diffPoWt':     TextAlign.right,
+          'dmPer':        TextAlign.right,
+          'lossWt':       TextAlign.right,
+          'lossPer':      TextAlign.right,
+          'diam':         TextAlign.left,
+          'acuraecy':     TextAlign.right,
+        };
+
+        const rightAlignments = <String, TextAlign>{
+          'rRgWt': TextAlign.right,
+          'rPoWt': TextAlign.right,
+        };
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (_detDisplay.isNotEmpty)
-              ErpEntryGrid(
+            // ── LEFT grid ─────────────────────────────────────────────────────
+            Expanded(
+              flex: 6,
+              child: _detDisplay.isNotEmpty
+                  ? ErpEntryGrid(
                 data: _detDisplay,
                 columns: _activeDetColumns,
                 title: 'DETAILS',
+                showTitleBar: false,
                 theme: t,
-                onDeleteRow: _deleteDetRow,
-                onEditRow: _editDetRow,
                 editingIndex: _editingDetIndex,
                 columnLabels: {
                   for (final c in _activeDetColumns) c: _colLabel(c)
                 },
-                columnAlignments: const {
-                  'orgPc': TextAlign.right,
-                  'orgWt': TextAlign.right,
-                  'issPc': TextAlign.right,
-                  'issWt': TextAlign.right,
-                  'recPc': TextAlign.right,
-                  'recWt': TextAlign.right,
-                  'dmPer': TextAlign.right,
-                  'dmWt': TextAlign.right,
-                  'kPc': TextAlign.right,
-                  'kWt': TextAlign.right,
-                  'brPc': TextAlign.right,
-                  'brWt': TextAlign.right,
-                  'lossPc': TextAlign.right,
-                  'lossWt': TextAlign.right,
-                  'topsPc': TextAlign.right,
-                  'topsWt': TextAlign.right,
-                  'remarks': TextAlign.right,
-                  'employee': TextAlign.right,
-                  'signer': TextAlign.right,
-                  'jnoRecPc': TextAlign.right,
-                  'shapeCode': TextAlign.right,
-                  'purityCode': TextAlign.right,
-                },
+                columnAlignments: leftAlignments,
                 footerTotCount: 'Tot: ${_detRows.length}',
                 footerTotals: _buildFooterTotals(),
-              ),
+                onDeleteRow: _deleteDetRow,
+                onEditRow: _editDetRow,
+              )
+                  : const SizedBox.shrink(),
+            ),
+
+            const SizedBox(width: 10),
+            // ── RIGHT grid ────────────────────────────────────────────────────
+            Expanded(
+              flex: 1,
+              child: rightDisplay.isNotEmpty
+                  ? ErpEntryGrid(
+                data: rightDisplay,
+                columns: rightColumns,
+                title: 'PLAN',
+                showTitleBar: false,
+                theme: t,
+                editingIndex: _editingDetIndex,
+                columnLabels: {
+                  for (final c in rightColumns) c: _colLabel(c)
+                },
+                columnAlignments: rightAlignments,
+                footerTotCount: 'Tot: ${_detRows.length}',
+                footerTotals: {
+                  'rRgWt': _f3(_detRows.fold(0.0, (s, r) => s! + (r.mackRoughWt ?? 0))),
+                  'rPoWt': _f3(_detRows.fold(0.0, (s, r) => s! + (r.diffPoWt ?? 0))),
+                },
+              )
+                  : const SizedBox.shrink(),
+            ),
           ],
         );
       },
@@ -1824,38 +1883,32 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
 
   /// Compute footer totals map for ErpEntryGrid.
   Map<String, String> _buildFooterTotals() {
-    double fold(double Function(SpkDeptIssDetModel) fn) =>
+    double fold(double Function(LaserDetModel) fn) =>
         _detRows.fold(0.0, (s, r) => s + fn(r));
-    int foldInt(int Function(SpkDeptIssDetModel) fn) =>
+    int foldInt(int Function(LaserDetModel) fn) =>
         _detRows.fold(0, (s, r) => s + fn(r));
 
-    final totDmWt = fold((r) => r.dmWt ?? 0);
+    final totDmWt  = fold((r) => r.dmWt  ?? 0);
     final totRecWt = fold((r) => r.recWt ?? 0);
     final totIssWt = fold((r) => r.issWt ?? 0);
-    final base = totRecWt > 0 ? totRecWt : totIssWt;
-    final dmPerStr =
-    base > 0 ? (totDmWt / base * 100).toStringAsFixed(2) : '0.00';
+    final base     = totRecWt > 0 ? totRecWt : totIssWt;
+    final dmPerStr = base > 0
+        ? (totDmWt / base * 100).toStringAsFixed(2)
+        : '0.00';
+    double totalRecWt = _detRows.fold(0.0, (s, r) => s + (r.recWt ?? 0));
+    double totalTopsWt = _detRows.fold(0.0, (s, r) => s + (r.topsWt ?? 0));
+    double firstIssWt = _detRows.isNotEmpty ? (_detRows.first.issWt ?? 0) : 0;
 
     return {
-      'orgPc': '${foldInt((r) => r.pc ?? 0)}',
-      'orgWt': _f3(fold((r) => r.wt ?? 0)),
-      'issPc': '${foldInt((r) => r.issPc ?? 0)}',
-      'issWt': _f3(totIssWt),
-      'recPc': '${foldInt((r) => r.recPc ?? 0)}',
-      'recWt': _f3(totRecWt),
-      'dmPer': dmPerStr,
-      'dmWt': _f3(totDmWt),
-      'kPc': '${foldInt((r) => r.kPc ?? 0)}',
-      'kWt': _f3(fold((r) => r.kWt ?? 0)),
-      'brPc': '${foldInt((r) => r.brPc ?? 0)}',
-      'brWt': _f3(fold((r) => r.brWt ?? 0)),
-      'lossPc': '${foldInt((r) => r.lossPc ?? 0)}',
-      'lossWt': _f3(fold((r) => r.lossWt ?? 0)),
-      'topsPc': '${foldInt((r) => r.topsPc ?? 0)}',
-      'topsWt': _f3(fold((r) => r.topsWt ?? 0)),
+      'recPc':        '${foldInt((r) => r.recPc    ?? 0)}',
+      'recWt':        _f3(totRecWt),
+      'mackRoughWt':  _f3(fold((r) => r.mackRoughWt ?? 0)),
+      'dmWt':         _f3(totDmWt),
+      'diffPoWt':     _f3(fold((r) => r.diffPoWt   ?? 0)),
+      'dmPer':        dmPerStr,
+      'lossWt': _f3(firstIssWt - (totalRecWt + totalTopsWt)),
     };
   }
-
   // ─────────────────────────────────────────────────────────────────────────
   //  TABLE WIDGET
   // ─────────────────────────────────────────────────────────────────────────
@@ -1864,7 +1917,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     final counterProv = context.read<CounterProvider>();
     final procProv = context.read<DeptProcessProvider>();
 
-    final data = prov.list.map((e) {
+    final data = prov.list.where((e) => e.formType == 'LASERREC').map((e) {
       String fromName = '', toName = '', processName = '';
       String fromDeptName = '', toDeptName = '';
 

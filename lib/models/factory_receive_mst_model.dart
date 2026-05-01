@@ -1,142 +1,123 @@
-class SpkDeptIssMstModel {
-  final int?    spkDeptIssMstID;
-  final String? spkDeptIssDate;
-  final int?    fromCrID;
-  final int?    toCrID;
-  final int?    deptProcessCode;
-  final int?    deptCode;
-  final String? sflag;
-  final String? sdate;
-  final String? stime;
-  final int?    logID;
-  final String? pcID;
-  final int?    ever;
-  final String? entryType;
-  final String? repairing;
-  final String? formType;
-  final String? proType;
-  final String? formType1;
-  final int?    nukCrId;
-  final String? planType;
+class FactoryReceiveMstModel {
+  final int? factoryRecMstID;
+  final String? factoryRecDate;
+  final String? time;
 
-  final List<SpkDeptIssDetModel> details;
+  final int? factoryCode;
+  final dynamic EntryType;
+  final String? factoryName;
 
-  // ── totals from DB ─────────────────────────────────────────────────────────
-  final double? totalWtDb;
-  final int?    totalPcDb;
-  // Fields mein add karo (existing fields ke baad):
-  final int?    totPkt;
-  final String? users;
-  final int?    jnoFirst;
-  final int?    bCode;
+  final int? pkt;
+  final int? pc;
+  final double? wt;
 
-  // Replace karo:
-  double get totalWt => totalWtDb ?? details.fold(0.0, (s, d) => s + (d.totalWt ?? 0));
-  int    get totalPc => totalPcDb ?? details.fold(0,   (s, d) => s + (d.totalPc ?? 0));
+  final int? issPc;
+  final double? issWt;
 
-  const SpkDeptIssMstModel({
-    this.spkDeptIssMstID,
-    this.spkDeptIssDate,
-    this.fromCrID,
-    this.toCrID,
-    this.deptProcessCode,
-    this.deptCode,
-    this.sflag,
-    this.sdate,
-    this.totPkt,
-    this.users,
-    this.jnoFirst,
-    this.stime,
-    this.logID,
-    this.pcID,
-    this.ever,
-    this.entryType,
-    this.repairing,
-    this.formType,
-    this.proType,
-    this.formType1,
-    this.nukCrId,
-    this.planType,
-    this.details = const [],
-    this.totalWtDb,
-    this.totalPcDb,
-    this.bCode,
+  final int? recPc;
+  final double? recWt;
+
+  final int? kPc;
+  final double? kWt;
+
+  final int? brPc;
+  final double? brWt;
+
+  final int? lossPc;
+  final double? lossWt;
+
+  final double? dmWt;
+  final double? dmPer;
+
+  const FactoryReceiveMstModel({
+    this.EntryType,
+    this.factoryRecMstID,
+    this.factoryRecDate,
+    this.time,
+    this.factoryCode,
+    this.factoryName,
+    this.pkt,
+    this.pc,
+    this.wt,
+    this.issPc,
+    this.issWt,
+    this.recPc,
+    this.recWt,
+    this.kPc,
+    this.kWt,
+    this.brPc,
+    this.brWt,
+    this.lossPc,
+    this.lossWt,
+    this.dmWt,
+    this.dmPer,
   });
 
-  factory SpkDeptIssMstModel.fromJson(Map<String, dynamic> json) =>
-      SpkDeptIssMstModel(
-        spkDeptIssMstID: json['SPKDeptIssMstID'],
-        spkDeptIssDate:  _dateOnly(json['SPKDeptIssDate']),
-        fromCrID:        json['FromCrID'],
-        toCrID:          json['ToCrID'],
-        deptProcessCode: json['DeptProcessCode'],
-        deptCode:        json['DeptCode'],
-        sflag:           json['Sflag'],
-        sdate:           _dateOnly(json['Sdate']),
-        stime:           json['Stime'],
-        logID:           json['LogID'],
-        pcID:            json['PcID'],
-        ever:            json['Ever'],
-        entryType:       json['EntryType'],
-        repairing:       json['Repairing'],
-        formType:        json['FormType'],
-        proType:         json['ProType'],
-        formType1:       json['FormType1'],
-        nukCrId:         json['NukCrId'],
-        planType:        json['PlanType'],
-        bCode:        json['BCode'],
-        totPkt:   json['TotPkt']  != null ? (json['TotPkt']  as num).toInt() : null,
-        users:    json['Users']?.toString(),
-        jnoFirst: json['Jno']     != null ? (json['Jno']     as num).toInt() : null,
-        totalWtDb: json['TotalWt'] != null
-            ? double.tryParse(json['TotalWt'].toString())
-            : null,
-        totalPcDb: json['TotalPc'] != null
-            ? (json['TotalPc'] as num).toInt()
-            : null,
-        details: (json['details'] as List? ?? [])
-            .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
-            .toList(),
-      );
+  factory FactoryReceiveMstModel.fromJson(Map<String, dynamic> json) {
+    return FactoryReceiveMstModel(
+      factoryRecMstID: json['FactoryRecMstID'],
+      factoryRecDate: _dateOnly(json['FactoryRecDate']),
+      time: json['Time']?.toString(),
 
+      factoryCode: json['FactoryCode'],
+      factoryName: json['FactoryName'],
+      EntryType: json['EntryType'],
+
+      pkt: json['Pkt'],
+      pc: json['Pc'],
+      wt: _toDouble(json['Wt']),
+
+      issPc: json['IssPc'],
+      issWt: _toDouble(json['IssWt']),
+
+      recPc: json['RecPc'],
+      recWt: _toDouble(json['RecWt']),
+
+      kPc: json['KPc'],
+      kWt: _toDouble(json['KWt']),
+
+      brPc: json['BrPc'],
+      brWt: _toDouble(json['BrWt']),
+
+      lossPc: json['LossPc'],
+      lossWt: _toDouble(json['LossWt']),
+
+      dmWt: _toDouble(json['DmWt']),
+      dmPer: _toDouble(json['DmPer']),
+    );
+  }
+
+  // ❗ Not required for list API, but keep minimal
   Map<String, dynamic> toJson() => {
-    'SPKDeptIssDate':  spkDeptIssDate,
-    'FromCrID':        fromCrID,
-    'ToCrID':          toCrID,
-    'DeptProcessCode': deptProcessCode,
-    'DeptCode':        deptCode,
-    'Sflag':           sflag,
-    'Sdate':           sdate,
-    'Stime':           stime,
-    'LogID':           logID,
-    'PcID':            pcID,
-    'Ever':            ever,
-    'EntryType':       entryType,
-    'Repairing':       repairing,
-    'FormType':        formType,
-    'ProType':         proType,
-    'FormType1':       formType1,
-    'NukCrId':         nukCrId,
-    'PlanType':        planType,
-    'BCode':        bCode,
+    "FactoryRecDate": factoryRecDate,
+    "FactoryCode": factoryCode,
+    "EntryType": EntryType,
   };
 
+  // ───────── HELPERS ─────────
   static String? _dateOnly(dynamic v) {
     if (v == null) return null;
     final s = v.toString();
     return s.length >= 10 ? s.substring(0, 10) : s;
   }
+
+  static double? _toDouble(dynamic v) {
+    if (v == null) return null;
+    return double.tryParse(v.toString());
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SpkDeptIssDetModel
+//  FactoryReceiveDetModel
 // ─────────────────────────────────────────────────────────────────────────────
-class SpkDeptIssDetModel {
-  final int?    spkDeptIssDetID;
-  final int?    spkDeptIssMstID;
+class FactoryReceiveDetModel {
+  final int? factoryIssDetID;
+  final int?    factoryRecMstID;
+  final int?    FactoryRecDetID;
   final int?    srno;
   final int?    id;
   final int?    jno;
+  final dynamic   MfgCut;
   final String? bCode;
   final String? pktNo;
   final int? fromDeptCode;  // ← ADD
@@ -276,11 +257,15 @@ class SpkDeptIssDetModel {
   final dynamic planPurity;
   final dynamic planShape;
   final dynamic orderMstId;
+  final dynamic CrID;
+  final dynamic LastCrID;
 
-  const SpkDeptIssDetModel({
-    this.spkDeptIssDetID,
-    this.spkDeptIssMstID,
+  const FactoryReceiveDetModel({
+    this.factoryIssDetID,
+    this.factoryRecMstID,
+    this.FactoryRecDetID,
     this.srno,
+    this.MfgCut,
     this.id,
     this.jno,
     this.bCode,
@@ -422,12 +407,15 @@ class SpkDeptIssDetModel {
     this.planPurity,
     this.planShape,
     this.recutEmp,
+    this.LastCrID,
+    this.CrID,
   });
 
-  factory SpkDeptIssDetModel.fromJson(Map<String, dynamic> json) =>
-      SpkDeptIssDetModel(
-        spkDeptIssDetID:  json['SPKDeptIssDetID'],
-        spkDeptIssMstID:  json['SPKDeptIssMstID'],
+  factory FactoryReceiveDetModel.fromJson(Map<String, dynamic> json) =>
+      FactoryReceiveDetModel(
+        factoryIssDetID: json['FactoryIssDetID'],
+        factoryRecMstID:  json['FactoryRecMstID'],
+        FactoryRecDetID:  json['FactoryRecDetID'],
         srno:             json['Srno'],
         id:               json['ID'],
         fromDeptCode: json['FromDeptCode'],
@@ -439,10 +427,13 @@ class SpkDeptIssDetModel {
         clvCut:           json['ClvCut'],
         fromCrId:        json['FromCrID'],
         toCrId:          json['ToCrID'],
+        CrID:          json['CrID'],
+        LastCrID:          json['LastCrID'],
         deptProcessCode: json['DeptProcessCode'],
         pc:               json['Pc'],
         wt:               _d(json['Wt']),
         issPc:            json['IssPc'],
+        MfgCut:            json['MfgCut'],
         issWt:            _d(json['IssWt']),
         recPc:            json['RecPc'],
         recWt:            _d(json['RecWt']),
@@ -575,13 +566,17 @@ class SpkDeptIssDetModel {
 
   Map<String, dynamic> toJson() => {
     // ── Always send ───────────────────────────────────────────────────────────
-    'SPKDeptIssMstID':  spkDeptIssMstID,
+    if (factoryIssDetID != null) 'FactoryIssDetID': factoryIssDetID,
+    'FactoryRecMstID':  factoryRecMstID,
+    'FactoryRecDetID':  FactoryRecDetID,
     'Srno':             srno,
     'ID':               id,
     'Jno':              jno,
     'BCode':            bCode,
     'PktNo':            pktNo,
     'CutNo':            cutNo,
+    'LastCrID':            LastCrID,
+    'CrID':            CrID,
     'ClvCut':           clvCut,
     'Pc':               pc,
     'Wt':               wt,
@@ -589,6 +584,7 @@ class SpkDeptIssDetModel {
     'IssWt':            issWt,
     'Length':            length,
     'RecPc':            recPc,
+    'MfgCut':            MfgCut,
     'sarinData':            sarinData,
     if (fromDeptCode != null) 'FromDeptCode': fromDeptCode,
     if (toDeptCode   != null) 'ToDeptCode':   toDeptCode,
@@ -731,36 +727,42 @@ class SpkDeptIssDetModel {
     return double.tryParse(v.toString());
   }
 }
-extension SpkDeptIssMstExt on SpkDeptIssMstModel {
+
+
+
+extension FactoryReceiveMstExt on FactoryReceiveMstModel {
   Map<String, dynamic> toTableRow() => {
-    'spkDeptIssMstID': spkDeptIssMstID,
-    'spkDeptIssDate':  spkDeptIssDate ?? '',
-    'fromCrID':        fromCrID?.toString() ?? '',
-    'toCrID':          toCrID?.toString() ?? '',
-    'deptProcessCode': deptProcessCode?.toString() ?? '',
-    'entryType':       entryType ?? '',
-    'totalPc':         totalPc.toString(),
-    'totalWt':         totalWt.toStringAsFixed(3),
-    'totPkt':          (totPkt ?? 0).toString(),   // ← ADD
-    'jno':             jnoFirst?.toString() ?? '',  // ← ADD
-    'users':           users ?? '',                 // ← ADD
-    'spkDeptIssTime':  stime ?? '',                 // ← ADD
+    'id': factoryRecMstID?.toString() ?? '',
+
+    'date': factoryRecDate ?? '',
+    'time': time ?? '',
+
+    'factory': factoryName ?? '',
+
+    'totPkt': (pkt ?? 0).toString(),
+
+    'pc': (pc ?? 0).toString(),
+    'wt': (wt ?? 0).toStringAsFixed(3),
+
+    'issPc': (issPc ?? 0).toString(),
+    'issWt': (issWt ?? 0).toStringAsFixed(3),
+
+    'recPc': (recPc ?? 0).toString(),
+    'recWt': (recWt ?? 0).toStringAsFixed(3),
+
+    'kPc': (kPc ?? 0).toString(),
+    'kWt': (kWt ?? 0).toStringAsFixed(3),
+
+    'brPc': (brPc ?? 0).toString(),
+    'brWt': (brWt ?? 0).toStringAsFixed(3),
+
+    'lossPc': (lossPc ?? 0).toString(),
+    'lossWt': (lossWt ?? 0).toStringAsFixed(3),
+
+    'dmWt': (dmWt ?? 0).toStringAsFixed(3),
+    'dmPer': (dmPer ?? 0).toStringAsFixed(2),
+
+    // 🔥 keep raw for rowTap
     '_raw': this,
   };
 }
-// ─────────────────────────────────────────────────────────────────────────────
-//  toTableRow extension
-// ─────────────────────────────────────────────────────────────────────────────
-// extension SpkDeptIssMstExt on SpkDeptIssMstModel {
-//   Map<String, dynamic> toTableRow() => {
-//     'spkDeptIssMstID': spkDeptIssMstID,
-//     'spkDeptIssDate':  spkDeptIssDate ?? '',
-//     'fromCrID':        fromCrID?.toString() ?? '',
-//     'toCrID':          toCrID?.toString() ?? '',
-//     'deptProcessCode': deptProcessCode?.toString() ?? '',
-//     'entryType':       entryType ?? '',
-//     'totalPc':         totalPc.toString(),
-//     'totalWt':         totalWt.toStringAsFixed(3),
-//     '_raw': this,
-//   };
-// }

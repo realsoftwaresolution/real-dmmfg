@@ -1,0 +1,150 @@
+import 'package:diam_mfg/models/factory_receive_mst_model.dart';
+import 'package:rs_dashboard/rs_dashboard.dart';
+
+class FactoryReceivedEntryProvider extends BaseProvider {
+  List<FactoryReceiveMstModel> _list     = [];
+  bool                     _isLoaded = false;
+
+  bool                         get isLoaded => _isLoaded;
+  List<FactoryReceiveMstModel>     get list     => List.unmodifiable(_list);
+  List<Map<String, dynamic>>   get tableData =>
+      _list.map((e) => e.toTableRow()).toList();
+// Provider mein ye map maintain karo
+// detMap declare karo (class level)
+  Map<int, List<FactoryReceiveDetModel>> detMap = {};
+
+// SIRF EK loadDetails rakho — dono merge karo:
+  Future<List<FactoryReceiveDetModel>> loadDetails(int mstID) async {
+    final result = await request<List<FactoryReceiveDetModel>>(
+      call: () => api.get('/factoryRec/$mstID'),
+      onSuccess: (res) {
+        final json = res.data as Map<String, dynamic>;
+        final data = json['data'] as List;
+        return data
+            .map((e) => FactoryReceiveDetModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      },
+    );
+    final dets = result ?? [];
+    detMap[mstID] = dets;   // ← detMap update
+    notifyListeners();
+    return dets;
+  }
+
+  // ── LOAD ALL ──────────────────────────────────────────────────────────────
+  Future<void> load() async {
+    final result = await request<List<FactoryReceiveMstModel>>(
+      call: () => api.get('/factoryRec?page=1&limit=2000'),
+      onSuccess: (res) {
+        final list = res.data['data'] as List;
+        return list
+            .map((e) => FactoryReceiveMstModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      },
+    );
+    if (result != null) {
+      _list     = result;
+      _isLoaded = true;
+      notifyListeners();
+    }
+  }
+
+  // BCode scan → PacketDet rows fetch
+  Future<List<FactoryReceiveDetModel>> fetchByBCode({
+    required String fCode,
+    required String bCode,
+  }) async {
+    final result = await request<List<FactoryReceiveDetModel>>(
+      showLoader: false,
+      call: () => api.get('/factoryRec/scan-bcode/$fCode/$bCode'),
+      onSuccess: (res) {
+        final data = res.data['data'];
+        final list = data is List ? data : [data];
+        return list
+            .map((e) => FactoryReceiveDetModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      },
+    );
+    return result ?? [];
+  }
+
+  // ── CREATE ────────────────────────────────────────────────────────────────
+  Future<bool> create(Map<String, dynamic> payload) async {
+    final result = await request<FactoryReceiveMstModel>(
+      call: () => api.post('/factoryRec', data: payload),
+      onSuccess: (res) => _parseMstResponse(res.data),
+    );
+
+    if (result != null) {
+      _list.insert(0, result);
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  // ── UPDATE ────────────────────────────────────────────────────────────────
+  Future<bool> update(
+      Map<String, dynamic>       values,
+      ) async {
+    final result = await request<FactoryReceiveMstModel>(
+      call: () => api.put('/factoryRec', data: values),
+      onSuccess: (res) => _parseMstResponse(res.data),
+    );
+    if (result != null) {
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  // ── DELETE ────────────────────────────────────────────────────────────────
+
+  Future<bool> delete( id) async {
+    final result = await request<bool>(
+      call: () => api.delete('/factoryRec/all/$id'),
+      onSuccess: (_) => true,
+    );
+    if (result == true) {
+      _list.removeWhere((e) => e.factoryRecMstID == id);
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> deleteRow( factoryIssMstID, factoryIssDetID, bCode) async {
+    final result = await request<bool>(
+      call: () => api.delete('/factoryRec/$factoryIssMstID/$factoryIssDetID/$bCode'),
+      onSuccess: (_) => true,
+    );
+    if (result == true) {
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  FactoryReceiveMstModel _parseMstResponse(dynamic data) {
+    if (data is Map) {
+      Map<String, dynamic> mstJson;
+      if (data.containsKey('mst')) {
+        mstJson = Map<String, dynamic>.from(data['mst'] as Map);
+        final rawDet = data['det'] as List? ?? [];
+        mstJson['details'] = rawDet;
+        // Det se totals calculate karo (create/update ke baad)
+        mstJson['TotPkt'] = rawDet.length;
+        mstJson['TotalPc'] = rawDet.fold<int>(0, (s, d) =>
+        s + ((d['TotalPc'] ?? 0) as num).toInt());
+        mstJson['TotalWt'] = rawDet.fold<double>(0.0, (s, d) =>
+        s + ((d['TotalWt'] ?? 0) as num).toDouble());
+        mstJson['Jno'] = rawDet.isNotEmpty ? rawDet.first['Jno'] : null;
+      } else {
+        mstJson = Map<String, dynamic>.from(data);
+      }
+      return FactoryReceiveMstModel.fromJson(mstJson);
+    }
+    throw Exception('Unexpected response format');
+  }
+
+}

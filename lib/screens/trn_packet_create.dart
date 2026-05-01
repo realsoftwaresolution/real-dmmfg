@@ -548,6 +548,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
       entryType:    'Packet Create',
       lastProcess:  'PACKET CREATE',
       pktValid:     'Y',
+
     );
 
     setState(() {

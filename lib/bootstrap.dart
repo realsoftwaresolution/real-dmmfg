@@ -28,12 +28,15 @@ import 'package:diam_mfg/providers/division_provider.dart';
 import 'package:diam_mfg/providers/employee_dept_det_provider.dart';
 import 'package:diam_mfg/providers/employee_manager_det_provider.dart';
 import 'package:diam_mfg/providers/employee_provider.dart';
+import 'package:diam_mfg/providers/factory_issue_entry_provider.dart';
 import 'package:diam_mfg/providers/factory_provider.dart';
+import 'package:diam_mfg/providers/factory_receive_provider.dart';
 import 'package:diam_mfg/providers/fluo_provider.dart';
 import 'package:diam_mfg/providers/holiday_provider.dart';
 import 'package:diam_mfg/providers/jangad_charni_provider.dart';
 import 'package:diam_mfg/providers/main_group_mst_provider.dart';
 import 'package:diam_mfg/providers/main_menuMst_provider.dart';
+import 'package:diam_mfg/providers/makable_entry_provider.dart';
 import 'package:diam_mfg/providers/menu_mst_provider.dart';
 import 'package:diam_mfg/providers/packet_provider.dart';
 import 'package:diam_mfg/providers/party_provider.dart';
@@ -154,8 +157,9 @@ Future<void> bootstrap({
           ChangeNotifierProvider<EmployeeDeptDetProvider>.value(value: EmployeeDeptDetProvider()),
           ChangeNotifierProvider<EmployeeManagerDetProvider>.value(value: EmployeeManagerDetProvider()),
           ChangeNotifierProvider<AdminMenuProvider>.value(value: AdminMenuProvider()),
-
-
+          ChangeNotifierProvider<MakableEntryProvider>.value(value: MakableEntryProvider()),
+          ChangeNotifierProvider<FactoryIssueEntryProvider>.value(value: FactoryIssueEntryProvider()),
+          ChangeNotifierProvider<FactoryReceivedEntryProvider>.value(value: FactoryReceivedEntryProvider()),
 
         ],
         child: app,

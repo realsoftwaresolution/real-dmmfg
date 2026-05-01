@@ -23,6 +23,8 @@
 //     },);
 //   }
 // }
+import 'dart:convert';
+
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../models/menu_mst_model.dart';
 
@@ -55,6 +57,10 @@ class MenuProvider extends BaseProvider {
         // TRANSACTION
         final transactions = list
             .where((e) => e.mainMenuMstID == 1)
+            .toList()
+          ..sort((a, b) => (a.menuSRNO ?? 0).compareTo(b.menuSRNO ?? 0));
+
+        final transactionItems = transactions
             .map((e) => e.toMenuItem())
             .toList();
 
@@ -84,7 +90,7 @@ class MenuProvider extends BaseProvider {
             id: "3",
             title: "Transaction",
             icon: "assets/images/3.png",
-            children: transactions,
+            children: transactionItems,
           ),
         ];
       },

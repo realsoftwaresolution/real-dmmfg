@@ -66,7 +66,7 @@ class SpkDeptIssProvider extends BaseProvider {
         },
       ),
       onSuccess: (res) {
-        final data = res.data;
+        final data = res.data['data'];
         final list = data is List ? data : [data];
         return list
             .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
@@ -93,7 +93,11 @@ class SpkDeptIssProvider extends BaseProvider {
     final result = await request<SpkDeptIssMstModel>(
       call: () => api.post('/spkDeptIss', data: {
         ...model.toJson(),
-        'details': details.map((e) => e.toJson()).toList(),
+        'details': details.map((e) {
+          final map = e.toJson();
+          map.remove('sarinData'); // ✅ REMOVE HERE
+          return map;
+        }).toList(),
       }),
       onSuccess: (res) => _parseMstResponse(res.data),
     );
@@ -112,10 +116,18 @@ class SpkDeptIssProvider extends BaseProvider {
       List<SpkDeptIssDetModel>   details,
       ) async {
     final model  = _buildModel(values);
+    // ✅ Convert model → map and remove BCode
+    final modelMap = Map<String, dynamic>.from(model.toJson())
+      ..remove('BCode'); // 🔥 REMOVE HERE
+
     final result = await request<SpkDeptIssMstModel>(
       call: () => api.put('/spkDeptIss/$id', data: {
-        ...model.toJson(),
-        'details': details.map((e) => e.toJson()).toList(),
+        ...modelMap, // ✅ cleaned
+        'details': details.map((e) {
+          final map = e.toJson();
+          map.remove('sarinData'); // ✅ REMOVE HERE
+          return map;
+        }).toList(),
       }),
       onSuccess: (res) => _parseMstResponse(res.data),
     );
@@ -209,7 +221,7 @@ class SpkDeptIssProvider extends BaseProvider {
       ever:            toI(v['ever']?.toString()),
       entryType:       v['entryType'],
       repairing:       v['repairing'],
-      formType:        v['formType'] ?? 'DEPT_ISS',
+      formType:        v['formType'] ?? 'SPK',
       proType:         v['proType'],
       formType1:       v['formType1'],
       nukCrId:         toI(v['nukCrId']?.toString()),
