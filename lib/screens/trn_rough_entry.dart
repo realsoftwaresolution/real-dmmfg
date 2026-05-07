@@ -3442,7 +3442,7 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
 
       token: token ?? '',
       // availableExtraColumns: _extraColumns,
-      url: baseUrl,
+      url: '',
       title: 'ROUGH ENTRY LIST',
       columns: _tableColumns,
       dateFilter: true,

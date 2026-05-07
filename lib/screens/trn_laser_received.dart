@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:collection/collection.dart';
 import 'package:diam_mfg/models/laser_mst_model.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
@@ -781,7 +783,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       _entryVals[k] = v ?? '';
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
-
+    print(r.topsPc);
     set('orgPc', r.pc?.toString());
     set('orgWt', _f3(r.wt));
     set('issPc', r.issPc?.toString());
@@ -803,6 +805,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     set('remarks', r.remarksCode?.toString());
     set('dueDay', r.dueDay?.toString());
     set('partName', r.partName?.toString());
+    set('scanValue', r.bCode?.toString());
   }
 
 
@@ -930,6 +933,14 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _syncDetGrid() {
+    int? toDeptCode;
+    if (_toCrId != null) {
+      try {
+        toDeptCode = context.read<CounterProvider>().list
+            .firstWhere((c) => c.crId == _toCrId)
+            .deptCode;
+      } catch (_) {}
+    }
     _activeDetColumns = [
       'srno',
       'bCode',
@@ -987,11 +998,11 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
             : '0.00',
         'partName':     r.partName?.toString() ?? '',
         'shapeCode':    r.shapeCode,
-        'oldShapeCode': r.oldShapeCode,
+        'oldShapeCode': r.oldShapeCode ?? '0',
         'purityCode':   r.purityCode,
-        'oldPurityCode':r.oldPurityCode,
+        'oldPurityCode':r.oldPurityCode ?? '0',
         'colorCode':    r.colorCode?.toString() ?? '',
-        'oldColorCode': r.oldColorCode?.toString() ?? '',
+        'oldColorCode': r.oldColorCode?.toString() ?? '0',
         'diam':         r.diam?.toStringAsFixed(2) ?? '0',
         'acuraecy':     r.acuraecy?.toStringAsFixed(2) ?? '',
         'sarinOpt':     r.sarinOpt ?? '',
@@ -1000,6 +1011,10 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         'remarkCode':       _entryVals['remark'] ?? '',
         'fType':       _isMackable ? 'MACKABLE' : 'SUBPACKET',
         'FormType':       'LASERREC',
+        'DeptCode': toDeptCode?.toString() ?? '',
+        'DeptProcessCode': _formValues['deptProcessCode'] ?? '',
+        'FromCrID': _fromCrId,
+        'ToCrID': _toCrId,
       };
     }).toList();
   }
@@ -1030,8 +1045,9 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     if (firstRadio != null) {
       _selectedRadioCode = firstRadio.userVisibilityCode.toString();
     }
-
-    final lastDet = details.isNotEmpty ? details.last : null;
+print(jsonEncode(details.first));
+print(row);
+print(jsonEncode(raw));
 
     setState(() {
       _selectedRow = row;
@@ -1042,7 +1058,9 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       _processSelected = raw.deptProcessCode != null;
       _isAdding = false;
       _showTableOnMobile = false;
-
+      setState(() {
+        _isMackable = details.first.fType.toString() == 'MACKABLE' ? true :false;
+      });
       _formValues = {
         'spkDeptIssMstID': raw.spkDeptIssMstID?.toString() ?? '0',
         'spkDeptIssDate': toDisplayDate(raw.spkDeptIssDate),
@@ -1051,13 +1069,11 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         'fromDept': _fromDeptName ?? '',
         'toCrId': raw.toCrID?.toString() ?? '',
         'toDept': _toDeptName ?? '',
-        'deptProcessCode': raw.deptProcessCode?.toString() ?? '',
+        'deptProcessCode': details.first.deptProcessCode.toString(),
         'deptName': _toDeptName ?? '',
-        if (lastDet?.tensionsCode != null)
-          'tensionsCode': lastDet!.tensionsCode!.toString(),
-        if (_selectedRadioCode != null) 'scanType': _selectedRadioCode!,
+        'remark': details.first.remarksCode.toString(),
+        'mackable': details.first.fType.toString() == 'MACKABLE' ? 'Y' : 'N',
       };
-
       _syncDetGrid();
     });
 
@@ -1712,7 +1728,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
                 gridData: _detDisplay
               );
               if (kDebugMode) {
-                print('data -- $data');
+                print('dataadsadsadasdasdasda -- $data');
               }
             }else{
               _calcDmWt();

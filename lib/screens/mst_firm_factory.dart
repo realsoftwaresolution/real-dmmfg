@@ -1,8 +1,8 @@
-
 import 'package:diam_mfg/models/factory_model.dart';
 import 'package:diam_mfg/providers/division_provider.dart';
 import 'package:diam_mfg/providers/factory_man_group_provider.dart';
 import 'package:diam_mfg/providers/factory_provider.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:erp_formatter/erp_formatter.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +26,7 @@ class MstFirmFactory extends StatefulWidget {
 class _MstFirmFactoryState extends State<MstFirmFactory> {
   // ── Theme ─────────────────────────────────────────────────────────────────
   ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
+
   ErpTheme get _theme => ErpTheme(_themeVariant);
 
   // ── State (same as PurchaseDemo) ──────────────────────────────────────────
@@ -52,25 +53,29 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
     ErpColumnConfig(key: 'address', label: 'ADDRESS', width: 180),
 
     /// PHONE
-    ErpColumnConfig(key: 'phone2', label: 'PHONE 2',width: 180),
-    ErpColumnConfig(key: 'phone3', label: 'PHONE 3',width: 180),
+    ErpColumnConfig(key: 'phone2', label: 'PHONE 2', width: 180),
+    ErpColumnConfig(key: 'phone3', label: 'PHONE 3', width: 180),
 
     /// MOBILE
-    ErpColumnConfig(key: 'mob2', label: 'MOBILE 2',width: 180),
-    ErpColumnConfig(key: 'mob3', label: 'MOBILE 3',width: 180),
+    ErpColumnConfig(key: 'mob2', label: 'MOBILE 2', width: 180),
+    ErpColumnConfig(key: 'mob3', label: 'MOBILE 3', width: 180),
 
     /// EMAIL
-    ErpColumnConfig(key: 'email1', label: 'EMAIL',width: 160),
+    ErpColumnConfig(key: 'email1', label: 'EMAIL', width: 160),
 
     /// COMPANY & STRUCTURE
-    ErpColumnConfig(key: 'factoryType', label: 'FACTORY TYPE',width: 200),
-    ErpColumnConfig(key: 'factoryManGroupCode', label: 'MAN GROUP CODE',width: 200),
-    ErpColumnConfig(key: 'divisionCode', label: 'DIVISION CODE',width: 200),
-    ErpColumnConfig(key: 'companyCode', label: 'COMPANY CODE',width: 200),
+    ErpColumnConfig(key: 'factoryType', label: 'FACTORY TYPE', width: 200),
+    ErpColumnConfig(
+      key: 'factoryManGroupCode',
+      label: 'MAN GROUP CODE',
+      width: 200,
+    ),
+    ErpColumnConfig(key: 'divisionCode', label: 'DIVISION CODE', width: 200),
+    ErpColumnConfig(key: 'companyCode', label: 'COMPANY CODE', width: 200),
   ];
+
   // ── EXTRA COLUMNS (pool) ──────────────────────────────────────────────────
   List<ErpColumnConfig> get _extraColumns => [
-
     /// BASIC
     ErpColumnConfig(key: 'address', label: 'ADDRESS', flex: 2),
 
@@ -95,12 +100,14 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
     ErpColumnConfig(key: 'rateOnShape', label: 'RATE ON SHAPE'),
     ErpColumnConfig(key: 'rateOnCut', label: 'RATE ON CUT'),
     ErpColumnConfig(key: 'diamEntry', label: 'DIAM ENTRY'),
-
   ];
 
   // ── FORM ROWS ─────────────────────────────────────────────────────────────
-  List<List<ErpFieldConfig>>  _formRows(CompanyProvider companyProvider,FactoryManGroupProvider factoryManGroupProvider,DivisionProvider divisionProvider) => [
-
+  List<List<ErpFieldConfig>> _formRows(
+    CompanyProvider companyProvider,
+    FactoryManGroupProvider factoryManGroupProvider,
+    DivisionProvider divisionProvider,
+  ) => [
     /// ───────── BASIC INFO ─────────
     // [
     //   // ErpFieldConfig(
@@ -118,18 +125,23 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
     //     sectionIndex: 0,
     //   ),
     // ],
-
     [
       ErpFieldConfig(
         key: 'factoryName',
         label: 'FACTORY NAME',
         required: true,
         sectionIndex: 0,
+        inputFormatters: [
+          UpperCaseTextFormatter(),
+        ],
       ),
       ErpFieldConfig(
         key: 'contactPerson',
         label: 'CONTACT PERSON',
         sectionIndex: 0,
+        inputFormatters: [
+          UpperCaseTextFormatter(),
+        ],
       ),
       // ErpFieldConfig(
       //   key: 'factoryType',
@@ -160,19 +172,20 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
         type: ErpFieldType.dropdown,
         dropdownItems: factoryManGroupProvider.groups
             .where((element) {
-          return element.active==true;
-        },).map((e) {
-          return ErpDropdownItem(
-            label: e.factoryManGroupName ?? '',
-            value: e.factoryManGroupCode?.toString() ?? '',
-          );
-        }).toList(),
+              return element.active == true;
+            })
+            .map((e) {
+              return ErpDropdownItem(
+                label: e.factoryManGroupName ?? '',
+                value: e.factoryManGroupCode?.toString() ?? '',
+              );
+            })
+            .toList(),
         // dropdownItems:companyProvider
         //     .companies
         //     .map((e) => e.companyName.toString())
         //     .toList(),
         sectionIndex: 0,
-
       ),
       // ErpFieldConfig(
       //   key: 'factoryManGroupCode',
@@ -188,19 +201,20 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
         initialDropValue: true,
         dropdownItems: divisionProvider.divisions
             .where((element) {
-          return element.active==true;
-        },).map((e) {
-          return ErpDropdownItem(
-            label: e.divisionName ?? '',
-            value: e.divisionCode?.toString() ?? '',
-          );
-        }).toList(),
+              return element.active == true;
+            })
+            .map((e) {
+              return ErpDropdownItem(
+                label: e.divisionName ?? '',
+                value: e.divisionCode?.toString() ?? '',
+              );
+            })
+            .toList(),
         // dropdownItems:companyProvider
         //     .companies
         //     .map((e) => e.companyName.toString())
         //     .toList(),
         sectionIndex: 0,
-
       ),
       // ErpFieldConfig(
       //   key: 'divisionCode',
@@ -245,19 +259,61 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
     ],
 
     [
-      ErpFieldConfig(key: 'phone1', label: 'PHONE 1', sectionIndex: 1,keyboardType: TextInputType.phone,validator: ErpValidators.phone()),
-      ErpFieldConfig(key: 'phone2', label: 'PHONE 2', sectionIndex: 1,keyboardType: TextInputType.phone,validator: ErpValidators.phone()),
-      ErpFieldConfig(key: 'phone3', label: 'PHONE 3', sectionIndex: 1,keyboardType: TextInputType.phone,validator: ErpValidators.phone()),
+      ErpFieldConfig(
+        key: 'phone1',
+        label: 'PHONE 1',
+        sectionIndex: 1,
+        keyboardType: TextInputType.phone,
+        validator: ErpValidators.phone(isRequired: false),
+      ),
+      ErpFieldConfig(
+        key: 'phone2',
+        label: 'PHONE 2',
+        sectionIndex: 1,
+        keyboardType: TextInputType.phone,
+        validator: ErpValidators.phone(isRequired: false),
+      ),
+      ErpFieldConfig(
+        key: 'phone3',
+        label: 'PHONE 3',
+        sectionIndex: 1,
+        keyboardType: TextInputType.phone,
+        validator: ErpValidators.phone(isRequired: false),
+      ),
     ],
 
     [
-      ErpFieldConfig(key: 'mob1', label: 'MOBILE 1', sectionIndex: 1,keyboardType: TextInputType.phone,validator: ErpValidators.phone()),
-      ErpFieldConfig(key: 'mob2', label: 'MOBILE 2', sectionIndex: 1,keyboardType: TextInputType.phone,validator: ErpValidators.phone()),
-      ErpFieldConfig(key: 'mob3', label: 'MOBILE 3', sectionIndex: 1,keyboardType: TextInputType.phone,validator: ErpValidators.phone()),
+      ErpFieldConfig(
+        key: 'mob1',
+        label: 'MOBILE 1',
+        sectionIndex: 1,
+        keyboardType: TextInputType.phone,
+        validator: ErpValidators.phone(isRequired: false),
+      ),
+      ErpFieldConfig(
+        key: 'mob2',
+        label: 'MOBILE 2',
+        sectionIndex: 1,
+        keyboardType: TextInputType.phone,
+        validator: ErpValidators.phone(isRequired: false),
+      ),
+      ErpFieldConfig(
+        key: 'mob3',
+        label: 'MOBILE 3',
+        sectionIndex: 1,
+        keyboardType: TextInputType.phone,
+        validator: ErpValidators.phone(isRequired: false),
+      ),
     ],
 
     [
-      ErpFieldConfig(key: 'email1', label: 'EMAIL', sectionIndex: 1,keyboardType: TextInputType.text,validator: ErpValidators.email()),
+      ErpFieldConfig(
+        key: 'email1',
+        label: 'EMAIL',
+        sectionIndex: 1,
+        keyboardType: TextInputType.text,
+        validator: ErpValidators.email(isRequired: false),
+      ),
       // ErpFieldConfig(key: 'gstNo', label: 'GST NO', sectionIndex: 1),
     ],
 
@@ -313,12 +369,11 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
         sectionIndex: 2,
       ),
     ],
-  ];  // ── INIT ──────────────────────────────────────────────────────────────────
+  ]; // ── INIT ──────────────────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-
       context.read<FactoryProvider>().loadFactories();
       context.read<CompanyProvider>().loadCompanies();
       context.read<DivisionProvider>().loadDivisions();
@@ -358,13 +413,15 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
         'factoryType': raw.factoryType ?? '',
         'factoryManGroupCode': raw.factoryManGroupCode?.toString() ?? '',
         'divisionCode': raw.divisionCode?.toString() ?? '',
-        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
-            ?? raw.companyCode?.toString() ?? '',
+        'companyCode':
+            context.read<CompanyProvider>().selectedCompanyCode?.toString() ??
+            raw.companyCode?.toString() ??
+            '',
         'rateOnShape': raw.rateOnShape == 'Y' ? 'true' : 'false',
         'rateOnCut': raw.rateOnCut == 'Y' ? 'true' : 'false',
         'diamEntry': raw.diamEntry == 'Y' ? 'true' : 'false',
-        // 'delRights': raw.delRights == 'Y' ? 'true' : 'false',
 
+        // 'delRights': raw.delRights == 'Y' ? 'true' : 'false',
         'active': raw.active == true ? 'true' : 'false',
         // 'rateOnShape': raw.rateOnShape == 'Y' ? 'Yes' : 'No',
         // 'rateOnCut': raw.rateOnCut == 'Y' ? 'Yes' : 'No',
@@ -376,13 +433,14 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
       setState(() => _showTableOnMobile = false);
     }
   }
+
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
     final provider = context.read<FactoryProvider>();
 
     bool success;
     if (_isEditMode && _selectedRow != null) {
-      final raw  = _selectedRow!['_raw'] as FactoryModel;
+      final raw = _selectedRow!['_raw'] as FactoryModel;
       final code = raw.factoryCode!;
       success = await provider.updateFactory(code, values);
     } else {
@@ -423,7 +481,12 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
   Future<void> _onDelete() async {
     final raw = _selectedRow?['_raw'] as FactoryModel?;
     if (raw?.companyCode == null) return;
-    final confirm = await ErpDeleteDialog.show(context: context, theme: _theme, title: 'Factory', itemName: raw!.factoryName??"");
+    final confirm = await ErpDeleteDialog.show(
+      context: context,
+      theme: _theme,
+      title: 'Factory',
+      itemName: raw!.factoryName ?? "",
+    );
 
     // final confirm = await showDialog<bool>(
     //   context: context,
@@ -448,8 +511,9 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
 
     if (confirm != true || !mounted) return;
 
-    final success =
-    await context.read<FactoryProvider>().deleteFactory(raw.factoryCode!);
+    final success = await context.read<FactoryProvider>().deleteFactory(
+      raw.factoryCode!,
+    );
 
     if (success && mounted) {
       _resetForm();
@@ -474,12 +538,13 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
   void _resetForm() {
     setState(() {
       _selectedRow = null;
-      _isEditMode  = false;
-      _formValues  = {};
+      _isEditMode = false;
+      _formValues = {};
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
   }
+
   bool _showTableOnMobile = false;
 
   // ── BUILD ─────────────────────────────────────────────────────────────────
@@ -493,146 +558,151 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
       builder: (context, provider, _) {
         return Padding(
           padding: const EdgeInsets.all(8),
-          child:
-                Responsive.isMobile(context)?_showTableOnMobile?ErpDataTable(
-                  isReportRow: false,
+          child: Responsive.isMobile(context)
+              ? _showTableOnMobile
+                    ? ErpDataTable(
+                        isReportRow: false,
 
-                  token: token ?? '',
-                  url: baseUrl,
-                  title: 'FACTORY LIST',
-                  columns: _tableColumns,
-                  // availableExtraColumns: _extraColumns,
-                  data: provider.tableData,
-                  // theme: _theme,
-                  showSearch: true,
-                  showFooterTotals: false,
-                  selectedRow: _selectedRow,
-                  onRowTap: _onRowTap,
-                  emptyMessage: provider.isLoaded
-        ? 'No Factory found'
-        : 'Loading...',
-                ):ErpForm(
-                  onExit: () {
-                    context.read<TabProvider>().closeCurrentTab();
-                  },
-                  logo: AppImages.logo,
+                        token: token ?? '',
+                        url: baseUrl,
+                        title: 'FACTORY LIST',
+                        columns: _tableColumns,
+                        // availableExtraColumns: _extraColumns,
+                        data: provider.tableData,
+                        // theme: _theme,
+                        showSearch: true,
+                        showFooterTotals: false,
+                        selectedRow: _selectedRow,
+                        onRowTap: _onRowTap,
+                        emptyMessage: provider.isLoaded
+                            ? 'No Factory found'
+                            : 'Loading...',
+                      )
+                    : ErpForm(
+                        onExit: () {
+                          context.read<TabProvider>().closeCurrentTab();
+                        },
+                        logo: AppImages.logo,
 
-                  key: _erpFormKey,
-                  title: 'FACTORY MASTER',
-                  subtitle: 'Firm / Factory Information',
-                  // tabs: ['Basic Info', 'Tax Info', 'Bank Details'],
-                  initialTabIndex: 0,
-                  onSearch: () => setState(() => _showTableOnMobile = true),
+                        key: _erpFormKey,
+                        title: 'FACTORY MASTER',
+                        subtitle: 'Firm / Factory Information',
+                        // tabs: ['Basic Info', 'Tax Info', 'Bank Details'],
+                        initialTabIndex: 0,
+                        onSearch: () =>
+                            setState(() => _showTableOnMobile = true),
 
-                  tabBarBackgroundColor: const Color(0xfff2f0ef),
-                  tabBarSelectedColor: _theme.primaryGradient.first,
-                  tabBarSelectedTxtColor: Colors.white,
-                  rows: _formRows(companyProvider,factoryManGroupProvider,divisionProvider),
-                  // theme: _theme,
-                  initialValues: _formValues,
-                  isEditMode: _isEditMode,
-                  onFieldChanged: (key, value) {
+                        tabBarBackgroundColor: const Color(0xfff2f0ef),
+                        tabBarSelectedColor: _theme.primaryGradient.first,
+                        tabBarSelectedTxtColor: Colors.white,
+                        rows: _formRows(
+                          companyProvider,
+                          factoryManGroupProvider,
+                          divisionProvider,
+                        ),
+                        // theme: _theme,
+                        initialValues: _formValues,
+                        isEditMode: _isEditMode,
+                        onFieldChanged: (key, value) {
+                          if (key == 'companyCode') {
+                            final selectedCompany = companyProvider.companies
+                                .firstWhere(
+                                  (c) => c.companyName == value,
+                                  orElse: () => CompanyModel(),
+                                );
 
-                    if (key == 'companyCode') {
+                            _formValues['companyCode'] =
+                                selectedCompany.companyCode?.toString() ?? '';
+                          } else {
+                            _formValues[key] = value;
+                          }
+                        },
+                        // onFieldChanged: (key, value) {
+                        //   _formValues[key] = value;
+                        // },
+                        onSave: _onSave,
+                        onCancel: _resetForm,
+                        onDelete: _isEditMode ? _onDelete : null,
+                      )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── LEFT: Form ─────────────────────────────────────────
+                    Expanded(
+                      flex: 2,
+                      child: ErpForm(
+                        onExit: () {
+                          context.read<TabProvider>().closeCurrentTab();
+                        },
+                        logo: AppImages.logo,
 
-        final selectedCompany = companyProvider.companies.firstWhere(
-              (c) => c.companyName == value,
-          orElse: () => CompanyModel(),
-        );
+                        key: _erpFormKey,
+                        title: 'FACTORY MASTER',
+                        subtitle: 'Firm / Factory Information',
+                        // tabs: ['Basic Info', 'Tax Info', 'Bank Details'],
+                        initialTabIndex: 0,
+                        tabBarBackgroundColor: const Color(0xfff2f0ef),
+                        tabBarSelectedColor: _theme.primaryGradient.first,
+                        tabBarSelectedTxtColor: Colors.white,
+                        rows: _formRows(
+                          companyProvider,
+                          factoryManGroupProvider,
+                          divisionProvider,
+                        ),
+                        // theme: _theme,
+                        initialValues: _formValues,
+                        isEditMode: _isEditMode,
+                        onFieldChanged: (key, value) {
+                          if (key == 'companyCode') {
+                            final selectedCompany = companyProvider.companies
+                                .firstWhere(
+                                  (c) => c.companyName == value,
+                                  orElse: () => CompanyModel(),
+                                );
 
-        _formValues['companyCode'] =
-            selectedCompany.companyCode?.toString() ?? '';
+                            _formValues['companyCode'] =
+                                selectedCompany.companyCode?.toString() ?? '';
+                          } else {
+                            _formValues[key] = value;
+                          }
+                        },
+                        // onFieldChanged: (key, value) {
+                        //   _formValues[key] = value;
+                        // },
+                        onSave: _onSave,
+                        onCancel: _resetForm,
+                        onDelete: _isEditMode ? _onDelete : null,
+                      ),
+                    ),
 
-                    } else {
-        _formValues[key] = value;
-                    }
-                  },
-                  // onFieldChanged: (key, value) {
-                  //   _formValues[key] = value;
-                  // },
-                  onSave: _onSave,
-                  onCancel: _resetForm,
-                  onDelete: _isEditMode ? _onDelete : null,
-                ):
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── LEFT: Form ─────────────────────────────────────────
-              Expanded(
-                flex: 2,
-                child: ErpForm(
-                  onExit: () {
-                    context.read<TabProvider>().closeCurrentTab();
-                  },
-                  logo: AppImages.logo,
+                    const SizedBox(width: 12),
 
-                  key: _erpFormKey,
-                  title: 'FACTORY MASTER',
-                  subtitle: 'Firm / Factory Information',
-                  // tabs: ['Basic Info', 'Tax Info', 'Bank Details'],
-                  initialTabIndex: 0,
-                  tabBarBackgroundColor: const Color(0xfff2f0ef),
-                  tabBarSelectedColor: _theme.primaryGradient.first,
-                  tabBarSelectedTxtColor: Colors.white,
-                  rows: _formRows(companyProvider,factoryManGroupProvider,divisionProvider),
-                  // theme: _theme,
-                  initialValues: _formValues,
-                  isEditMode: _isEditMode,
-                  onFieldChanged: (key, value) {
+                    // ── RIGHT: Table ───────────────────────────────────────
+                    Expanded(
+                      flex: 2,
+                      child: ErpDataTable(
+                        isReportRow: false,
 
-                    if (key == 'companyCode') {
-
-                      final selectedCompany = companyProvider.companies.firstWhere(
-                            (c) => c.companyName == value,
-                        orElse: () => CompanyModel(),
-                      );
-
-                      _formValues['companyCode'] =
-                          selectedCompany.companyCode?.toString() ?? '';
-
-                    } else {
-                      _formValues[key] = value;
-                    }
-                  },
-                  // onFieldChanged: (key, value) {
-                  //   _formValues[key] = value;
-                  // },
-                  onSave: _onSave,
-                  onCancel: _resetForm,
-                  onDelete: _isEditMode ? _onDelete : null,
+                        token: token ?? '',
+                        url: baseUrl,
+                        title: 'FACTORY LIST',
+                        columns: _tableColumns,
+                        // availableExtraColumns: _extraColumns,
+                        data: provider.tableData,
+                        // theme: _theme,
+                        showSearch: true,
+                        showFooterTotals: false,
+                        selectedRow: _selectedRow,
+                        onRowTap: _onRowTap,
+                        emptyMessage: provider.isLoaded
+                            ? 'No Factory found'
+                            : 'Loading...',
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // ── RIGHT: Table ───────────────────────────────────────
-              Expanded(
-                flex: 2,
-                child: ErpDataTable(
-                  isReportRow: false,
-
-                  token: token ?? '',
-                  url: baseUrl,
-                  title: 'FACTORY LIST',
-                  columns: _tableColumns,
-                  // availableExtraColumns: _extraColumns,
-                  data: provider.tableData,
-                  // theme: _theme,
-                  showSearch: true,
-                  showFooterTotals: false,
-                  selectedRow: _selectedRow,
-                  onRowTap: _onRowTap,
-                  emptyMessage: provider.isLoaded
-                      ? 'No Factory found'
-                      : 'Loading...',
-                ),
-              ),
-            ],
-          ),
         );
       },
     );
   }
-
-
 }

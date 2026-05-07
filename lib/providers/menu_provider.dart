@@ -40,60 +40,108 @@ class MenuProvider extends BaseProvider {
         final res = await api.get('/menuMst');
         return res;
       },
-      onSuccess: (response) {
+        onSuccess: (response) {
+          dynamic permissions = AppStorage.getObject("user");
 
-        // API → Model convert
-        final List<MenuMstModel> list =
-        (response.data as List)
-            .map((e) => MenuMstModel.fromJson(e))
-            .toList();
+          // Decode if stored as String
+          if (permissions is String) {
+            permissions = jsonDecode(permissions);
+          }
 
-        // MASTER
-        final masters = list
-            .where((e) => e.mainMenuMstID == 0)
-            .map((e) => e.toMenuItem())
-            .toList();
+          final ua = permissions['ua'] ?? {};
 
-        // TRANSACTION
-        final transactions = list
-            .where((e) => e.mainMenuMstID == 1)
-            .toList()
-          ..sort((a, b) => (a.menuSRNO ?? 0).compareTo(b.menuSRNO ?? 0));
+          // Permission lists
+          final List masterPermission =
+          List<int>.from(ua['0'] ?? []);
 
-        final transactionItems = transactions
-            .map((e) => e.toMenuItem())
-            .toList();
+          final List transactionPermission =
+          List<int>.from(ua['1'] ?? []);
 
-        _menus = [
-          RSMenuItem(
-            id: "4",
-            title: "Admin",
-            icon: "assets/images/2.27.png",
-            route: "/4",
-          ),
+          final List reportPermission =
+          List<int>.from(ua['2'] ?? []);
 
-          RSMenuItem(
-            id: "1",
-            title: "Dashboard",
-            icon: "assets/images/1.png",
-            route: "/1",
-          ),
+          // API → Model convert
+          final List<MenuMstModel> list =
+          (response.data as List)
+              .map((e) => MenuMstModel.fromJson(e))
+              .toList();
 
-          RSMenuItem(
-            id: "2",
-            title: "Masters",
-            icon: "assets/images/2.png",
-            children: masters,
-          ),
+          // ================= MASTER =================
+          final masters = list
+              .where((e) =>
+          e.mainMenuMstID == 0 &&
+              masterPermission.contains(e.menuMstID))
+              .toList()
+            ..sort((a, b) =>
+                (a.menuSRNO ?? 0).compareTo(b.menuSRNO ?? 0));
 
-          RSMenuItem(
-            id: "3",
-            title: "Transaction",
-            icon: "assets/images/3.png",
-            children: transactionItems,
-          ),
-        ];
-      },
+          final masterItems =
+          masters.map((e) => e.toMenuItem()).toList();
+
+          // ================= TRANSACTION =================
+          final transactions = list
+              .where((e) =>
+          e.mainMenuMstID == 1 &&
+              transactionPermission.contains(e.menuMstID))
+              .toList()
+            ..sort((a, b) =>
+                (a.menuSRNO ?? 0).compareTo(b.menuSRNO ?? 0));
+
+          final transactionItems =
+          transactions.map((e) => e.toMenuItem()).toList();
+
+          // ================= REPORTS =================
+          final reports = list
+              .where((e) =>
+          e.mainMenuMstID == 2 &&
+              reportPermission.contains(e.menuMstID))
+              .toList()
+            ..sort((a, b) =>
+                (a.menuSRNO ?? 0).compareTo(b.menuSRNO ?? 0));
+
+          final reportItems =
+          reports.map((e) => e.toMenuItem()).toList();
+
+          // ================= FINAL MENU =================
+          _menus = [
+            // RSMenuItem(
+            //   id: "4",
+            //   title: "Admin",
+            //   icon: "assets/images/2.27.png",
+            //   route: "/4",
+            // ),
+            RSMenuItem(
+              id: "1",
+              title: "Dashboard",
+              icon: "assets/images/1.png",
+              route: "/1",
+            ),
+
+            if (masterItems.isNotEmpty)
+              RSMenuItem(
+                id: "2",
+                title: "Masters",
+                icon: "assets/images/2.png",
+                children: masterItems,
+              ),
+
+            if (transactionItems.isNotEmpty)
+              RSMenuItem(
+                id: "3",
+                title: "Transaction",
+                icon: "assets/images/3.png",
+                children: transactionItems,
+              ),
+
+            if (reportItems.isNotEmpty)
+              RSMenuItem(
+                id: "4",
+                title: "Reports",
+                icon: "assets/images/2.9.png",
+                children: reportItems,
+              ),
+          ];
+        }
     );
   }
 }

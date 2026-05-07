@@ -1,6 +1,7 @@
 import 'package:diam_mfg/providers/purity_group_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/purity_type_provider.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -59,6 +60,9 @@ class _MstPurityGroupState extends State<MstPurityGroup> {
         label: 'NAME',
         required: true,
         sectionIndex: 0,
+        inputFormatters: [
+          UpperCaseTextFormatter(),
+        ],
       ),
     ],
 
@@ -119,14 +123,14 @@ class _MstPurityGroupState extends State<MstPurityGroup> {
 
     /// ── SETTINGS ──
     [
-      ErpFieldConfig(
-        key: 'delRights',
-        label: 'DEL RIGHTS',
-        type: ErpFieldType.checkbox,
-        sectionTitle: 'SETTINGS',
-        sectionIndex: 1,
-        checkboxDbType: 'YN'
-      ),
+      // ErpFieldConfig(
+      //   key: 'delRights',
+      //   label: 'DEL RIGHTS',
+      //   type: ErpFieldType.checkbox,
+      //   sectionTitle: 'SETTINGS',
+      //   sectionIndex: 1,
+      //   checkboxDbType: 'YN'
+      // ),
       ErpFieldConfig(
         key: 'active',
         label: 'ACTIVE',

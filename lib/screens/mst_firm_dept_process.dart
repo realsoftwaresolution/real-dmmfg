@@ -2,6 +2,7 @@ import 'package:diam_mfg/providers/dept_process_provider.dart';
 import 'package:diam_mfg/providers/dept_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/stock_type_provider.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -73,6 +74,9 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
             label: 'NAME',
             required: true,
             sectionIndex: 0,
+            inputFormatters: [
+              UpperCaseTextFormatter(),
+            ],
           ),
           ErpFieldConfig(
             key: 'deptCode',
@@ -618,7 +622,6 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
           child:
               Responsive.isMobile(context)?_showTableOnMobile?ErpDataTable(
                 isReportRow: false,
-
                 token: token ?? '',
                 url: baseUrl,
                 title: 'DEPT PROCESS LIST',

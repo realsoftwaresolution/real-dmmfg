@@ -60,7 +60,7 @@ class CompanyProvider extends BaseProvider {
   // ── CREATE ───────────────────────────────────────────────────────────────
   Future<bool> createCompany(Map<String, dynamic> formValues) async {
     final model = CompanyModel.fromFormValues(formValues);
-
+    print(model.toJson());
     final result = await request<CompanyModel>(
       showLoader: true,
       call: () => api.post('/company', data: model.toJson()),

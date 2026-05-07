@@ -97,10 +97,8 @@ class CompanyModel {
     'BankAddress':   bankAddress,
     'IFSCCode':      ifscCode,
     'BankAcNo':      bankAcNo,
-    'FromYear': fromYear?.substring(0,10),
-    'ToYear': toYear?.substring(0,10),
-    // 'FromYear': formatDate(fromYear),
-    // 'ToYear': formatDate(toYear),
+    'FromYear': fromYear!.isEmpty ?'':fromYear?.substring(0,10),
+    'ToYear': toYear!.isEmpty ?'': toYear?.substring(0,10),
     'Active':        active,
     'PANNo':         panNo,
   };

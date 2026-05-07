@@ -123,7 +123,7 @@ class TrnLaserReceivedProvider extends BaseProvider {
         },
       ),
       onSuccess: (res) {
-        final responseData = res.data;
+        final responseData = res.data['data'];
         if (kDebugMode) {
           print('responseData -- ${responseData.toString()}');
         }

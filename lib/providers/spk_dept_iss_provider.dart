@@ -1,7 +1,6 @@
 // lib/providers/spk_dept_iss_provider.dart
 
 import 'package:rs_dashboard/rs_dashboard.dart';
-
 import '../models/spkDeptIss_mst_model.dart';
 
 class SpkDeptIssProvider extends BaseProvider {
@@ -90,9 +89,16 @@ class SpkDeptIssProvider extends BaseProvider {
       List<SpkDeptIssDetModel>   details,
       ) async {
     final model  = _buildModel(values);
+    // ✅ Convert model → map and remove BCode
+    final modelMap = Map<String, dynamic>.from(model.toJson())
+      ..remove('DeptCode')
+      ..remove('DeptProcessCode')
+      ..remove('ToCrID')
+      ..remove('FromCrID');
+    // 🔥 REMOVE HERE
     final result = await request<SpkDeptIssMstModel>(
       call: () => api.post('/spkDeptIss', data: {
-        ...model.toJson(),
+        ...modelMap, // ✅ cleaned
         'details': details.map((e) {
           final map = e.toJson();
           map.remove('sarinData'); // ✅ REMOVE HERE
@@ -118,7 +124,12 @@ class SpkDeptIssProvider extends BaseProvider {
     final model  = _buildModel(values);
     // ✅ Convert model → map and remove BCode
     final modelMap = Map<String, dynamic>.from(model.toJson())
-      ..remove('BCode'); // 🔥 REMOVE HERE
+      ..remove('BCode')
+      ..remove('DeptCode')
+      ..remove('DeptProcessCode')
+      ..remove('ToCrID')
+      ..remove('FromCrID');
+    // 🔥 REMOVE HERE
 
     final result = await request<SpkDeptIssMstModel>(
       call: () => api.put('/spkDeptIss/$id', data: {

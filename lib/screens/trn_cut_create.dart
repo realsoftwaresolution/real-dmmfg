@@ -884,6 +884,7 @@ import 'package:diam_mfg/providers/purity_provider.dart';
 import 'package:diam_mfg/providers/rough_assort_provider.dart';
 import 'package:diam_mfg/providers/rough_provider.dart';
 import 'package:diam_mfg/utils/app_images.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/helper_functions.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
@@ -1372,18 +1373,11 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
 
   // ── SAVE ───────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
-    print('valuesasdadasd $values');
     final prov = context.read<CutCreateProvider>();
-
-    String toIso(String? v) {
-      if (v == null || v.isEmpty) return '';
-      try {
-        return DateFormat('yyyy-MM-dd').format(DateFormat('dd/MM/yyyy').parse(v));
-      } catch (_) { return v; }
-    }
-
     final merged = Map<String, dynamic>.from(values);
-    merged['cutCreateDate'] = toIso(merged['cutCreateDate']?.toString());
+    merged['cutCreateDate'] = toUtcIso(merged['cutCreateDate']?.toString());
+    merged['Sdate'] = DateTime.now().toUtc().toIso8601String();
+    print('print save cut data ---  $merged');
 
     bool success;
     if (_isEditMode && _selectedMst != null) {

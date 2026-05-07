@@ -1,3 +1,4 @@
+import 'package:diam_mfg/screens/Report_screen.dart';
 import 'package:diam_mfg/screens/admin_menu_create.dart';
 import 'package:diam_mfg/screens/mst_firm_color.dart';
 import 'package:diam_mfg/screens/mst_firm_dept_group.dart';
@@ -32,7 +33,6 @@ import 'package:diam_mfg/screens/trn_rough_assort.dart';
 import 'package:diam_mfg/screens/trn_rough_entry.dart';
 import 'package:diam_mfg/screens/trn_spk_dept_iss.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
-
 import '../screens/dashboard_screen.dart';
 import '../screens/mst_firm_dept.dart';
 import '../screens/mst_firm_cut.dart';
@@ -45,9 +45,7 @@ import '../screens/user_master.dart';
 class AppRouter {
   static final String intial='/1';
   static final RSDashboardRouter router = RSDashboardRouter({
-
     '/1': (context) => const DashboardScreen(),
-
     '/2.01': (context) => const MstFirmCompany(),
     '/2.02': (context) => const MstFirmParty(),
     '/2.03': (context) => const MstFirmFactory(),
@@ -86,8 +84,6 @@ class AppRouter {
     '/3.09': (context) => const TrnFactoryIssueEntry(),
     '/3.10': (context) => const FactoryReceiveEntry(),
     '/4': (context) => const AdminMenuCreateScreen(),
-
+    '/4.01': (context) => const ReportScreen(),
   });
-
-
 }

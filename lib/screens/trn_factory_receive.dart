@@ -15,6 +15,7 @@ import 'package:diam_mfg/providers/factory_receive_provider.dart';
 import 'package:diam_mfg/providers/remarks_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
 import 'package:diam_mfg/utils/app_images.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/helper_functions.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
@@ -664,7 +665,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         "BrWt": brWt,
 
         "LossPc": safeLossPc,
-        "LossWt": safeLossWt,
+        "LossWt": safeLossWt.toStringAsFixed(3),
 
         "PurityCode":
         int.tryParse(_entryVals['purity'] ?? '0') ?? 0,
@@ -1277,7 +1278,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       "BrWt": r.brWt ?? 0,
 
       "LossPc": r.lossPc ?? 0,
-      "LossWt": r.lossWt ?? 0,
+      "LossWt": r.lossWt?.toStringAsFixed(3) ?? 0,
 
       // ✅ ONLY send if valid
         "PurityCode": r.purityCode ?? 0,
@@ -1312,26 +1313,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
       "OrderMstID": r.orderMstID,
     };
-  }
-
-  String toUtcIso(String? v) {
-    if (v == null || v.isEmpty) return '';
-
-    try {
-      final parsed = DateFormat('dd/MM/yyyy').parse(v);
-
-      // attach time (optional: 00:00 or current time)
-      final dt = DateTime(
-        parsed.year,
-        parsed.month,
-        parsed.day,
-        10, 30, 0, 0, // 👈 fixed time OR use DateTime.now()
-      );
-
-      return dt.toUtc().toIso8601String();
-    } catch (_) {
-      return v;
-    }
   }
 
   Future<void> _onSave(Map<String, dynamic> values) async {

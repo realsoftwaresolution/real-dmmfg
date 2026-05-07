@@ -671,14 +671,21 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
-  rs_dashboard:
-    dependency: "direct main"
+  restart_app:
+    dependency: transitive
     description:
-      name: rs_dashboard
-      sha256: "88bf7310f4eb2b8cf4a9d236fd317b647f93affbeac09288a49ecd78fc0d32f5"
+      name: restart_app
+      sha256: "400dd401b77b599e2defef55fd4c22af3ff80af48616a82f01c2a07070e3e368"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.7"
+    version: "1.8.3"
+  rs_dashboard:
+    dependency: "direct overridden"
+    description:
+      path: "../rs_dashboard"
+      relative: true
+    source: path
+    version: "0.0.9"
   shared_preferences:
     dependency: "direct main"
     description:

@@ -5,6 +5,7 @@ import '../utils/helper_functions.dart';
 class ReportTypeModel {
   final int?    reportTypeMstID;
   final int?    reportTypeCode;
+  final int?    TestCode;
   final String? reportTypeName;
   final int?    sortID;
   final bool?   active;
@@ -12,6 +13,7 @@ class ReportTypeModel {
   ReportTypeModel({
     this.reportTypeMstID,
     this.reportTypeCode,
+    this.TestCode,
     this.reportTypeName,
     this.sortID,
     this.active,
@@ -22,6 +24,7 @@ class ReportTypeModel {
         reportTypeMstID: json['ReportTypeMstID'],
         reportTypeCode:  json['ReportTypeCode'],
         reportTypeName:  json['ReportTypeName'],
+        TestCode:  json['TestCode'],
         sortID:          json['SortID'],
         active:          json['Active'] == true || json['Active'] == 1,
       );
@@ -30,9 +33,11 @@ class ReportTypeModel {
     'ReportTypeName': reportTypeName,
     'SortID':         sortID,
     'Active':         active,
+    'TestCode':         TestCode,
   };
 
   Map<String, dynamic> toTableRow() => {
+    'TestCode': TestCode?.toString() ?? '',
     'reportTypeCode': reportTypeCode?.toString() ?? '',
     'reportTypeName': reportTypeName             ?? '',
     'sortID':         sortID?.toString()         ?? '',

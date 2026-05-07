@@ -13,6 +13,7 @@ import 'package:diam_mfg/providers/factory_provider.dart';
 import 'package:diam_mfg/providers/remarks_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
 import 'package:diam_mfg/utils/app_images.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:erp_data_table/erp_data_table.dart';
@@ -602,27 +603,6 @@ print(jsonEncode(_detRows));
 
   Future<void> _onSave(Map<String, dynamic> values) async {
     final prov = context.read<FactoryIssueEntryProvider>();
-
-    String toUtcIso(String? v) {
-      if (v == null || v.isEmpty) return '';
-
-      try {
-        final parsed = DateFormat('dd/MM/yyyy').parse(v);
-
-        // attach time (optional: 00:00 or current time)
-        final dt = DateTime(
-          parsed.year,
-          parsed.month,
-          parsed.day,
-          10, 30, 0, 0, // 👈 fixed time OR use DateTime.now()
-        );
-
-        return dt.toUtc().toIso8601String();
-      } catch (_) {
-        return v;
-      }
-    }
-
     // ✅ MASTER PAYLOAD
     final payload = {
       "FactoryIssDate": toUtcIso(_formValues['date']),
@@ -1105,6 +1085,7 @@ print(jsonEncode(_detRows));
 
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
       onSave: _onSave,
+      isShowSaveButton: !_isEditMode,
       onCancel: _resetForm,
       onDelete: _isEditMode ? _onDelete : null,
       onSearch: () => setState(() => _showTableOnMobile = true),

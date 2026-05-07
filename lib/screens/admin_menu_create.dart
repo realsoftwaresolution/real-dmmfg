@@ -297,7 +297,7 @@ class _FormPanelState extends State<_FormPanel> {
   Future<void> _onSave(BuildContext context, AdminMenuProvider provider) async {
     final success = await provider.saveMenu();
     if (!context.mounted) return;
-    if(success){
+    if(success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -496,7 +496,7 @@ class _MenuListPanelState extends State<_MenuListPanel>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -510,7 +510,9 @@ class _MenuListPanelState extends State<_MenuListPanel>
     final masters =
     widget.provider.allMenus.where((m) => m.mainMenuMstID == 0).toList();
     final transactions =
-    widget.provider.allMenus.where((m) => m.mainMenuMstID != 0).toList();
+    widget.provider.allMenus.where((m) => m.mainMenuMstID == 1).toList();
+    final reports =
+    widget.provider.allMenus.where((m) => m.mainMenuMstID == 2).toList();
 
     return Column(
       children: [
@@ -525,6 +527,7 @@ class _MenuListPanelState extends State<_MenuListPanel>
             tabs: [
               Tab(text: 'Masters (${masters.length})'),
               Tab(text: 'Transactions (${transactions.length})'),
+              Tab(text: 'Reports (${reports.length})'),
             ],
           ),
         ),
@@ -534,6 +537,7 @@ class _MenuListPanelState extends State<_MenuListPanel>
             children: [
               _MenuGroupList(menus: masters, groupLabel: 'Master'),
               _MenuGroupList(menus: transactions, groupLabel: 'Transaction'),
+              _MenuGroupList(menus: reports, groupLabel: 'Reports'),
             ],
           ),
         ),

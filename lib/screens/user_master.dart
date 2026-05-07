@@ -3565,19 +3565,35 @@ class _MstCounterState extends State<MstCounter> {
       );
     }
 
+    // Widget content() {
+    //   switch (_currentTabIndex) {
+    //     case 0:  return _buildDisplaySetting(visP, theme);
+    //     case 1:  return tabsEnabled ? _buildProcessTab(theme)                      : _lockedMsg(theme);
+    //     case 2:  return tabsEnabled ? _buildMenuRightsTree(mainMenuP, menuP, theme): _lockedMsg(theme);
+    //     case 3:  return tabsEnabled ? _buildAllowManagerIssueTab(theme)            : _lockedMsg(theme);
+    //     case 4:  return tabsEnabled ? _buildAllowManagerReceiveTab(theme)          : _lockedMsg(theme);
+    //     case 5:  return tabsEnabled ? _buildAllowOperatorTab(opP, theme)           : _lockedMsg(theme);
+    //     case 6:  return tabsEnabled ? _buildAllowManagerTab(opP, theme)            : _lockedMsg(theme);
+    //     case 7:  return tabsEnabled ? _buildAllowDeptTab(theme)                    : _lockedMsg(theme);
+    //     case 8:  return tabsEnabled ? _buildShapeLockTab(theme)                    : _lockedMsg(theme);
+    //     case 9:  return tabsEnabled ? _buildAllowStockTypeTab(theme)               : _lockedMsg(theme);
+    //     case 10: return tabsEnabled ? _buildReportRightsTab(theme) : _lockedMsg(theme);
+    //     default: return const SizedBox.shrink();
+    //   }
+    // }
     Widget content() {
       switch (_currentTabIndex) {
         case 0:  return _buildDisplaySetting(visP, theme);
-        case 1:  return tabsEnabled ? _buildProcessTab(theme)                      : _lockedMsg(theme);
-        case 2:  return tabsEnabled ? _buildMenuRightsTree(mainMenuP, menuP, theme): _lockedMsg(theme);
-        case 3:  return tabsEnabled ? _buildAllowManagerIssueTab(theme)            : _lockedMsg(theme);
-        case 4:  return tabsEnabled ? _buildAllowManagerReceiveTab(theme)          : _lockedMsg(theme);
-        case 5:  return tabsEnabled ? _buildAllowOperatorTab(opP, theme)           : _lockedMsg(theme);
-        case 6:  return tabsEnabled ? _buildAllowManagerTab(opP, theme)            : _lockedMsg(theme);
-        case 7:  return tabsEnabled ? _buildAllowDeptTab(theme)                    : _lockedMsg(theme);
-        case 8:  return tabsEnabled ? _buildShapeLockTab(theme)                    : _lockedMsg(theme);
-        case 9:  return tabsEnabled ? _buildAllowStockTypeTab(theme)               : _lockedMsg(theme);
-        case 10: return tabsEnabled ? _buildReportRightsTab(theme) : _lockedMsg(theme);
+        case 1:  return  _buildProcessTab(theme)                      ;
+        case 2:  return  _buildMenuRightsTree(mainMenuP, menuP, theme);
+        case 3:  return  _buildAllowManagerIssueTab(theme)            ;
+        case 4:  return  _buildAllowManagerReceiveTab(theme)          ;
+        case 5:  return  _buildAllowOperatorTab(opP, theme)           ;
+        case 6:  return  _buildAllowManagerTab(opP, theme)            ;
+        case 7:  return  _buildAllowDeptTab(theme)                    ;
+        case 8:  return  _buildShapeLockTab(theme)                    ;
+        case 9:  return  _buildAllowStockTypeTab(theme)               ;
+        case 10: return  _buildReportRightsTab(theme) ;
         default: return const SizedBox.shrink();
       }
     }

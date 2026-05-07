@@ -1,6 +1,7 @@
 import 'package:diam_mfg/providers/color_group_provider.dart';
 import 'package:diam_mfg/providers/color_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -37,7 +38,6 @@ class _MstColorState extends State<MstColor> {
     ErpColumnConfig(key: 'colorCode', label: 'CODE', width: 130),
     ErpColumnConfig(key: 'colorName', label: 'NAME', width: 220),
     ErpColumnConfig(key: 'colorRptGroupCode', label: 'RPT GROUP', width: 180),
-    ErpColumnConfig(key: 'companyCode', label: 'COMPANY', width: 160),
     ErpColumnConfig(key: 'sortID', label: 'SORT ID', width: 160),
     ErpColumnConfig(key: 'active', label: 'ACTIVE', width: 140),
   ];
@@ -68,6 +68,9 @@ class _MstColorState extends State<MstColor> {
         label: 'NAME',
         required: true,
         sectionIndex: 0,
+        inputFormatters: [
+          UpperCaseTextFormatter(),
+        ],
       ),
       ErpFieldConfig(
         key: 'colorRptGroupCode',

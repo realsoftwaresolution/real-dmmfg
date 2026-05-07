@@ -1,6 +1,7 @@
 import 'package:diam_mfg/providers/article_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/utils/app_images.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 
@@ -59,6 +60,9 @@ class _MstArticleState extends State<MstArticle> {
         label: 'NAME',
         required: true,
         sectionIndex: 0,
+        inputFormatters: [
+          UpperCaseTextFormatter(),
+        ],
       ),
       ErpFieldConfig(
         key: 'sortID',

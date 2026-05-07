@@ -1,5 +1,7 @@
 // lib/screens/trn_spk_dept_iss_entry.dart
 
+import 'dart:convert';
+
 import 'package:collection/collection.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
 import 'package:diam_mfg/providers/counter_manager_det_provider.dart';
@@ -210,6 +212,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       if (excluded.contains(name)) continue;
       merged[name] = f;
     }
+
     return merged;
   }
 
@@ -299,7 +302,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
     await _displayProv.loadByCounter(counter.counterMstID!);
     if (!mounted) return;
-
+print('_displayProv.counterList $crId');
     setState(() {
       _fromDisplayFields = _buildVisibilityList(
         rawList: _displayProv.counterList,
@@ -1071,7 +1074,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             .deptCode;
       } catch (_) {}
     }
-
     final merged = Map<String, dynamic>.from(values)
       ..['Stime'] = DateFormat('hh:mm a').format(DateTime.now())
       ..['Sdate'] = DateFormat('yyyy-MM-dd').format(DateTime.now())
@@ -1079,6 +1081,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       ..['fromCrID'] = _fromCrId?.toString() ?? ''
       ..['toCrID'] = _toCrId?.toString() ?? ''
       ..['deptCode'] = toDeptCode?.toString() ?? '';
+
     final success = _isEditMode && _selectedMst != null
         ? await prov.update(_selectedMst!.spkDeptIssMstID!, merged, _detRows)
         : await prov.create(merged, _detRows);
@@ -1093,6 +1096,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         title: wasEdit ? 'Updated' : 'Saved',
         message: wasEdit ? 'Dept Issue updated.' : 'Dept Issue saved.',
       );
+      await context.read<SpkDeptIssProvider>().load();
     }
   }
 

@@ -334,6 +334,7 @@ class CutCreateProvider extends BaseProvider {
 
     return CutCreateModel(
       cutCreateDate:    v['cutCreateDate'],
+      sdate:    v['Sdate'],
       jno:              toI(v['jno']),
       kapanNo:          v['kapanNo'],
       sflag:            v['sflag'],

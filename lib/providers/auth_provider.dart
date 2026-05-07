@@ -73,32 +73,38 @@ class AuthProvider extends BaseProvider {
   }) async {
 
     final result = await request<AuthResponse>(
-
       call: () => api.post(
-        "/counter/login",
+        "/login",
         data: {
-          "CrName": username,
-          "CrPass": password,
+          "username": username,
+          "password": password,
         },
       ),
-
       onSuccess: (response) {
-        print('ress----${response.data}');
-
         return AuthResponse.fromJson(response.data);
       },
     );
 
     if (result == null) return false;
 
-    _token = result.token;
+    // ✅ FIXED HERE
+    _token = result.accessToken;
+
+    if (_token == null || _token!.isEmpty) {
+      print("❌ Token missing");
+      return false;
+    }
+
+    // ✅ User mapping
     _user = CounterModel.fromJson(result.user);
+
     _isAuthenticated = true;
 
-    /// Save Session
+    /// ✅ Save Session
     await AppStorage.setString("token", _token!);
+    await AppStorage.setString("refreshToken", result.refreshToken!);
     await AppStorage.setObject("user", result.user);
-    await RSAuthSession.setToken(_token??"");
+    await RSAuthSession.setToken(_token!);
 
     notifyListeners();
     return true;

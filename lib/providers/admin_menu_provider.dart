@@ -149,13 +149,6 @@ class AdminMenuProvider extends ChangeNotifier {
     return '$prefix.$next';
   }
 
-
-  int get _nextMenuMstID {
-    final grouped = menusInSelectedGroup;
-    if (grouped.isEmpty) return 1;
-    return grouped.map((m) => m.menuMstID).reduce((a, b) => a > b ? a : b) + 1;
-  }
-
   // ── Save ───────────────────────────────────────────────
   Future<bool> saveMenu() async {
     if (!formKey.currentState!.validate()) return false;

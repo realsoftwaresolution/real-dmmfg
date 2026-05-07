@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:diam_mfg/providers/ReportProvider.dart';
 import 'package:diam_mfg/providers/admin_menu_provider.dart';
 import 'package:diam_mfg/providers/article_provider.dart';
 import 'package:diam_mfg/providers/auth_provider.dart';
@@ -76,23 +77,17 @@ Future<void> bootstrap({
 }) async {
   return runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
-
     await AppStorage.init();
-    //
-    // /// API Base URL
     RSApiConfig.init(url: "http://50.62.183.116:5000/api");
+    ApiClient.reset(); // ✅ force re-create BEFORE any provider touches it
     await RSAuthSession.restore();
-
-    final menuProvider = MenuProvider();
-
-    await menuProvider.loadMenus();
 
     final app = await fn();
 
     runApp(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider<MenuProvider>.value(value: menuProvider),
+          ChangeNotifierProvider<MenuProvider>.value(value: MenuProvider()),
           ChangeNotifierProvider<AuthProvider>.value(value: AuthProvider()),
           ChangeNotifierProvider<CompanyProvider>.value(value: CompanyProvider()),
           ChangeNotifierProvider<PartyProvider>.value(value: PartyProvider()),
@@ -160,7 +155,7 @@ Future<void> bootstrap({
           ChangeNotifierProvider<MakableEntryProvider>.value(value: MakableEntryProvider()),
           ChangeNotifierProvider<FactoryIssueEntryProvider>.value(value: FactoryIssueEntryProvider()),
           ChangeNotifierProvider<FactoryReceivedEntryProvider>.value(value: FactoryReceivedEntryProvider()),
-
+          ChangeNotifierProvider<ReportProvider>.value(value: ReportProvider()),
         ],
         child: app,
       ),

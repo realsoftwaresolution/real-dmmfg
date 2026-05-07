@@ -1,4 +1,3 @@
-
 import 'package:diam_mfg/models/party_model.dart';
 import 'package:diam_mfg/providers/party_provider.dart';
 import 'package:diam_mfg/providers/party_type_provider.dart';
@@ -11,6 +10,7 @@ import 'package:rs_dashboard/rs_dashboard.dart';
 import '../bootstrap.dart';
 import '../providers/company_provider.dart';
 import '../utils/app_images.dart';
+import '../utils/constants.dart';
 import '../utils/delete_dialogue.dart';
 import '../utils/msg_dialogue.dart';
 
@@ -24,6 +24,7 @@ class MstFirmParty extends StatefulWidget {
 class _MstFirmPartyState extends State<MstFirmParty> {
   // ── Theme ─────────────────────────────────────────────────────────────────
   ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
+
   ErpTheme get _theme => ErpTheme(_themeVariant);
 
   // ── State (same as PurchaseDemo) ──────────────────────────────────────────
@@ -57,30 +58,40 @@ class _MstFirmPartyState extends State<MstFirmParty> {
       width: 90,
       align: ColumnAlign.center,
     ),
-    ErpColumnConfig(key: 'emailID',   label: 'EMAIL',      flex: 1.5),
-    ErpColumnConfig(key: 'panNo',      label: 'PAN NO',     flex: 1.0),
-    ErpColumnConfig(key: 'bankName',   label: 'BANK',       flex: 1.2),
-    ErpColumnConfig(key: 'branchName', label: 'BRANCH',     width: 160),
-    ErpColumnConfig(key: 'ifscCode',   label: 'IFSC',       flex: 1.0),
-    ErpColumnConfig(key: 'bankAcNo',   label: 'AC NO',      flex: 1.2),
-    ErpColumnConfig(key: 'fromYear',   label: 'FROM YEAR',  width: 180, isDate: true),
-    ErpColumnConfig(key: 'toYear',     label: 'TO YEAR',    width: 160, isDate: true),
+    ErpColumnConfig(key: 'emailID', label: 'EMAIL', flex: 1.5),
+    ErpColumnConfig(key: 'panNo', label: 'PAN NO', flex: 1.0),
+    ErpColumnConfig(key: 'bankName', label: 'BANK', flex: 1.2),
+    ErpColumnConfig(key: 'branchName', label: 'BRANCH', width: 160),
+    ErpColumnConfig(key: 'ifscCode', label: 'IFSC', flex: 1.0),
+    ErpColumnConfig(key: 'bankAcNo', label: 'AC NO', flex: 1.2),
+    ErpColumnConfig(
+      key: 'fromYear',
+      label: 'FROM YEAR',
+      width: 180,
+      isDate: true,
+    ),
+    ErpColumnConfig(key: 'toYear', label: 'TO YEAR', width: 160, isDate: true),
   ];
+
   // ── EXTRA COLUMNS (pool) ──────────────────────────────────────────────────
   List<ErpColumnConfig> get _extraColumns => [
-    ErpColumnConfig(key: 'emailID',   label: 'EMAIL',      flex: 1.5),
-    ErpColumnConfig(key: 'panNo',      label: 'PAN NO',     flex: 1.0),
-    ErpColumnConfig(key: 'bankName',   label: 'BANK',       flex: 1.2),
-    ErpColumnConfig(key: 'branchName', label: 'BRANCH',     flex: 1.0),
-    ErpColumnConfig(key: 'ifscCode',   label: 'IFSC',       flex: 1.0),
-    ErpColumnConfig(key: 'bankAcNo',   label: 'AC NO',      flex: 1.2),
-    ErpColumnConfig(key: 'fromYear',   label: 'FROM YEAR',  flex: 0.8, isDate: true),
-    ErpColumnConfig(key: 'toYear',     label: 'TO YEAR',    flex: 0.8, isDate: true),
+    ErpColumnConfig(key: 'emailID', label: 'EMAIL', flex: 1.5),
+    ErpColumnConfig(key: 'panNo', label: 'PAN NO', flex: 1.0),
+    ErpColumnConfig(key: 'bankName', label: 'BANK', flex: 1.2),
+    ErpColumnConfig(key: 'branchName', label: 'BRANCH', flex: 1.0),
+    ErpColumnConfig(key: 'ifscCode', label: 'IFSC', flex: 1.0),
+    ErpColumnConfig(key: 'bankAcNo', label: 'AC NO', flex: 1.2),
+    ErpColumnConfig(
+      key: 'fromYear',
+      label: 'FROM YEAR',
+      flex: 0.8,
+      isDate: true,
+    ),
+    ErpColumnConfig(key: 'toYear', label: 'TO YEAR', flex: 0.8, isDate: true),
   ];
 
   // ── FORM ROWS ─────────────────────────────────────────────────────────────
-  List<List<ErpFieldConfig>>  _formRows (PartyTypeProvider partyTypeProvider)=> [
-
+  List<List<ErpFieldConfig>> _formRows(PartyTypeProvider partyTypeProvider) => [
     /// ───────────────── BASIC INFORMATION ─────────────────
     [
       // ErpFieldConfig(
@@ -106,6 +117,9 @@ class _MstFirmPartyState extends State<MstFirmParty> {
         required: true,
         flex: 3,
         sectionIndex: 0,
+        inputFormatters: [
+          UpperCaseTextFormatter(),
+        ],
       ),
       // ErpFieldConfig(
       //   key: 'partyType',
@@ -119,28 +133,29 @@ class _MstFirmPartyState extends State<MstFirmParty> {
       //   flex: 2,
       //   sectionIndex: 0,
       // ),
-        ErpFieldConfig(
-          key: 'partyType',
-          label: 'PARTY TYPE',
-          required: true,
-          initialDropValue: true,
-          type: ErpFieldType.dropdown,
-          dropdownItems: partyTypeProvider.list
-              .where((element) {
-            return element.active==true;
-          },).map((e) {
-            return ErpDropdownItem(
-              label: e.partyTypeName ?? '',
-              value: e.partyNameCode?.toString() ?? '',
-            );
-          }).toList(),
-          // dropdownItems:companyProvider
-          //     .companies
-          //     .map((e) => e.companyName.toString())
-          //     .toList(),
-          sectionIndex: 0,
-
-        ),
+      ErpFieldConfig(
+        key: 'partyType',
+        label: 'PARTY TYPE',
+        required: true,
+        initialDropValue: true,
+        type: ErpFieldType.dropdown,
+        dropdownItems: partyTypeProvider.list
+            .where((element) {
+              return element.active == true;
+            })
+            .map((e) {
+              return ErpDropdownItem(
+                label: e.partyTypeName ?? '',
+                value: e.partyNameCode?.toString() ?? '',
+              );
+            })
+            .toList(),
+        // dropdownItems:companyProvider
+        //     .companies
+        //     .map((e) => e.companyName.toString())
+        //     .toList(),
+        sectionIndex: 0,
+      ),
     ],
 
     // [
@@ -174,8 +189,6 @@ class _MstFirmPartyState extends State<MstFirmParty> {
     //   // ),
     // ],
 
-
-
     /// ───────────────── CONTACT DETAILS ─────────────────
     [
       ErpFieldConfig(
@@ -189,21 +202,81 @@ class _MstFirmPartyState extends State<MstFirmParty> {
     ],
 
     [
-      ErpFieldConfig(key: 'phone1', label: 'PHONE 1', flex: 1, sectionIndex: 1,type: ErpFieldType.phone,validator: ErpValidators.phone()),
-      ErpFieldConfig(key: 'phone2', label: 'PHONE 2', flex: 1, sectionIndex: 1,type: ErpFieldType.phone,validator: ErpValidators.phone()),
-      ErpFieldConfig(key: 'phone3', label: 'PHONE 3', flex: 1, sectionIndex: 1,type: ErpFieldType.phone,validator: ErpValidators.phone()),
+      ErpFieldConfig(
+        key: 'phone1',
+        label: 'PHONE 1',
+        flex: 1,
+        sectionIndex: 1,
+        type: ErpFieldType.phone,
+        validator: ErpValidators.phone(isRequired: false),
+      ),
+      ErpFieldConfig(
+        key: 'phone2',
+        label: 'PHONE 2',
+        flex: 1,
+        sectionIndex: 1,
+        type: ErpFieldType.phone,
+        validator: ErpValidators.phone(isRequired: false),
+      ),
+      ErpFieldConfig(
+        key: 'phone3',
+        label: 'PHONE 3',
+        flex: 1,
+        sectionIndex: 1,
+        type: ErpFieldType.phone,
+        validator: ErpValidators.phone(isRequired: false),
+      ),
     ],
 
     [
-      ErpFieldConfig(key: 'mob1', label: 'MOBILE 1', flex: 1, sectionIndex: 1,type: ErpFieldType.phone,validator: ErpValidators.phone()),
-      ErpFieldConfig(key: 'mob2', label: 'MOBILE 2', flex: 1, sectionIndex: 1,type: ErpFieldType.phone,validator: ErpValidators.phone()),
-      ErpFieldConfig(key: 'mob3', label: 'MOBILE 3', flex: 1, sectionIndex: 1,type: ErpFieldType.phone,validator: ErpValidators.phone()),
+      ErpFieldConfig(
+        key: 'mob1',
+        label: 'MOBILE 1',
+        flex: 1,
+        sectionIndex: 1,
+        type: ErpFieldType.phone,
+        validator: ErpValidators.phone(isRequired: false),
+      ),
+      ErpFieldConfig(
+        key: 'mob2',
+        label: 'MOBILE 2',
+        flex: 1,
+        sectionIndex: 1,
+        type: ErpFieldType.phone,
+        validator: ErpValidators.phone(isRequired: false),
+      ),
+      ErpFieldConfig(
+        key: 'mob3',
+        label: 'MOBILE 3',
+        flex: 1,
+        sectionIndex: 1,
+        type: ErpFieldType.phone,
+        validator: ErpValidators.phone(isRequired: false),
+      ),
     ],
 
     [
-      ErpFieldConfig(key: 'email1', label: 'EMAIL 1', flex: 1, sectionIndex: 1,validator: ErpValidators.email()),
-      ErpFieldConfig(key: 'email2', label: 'EMAIL 2', flex: 1, sectionIndex: 1,validator: ErpValidators.email()),
-      ErpFieldConfig(key: 'email3', label: 'EMAIL 3', flex: 1, sectionIndex: 1,validator: ErpValidators.email()),
+      ErpFieldConfig(
+        key: 'email1',
+        label: 'EMAIL 1',
+        flex: 1,
+        sectionIndex: 1,
+        validator: ErpValidators.email(isRequired: false),
+      ),
+      ErpFieldConfig(
+        key: 'email2',
+        label: 'EMAIL 2',
+        flex: 1,
+        sectionIndex: 1,
+        validator: ErpValidators.email(isRequired: false),
+      ),
+      ErpFieldConfig(
+        key: 'email3',
+        label: 'EMAIL 3',
+        flex: 1,
+        sectionIndex: 1,
+        validator: ErpValidators.email(isRequired: false),
+      ),
     ],
 
     /// ───────────────── TAX DETAILS ─────────────────
@@ -214,19 +287,22 @@ class _MstFirmPartyState extends State<MstFirmParty> {
         flex: 2,
         sectionTitle: 'TAX DETAILS',
         sectionIndex: 2,
-          validator: ErpValidators.gstNoOptional
+        validator: ErpValidators.gstNoOptional,
       ),
       ErpFieldConfig(key: 'cstNo', label: 'CST NO', flex: 2, sectionIndex: 2),
       ErpFieldConfig(key: 'tinNo', label: 'TIN NO', flex: 2, sectionIndex: 2),
     ],
 
     [
-      ErpFieldConfig(key: 'panNo', label: 'PAN NO', flex: 2, sectionIndex: 2,        validator:
-      ErpValidators.compose([
-        ErpValidators.minLength('PAN No', 10),
-        ErpValidators.panNo(),
-      ])
-        ,),
+      ErpFieldConfig(
+        key: 'panNo',
+        label: 'PAN NO',
+        flex: 2,
+        sectionIndex: 2,
+        validator: ErpValidators.compose([
+          ErpValidators.panNo(isRequired: false),
+        ]),
+      ),
       ErpFieldConfig(key: 'state', label: 'STATE', flex: 2, sectionIndex: 2),
       ErpFieldConfig(
         key: 'stateCode',
@@ -237,27 +313,26 @@ class _MstFirmPartyState extends State<MstFirmParty> {
       ),
     ],
     [
-
       ErpFieldConfig(
-          key: 'mainCutCompulsory',
-          label: 'MAIN CUT COMPULSORY',
-          type: ErpFieldType.checkbox,
-          flex: 2,
-          sectionIndex: 0,
-          checkboxDbType: 'BIT'
-
+        key: 'mainCutCompulsory',
+        label: 'MAIN CUT COMPULSORY',
+        type: ErpFieldType.checkbox,
+        flex: 2,
+        sectionIndex: 0,
+        checkboxDbType: 'BIT',
       ),
       ErpFieldConfig(
-          key: 'active',
-          label: 'ACTIVE',
-          type: ErpFieldType.checkbox,
-          flex: 1,
-          sectionIndex: 0,
-          initialBoolValue: true,
-          checkboxDbType: 'BIT'
+        key: 'active',
+        label: 'ACTIVE',
+        type: ErpFieldType.checkbox,
+        flex: 1,
+        sectionIndex: 0,
+        initialBoolValue: true,
+        checkboxDbType: 'BIT',
       ),
     ],
   ];
+
   // ── INIT ──────────────────────────────────────────────────────────────────
   @override
   void initState() {
@@ -277,14 +352,16 @@ class _MstFirmPartyState extends State<MstFirmParty> {
 
     setState(() {
       _selectedRow = row;
-      _isEditMode  = true;
+      _isEditMode = true;
       _formValues = {
         'partyMstID': raw.partyMstID?.toString() ?? '',
         'partyCode': raw.partyCode?.toString() ?? '',
         'partyName': raw.partyName ?? '',
         'partyType': raw.partyType ?? '',
-        'companyCode': context.read<CompanyProvider>().selectedCompanyCode?.toString()
-            ?? raw.companyCode?.toString() ?? '',
+        'companyCode':
+            context.read<CompanyProvider>().selectedCompanyCode?.toString() ??
+            raw.companyCode?.toString() ??
+            '',
         'address': raw.address ?? '',
         'phone1': raw.phone1 ?? '',
         'phone2': raw.phone2 ?? '',
@@ -316,7 +393,7 @@ class _MstFirmPartyState extends State<MstFirmParty> {
 
     bool success;
     if (_isEditMode && _selectedRow != null) {
-      final raw  = _selectedRow!['_raw'] as PartyModel;
+      final raw = _selectedRow!['_raw'] as PartyModel;
       final code = raw.partyCode!;
       success = await provider.updateParty(code, values);
     } else {
@@ -357,7 +434,12 @@ class _MstFirmPartyState extends State<MstFirmParty> {
   Future<void> _onDelete() async {
     final raw = _selectedRow?['_raw'] as PartyModel?;
     if (raw?.companyCode == null) return;
-    final confirm = await ErpDeleteDialog.show(context: context, theme: _theme, title: 'Party', itemName: raw!.partyName??"");
+    final confirm = await ErpDeleteDialog.show(
+      context: context,
+      theme: _theme,
+      title: 'Party',
+      itemName: raw!.partyName ?? "",
+    );
 
     // final confirm = await showDialog<bool>(
     //   context: context,
@@ -382,8 +464,9 @@ class _MstFirmPartyState extends State<MstFirmParty> {
 
     if (confirm != true || !mounted) return;
 
-    final success =
-    await context.read<PartyProvider>().deleteParty(raw.partyCode!);
+    final success = await context.read<PartyProvider>().deleteParty(
+      raw.partyCode!,
+    );
 
     if (success && mounted) {
       _resetForm();
@@ -408,12 +491,13 @@ class _MstFirmPartyState extends State<MstFirmParty> {
   void _resetForm() {
     setState(() {
       _selectedRow = null;
-      _isEditMode  = false;
-      _formValues  = {};
+      _isEditMode = false;
+      _formValues = {};
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
   }
+
   bool _showTableOnMobile = false;
 
   // ── BUILD ─────────────────────────────────────────────────────────────────
@@ -425,114 +509,115 @@ class _MstFirmPartyState extends State<MstFirmParty> {
       builder: (context, provider, _) {
         return Padding(
           padding: const EdgeInsets.all(8),
-          child:
-              Responsive.isMobile(context)?_showTableOnMobile?ErpDataTable(
-                isReportRow: false,
+          child: Responsive.isMobile(context)
+              ? _showTableOnMobile
+                    ? ErpDataTable(
+                        isReportRow: false,
 
-                token: token ?? '',
-                url: baseUrl,
-                title: 'PARTY LIST',
-                columns: _tableColumns,
-                // availableExtraColumns: _extraColumns,
-                data: provider.tableData,
-                // theme: _theme,
-                showSearch: true,
-                showFooterTotals: false,
-                selectedRow: _selectedRow,
-                onRowTap: _onRowTap,
-                emptyMessage: provider.isLoaded
-                    ? 'No Party found'
-                    : 'Loading...',
-              ):ErpForm(
-                onExit: () {
-                  context.read<TabProvider>().closeCurrentTab();
-                },
-                logo: AppImages.logo,
+                        token: token ?? '',
+                        url: baseUrl,
+                        title: 'PARTY LIST',
+                        columns: _tableColumns,
+                        // availableExtraColumns: _extraColumns,
+                        data: provider.tableData,
+                        // theme: _theme,
+                        showSearch: true,
+                        showFooterTotals: false,
+                        selectedRow: _selectedRow,
+                        onRowTap: _onRowTap,
+                        emptyMessage: provider.isLoaded
+                            ? 'No Party found'
+                            : 'Loading...',
+                      )
+                    : ErpForm(
+                        onExit: () {
+                          context.read<TabProvider>().closeCurrentTab();
+                        },
+                        logo: AppImages.logo,
 
-                key: _erpFormKey,
-                title: 'PARTY MASTER',
-                subtitle: 'Firm / Party Information',
-                // tabs: ['Basic Info', 'Tax Info', 'Bank Details'],
-                initialTabIndex: 0,
-                tabBarBackgroundColor: const Color(0xfff2f0ef),
-                tabBarSelectedColor: _theme.primaryGradient.first,
-                tabBarSelectedTxtColor: Colors.white,
-                rows: _formRows(partyTypeProvider),
-                onSearch: () => setState(() => _showTableOnMobile = true),
+                        key: _erpFormKey,
+                        title: 'PARTY MASTER',
+                        subtitle: 'Firm / Party Information',
+                        // tabs: ['Basic Info', 'Tax Info', 'Bank Details'],
+                        initialTabIndex: 0,
+                        tabBarBackgroundColor: const Color(0xfff2f0ef),
+                        tabBarSelectedColor: _theme.primaryGradient.first,
+                        tabBarSelectedTxtColor: Colors.white,
+                        rows: _formRows(partyTypeProvider),
+                        onSearch: () =>
+                            setState(() => _showTableOnMobile = true),
 
-                // theme: _theme,
-                initialValues: _formValues,
-                isEditMode: _isEditMode,
-                onFieldChanged: (key, value) {
-                  _formValues[key] = value;
-                },
-                onSave: _onSave,
-                onCancel: _resetForm,
-                onDelete: _isEditMode ? _onDelete : null,
-              ):
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── LEFT: Form ─────────────────────────────────────────
-              Expanded(
-                flex: 2,
-                child: ErpForm(
-                  logo: AppImages.logo,
-                  onExit: () {
-                    context.read<TabProvider>().closeCurrentTab();
-                  },
+                        // theme: _theme,
+                        initialValues: _formValues,
+                        isEditMode: _isEditMode,
+                        onFieldChanged: (key, value) {
+                          _formValues[key] = value;
+                        },
+                        onSave: _onSave,
+                        onCancel: _resetForm,
+                        onDelete: _isEditMode ? _onDelete : null,
+                      )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── LEFT: Form ─────────────────────────────────────────
+                    Expanded(
+                      flex: 2,
+                      child: ErpForm(
+                        logo: AppImages.logo,
+                        onExit: () {
+                          context.read<TabProvider>().closeCurrentTab();
+                        },
 
-                  key: _erpFormKey,
-                  title: 'PARTY MASTER',
-                  subtitle: 'Firm / Party Information',
-                  // tabs: ['Basic Info', 'Tax Info', 'Bank Details'],
-                  initialTabIndex: 0,
-                  tabBarBackgroundColor: const Color(0xfff2f0ef),
-                  tabBarSelectedColor: _theme.primaryGradient.first,
-                  tabBarSelectedTxtColor: Colors.white,
-                  rows: _formRows(partyTypeProvider),
-                  // theme: _theme,
-                  initialValues: _formValues,
-                  isEditMode: _isEditMode,
-                  onFieldChanged: (key, value) {
-                    _formValues[key] = value;
-                  },
-                  onSave: _onSave,
-                  onCancel: _resetForm,
-                  onDelete: _isEditMode ? _onDelete : null,
+                        key: _erpFormKey,
+                        title: 'PARTY MASTER',
+                        subtitle: 'Firm / Party Information',
+                        // tabs: ['Basic Info', 'Tax Info', 'Bank Details'],
+                        initialTabIndex: 0,
+                        tabBarBackgroundColor: const Color(0xfff2f0ef),
+                        tabBarSelectedColor: _theme.primaryGradient.first,
+                        tabBarSelectedTxtColor: Colors.white,
+                        rows: _formRows(partyTypeProvider),
+                        // theme: _theme,
+                        initialValues: _formValues,
+                        isEditMode: _isEditMode,
+                        onFieldChanged: (key, value) {
+                          _formValues[key] = value;
+                        },
+                        onSave: _onSave,
+                        onCancel: _resetForm,
+                        onDelete: _isEditMode ? _onDelete : null,
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    // ── RIGHT: Table ───────────────────────────────────────
+                    Expanded(
+                      flex: 2,
+                      child: ErpDataTable(
+                        isReportRow: false,
+
+                        token: token ?? '',
+                        url: baseUrl,
+                        title: 'PARTY LIST',
+                        columns: _tableColumns,
+                        // availableExtraColumns: _extraColumns,
+                        data: provider.tableData,
+                        // theme: _theme,
+                        showSearch: true,
+                        showFooterTotals: false,
+                        selectedRow: _selectedRow,
+                        onRowTap: _onRowTap,
+                        emptyMessage: provider.isLoaded
+                            ? 'No Party found'
+                            : 'Loading...',
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // ── RIGHT: Table ───────────────────────────────────────
-              Expanded(
-                flex: 2,
-                child: ErpDataTable(
-                  isReportRow: false,
-
-                  token: token ?? '',
-                  url: baseUrl,
-                  title: 'PARTY LIST',
-                  columns: _tableColumns,
-                  // availableExtraColumns: _extraColumns,
-                  data: provider.tableData,
-                  // theme: _theme,
-                  showSearch: true,
-                  showFooterTotals: false,
-                  selectedRow: _selectedRow,
-                  onRowTap: _onRowTap,
-                  emptyMessage: provider.isLoaded
-                      ? 'No Party found'
-                      : 'Loading...',
-                ),
-              ),
-            ],
-          ),
         );
       },
     );
   }
-
-
 }

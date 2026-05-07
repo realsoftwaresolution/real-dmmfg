@@ -1094,6 +1094,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         title: wasEdit ? 'Updated' : 'Saved',
         message: wasEdit ? 'Makable Entry Updated.' : 'Makable Entry Saved.',
       );
+      context.read<MakableEntryProvider>().load();
     }
   }
 

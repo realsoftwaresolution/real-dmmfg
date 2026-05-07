@@ -1,5 +1,6 @@
 // lib/screens/mst_firm_company.dart
 
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:erp_formatter/erp_formatter.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,7 @@ class MstFirmCompany extends StatefulWidget {
 class _MstFirmCompanyState extends State<MstFirmCompany> {
   // ── Theme ─────────────────────────────────────────────────────────────────
   ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
+
   ErpTheme get _theme => ErpTheme(_themeVariant);
 
   // ── State (same as PurchaseDemo) ──────────────────────────────────────────
@@ -35,7 +37,7 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
 
   // ── TABLE COLUMNS ─────────────────────────────────────────────────────────
   List<ErpColumnConfig> get _tableColumns => [
-     ErpColumnConfig(
+    ErpColumnConfig(
       key: 'companyCode',
       label: 'CODE',
       // flex: 1,
@@ -43,55 +45,44 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
 
       required: true,
     ),
-     ErpColumnConfig(
+    ErpColumnConfig(
       key: 'companyName',
       label: 'COMPANY NAME',
       width: 200,
       // flex: 1,
       required: true,
     ),
-     ErpColumnConfig(
+    ErpColumnConfig(
       key: 'contactPerson',
       label: 'CONTACT PERSON',
       width: 220,
       // flex: 1,
     ),
-     ErpColumnConfig(
-      key: 'phone',
-      label: 'PHONE',
-      flex: 1.0,
-
-    ),
-     ErpColumnConfig(
-      key: 'gstNo',
-      label: 'GST NO',
-      width: 160,
-      flex: 1,
-    ),
-     ErpColumnConfig(
-      key: 'state',
-      label: 'STATE',
-      flex: 1,
-    ),
-     ErpColumnConfig(
+    ErpColumnConfig(key: 'phone', label: 'PHONE', flex: 1.0),
+    ErpColumnConfig(key: 'gstNo', label: 'GST NO', width: 160, flex: 1),
+    ErpColumnConfig(key: 'state', label: 'STATE', flex: 1),
+    ErpColumnConfig(
       key: 'active',
       label: 'ACTIVE',
       flex: 1,
       align: ColumnAlign.center,
-
     ),
-    ErpColumnConfig(key: 'emailID',   label: 'EMAIL',      flex: 1.5),
-    ErpColumnConfig(key: 'panNo',      label: 'PAN NO',     flex: 1.0),
-    ErpColumnConfig(key: 'bankName',   label: 'BANK',       flex: 1.2),
-    ErpColumnConfig(key: 'branchName', label: 'BRANCH',     width: 160,),
-    ErpColumnConfig(key: 'ifscCode',   label: 'IFSC',       flex: 1.0),
-    ErpColumnConfig(key: 'bankAcNo',   label: 'AC NO',      flex: 1.2),
-    ErpColumnConfig(key: 'fromYear',   label: 'FROM YEAR',  width: 180, isDate: true),
-    ErpColumnConfig(key: 'toYear',     label: 'TO YEAR',    width: 160, isDate: true),
+    ErpColumnConfig(key: 'emailID', label: 'EMAIL', flex: 1.5),
+    ErpColumnConfig(key: 'panNo', label: 'PAN NO', flex: 1.0),
+    ErpColumnConfig(key: 'bankName', label: 'BANK', flex: 1.2),
+    ErpColumnConfig(key: 'branchName', label: 'BRANCH', width: 160),
+    ErpColumnConfig(key: 'ifscCode', label: 'IFSC', flex: 1.0),
+    ErpColumnConfig(key: 'bankAcNo', label: 'AC NO', flex: 1.2),
+    ErpColumnConfig(
+      key: 'fromYear',
+      label: 'FROM YEAR',
+      width: 180,
+      isDate: true,
+    ),
+    ErpColumnConfig(key: 'toYear', label: 'TO YEAR', width: 160, isDate: true),
   ];
 
   // ── EXTRA COLUMNS (pool) ──────────────────────────────────────────────────
-
 
   // ── FORM ROWS ─────────────────────────────────────────────────────────────
   List<List<ErpFieldConfig>> get _formRows => [
@@ -116,7 +107,9 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
         flex: 3,
         required: true,
         sectionIndex: 0,
-
+        inputFormatters: [
+          UpperCaseTextFormatter(),
+        ],
         // tabIndex: 0,
       ),
 
@@ -140,7 +133,9 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
         hint: 'Enter contact person',
         flex: 2,
         sectionIndex: 0,
-        // tabIndex: 0,
+        inputFormatters: [
+          UpperCaseTextFormatter(),
+        ],
       ),
       ErpFieldConfig(
         key: 'phone',
@@ -149,8 +144,7 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
         flex: 2,
         sectionIndex: 0,
         keyboardType: TextInputType.phone,
-        validator: ErpValidators.phone(),
-        // tabIndex: 0,
+        validator: ErpValidators.phone(isRequired: false),
       ),
       ErpFieldConfig(
         key: 'emailID',
@@ -158,9 +152,8 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
         hint: 'Enter email address',
         flex: 2,
         sectionIndex: 0,
-        validator: ErpValidators.email(),
-
-        // tabIndex: 0,
+        keyboardType: TextInputType.emailAddress,
+        validator: ErpValidators.email(isRequired: false),
       ),
     ],
     [
@@ -171,7 +164,6 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
         flex: 4,
         maxLines: 2,
         sectionIndex: 0,
-        // tabIndex: 0,
       ),
       ErpFieldConfig(
         key: 'webSite',
@@ -179,6 +171,8 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
         hint: 'www.example.com',
         flex: 2,
         sectionIndex: 0,
+        keyboardType: TextInputType.url,
+        validator: ErpValidators.website(isRequired: false),
         // tabIndex: 0,
       ),
     ],
@@ -209,8 +203,6 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
         hint: 'Enter GST number',
         flex: 2,
         sectionIndex: 1,
-
-        // tabIndex: 1,
       ),
     ],
     [
@@ -220,14 +212,7 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
         hint: 'Enter PAN number',
         flex: 2,
         sectionIndex: 1,
-        validator:
-   ErpValidators.compose([
-      ErpValidators.minLength('PAN No', 10),
-      ErpValidators.panNo(),
-      ])
-        ,
-
-        // tabIndex: 1,
+        validator: ErpValidators.panNo(isRequired: false),
       ),
       ErpFieldConfig(
         key: 'cstNo',
@@ -256,6 +241,9 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
         flex: 2,
         sectionTitle: 'BANK DETAILS',
         sectionIndex: 2,
+        inputFormatters: [
+          UpperCaseTextFormatter(),
+        ],
         // tabIndex: 2,
       ),
       ErpFieldConfig(
@@ -264,6 +252,9 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
         hint: 'Enter branch name',
         flex: 2,
         sectionIndex: 2,
+        inputFormatters: [
+          UpperCaseTextFormatter(),
+        ],
         // tabIndex: 2,
       ),
       ErpFieldConfig(
@@ -272,7 +263,7 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
         hint: 'e.g. SBIN0001234',
         flex: 2,
         sectionIndex: 2,
-        validator: ErpValidators.ifscCode()
+        validator: ErpValidators.ifscCode(isRequired: false),
         // tabIndex: 2,
       ),
     ],
@@ -318,15 +309,15 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
     [
       ErpFieldConfig(
         sectionTitle: 'Settings',
-          key: 'active',
-          label: 'ACTIVE',
-          type: ErpFieldType.checkbox,
-          flex: 1,
-          sectionIndex: 3,
-          checkboxDbType: 'BIT',
-        initialBoolValue: true
+        key: 'active',
+        label: 'ACTIVE',
+        type: ErpFieldType.checkbox,
+        flex: 1,
+        sectionIndex: 3,
+        checkboxDbType: 'BIT',
+        initialBoolValue: true,
       ),
-    ]
+    ],
   ];
 
   // ── INIT ──────────────────────────────────────────────────────────────────
@@ -344,29 +335,29 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
 
     setState(() {
       _selectedRow = row;
-      _isEditMode  = true;
-      _formValues  = {
-        'companyCode':   raw.companyCode?.toString() ?? '',
-        'companyName':   raw.companyName   ?? '',
+      _isEditMode = true;
+      _formValues = {
+        'companyCode': raw.companyCode?.toString() ?? '',
+        'companyName': raw.companyName ?? '',
         'contactPerson': raw.contactPerson ?? '',
-        'address':       raw.address       ?? '',
-        'phone':         raw.phone         ?? '',
-        'webSite':       raw.webSite       ?? '',
-        'emailID':       raw.emailID       ?? '',
-        'state':         raw.state         ?? '',
-        'stateCode':     raw.stateCode?.toString() ?? '',
-        'gstNo':         raw.gstNo    ?? '',
-        'cstNo':         raw.cstNo    ?? '',
-        'tinNo':         raw.tinNo    ?? '',
-        'bankName':      raw.bankName    ?? '',
-        'branchName':    raw.branchName  ?? '',
-        'bankAddress':   raw.bankAddress ?? '',
-        'ifscCode':      raw.ifscCode    ?? '',
-        'bankAcNo':      raw.bankAcNo    ?? '',
-        'fromYear':      raw.fromYear    ?? '',
-        'toYear':        raw.toYear      ?? '',
+        'address': raw.address ?? '',
+        'phone': raw.phone ?? '',
+        'webSite': raw.webSite ?? '',
+        'emailID': raw.emailID ?? '',
+        'state': raw.state ?? '',
+        'stateCode': raw.stateCode?.toString() ?? '',
+        'gstNo': raw.gstNo ?? '',
+        'cstNo': raw.cstNo ?? '',
+        'tinNo': raw.tinNo ?? '',
+        'bankName': raw.bankName ?? '',
+        'branchName': raw.branchName ?? '',
+        'bankAddress': raw.bankAddress ?? '',
+        'ifscCode': raw.ifscCode ?? '',
+        'bankAcNo': raw.bankAcNo ?? '',
+        'fromYear': raw.fromYear ?? '',
+        'toYear': raw.toYear ?? '',
         'active': raw.active == true ? 'true' : 'false',
-        'panNo':         raw.panNo ?? '',
+        'panNo': raw.panNo ?? '',
       };
     });
     if (Responsive.isMobile(context)) {
@@ -380,7 +371,7 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
 
     bool success;
     if (_isEditMode && _selectedRow != null) {
-      final raw  = _selectedRow!['_raw'] as CompanyModel;
+      final raw = _selectedRow!['_raw'] as CompanyModel;
       final code = raw.companyCode!;
       success = await provider.updateCompany(code, values);
     } else {
@@ -421,7 +412,12 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
   Future<void> _onDelete() async {
     final raw = _selectedRow?['_raw'] as CompanyModel?;
     if (raw?.companyCode == null) return;
-    final confirm = await ErpDeleteDialog.show(context: context, theme: _theme, title: 'Company', itemName: raw!.companyName??"");
+    final confirm = await ErpDeleteDialog.show(
+      context: context,
+      theme: _theme,
+      title: 'Company',
+      itemName: raw!.companyName ?? "",
+    );
 
     // final confirm = await showDialog<bool>(
     //   context: context,
@@ -446,8 +442,9 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
 
     if (confirm != true || !mounted) return;
 
-    final success =
-    await context.read<CompanyProvider>().deleteCompany(raw.companyCode!);
+    final success = await context.read<CompanyProvider>().deleteCompany(
+      raw.companyCode!,
+    );
 
     if (success && mounted) {
       _resetForm();
@@ -472,13 +469,13 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
   void _resetForm() {
     setState(() {
       _selectedRow = null;
-      _isEditMode  = false;
-      _formValues  = {};
-      _showTableOnMobile=false;
-
+      _isEditMode = false;
+      _formValues = {};
+      _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
   }
+
   bool _showTableOnMobile = false;
 
   // ── BUILD ─────────────────────────────────────────────────────────────────
@@ -488,75 +485,75 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
       builder: (context, provider, _) {
         return Padding(
           padding: const EdgeInsets.all(8),
-          child:
-              Responsive.isMobile(context)?_showTableOnMobile? buildErpDataTable(provider):ErpForm(
-                onExit: () {
-                  context.read<TabProvider>().closeCurrentTab();
-                },
-                logo: AppImages.logo,
+          child: Responsive.isMobile(context)
+              ? _showTableOnMobile
+                    ? buildErpDataTable(provider)
+                    : ErpForm(
+                        onExit: () {
+                          context.read<TabProvider>().closeCurrentTab();
+                        },
+                        logo: AppImages.logo,
 
-                key: _erpFormKey,
-                title: 'COMPANY MASTER',
-                subtitle: 'Firm / Company Information',
-                // tabs: ['Basic Info', 'Tax Info', 'Bank Details'],
-                initialTabIndex: 0,
-                onSearch: () => setState(() => _showTableOnMobile = true),
-                tabBarBackgroundColor: const Color(0xfff2f0ef),
-                tabBarSelectedColor: _theme.primaryGradient.first,
-                tabBarSelectedTxtColor: Colors.white,
-                rows: _formRows,
-                // theme: _theme,
-                initialValues: _formValues,
-                isEditMode: _isEditMode,
-                onFieldChanged: (key, value) {
-                _formValues[key] = value;
-                },
-                onSave: _onSave,
-                onCancel: _resetForm,
-                onDelete: _isEditMode ? _onDelete : null,
-              ):
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── LEFT: Form ─────────────────────────────────────────
-              Expanded(
-                flex: 2,
-                child: ErpForm(
-                  onExit: () {
-                    context.read<TabProvider>().closeCurrentTab();
-                  },
-                  logo: AppImages.logo,
+                        key: _erpFormKey,
+                        title: 'COMPANY MASTER',
+                        subtitle: 'Firm / Company Information',
+                        // tabs: ['Basic Info', 'Tax Info', 'Bank Details'],
+                        initialTabIndex: 0,
+                        onSearch: () =>
+                            setState(() => _showTableOnMobile = true),
+                        tabBarBackgroundColor: const Color(0xfff2f0ef),
+                        tabBarSelectedColor: _theme.primaryGradient.first,
+                        tabBarSelectedTxtColor: Colors.white,
+                        rows: _formRows,
+                        // theme: _theme,
+                        initialValues: _formValues,
+                        isEditMode: _isEditMode,
+                        onFieldChanged: (key, value) {
+                          _formValues[key] = value;
+                        },
+                        onSave: _onSave,
+                        onCancel: _resetForm,
+                        onDelete: _isEditMode ? _onDelete : null,
+                      )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── LEFT: Form ─────────────────────────────────────────
+                    Expanded(
+                      flex: 2,
+                      child: ErpForm(
+                        onExit: () {
+                          context.read<TabProvider>().closeCurrentTab();
+                        },
+                        logo: AppImages.logo,
 
-                  key: _erpFormKey,
-                  title: 'COMPANY MASTER',
-                  subtitle: 'Firm / Company Information',
-                  // tabs: ['Basic Info', 'Tax Info', 'Bank Details'],
-                  initialTabIndex: 0,
-                  tabBarBackgroundColor: const Color(0xfff2f0ef),
-                  tabBarSelectedColor: _theme.primaryGradient.first,
-                  tabBarSelectedTxtColor: Colors.white,
-                  rows: _formRows,
-                  // theme: _theme,
-                  initialValues: _formValues,
-                  isEditMode: _isEditMode,
-                  onFieldChanged: (key, value) {
-                    _formValues[key] = value;
-                  },
-                  onSave: _onSave,
-                  onCancel: _resetForm,
-                  onDelete: _isEditMode ? _onDelete : null,
+                        key: _erpFormKey,
+                        title: 'COMPANY MASTER',
+                        subtitle: 'Firm / Company Information',
+                        // tabs: ['Basic Info', 'Tax Info', 'Bank Details'],
+                        initialTabIndex: 0,
+                        tabBarBackgroundColor: const Color(0xfff2f0ef),
+                        tabBarSelectedColor: _theme.primaryGradient.first,
+                        tabBarSelectedTxtColor: Colors.white,
+                        rows: _formRows,
+                        // theme: _theme,
+                        initialValues: _formValues,
+                        isEditMode: _isEditMode,
+                        onFieldChanged: (key, value) {
+                          _formValues[key] = value;
+                        },
+                        onSave: _onSave,
+                        onCancel: _resetForm,
+                        onDelete: _isEditMode ? _onDelete : null,
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    // ── RIGHT: Table ───────────────────────────────────────
+                    Expanded(flex: 2, child: buildErpDataTable(provider)),
+                  ],
                 ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // ── RIGHT: Table ───────────────────────────────────────
-              Expanded(
-                flex: 2,
-                child: buildErpDataTable(provider),
-              ),
-            ],
-          ),
         );
       },
     );
@@ -564,24 +561,20 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
 
   ErpDataTable buildErpDataTable(CompanyProvider provider) {
     return ErpDataTable(
-                isReportRow: false,
+      isReportRow: false,
 
-                token: token ?? '',
-                url: baseUrl,
-                title: 'COMPANY LIST',
-                columns: _tableColumns,
-                // availableExtraColumns: _extraColumns,
-                data: provider.tableData,
-                // theme: _theme,
-                showSearch: true,
-                showFooterTotals: false,
-                selectedRow: _selectedRow,
-                onRowTap: _onRowTap,
-                emptyMessage: provider.isLoaded
-                    ? 'No companies found'
-                    : 'Loading...',
-              );
+      token: token ?? '',
+      url: baseUrl,
+      title: 'COMPANY LIST',
+      columns: _tableColumns,
+      // availableExtraColumns: _extraColumns,
+      data: provider.tableData,
+      // theme: _theme,
+      showSearch: true,
+      showFooterTotals: false,
+      selectedRow: _selectedRow,
+      onRowTap: _onRowTap,
+      emptyMessage: provider.isLoaded ? 'No companies found' : 'Loading...',
+    );
   }
-
-
 }

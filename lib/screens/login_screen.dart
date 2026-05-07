@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:diam_mfg/providers/menu_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
@@ -84,6 +85,10 @@ class _LoginScreenV7State extends State<LoginScreenV7>
         username: _emailCtrl.text.trim(), password: _passCtrl.text);
     if (ok && mounted) {
       final companyProvider = context.read<CompanyProvider>();
+      final prov = context.read<MenuProvider>();
+      await prov.loadMenus();
+      if (!mounted) return;
+      setState(() {});
       await companyProvider.loadCompanies();
       if (!mounted) return;
 
