@@ -1,6 +1,8 @@
 import 'package:diam_mfg/providers/shape_provider.dart';
 import 'package:diam_mfg/providers/shape_group_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +39,7 @@ class _MstShapeState extends State<MstShape> {
   List<ErpColumnConfig> get _tableColumns => [
     ErpColumnConfig(key: 'shapeCode', label: 'CODE', width: 130),
     ErpColumnConfig(key: 'shapeName', label: 'NAME', width: 180),
-    ErpColumnConfig(key: 'shapeGroupCode', label: 'GROUP', width: 160),
+    ErpColumnConfig(key: 'ShapeGroupName', label: 'GROUP', width: 160),
     ErpColumnConfig(key: 'rateOn', label: 'RATE ON', width: 180),
     ErpColumnConfig(key: 'rapCode', label: 'RAP CODE', width: 180),
     ErpColumnConfig(key: 'companyCode', label: 'COMPANY', width: 160),
@@ -78,6 +80,13 @@ class _MstShapeState extends State<MstShape> {
             inputFormatters: [
               UpperCaseTextFormatter(),
             ],
+            onDuplicateCheck: (value, allValues) async {
+              return await _checkDuplicate(
+                fields: {
+                  'ShapeName': value,
+                },
+              );
+            },
           ),
           ErpFieldConfig(
             key: 'shapeGroupCode',
@@ -183,6 +192,34 @@ class _MstShapeState extends State<MstShape> {
         ],
       ];
 
+  Future<bool> _checkDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'ShapeName': 'shapeName',
+        'ShapeGroupCode': 'shapeGroupCode',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'Shape',
+      fields: fields,
+    );
+  }
+
+
   // // ── INIT ──────────────────────────────────────────────────────────────────
   // @override
   // void initState() {
@@ -263,6 +300,13 @@ class _MstShapeState extends State<MstShape> {
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkDuplicate(
+      fields: {
+        'ShapeName': values['shapeName'].toString(),
+        'ShapeGroupCode': num.parse(values['shapeGroupCode'].toString()),
+      },
+    );
+    if (exists) return;
     final provider = context.read<ShapeProvider>();
 
     bool success;

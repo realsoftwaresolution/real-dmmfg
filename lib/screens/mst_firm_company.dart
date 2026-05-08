@@ -1,5 +1,7 @@
 // lib/screens/mst_firm_company.dart
 
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:erp_formatter/erp_formatter.dart';
@@ -42,7 +44,6 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
       label: 'CODE',
       // flex: 1,
       width: 100,
-
       required: true,
     ),
     ErpColumnConfig(
@@ -110,6 +111,13 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
         inputFormatters: [
           UpperCaseTextFormatter(),
         ],
+        onDuplicateCheck: (value, allValues) async {
+          return await _checkCompanyDuplicate(
+            fields: {
+              'CompanyName': value,
+            },
+          );
+        },
         // tabIndex: 0,
       ),
 
@@ -320,6 +328,33 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
     ],
   ];
 
+  Future<bool> _checkCompanyDuplicate({
+    required Map<String, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'CompanyName': 'companyName',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'Company',
+      fields: fields,
+    );
+  }
+
+
   // ── INIT ──────────────────────────────────────────────────────────────────
   @override
   void initState() {
@@ -367,6 +402,13 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkCompanyDuplicate(
+      fields: {
+        'CompanyName': values['companyName'],
+      },
+    );
+    if (exists) return;
+
     final provider = context.read<CompanyProvider>();
 
     bool success;

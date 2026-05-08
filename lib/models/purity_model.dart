@@ -4,6 +4,8 @@ class PurityModel {
   final int? purityMstID;
   final int? purityCode;
   final String? purityName;
+  final String? PurityRptGroupName;
+  final String? PurityGroupName;
   final int? purityGroupCode;
   final int? purityRptGroupCode;
   final String? sflag;
@@ -22,6 +24,8 @@ class PurityModel {
   PurityModel({
     this.purityMstID,
     this.purityCode,
+    this.PurityGroupName,
+    this.PurityRptGroupName,
     this.purityName,
     this.purityGroupCode,
     this.purityRptGroupCode,
@@ -44,6 +48,8 @@ class PurityModel {
       purityMstID: json['PurityMstID'],
       purityCode: json['PurityCode'],
       purityName: json['PurityName'],
+      PurityRptGroupName: json['PurityRptGroupName'],
+      PurityGroupName: json['PurityGroupName'],
       purityGroupCode: json['PurityGroupCode'],
       purityRptGroupCode: json['PurityRptGroupCode'],
       sflag: json['Sflag'],
@@ -67,6 +73,8 @@ class PurityModel {
     return {
       'PurityCode': purityCode,
       'PurityName': purityName,
+      'PurityGroupName': PurityGroupName,
+      'PurityRptGroupName': PurityRptGroupName,
       'PurityGroupCode': purityGroupCode,
       'PurityRptGroupCode': purityRptGroupCode,
       'CompanyCode': companyCode,
@@ -83,6 +91,8 @@ class PurityModel {
     return {
       'purityCode': purityCode,
       'purityName': purityName ?? '',
+      'PurityRptGroupName': PurityRptGroupName ?? '',
+      'PurityGroupName': PurityGroupName ?? '',
       'purityGroupCode': purityGroupCode?.toString() ?? '',
       'purityRptGroupCode': purityRptGroupCode?.toString() ?? '',
       'labourRate': labourRate?.toStringAsFixed(2) ?? '',
@@ -97,6 +107,8 @@ class PurityModel {
     return PurityModel(
       purityCode: int.tryParse(v['purityCode'] ?? ''),
       purityName: v['purityName'],
+      PurityGroupName: v['PurityGroupName'],
+      PurityRptGroupName: v['PurityRptGroupName'],
       purityGroupCode: int.tryParse(v['purityGroupCode'] ?? ''),
       purityRptGroupCode: int.tryParse(v['purityRptGroupCode'] ?? ''),
       companyCode: int.tryParse(v['companyCode'] ?? ''),

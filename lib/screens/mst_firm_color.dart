@@ -1,6 +1,8 @@
 import 'package:diam_mfg/providers/color_group_provider.dart';
 import 'package:diam_mfg/providers/color_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +39,7 @@ class _MstColorState extends State<MstColor> {
   List<ErpColumnConfig> get _tableColumns => [
     ErpColumnConfig(key: 'colorCode', label: 'CODE', width: 130),
     ErpColumnConfig(key: 'colorName', label: 'NAME', width: 220),
-    ErpColumnConfig(key: 'colorRptGroupCode', label: 'RPT GROUP', width: 180),
+    ErpColumnConfig(key: 'ColorRptGroupName', label: 'RPT GROUP', width: 180),
     ErpColumnConfig(key: 'sortID', label: 'SORT ID', width: 160),
     ErpColumnConfig(key: 'active', label: 'ACTIVE', width: 140),
   ];
@@ -142,6 +144,35 @@ class _MstColorState extends State<MstColor> {
     ],
   ];
 
+
+  Future<bool> _checkDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'ColorRptGroupCode': 'colorRptGroupCode',
+        'ColorName': 'colorName',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'Color',
+      fields: fields,
+    );
+  }
+
+
   // // ── INIT ──────────────────────────────────────────────────────────────────
   // @override
   // void initState() {
@@ -219,6 +250,13 @@ class _MstColorState extends State<MstColor> {
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkDuplicate(
+      fields: {
+        'ColorName': values['colorName'].toString(),
+        'ColorRptGroupCode': num.parse(values['colorRptGroupCode'].toString()),
+      },
+    );
+    if (exists) return;
     final provider = context.read<ColorProvider>();
 
     bool success;

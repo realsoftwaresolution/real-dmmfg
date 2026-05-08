@@ -1,6 +1,8 @@
 import 'package:diam_mfg/providers/pc_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
+import 'package:erp_formatter/erp_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
@@ -61,11 +63,15 @@ class _MstPcState extends State<MstPc> {
         label: 'NAME',
         required: true,
         sectionIndex: 0,
+        inputFormatters: [
+          UpperCaseTextFormatter(),
+        ],
       ),
       ErpFieldConfig(
         key: 'pcIPAddress',
         label: 'IP ADDRESS',
         sectionIndex: 0,
+        validator: ErpValidators.ipAddress(isRequired: false),
       ),
       ErpFieldConfig(
         key: 'sortID',

@@ -2,6 +2,8 @@ import 'package:diam_mfg/providers/dept_process_provider.dart';
 import 'package:diam_mfg/providers/dept_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/stock_type_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
@@ -38,8 +40,10 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
   List<ErpColumnConfig> get _tableColumns => [
     ErpColumnConfig(key: 'deptProcessCode', label: 'CODE', width: 130),
     ErpColumnConfig(key: 'deptProcessName', label: 'NAME', width: 200),
-    ErpColumnConfig(key: 'deptCode', label: 'DEPT', width: 130),
+    ErpColumnConfig(key: 'DeptName', label: 'DEPT', width: 130),
     ErpColumnConfig(key: 'companyCode', label: 'COMPANY', width: 160),
+    ErpColumnConfig(key: 'StockType', label: 'STOCK TYPE', width: 180),
+    ErpColumnConfig(key: 'RateOnShape', label: 'RATE ON SHAPE', width: 180),
     ErpColumnConfig(key: 'sortID', label: 'SORT ID', width: 160),
     ErpColumnConfig(key: 'active', label: 'ACTIVE', width: 140),
   ];
@@ -401,6 +405,37 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
         ],
       ];
 
+
+
+  Future<bool> _checkDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'DeptCode': 'deptCode',
+        'DeptProcessName': 'deptProcessName',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'DeptProcess',
+      fields: fields,
+    );
+  }
+
+
+
   // // ── INIT ──────────────────────────────────────────────────────────────────
   // @override
   // void initState() {
@@ -450,6 +485,7 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
 
 
       await context.read<DeptProcessProvider>().load();
+      await context.read<StockTypeProvider>().load();
       _setDefaultSortId();
 
     });
@@ -506,6 +542,13 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkDuplicate(
+      fields: {
+        'DeptProcessName': values['deptProcessName'].toString(),
+        'DeptCode': num.parse(values['deptCode'].toString()),
+      },
+    );
+    if (exists) return;
     final provider = context.read<DeptProcessProvider>();
 
     bool success;

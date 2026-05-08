@@ -1,5 +1,7 @@
 import 'package:diam_mfg/providers/article_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
@@ -63,6 +65,13 @@ class _MstArticleState extends State<MstArticle> {
         inputFormatters: [
           UpperCaseTextFormatter(),
         ],
+        onDuplicateCheck: (value, allValues) async {
+          return await _checkNameAndSortIdDuplicate(
+            fields: {
+              'ArticalName': value,
+            },
+          );
+        },
       ),
       ErpFieldConfig(
         key: 'sortID',
@@ -106,6 +115,34 @@ class _MstArticleState extends State<MstArticle> {
       ),
     ],
   ];
+
+  Future<bool> _checkNameAndSortIdDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'ArticalName': 'articalName',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'Article',
+      fields: fields,
+    );
+  }
+
+
   void _setDefaultSortId() {
     final provider = context.read<ArticleProvider>();
 
@@ -181,6 +218,12 @@ class _MstArticleState extends State<MstArticle> {
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkNameAndSortIdDuplicate(
+      fields: {
+        'ArticalName': values['articalName'],
+      },
+    );
+    if (exists) return;
     final provider = context.read<ArticleProvider>();
 
     bool success;

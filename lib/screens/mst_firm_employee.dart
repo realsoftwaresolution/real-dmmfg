@@ -350,6 +350,7 @@ import 'package:diam_mfg/providers/designation_provider.dart';
 import 'package:diam_mfg/providers/employee_dept_det_provider.dart';
 import 'package:diam_mfg/providers/employee_manager_det_provider.dart';
 import 'package:diam_mfg/providers/employee_provider.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -410,8 +411,12 @@ class _MstEmployeeState extends State<MstEmployee> {
 
   List<List<ErpFieldConfig>> _formRows(DeptProvider deptP, DesignationProvider desigP) => [
     [
-      ErpFieldConfig(key: 'employeeName', label: 'EMPLOYEE NAME', required: true, flex: 3, sectionTitle: 'BASIC INFORMATION', sectionIndex: 0),
-      ErpFieldConfig(key: 'aliasName',    label: 'ALIAS NAME',    flex: 2, sectionIndex: 0),
+      ErpFieldConfig(key: 'employeeName', label: 'EMPLOYEE NAME', required: true, flex: 3, sectionTitle: 'BASIC INFORMATION', sectionIndex: 0,inputFormatters: [
+        UpperCaseTextFormatter(),
+      ],),
+      ErpFieldConfig(key: 'aliasName',    label: 'ALIAS NAME',    flex: 2, sectionIndex: 0,inputFormatters: [
+        UpperCaseTextFormatter(),
+      ],  ),
     ],
     [
       ErpFieldConfig(

@@ -1,6 +1,9 @@
 import 'package:diam_mfg/providers/tension_type_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -68,6 +71,9 @@ class _MstTensionsState extends State<MstTensions> {
         label: 'NAME',
         required: true,
         sectionIndex: 0,
+        inputFormatters: [
+          UpperCaseTextFormatter(),
+        ],
       ),
       ErpFieldConfig(
         key: 'tensionType',
@@ -81,7 +87,7 @@ class _MstTensionsState extends State<MstTensions> {
         },).map((e) {
           return ErpDropdownItem(
             label: e.tensionTypeName ?? '',
-            value: e.tensionTypeCode?.toString() ?? '',
+            value: e.tensionTypeName?.toString() ?? '',
           );
         }).toList(),
         sectionIndex: 0,
@@ -131,6 +137,36 @@ class _MstTensionsState extends State<MstTensions> {
       ),
     ],
   ];
+
+
+  Future<bool> _checkDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'TensionType': 'tensionType',
+        'TensionsName': 'tensionsName',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'Tensions',
+      fields: fields,
+    );
+  }
+
+
 
   // // ── INIT ──────────────────────────────────────────────────────────────────
   // @override
@@ -208,6 +244,13 @@ class _MstTensionsState extends State<MstTensions> {
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkDuplicate(
+      fields: {
+        'TensionsName': values['tensionsName'].toString(),
+        'TensionType': values['tensionType'].toString(),
+      },
+    );
+    if (exists) return;
     final provider = context.read<TensionsProvider>();
 
     bool success;

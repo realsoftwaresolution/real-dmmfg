@@ -153,12 +153,11 @@ packages:
     source: path
     version: "1.1.4"
   erp_formatter:
-    dependency: "direct main"
+    dependency: "direct overridden"
     description:
-      name: erp_formatter
-      sha256: a1d78f4b11304b06a8dfaa11ceb6e9b78f68325ee18bbc15758325394bfc4b88
-      url: "https://pub.dev"
-    source: hosted
+      path: "../erp_formatter"
+      relative: true
+    source: path
     version: "1.0.1"
   excel:
     dependency: "direct main"

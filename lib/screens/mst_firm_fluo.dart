@@ -1,5 +1,8 @@
 import 'package:diam_mfg/providers/fluo_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -56,6 +59,16 @@ class _MstFluoState extends State<MstFluo> {
         label: 'NAME',
         required: true,
         sectionIndex: 0,
+        inputFormatters: [
+          UpperCaseTextFormatter(),
+        ],
+        onDuplicateCheck: (value, allValues) async {
+          return await _checkDuplicate(
+            fields: {
+              'FluoName': value,
+            },
+          );
+        },
       ),
       ErpFieldConfig(
         key: 'sortID',
@@ -99,6 +112,35 @@ class _MstFluoState extends State<MstFluo> {
       ),
     ],
   ];
+
+
+
+  Future<bool> _checkDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'FluoName': 'fluoName',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'Fluo',
+      fields: fields,
+    );
+  }
+
 
   // // ── INIT ──────────────────────────────────────────────────────────────────
   // @override
@@ -173,6 +215,12 @@ class _MstFluoState extends State<MstFluo> {
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkDuplicate(
+      fields: {
+        'FluoName': values['fluoName'],
+      },
+    );
+    if (exists) return;
     final provider = context.read<FluoProvider>();
     bool success;
     if (_isEditMode && _selectedRow != null) {

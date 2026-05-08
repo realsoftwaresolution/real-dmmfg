@@ -1,5 +1,7 @@
 import 'package:diam_mfg/providers/shape_group_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
@@ -61,6 +63,13 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
         inputFormatters: [
           UpperCaseTextFormatter(),
         ],
+        onDuplicateCheck: (value, allValues) async {
+          return await _checkDuplicate(
+            fields: {
+              'ShapeGroupName': value,
+            },
+          );
+        },
       ),
       ErpFieldConfig(
         key: 'sortID',
@@ -107,6 +116,34 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
       ),
     ],
   ];
+
+
+
+  Future<bool> _checkDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'ShapeGroupName': 'shapeGroupName',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'ShapeGroup',
+      fields: fields,
+    );
+  }
 
   // // ── INIT ──────────────────────────────────────────────────────────────────
   // @override
@@ -182,6 +219,12 @@ class _MstShapeGroupState extends State<MstShapeGroup> {
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkDuplicate(
+      fields: {
+        'ShapeGroupName': values['shapeGroupName'],
+      },
+    );
+    if (exists) return;
     final provider = context.read<ShapeGroupProvider>();
 
     bool success;

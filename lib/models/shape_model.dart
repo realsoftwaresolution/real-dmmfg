@@ -4,6 +4,7 @@ class ShapeModel {
   final int? shapeMstID;
   final int? shapeCode;
   final String? shapeName;
+  final String? ShapeGroupName;
   final int? shapeGroupCode;
   final String? sflag;
   final String? sdate;
@@ -21,6 +22,7 @@ class ShapeModel {
     this.shapeMstID,
     this.shapeCode,
     this.shapeName,
+    this.ShapeGroupName,
     this.shapeGroupCode,
     this.sflag,
     this.sdate,
@@ -41,6 +43,7 @@ class ShapeModel {
       shapeCode: json['ShapeCode'],
       shapeName: json['ShapeName'],
       shapeGroupCode: json['ShapeGroupCode'],
+      ShapeGroupName: json['ShapeGroupName'],
       sflag: json['Sflag'],
       sdate: json['Sdate']?.toString(),
       logID: json['LogID'],
@@ -61,6 +64,7 @@ class ShapeModel {
       'ShapeName': shapeName,
       'ShapeGroupCode': shapeGroupCode,
       'CompanyCode': companyCode,
+      'ShapeGroupName': ShapeGroupName,
       'SortID': sortID,
       'Active': active,
       'RateOn': rateOn,
@@ -74,6 +78,7 @@ class ShapeModel {
       'shapeCode': shapeCode,
       'shapeName': shapeName ?? '',
       'shapeGroupCode': shapeGroupCode?.toString() ?? '',
+      'ShapeGroupName': ShapeGroupName?.toString() ?? '',
       'rateOn': rateOn ?? '',
       'rapCode': rapCode ?? '',
       'companyCode': companyName??companyCode?.toString() ?? '',
@@ -87,6 +92,7 @@ class ShapeModel {
     return ShapeModel(
       shapeCode: int.tryParse(v['shapeCode'] ?? ''),
       shapeName: v['shapeName'],
+      ShapeGroupName: v['ShapeGroupName'],
       shapeGroupCode: int.tryParse(v['shapeGroupCode'] ?? ''),
       companyCode: int.tryParse(v['companyCode'] ?? ''),
       sortID: int.tryParse(v['sortID'] ?? ''),

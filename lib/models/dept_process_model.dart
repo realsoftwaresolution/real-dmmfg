@@ -4,6 +4,7 @@ class DeptProcessModel {
   final int? deptProcessMstID;
   final int? deptProcessCode;
   final String? deptProcessName;
+  final String? DeptName;
   final int? deptCode;
   final String? sflag;
   final String? sdate;
@@ -45,6 +46,7 @@ class DeptProcessModel {
     this.deptProcessMstID,
     this.deptProcessCode,
     this.deptProcessName,
+    this.DeptName,
     this.deptCode,
     this.sflag,
     this.sdate,
@@ -88,6 +90,7 @@ class DeptProcessModel {
       deptProcessMstID: json['DeptProcessMstID'],
       deptProcessCode: json['DeptProcessCode'],
       deptProcessName: json['DeptProcessName'],
+      DeptName: json['DeptName'],
       deptCode: json['DeptCode'],
       sflag: json['Sflag'],
       sdate: json['Sdate']?.toString(),
@@ -132,6 +135,7 @@ class DeptProcessModel {
       'DeptProcessCode': deptProcessCode,
       'DeptProcessName': deptProcessName,
       'DeptCode': deptCode,
+      'DeptName': DeptName,
       'CompanyCode': companyCode,
       'SortID': sortID,
       'Active': active,
@@ -169,6 +173,9 @@ class DeptProcessModel {
     return {
       'deptProcessCode': deptProcessCode,
       'deptProcessName': deptProcessName ?? '',
+      'DeptName': DeptName ?? '',
+      'StockType': stockType ?? '',
+      'RateOnShape': rateOnShape ?? '',
       'deptCode': deptCode?.toString() ?? '',
       'companyCode':companyName?? companyCode?.toString() ?? '',
       'sortID': sortID?.toString() ?? '',
@@ -217,6 +224,7 @@ class DeptProcessModel {
     return DeptProcessModel(
       deptProcessCode: int.tryParse(v['deptProcessCode'] ?? ''),
       deptProcessName: v['deptProcessName'],
+      DeptName: v['DeptName'],
 
       deptCode: int.tryParse(v['deptCode'] ?? ''),
       companyCode: int.tryParse(v['companyCode'] ?? ''),

@@ -4,6 +4,8 @@ class RemarksModel {
   final int? remarksMstID;
   final int? remarksCode;
   final String? remarksName;
+  final String? DeptProcessName;
+  final String? DeptName;
   final int? deptCode;
   final int? deptProcessCode;
   final String? sflag;
@@ -20,6 +22,8 @@ class RemarksModel {
     this.remarksMstID,
     this.remarksCode,
     this.remarksName,
+    this.DeptProcessName,
+    this.DeptName,
     this.deptCode,
     this.deptProcessCode,
     this.sflag,
@@ -38,6 +42,8 @@ class RemarksModel {
       remarksMstID: json['RemarksMstID'],
       remarksCode: json['RemarksCode'],
       remarksName: json['RemarksName'],
+      DeptName: json['DeptName'],
+      DeptProcessName: json['DeptProcessName'],
       deptCode: json['DeptCode'],
       deptProcessCode: json['DeptProcessCode'],
       sflag: json['Sflag'],
@@ -56,6 +62,8 @@ class RemarksModel {
     return {
       'RemarksCode': remarksCode,
       'RemarksName': remarksName,
+      'DeptProcessName': DeptProcessName,
+      'DeptName': DeptName,
       'DeptCode': deptCode,
       'DeptProcessCode': deptProcessCode,
       'CompanyCode': companyCode,
@@ -69,6 +77,8 @@ class RemarksModel {
     return {
       'remarksCode': remarksCode,
       'remarksName': remarksName ?? '',
+      'DeptProcessName': DeptProcessName ?? '',
+      'DeptName': DeptName ?? '',
       'deptCode': deptCode?.toString() ?? '',
       'deptProcessCode': deptProcessCode?.toString() ?? '',
       'tops': tops?.toString() ?? '',
@@ -83,6 +93,8 @@ class RemarksModel {
     return RemarksModel(
       remarksCode: int.tryParse(v['remarksCode'] ?? ''),
       remarksName: v['remarksName'],
+      DeptProcessName: v['DeptProcessName'],
+      DeptName: v['DeptName'],
       deptCode: int.tryParse(v['deptCode'] ?? ''),
       deptProcessCode: int.tryParse(v['deptProcessCode'] ?? ''),
       companyCode: int.tryParse(v['companyCode'] ?? ''),

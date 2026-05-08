@@ -4,6 +4,7 @@ class PurityGroupModel {
   final int? purityGroupMstID;
   final int? purityGroupCode;
   final String? purityGroupName;
+  final String? PurityTypeName;
   final int? purityTypeCode;
   final String? sflag;
   final String? sdate;
@@ -19,6 +20,7 @@ class PurityGroupModel {
     this.purityGroupMstID,
     this.purityGroupCode,
     this.purityGroupName,
+    this.PurityTypeName,
     this.purityTypeCode,
     this.sflag,
     this.sdate,
@@ -37,6 +39,7 @@ class PurityGroupModel {
       purityGroupCode: json['PurityGroupCode'],
       purityGroupName: json['PurityGroupName'],
       purityTypeCode: json['PurityTypeCode'],
+      PurityTypeName: json['PurityTypeName'],
       sflag: json['Sflag'],
       sdate: json['Sdate']?.toString(),
       logID: json['LogID'],
@@ -55,6 +58,7 @@ class PurityGroupModel {
       'PurityGroupCode': purityGroupCode,
       'PurityGroupName': purityGroupName,
       'PurityTypeCode': purityTypeCode,
+      'PurityTypeName': PurityTypeName,
       'CompanyCode': companyCode,
       'SortID': sortID,
       'Active': active,
@@ -67,6 +71,7 @@ class PurityGroupModel {
       'purityGroupCode': purityGroupCode,
       'purityGroupName': purityGroupName ?? '',
       'purityTypeCode': purityTypeCode?.toString() ?? '',
+      'PurityTypeName': PurityTypeName?.toString() ?? '',
       'companyCode': companyName??companyCode?.toString() ?? '',
       'sortID': sortID?.toString() ?? '',
       'active': active == true ? 'Yes' : 'No',
@@ -77,6 +82,7 @@ class PurityGroupModel {
     return PurityGroupModel(
       purityGroupCode: int.tryParse(v['purityGroupCode'] ?? ''),
       purityGroupName: v['purityGroupName'],
+      PurityTypeName: v['PurityTypeName'],
       purityTypeCode: int.tryParse(v['purityTypeCode'] ?? ''),
       companyCode: int.tryParse(v['companyCode'] ?? ''),
       sortID: int.tryParse(v['sortID'] ?? ''),

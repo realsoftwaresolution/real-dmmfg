@@ -1,6 +1,8 @@
 import 'package:diam_mfg/providers/dept_provider.dart';
 import 'package:diam_mfg/providers/dept_group_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
@@ -37,8 +39,14 @@ class _MstDeptState extends State<MstDept> {
   List<ErpColumnConfig> get _tableColumns => [
     ErpColumnConfig(key: 'deptCode', label: 'CODE', width: 130),
     ErpColumnConfig(key: 'deptName', label: 'NAME', width: 200),
-    ErpColumnConfig(key: 'deptGroupCode', label: 'GROUP', width: 160),
+    ErpColumnConfig(key: 'DeptGroupName', label: 'GROUP', width: 160),
     ErpColumnConfig(key: 'companyCode', label: 'COMPANY', width: 160),
+    ErpColumnConfig(key: 'rateOnJanCharni', label: 'COMPANY', width: 160),
+    ErpColumnConfig(key: 'managerRate', label: 'Manager Rate', width: 200),
+    ErpColumnConfig(key: 'rateOnCutMan', label: 'Rate On Cut Man', width: 200),
+    ErpColumnConfig(key: 'rateOnRgType', label: 'Rate On Rg Type', width: 200),
+    ErpColumnConfig(key: 'rateOnTension', label: 'Rate On Tension', width: 200),
+    ErpColumnConfig(key: 'rateOnLSPie', label: 'Rate On LS Pie', width: 200),
     ErpColumnConfig(key: 'sortID', label: 'SORT ID', width: 160),
     ErpColumnConfig(key: 'active', label: 'ACTIVE', width: 140),
   ];
@@ -352,6 +360,36 @@ class _MstDeptState extends State<MstDept> {
         ],
       ];
 
+
+  Future<bool> _checkDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'DeptGroupCode': 'deptGroupCode',
+        'DeptName': 'deptName',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'Dept',
+      fields: fields,
+    );
+  }
+
+
+
   // // ── INIT ──────────────────────────────────────────────────────────────────
   // @override
   // void initState() {
@@ -458,6 +496,13 @@ class _MstDeptState extends State<MstDept> {
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkDuplicate(
+      fields: {
+        'DeptName': values['deptName'].toString(),
+        'DeptGroupCode': num.parse(values['deptGroupCode'].toString()),
+      },
+    );
+    if (exists) return;
     final provider = context.read<DeptProvider>();
 
     bool success;

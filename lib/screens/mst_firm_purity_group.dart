@@ -1,6 +1,8 @@
 import 'package:diam_mfg/providers/purity_group_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/purity_type_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +39,7 @@ class _MstPurityGroupState extends State<MstPurityGroup> {
   List<ErpColumnConfig> get _tableColumns => [
     ErpColumnConfig(key: 'purityGroupCode', label: 'CODE', width: 130),
     ErpColumnConfig(key: 'purityGroupName', label: 'NAME', width: 200),
-    ErpColumnConfig(key: 'purityTypeCode', label: 'PURITY TYPE', width: 180),
+    ErpColumnConfig(key: 'PurityTypeName', label: 'PURITY TYPE', width: 180),
     ErpColumnConfig(key: 'companyCode', label: 'COMPANY', width: 160),
     ErpColumnConfig(key: 'sortID', label: 'SORT ID', width: 160),
     ErpColumnConfig(key: 'active', label: 'ACTIVE', width: 140),
@@ -63,6 +65,13 @@ class _MstPurityGroupState extends State<MstPurityGroup> {
         inputFormatters: [
           UpperCaseTextFormatter(),
         ],
+        onDuplicateCheck: (value, allValues) async {
+          return await _checkPurityGroupNameAndSortIdDuplicate(
+            fields: {
+              'PurityGroupName': value,
+            },
+          );
+        },
       ),
     ],
 
@@ -152,6 +161,35 @@ class _MstPurityGroupState extends State<MstPurityGroup> {
   //     context.read<CompanyProvider>().loadCompanies();
   //   });
   // }
+
+
+  Future<bool> _checkPurityGroupNameAndSortIdDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'PurityGroupName': 'purityGroupName',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'PurityGroup',
+      fields: fields,
+    );
+  }
+
+
   void _setDefaultSortId() {
     final provider = context.read<PurityGroupProvider>();
 
@@ -225,6 +263,12 @@ class _MstPurityGroupState extends State<MstPurityGroup> {
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkPurityGroupNameAndSortIdDuplicate(
+      fields: {
+        'PurityGroupName': values['purityGroupName'],
+      },
+    );
+    if (exists) return;
     final provider = context.read<PurityGroupProvider>();
     // values['delRights'] = values['delRights'] == 'Y' ? 'Y' : 'N';
     //

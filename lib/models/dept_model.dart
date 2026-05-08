@@ -4,6 +4,7 @@ class DeptModel {
   final int? deptMstID;
   final int? deptCode;
   final String? deptName;
+  final String? DeptGroupName;
   final int? deptGroupCode;
   final String? sflag;
   final String? sdate;
@@ -43,6 +44,7 @@ class DeptModel {
   DeptModel({
     this.deptMstID,
     this.deptCode,
+    this.DeptGroupName,
     this.deptName,
     this.deptGroupCode,
     this.sflag,
@@ -86,6 +88,7 @@ class DeptModel {
       deptMstID: json['DeptMstID'],
       deptCode: json['DeptCode'],
       deptName: json['DeptName'],
+      DeptGroupName: json['DeptGroupName'],
       deptGroupCode: json['DeptGroupCode'],
       sflag: json['Sflag'],
       sdate: json['Sdate']?.toString(),
@@ -133,6 +136,7 @@ class DeptModel {
       'SortID': sortID,
       'Active': active,
       'DelRights': delRights,
+      'DeptGroupName': DeptGroupName,
       'ClvActive': clvActive,
       'JnoCreate': jnoCreate,
       'DisplayStock': displayStock,
@@ -166,6 +170,13 @@ class DeptModel {
       'deptCode': deptCode,
       'deptName': deptName ?? '',
       'deptGroupCode': deptGroupCode?.toString() ?? '',
+      'DeptGroupName': DeptGroupName?.toString() ?? '',
+      'rateOnJanCharni': rateOnJanCharni?.toString() ?? '',
+      'managerRate': managerRate?.toString() ?? '',
+      'rateOnCutMan': rateOnCutMan?.toString() ?? '',
+      'rateOnRgType': rateOnRgType?.toString() ?? '',
+      'rateOnTension': rateOnTension?.toString() ?? '',
+      'rateOnLSPie': rateOnLSPie?.toString() ?? '',
       'companyCode': companyName??companyCode?.toString() ?? '',
       'sortID': sortID?.toString() ?? '',
       'active': active == true ? 'Yes' : 'No',
@@ -177,6 +188,7 @@ class DeptModel {
     return DeptModel(
       deptCode: int.tryParse(v['deptCode'] ?? ''),
       deptName: v['deptName'],
+      DeptGroupName: v['DeptGroupName'],
       deptGroupCode: int.tryParse(v['deptGroupCode'] ?? ''),
       companyCode: int.tryParse(v['companyCode'] ?? ''),
       sortID: int.tryParse(v['sortID'] ?? ''),

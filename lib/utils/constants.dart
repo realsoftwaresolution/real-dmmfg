@@ -51,3 +51,47 @@ class UpperCaseTextFormatter extends TextInputFormatter {
     );
   }
 }
+
+String formatDisplayDate(dynamic value) {
+
+  if (value == null) return '';
+
+  final str = value.toString().trim();
+
+  if (str.isEmpty) return '';
+
+  try {
+
+    final date = DateTime.parse(str);
+
+    return '${date.day.toString().padLeft(2, '0')}/'
+        '${date.month.toString().padLeft(2, '0')}/'
+        '${date.year}';
+
+  } catch (e) {
+
+    return str;
+  }
+}
+
+String toIsoDate(String value) {
+
+  try {
+
+    final parts = value.split('/');
+
+    if (parts.length != 3) return value;
+
+    final date = DateTime.utc(
+      int.parse(parts[2]), // year
+      int.parse(parts[1]), // month
+      int.parse(parts[0]), // day
+    );
+
+    return date.toIso8601String();
+
+  } catch (e) {
+
+    return value;
+  }
+}

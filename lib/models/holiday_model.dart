@@ -1,3 +1,5 @@
+import 'package:diam_mfg/utils/constants.dart';
+
 import '../utils/helper_functions.dart';
 
 class HolidayModel {
@@ -47,15 +49,10 @@ class HolidayModel {
   }
 
   Map<String, dynamic> toJson() {
-    String? date;
-
-    if (holidayDate != null && holidayDate!.isNotEmpty) {
-      date = holidayDate!.substring(0, 10); // yyyy-MM-dd
-    }
     return {
       'HolidayCode': holidayCode,
       'HolidayName': holidayName,
-      'HolidayDate': date,
+      'HolidayDate': holidayDate,
       'CompanyCode': companyCode,
       'SortID': sortID,
       'Active': active,
@@ -63,20 +60,11 @@ class HolidayModel {
   }
 
   Map<String, dynamic> toTableRow({String? companyName}) {
-    // Format date for display: extract YYYY-MM-DD from ISO string
-    String displayDate = '';
-    if (holidayDate != null && holidayDate!.isNotEmpty) {
-      try {
-        displayDate = holidayDate!.substring(0, 10);
-      } catch (_) {
-        displayDate = holidayDate ?? '';
-      }
-    }
     return {
       'holidayCode': holidayCode,
       'holidayName': holidayName ?? '',
-      'holidayDate': displayDate,
-      'companyCode': companyName??companyCode?.toString() ?? '',
+      'holidayDate': formatDisplayDate(holidayDate),
+      'companyCode': companyName ?? companyCode?.toString() ?? '',
       'sortID': sortID?.toString() ?? '',
       'active': active == true ? 'Yes' : 'No',
       '_raw': this,
@@ -84,20 +72,20 @@ class HolidayModel {
   }
 
   static HolidayModel fromFormValues(Map<String, dynamic> v) {
-    String? rawDate = v['holidayDate'];
-    String? cleanDate;
-    if (rawDate != null && rawDate.isNotEmpty) {
-      cleanDate = rawDate.length >= 10 ? rawDate.substring(0, 10) : rawDate;
-    }
-    return HolidayModel(
-      holidayCode: int.tryParse(v['holidayCode'] ?? ''),
-      holidayName: v['holidayName'],
-      holidayDate: cleanDate,
-      companyCode: int.tryParse(v['companyCode'] ?? ''),
-      sortID: int.tryParse(v['sortID'] ?? ''),
-      // active: v['active'] == 'Y',
-      active: parseBool(v['active']),
 
+    return HolidayModel(
+
+      holidayCode: int.tryParse(v['holidayCode'] ?? ''),
+
+      holidayName: v['holidayName'],
+
+      holidayDate: toIsoDate(v['holidayDate']),
+
+      companyCode: int.tryParse(v['companyCode'] ?? ''),
+
+      sortID: int.tryParse(v['sortID'] ?? ''),
+
+      active: parseBool(v['active']),
     );
   }
 }

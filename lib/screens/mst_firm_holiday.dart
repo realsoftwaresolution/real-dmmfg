@@ -1,5 +1,8 @@
 import 'package:diam_mfg/providers/holiday_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -61,6 +64,9 @@ class _MstHolidayState extends State<MstHoliday> {
         label: 'NAME',
         required: true,
         sectionIndex: 0,
+        inputFormatters: [
+          UpperCaseTextFormatter(),
+        ],
       ),
       ErpFieldConfig(
         key: 'holidayDate',
@@ -120,6 +126,37 @@ class _MstHolidayState extends State<MstHoliday> {
   //     context.read<CompanyProvider>().loadCompanies();
   //   });
   // }
+
+
+
+  Future<bool> _checkDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      allowRowData: true,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'HolidayDate': 'HolidayDate',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'Holiday',
+      fields: fields,
+    );
+  }
+
+
   void _setDefaultSortId() {
     final provider = context.read<HolidayProvider>();
 
@@ -165,14 +202,7 @@ class _MstHolidayState extends State<MstHoliday> {
   }
   void _onRowTap(Map<String, dynamic> row) {
     final raw = row['_raw'] as HolidayModel;
-    String dateVal = '';
-    if (raw.holidayDate != null && raw.holidayDate!.length >= 10) {
-      final parts = raw.holidayDate!.substring(0, 10).split('-'); // [yyyy, MM, dd]
-      if (parts.length == 3) {
-        dateVal = '${parts[2]}/${parts[1]}/${parts[0]}'; // dd/MM/yyyy ← slash
-      }
-    }
-
+    final dateVal = formatDisplayDate(raw.holidayDate);
     setState(() {
       _selectedRow = row;
       _isEditMode = true;
@@ -192,6 +222,12 @@ class _MstHolidayState extends State<MstHoliday> {
   }
 
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkDuplicate(
+      fields: {
+        'HolidayDate': toIsoDate(values['holidayDate']),
+      },
+    );
+    if (exists) return;
     final provider = context.read<HolidayProvider>();
     bool success;
     if (_isEditMode && _selectedRow != null) {

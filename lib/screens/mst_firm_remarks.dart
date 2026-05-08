@@ -2,6 +2,9 @@ import 'package:diam_mfg/providers/remarks_provider.dart';
 import 'package:diam_mfg/providers/dept_provider.dart';
 import 'package:diam_mfg/providers/dept_process_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -34,8 +37,8 @@ class _MstRemarksState extends State<MstRemarks> {
   List<ErpColumnConfig> get _tableColumns => [
     ErpColumnConfig(key: 'remarksCode', label: 'CODE', width: 130),
     ErpColumnConfig(key: 'remarksName', label: 'NAME', width: 200),
-    ErpColumnConfig(key: 'deptCode', label: 'DEPT', width: 130),
-    ErpColumnConfig(key: 'deptProcessCode', label: 'PROCESS', width: 170),
+    ErpColumnConfig(key: 'DeptName', label: 'DEPT', width: 130),
+    ErpColumnConfig(key: 'DeptProcessName', label: 'PROCESS', width: 170),
     ErpColumnConfig(key: 'tops', label: 'TOPS', width: 130),
     ErpColumnConfig(key: 'companyCode', label: 'COMPANY', width: 160),
     ErpColumnConfig(key: 'sortID', label: 'SORT ID', width: 160),
@@ -70,6 +73,9 @@ class _MstRemarksState extends State<MstRemarks> {
             label: 'NAME',
             required: true,
             sectionIndex: 0,
+            inputFormatters: [
+              UpperCaseTextFormatter(),
+            ],
           ),
           ErpFieldConfig(
             key: 'deptCode',
@@ -156,6 +162,38 @@ class _MstRemarksState extends State<MstRemarks> {
         ],
       ];
 
+
+
+  Future<bool> _checkDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'DeptCode': 'deptCode',
+        'DeptProcessCode': 'deptProcessCode',
+        'RemarksName': 'remarksName',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'Remarks',
+      fields: fields,
+    );
+  }
+
+
+
   // @override
   // void initState() {
   //   super.initState();
@@ -232,6 +270,14 @@ class _MstRemarksState extends State<MstRemarks> {
   }
 
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkDuplicate(
+      fields: {
+        'RemarksName': values['remarksName'].toString(),
+        'DeptProcessCode': num.parse(values['deptProcessCode'].toString()),
+        'DeptCode': num.parse(values['deptCode'].toString()),
+      },
+    );
+    if (exists) return;
     final provider = context.read<RemarksProvider>();
     bool success;
     if (_isEditMode && _selectedRow != null) {

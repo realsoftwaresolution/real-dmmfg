@@ -3,6 +3,8 @@ import 'package:diam_mfg/providers/charni_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/dept_provider.dart';
 import 'package:diam_mfg/providers/shape_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
@@ -218,6 +220,38 @@ class _MstCharniState extends State<MstCharni> {
     ],
   ];
 
+
+
+  Future<bool> _checkDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      allowRowData: true,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'DeptCode': 'DeptCode',
+        'FromSize': 'FromSize',
+        'ToSize': 'ToSize',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'Charni',
+      fields: fields,
+    );
+  }
+
+
   // ── INIT ──────────────────────────────────────────────────────────────────
   // @override
   // void initState() {
@@ -305,6 +339,14 @@ class _MstCharniState extends State<MstCharni> {
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkDuplicate(
+      fields: {
+        'DeptCode': num.parse(values['deptCode'].toString()),
+        'FromSize': num.parse(values['fromSize'].toString()),
+        'ToSize': num.parse(values['toSize'].toString()),
+      },
+    );
+    if (exists) return;
     final provider = context.read<CharniProvider>();
 
     bool success;

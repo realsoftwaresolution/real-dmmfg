@@ -1,5 +1,7 @@
 import 'package:diam_mfg/providers/dept_group_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
@@ -61,6 +63,13 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
         inputFormatters: [
           UpperCaseTextFormatter(),
         ],
+        onDuplicateCheck: (value, allValues) async {
+          return await _checkDuplicate(
+            fields: {
+              'DeptGroupName': value,
+            },
+          );
+        },
       ),
       ErpFieldConfig(
         key: 'sortID',
@@ -107,6 +116,35 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
       ),
     ],
   ];
+
+
+
+  Future<bool> _checkDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'DeptGroupName': 'deptGroupName',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'DeptGroup',
+      fields: fields,
+    );
+  }
+
 
   // // ── INIT ──────────────────────────────────────────────────────────────────
   // @override
@@ -182,6 +220,12 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkDuplicate(
+      fields: {
+        'DeptGroupName': values['deptGroupName'],
+      },
+    );
+    if (exists) return;
     final provider = context.read<DeptGroupProvider>();
 
     bool success;

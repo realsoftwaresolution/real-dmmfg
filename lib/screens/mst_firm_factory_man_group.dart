@@ -1,6 +1,8 @@
 import 'package:diam_mfg/models/factory_man_group_model.dart';
 import 'package:diam_mfg/providers/factory_man_group_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
@@ -69,6 +71,13 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
         inputFormatters: [
           UpperCaseTextFormatter(),
         ],
+        onDuplicateCheck: (value, allValues) async {
+          return await _checkGroupNameAndSortIdDuplicate(
+            fields: {
+              'FactoryManGroupName': value,
+            },
+          );
+        },
       ),
       ErpFieldConfig(
         key: 'sortID',
@@ -118,6 +127,33 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
       // ),
     ],
   ];
+
+  Future<bool> _checkGroupNameAndSortIdDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'FactoryManGroupName': 'factoryManGroupName',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'FactoryManGroup',
+      fields: fields,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -192,6 +228,13 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkGroupNameAndSortIdDuplicate(
+      fields: {
+        'FactoryManGroupName': values['factoryManGroupName'],
+      },
+    );
+    if (exists) return;
+
     final provider = context.read<FactoryManGroupProvider>();
 
     bool success;

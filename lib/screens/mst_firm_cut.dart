@@ -1,6 +1,8 @@
 import 'package:diam_mfg/models/cut_model.dart';
 import 'package:diam_mfg/providers/cut_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
@@ -89,6 +91,13 @@ class _MstCutState extends State<MstCut> {
         inputFormatters: [
           UpperCaseTextFormatter(),
         ],
+        onDuplicateCheck: (value, allValues) async {
+          return await _checkCutNameAndSortIdDuplicate(
+            fields: {
+              'CutName': value,
+            },
+          );
+        },
       ),
       ErpFieldConfig(
         key: 'sortID',
@@ -135,6 +144,33 @@ class _MstCutState extends State<MstCut> {
       ),
     ],
   ];
+
+  Future<bool> _checkCutNameAndSortIdDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'CutName': 'cutName',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'Cut',
+      fields: fields,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -188,6 +224,12 @@ class _MstCutState extends State<MstCut> {
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkCutNameAndSortIdDuplicate(
+      fields: {
+        'CutName': values['cutName'],
+      },
+    );
+    if (exists) return;
     final provider = context.read<CutProvider>();
 
     bool success;

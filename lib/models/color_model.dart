@@ -4,6 +4,7 @@ class ColorModel {
   final int? colorMstID;
   final int? colorCode;
   final String? colorName;
+  final String? ColorRptGroupName;
   final int? colorRptGroupCode;
   final String? sflag;
   final String? sdate;
@@ -19,6 +20,7 @@ class ColorModel {
     this.colorMstID,
     this.colorCode,
     this.colorName,
+    this.ColorRptGroupName,
     this.colorRptGroupCode,
     this.sflag,
     this.sdate,
@@ -36,6 +38,7 @@ class ColorModel {
       colorMstID: json['ColorMstID'],
       colorCode: json['ColorCode'],
       colorName: json['ColorName'],
+      ColorRptGroupName: json['ColorRptGroupName'],
       colorRptGroupCode: json['ColorRptGroupCode'],
       sflag: json['Sflag'],
       sdate: json['Sdate']?.toString(),
@@ -53,6 +56,7 @@ class ColorModel {
     return {
       'ColorCode': colorCode,
       'ColorName': colorName,
+      'ColorRptGroupName': ColorRptGroupName,
       'ColorRptGroupCode': colorRptGroupCode,
       'CompanyCode': companyCode,
       'SortID': sortID,
@@ -65,6 +69,7 @@ class ColorModel {
     return {
       'colorCode': colorCode,
       'colorName': colorName ?? '',
+      'ColorRptGroupName': ColorRptGroupName ?? '',
       'colorRptGroupCode': colorRptGroupCode?.toString() ?? '',
       'companyCode': companyName??companyCode?.toString() ?? '',
       'sortID': sortID?.toString() ?? '',
@@ -77,6 +82,7 @@ class ColorModel {
     return ColorModel(
       colorCode: int.tryParse(v['colorCode'] ?? ''),
       colorName: v['colorName'],
+      ColorRptGroupName: v['ColorRptGroupName'],
       colorRptGroupCode: int.tryParse(v['colorRptGroupCode'] ?? ''),
       companyCode: int.tryParse(v['companyCode'] ?? ''),
       sortID: int.tryParse(v['sortID'] ?? ''),

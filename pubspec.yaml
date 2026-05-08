@@ -37,7 +37,7 @@ dependencies:
 #  rs_dashboard:
 #  0.0.8
 
-  erp_formatter: 1.0.1
+#  erp_formatter: 1.0.1
 #    path: ../erp_formatter
 #    path: ../rs_dashboard
   erp_data_table:
@@ -60,6 +60,8 @@ dependencies:
 dependency_overrides:
   rs_dashboard:
     path: ../rs_dashboard
+  erp_formatter:
+    path: ../erp_formatter
 
 
 dev_dependencies:

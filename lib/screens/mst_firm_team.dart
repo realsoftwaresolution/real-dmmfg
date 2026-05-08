@@ -2,7 +2,10 @@
 import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/team_provider.dart';
 import 'package:diam_mfg/models/team_model.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/app_images.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -56,6 +59,16 @@ class _MstTeamEntryState extends State<MstTeamEntry> {
           type: ErpFieldType.text,
           required: true, flex: 2,
           sectionTitle: 'TEAM MASTER', sectionIndex: 0,
+          inputFormatters: [
+            UpperCaseTextFormatter(),
+          ],
+          onDuplicateCheck: (value, allValues) async {
+            return await _checkDuplicate(
+              fields: {
+                'TeamName': value,
+              },
+            );
+          },
         ),
         ErpFieldConfig(
           key: 'sortID', label: 'SORT ID',
@@ -90,6 +103,35 @@ class _MstTeamEntryState extends State<MstTeamEntry> {
       ],
     ];
   }
+
+
+  Future<bool> _checkDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'TeamName': 'teamName',
+      },
+    );
+
+    if (skip) {
+      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'Team',
+      fields: fields,
+    );
+  }
+
+
   void _setDefaultSortId() {
     final provider = context.read<TeamProvider>();
 
@@ -155,6 +197,12 @@ class _MstTeamEntryState extends State<MstTeamEntry> {
 
   // ── SAVE ───────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkDuplicate(
+      fields: {
+        'TeamName': values['teamName'],
+      },
+    );
+    if (exists) return;
     final prov = context.read<TeamProvider>();
     bool success;
 

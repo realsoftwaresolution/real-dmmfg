@@ -1,6 +1,7 @@
 import 'package:diam_mfg/models/division_model.dart';
 import 'package:diam_mfg/providers/division_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -64,6 +65,9 @@ class _MstDivisionState extends State<MstDivision> {
         label: 'DIVISION NAME',
         required: true,
         sectionIndex: 0,
+        inputFormatters: [
+          UpperCaseTextFormatter(),
+        ],
       ),
       ErpFieldConfig(
         key: 'sortID',
