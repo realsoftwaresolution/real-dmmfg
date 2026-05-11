@@ -59,6 +59,8 @@ class MenuProvider extends BaseProvider {
 
           final List reportPermission =
           List<int>.from(ua['2'] ?? []);
+          final List utilityPermission =
+          List<int>.from(ua['3'] ?? []);
 
           // API → Model convert
           final List<MenuMstModel> list =
@@ -102,21 +104,34 @@ class MenuProvider extends BaseProvider {
           final reportItems =
           reports.map((e) => e.toMenuItem()).toList();
 
+
+          // ================= UTILITY =================
+          final utility = list
+              .where((e) =>
+          e.mainMenuMstID == 3 &&
+              utilityPermission.contains(e.menuMstID))
+              .toList()
+            ..sort((a, b) =>
+                (a.menuSRNO ?? 0).compareTo(b.menuSRNO ?? 0));
+
+          final utilityItems =
+          utility.map((e) => e.toMenuItem()).toList();
+
+
           // ================= FINAL MENU =================
           _menus = [
-            // RSMenuItem(
-            //   id: "4",
-            //   title: "Admin",
-            //   icon: "assets/images/2.27.png",
-            //   route: "/4",
-            // ),
+            RSMenuItem(
+              id: "4",
+              title: "Admin",
+              icon: "assets/images/2.27.png",
+              route: "/4",
+            ),
             RSMenuItem(
               id: "1",
               title: "Dashboard",
               icon: "assets/images/1.png",
               route: "/1",
             ),
-
             if (masterItems.isNotEmpty)
               RSMenuItem(
                 id: "2",
@@ -124,7 +139,6 @@ class MenuProvider extends BaseProvider {
                 icon: "assets/images/2.png",
                 children: masterItems,
               ),
-
             if (transactionItems.isNotEmpty)
               RSMenuItem(
                 id: "3",
@@ -132,13 +146,19 @@ class MenuProvider extends BaseProvider {
                 icon: "assets/images/3.png",
                 children: transactionItems,
               ),
-
             if (reportItems.isNotEmpty)
               RSMenuItem(
                 id: "4",
                 title: "Reports",
                 icon: "assets/images/2.9.png",
                 children: reportItems,
+              ),
+            if (utilityItems.isNotEmpty)
+              RSMenuItem(
+                id: "5",
+                title: "Utility",
+                icon: "assets/images/2.13.png",
+                children: utilityItems,
               ),
           ];
         }

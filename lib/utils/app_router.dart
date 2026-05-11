@@ -1,3 +1,5 @@
+import 'package:diam_mfg/screens/PacketHistoryScreen.dart' show PacketHistoryScreen;
+import 'package:diam_mfg/screens/PairScreen.dart';
 import 'package:diam_mfg/screens/Report_screen.dart';
 import 'package:diam_mfg/screens/admin_menu_create.dart';
 import 'package:diam_mfg/screens/mst_firm_color.dart';
@@ -85,5 +87,7 @@ class AppRouter {
     '/3.10': (context) => const FactoryReceiveEntry(),
     '/4': (context) => const AdminMenuCreateScreen(),
     '/4.01': (context) => const ReportScreen(),
+    '/5.01': (context) => const PairScreen(),
+    '/5.02': (context) => const PacketHistoryScreen(),
   });
 }

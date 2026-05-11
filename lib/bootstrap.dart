@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:diam_mfg/providers/PairProvider.dart';
 import 'package:diam_mfg/providers/ReportProvider.dart';
 import 'package:diam_mfg/providers/admin_menu_provider.dart';
 import 'package:diam_mfg/providers/article_provider.dart';
@@ -69,6 +70,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../providers/menu_provider.dart';
+import 'providers/Packet_History_provider.dart';
 import 'providers/factory_man_group_provider.dart';
 String baseUrl='http://50.62.183.116:5000';
 
@@ -156,6 +158,8 @@ Future<void> bootstrap({
           ChangeNotifierProvider<FactoryIssueEntryProvider>.value(value: FactoryIssueEntryProvider()),
           ChangeNotifierProvider<FactoryReceivedEntryProvider>.value(value: FactoryReceivedEntryProvider()),
           ChangeNotifierProvider<ReportProvider>.value(value: ReportProvider()),
+          ChangeNotifierProvider<PairProvider>.value(value: PairProvider()),
+          ChangeNotifierProvider<PacketHistoryProvider>.value(value: PacketHistoryProvider()),
         ],
         child: app,
       ),

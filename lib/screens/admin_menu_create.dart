@@ -496,7 +496,7 @@ class _MenuListPanelState extends State<_MenuListPanel>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -513,6 +513,8 @@ class _MenuListPanelState extends State<_MenuListPanel>
     widget.provider.allMenus.where((m) => m.mainMenuMstID == 1).toList();
     final reports =
     widget.provider.allMenus.where((m) => m.mainMenuMstID == 2).toList();
+    final utility =
+    widget.provider.allMenus.where((m) => m.mainMenuMstID == 3).toList();
 
     return Column(
       children: [
@@ -528,6 +530,7 @@ class _MenuListPanelState extends State<_MenuListPanel>
               Tab(text: 'Masters (${masters.length})'),
               Tab(text: 'Transactions (${transactions.length})'),
               Tab(text: 'Reports (${reports.length})'),
+              Tab(text: 'Utility (${utility.length})'),
             ],
           ),
         ),
@@ -538,6 +541,7 @@ class _MenuListPanelState extends State<_MenuListPanel>
               _MenuGroupList(menus: masters, groupLabel: 'Master'),
               _MenuGroupList(menus: transactions, groupLabel: 'Transaction'),
               _MenuGroupList(menus: reports, groupLabel: 'Reports'),
+              _MenuGroupList(menus: utility, groupLabel: 'Utility'),
             ],
           ),
         ),
