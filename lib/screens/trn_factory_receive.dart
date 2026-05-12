@@ -282,10 +282,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         counterType: 'FROM',
       );
     });
-
-    if (_fromDisplayFields.isNotEmpty) {
-      debugPrint('FROM → ${_fromDisplayFields.first.userVisibilityName}');
-    }
   }
 
   Future<void> _loadToDisplayFields(int crId) async {
@@ -303,10 +299,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         counterType: 'TO',
       );
     });
-
-    if (_toDisplayFields.isNotEmpty) {
-      debugPrint('TO → ${_toDisplayFields.first.userVisibilityName}');
-    }
   }
 
   /// Shared logic for building a sorted, validated UserVisibilityModel list.
@@ -415,7 +407,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       if (f.userVisibilityCode == null) continue;
       _formValues['entry_${f.userVisibilityCode}'] ??= '';
       _formValues['to_${f.userVisibilityCode}'] ??= '';
-      debugPrint('_toDisplayFields ${f.userVisibilityCode}');
     }
     for (final f in _fromDisplayFields) {
       if (f.userVisibilityCode == null) continue;
@@ -689,8 +680,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         "Size":
         double.tryParse(_entryVals['size'] ?? '0') ?? 0,
       };
-
-      print("UPDATE DETAIL => $payload");
 
       final success = await prov.update(payload);
 
@@ -1202,7 +1191,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   }
 
   Future<void> _onRowTap(Map<String, dynamic> row) async {
-    print('ROW DATA => $row');
     final prov = context.read<FactoryReceivedEntryProvider>();
     final id = int.tryParse(row['id'].toString()) ?? 0;
 
@@ -1226,9 +1214,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         'type': _s(row['type']),
         "polishChecker": _s(details.first.LastCrID ?? 0),
       };
-
-
-      print('skjdfhksjfhdskjfsjfs ${_formValues}');
       _syncDetGrid();
     });
 
@@ -1333,8 +1318,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
       "details": _detRows.map(_mapToApiDetail).toList(),
     };
-    print('merged _detRows ${payload}');
-    print('merged _detRows ${jsonEncode(_detRows)}');
 
     final success = await prov.create(payload);
 
@@ -1442,7 +1425,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     final fromItems = counterProv.list
         .where((c) {
       final grp = _deptGroupNameFor(c.deptGroupCode).toUpperCase();
-      print('adslkfjlfdjskfksfds $grp');
       return grp.contains('CLEAVING');
     })
         .map((c) => ErpDropdownItem(

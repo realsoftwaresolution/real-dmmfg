@@ -106,7 +106,6 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
     final kapanItems = rap.list
         .where((assort) {
           if (assort.kapanNo == null || assort.kapanNo!.isEmpty) return false;
-          print('${jsonEncode(assort)} -${jsonEncode(assort.details)}');
           if (!assort.details.any((d) => d.purityCode == 2)) return false;
 
           // Assort total wt for this kapan
@@ -589,7 +588,6 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
     final merged = Map<String, dynamic>.from(values);
     merged['cutCreateDate'] = toUtcIso(merged['cutCreateDate']?.toString());
     merged['Sdate'] = DateTime.now().toUtc().toIso8601String();
-    print('print save cut data ---  $merged');
 
     bool success;
     if (_isEditMode && _selectedMst != null) {

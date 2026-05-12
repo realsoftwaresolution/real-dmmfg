@@ -154,7 +154,6 @@ class _MstTensionsState extends State<MstTensions> {
     );
 
     if (skip) {
-      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
       return false;
     }
     /// ── API CHECK ─────────────────────────────

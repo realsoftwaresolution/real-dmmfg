@@ -127,7 +127,6 @@ class CounterOperatorDetProvider extends BaseProvider {
       call:      () => api.get('/counterOperatorDet?crId=$crId'),
       onSuccess: (res) {
         final data = res.data as List;
-        print('data-----$data');
         return data.map((e) => CounterOperatorDetModel.fromJson(e)).toList();
       },
     );

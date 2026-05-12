@@ -307,10 +307,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         counterType: 'FROM',
       );
     });
-
-    if (_fromDisplayFields.isNotEmpty) {
-      debugPrint('FROM → ${_fromDisplayFields.first.userVisibilityName}');
-    }
   }
 
   Future<void> _loadToDisplayFields(int crId) async {
@@ -327,10 +323,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         counterType: 'TO',
       );
     });
-
-    if (_toDisplayFields.isNotEmpty) {
-      debugPrint('TO → ${_toDisplayFields.first.userVisibilityName}');
-    }
   }
 
   /// Shared logic for building a sorted, validated UserVisibilityModel list.
@@ -429,7 +421,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       if (f.userVisibilityCode == null) continue;
       _formValues['entry_${f.userVisibilityCode}'] ??= '';
       _formValues['to_${f.userVisibilityCode}'] ??= '';
-      debugPrint('_toDisplayFields ${f.userVisibilityCode}');
     }
     for (final f in _fromDisplayFields) {
       if (f.userVisibilityCode == null) continue;
@@ -564,7 +555,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         return;
       }
     }
-    print(_entryVals);
     final issPc = int.tryParse(_entryVals['issPc'] ?? '') ?? 0;
     final issWt = double.tryParse(_entryVals['issWt'] ?? '') ?? 0;
     final recPc = int.tryParse(_entryVals['recPc'] ?? '') ?? 0;
@@ -783,7 +773,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       _entryVals[k] = v ?? '';
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
-    print(r.topsPc);
     set('orgPc', r.pc?.toString());
     set('orgWt', _f3(r.wt));
     set('issPc', r.issPc?.toString());
@@ -1009,7 +998,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         'sarinMachine': r.sarinMachine ?? '',
         'qrCode':       r.qrCode ?? '',
         'remarkCode':       _entryVals['remark'] ?? '',
-        'fType':       _isMackable ? 'MACKABLE' : 'SUBPACKET',
+        'fType':       _isMackable ? 'MAKABLE' : 'SUBPACKET',
         'FormType':       'LASERREC',
         'DeptCode': toDeptCode?.toString() ?? '',
         'DeptProcessCode': _formValues['deptProcessCode'] ?? '',
@@ -1045,9 +1034,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     if (firstRadio != null) {
       _selectedRadioCode = firstRadio.userVisibilityCode.toString();
     }
-print(jsonEncode(details.first));
-print(row);
-print(jsonEncode(raw));
 
     setState(() {
       _selectedRow = row;
@@ -1679,8 +1665,6 @@ print(jsonEncode(raw));
 
       onFieldChanged: (key, value) async {
         _formValues[key] = value.toString();
-        debugPrint('onFieldChanged: $key');
-
         switch (key) {
           case 'fromCrId':
             _onFromSelected(value.toString());
@@ -1727,9 +1711,6 @@ print(jsonEncode(raw));
                 fromCrId: _fromCrId!.toString(),
                 gridData: _detDisplay
               );
-              if (kDebugMode) {
-                print('dataadsadsadasdasdasda -- $data');
-              }
             }else{
               _calcDmWt();
             }

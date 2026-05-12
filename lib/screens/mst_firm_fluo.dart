@@ -129,7 +129,6 @@ class _MstFluoState extends State<MstFluo> {
     );
 
     if (skip) {
-      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
       return false;
     }
     /// ── API CHECK ─────────────────────────────

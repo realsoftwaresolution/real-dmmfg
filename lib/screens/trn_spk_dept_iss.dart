@@ -302,17 +302,12 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
     await _displayProv.loadByCounter(counter.counterMstID!);
     if (!mounted) return;
-print('_displayProv.counterList $crId');
     setState(() {
       _fromDisplayFields = _buildVisibilityList(
         rawList: _displayProv.counterList,
         counterType: 'FROM',
       );
     });
-
-    if (_fromDisplayFields.isNotEmpty) {
-      debugPrint('FROM → ${_fromDisplayFields.first.userVisibilityName}');
-    }
   }
 
   Future<void> _loadToDisplayFields(int crId) async {
@@ -329,10 +324,6 @@ print('_displayProv.counterList $crId');
         counterType: 'TO',
       );
     });
-
-    if (_toDisplayFields.isNotEmpty) {
-      debugPrint('TO → ${_toDisplayFields.first.userVisibilityName}');
-    }
   }
 
   /// Shared logic for building a sorted, validated UserVisibilityModel list.
@@ -431,7 +422,6 @@ print('_displayProv.counterList $crId');
       if (f.userVisibilityCode == null) continue;
       _formValues['entry_${f.userVisibilityCode}'] ??= '';
       _formValues['to_${f.userVisibilityCode}'] ??= '';
-      debugPrint('_toDisplayFields ${f.userVisibilityCode}');
     }
     for (final f in _fromDisplayFields) {
       if (f.userVisibilityCode == null) continue;
@@ -1726,7 +1716,6 @@ print('_displayProv.counterList $crId');
 
   @override
   Widget build(BuildContext context) {
-    print(_entryVals);
     return Consumer<SpkDeptIssProvider>(
       builder: (ctx, prov, _) => Padding(
         padding: const EdgeInsets.all(8),
@@ -1786,8 +1775,6 @@ print('_displayProv.counterList $crId');
 
       onFieldChanged: (key, value) {
         _formValues[key] = value.toString();
-        debugPrint('onFieldChanged: $key');
-
         switch (key) {
           case 'fromCrId':
             _onFromSelected(value.toString());
@@ -1988,7 +1975,6 @@ print('_displayProv.counterList $crId');
     final counterProv = context.read<CounterProvider>();
     final procProv = context.read<DeptProcessProvider>();
     final data = prov.list.where((e) => e.formType == 'SPK').map((e) {
-      print(e.formType);
       String fromName = '', toName = '', processName = '';
       String fromDeptName = '', toDeptName = '';
 

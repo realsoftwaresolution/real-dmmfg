@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 import 'package:collection/collection.dart';
 import 'package:diam_mfg/providers/counter_stock_type_det_provider.dart';
@@ -62,7 +61,6 @@ class _MstCounterState extends State<MstCounter> {
   bool _isSaving = false;
 
   int? _savedCrId;
-  int? _savedMstID;
   int? _savedDeptCode;
 
   int _currentTabIndex = 0;
@@ -156,9 +154,7 @@ class _MstCounterState extends State<MstCounter> {
           .read<CounterProvider>()
           .load()
           .then((_) {
-            debugPrint('✅ Counter loaded');
             if (!mounted) return;
-
             final list = context.read<CounterProvider>().list;
             final maxSort = list.isEmpty
                 ? 0
@@ -188,7 +184,6 @@ class _MstCounterState extends State<MstCounter> {
       _selectedManagerIds = {};
       _selectedDeptIds = {};
       _savedCrId = raw.crId;
-      _savedMstID = raw.counterMstID;
       _savedDeptCode = raw.deptCode;
 
       _formValues = {
@@ -407,7 +402,6 @@ class _MstCounterState extends State<MstCounter> {
 
       setState(() {
         _savedCrId = crId;
-        _savedMstID = mstID;
         _savedDeptCode = savedCounter!.deptCode;
         _isEditMode = true;
         _selectedRow = {'_raw': savedCounter};
@@ -466,8 +460,6 @@ class _MstCounterState extends State<MstCounter> {
         if (r.counterProcessDetID != null)
           await processProvider.delete(r.counterProcessDetID!);
       }
-      print('_selectedProcessCodes ${_selectedProcessCodes}');
-
       for (final procCode in _selectedProcessCodes) {
         final proc = processList.firstWhereOrNull(
           (p) => p.deptProcessCode == procCode,
@@ -672,7 +664,6 @@ class _MstCounterState extends State<MstCounter> {
     if (_currentTabIndex == 8) {
       final shapeProvider = context.read<CounterShapeDetProvider>();
       await shapeProvider.deleteByCrId(crId);
-      print('_selectedShapeIds ${_selectedShapeIds}');
       for (final shapeCode in _selectedShapeIds) {
         await shapeProvider.create({
           'allowCrId': crId.toString(),
@@ -716,7 +707,6 @@ class _MstCounterState extends State<MstCounter> {
     // ── Tab 10: Report Rights ──────────────────────────────────────────────
     if (_currentTabIndex == 10) {
       final repProvider = context.read<CounterReportDetProvider>();
-      final reportList = context.read<ReportMstProvider>().list;
       await repProvider.deleteByCrId(crId);
       for (final key in _selectedReportKeys) {
         final parts = key.split('_');
@@ -830,8 +820,6 @@ class _MstCounterState extends State<MstCounter> {
       _selectedEmpType = null;
 
       _savedCrId = null;
-
-      _savedMstID = null;
 
       _savedDeptCode = null;
 
@@ -1017,7 +1005,7 @@ class _MstCounterState extends State<MstCounter> {
         ),
         if (_isSaving)
           Container(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha:0.4),
             child: Center(
               child: Container(
                 padding: const EdgeInsets.symmetric(
@@ -1183,10 +1171,11 @@ class _MstCounterState extends State<MstCounter> {
                     );
                   });
                 }
-                if (key == 'deptCode')
+                if (key == 'deptCode') {
                   setState(
                     () => _selectedDeptCode = value.isEmpty ? null : value,
                   );
+                }
                 if (key == 'manType') setState(() => _selectedManType = value);
                 if (key == 'empType') setState(() => _selectedEmpType = value);
               },
@@ -1524,7 +1513,6 @@ class _MstCounterState extends State<MstCounter> {
     );
 
     if (skip) {
-      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
       return false;
     }
 
@@ -1652,7 +1640,7 @@ class _MstCounterState extends State<MstCounter> {
           child: Opacity(
             opacity: enabled ? 1.0 : 0.45,
             child: DropdownButtonFormField<String>(
-              value: validVal,
+              initialValue: validVal,
               isDense: true,
               isExpanded: true,
               style: TextStyle(fontSize: 11, color: theme.text),
@@ -1773,9 +1761,9 @@ class _MstCounterState extends State<MstCounter> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: theme.primary.withOpacity(0.04),
+        color: theme.primary.withValues(alpha:0.04),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: theme.primary.withOpacity(0.25)),
+        border: Border.all(color: theme.primary.withValues(alpha:0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1786,14 +1774,14 @@ class _MstCounterState extends State<MstCounter> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: theme.primaryGradient
-                    .map((c) => c.withOpacity(0.15))
+                    .map((c) => c.withValues(alpha:0.15))
                     .toList(),
               ),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(10),
               ),
               border: Border(
-                bottom: BorderSide(color: theme.primary.withOpacity(0.15)),
+                bottom: BorderSide(color: theme.primary.withValues(alpha:0.15)),
               ),
             ),
             child: Row(
@@ -1922,7 +1910,7 @@ class _MstCounterState extends State<MstCounter> {
           Icon(
             Icons.lock_outline_rounded,
             size: 32,
-            color: theme.textLight.withOpacity(0.4),
+            color: theme.textLight.withValues(alpha:0.4),
           ),
           const SizedBox(height: 8),
           Text(
@@ -2060,7 +2048,7 @@ class _MstCounterState extends State<MstCounter> {
                 ),
                 margin: const EdgeInsets.only(bottom: 6),
                 decoration: BoxDecoration(
-                  color: theme.primary.withOpacity(.06),
+                  color: theme.primary.withValues(alpha:.06),
                   borderRadius: BorderRadius.circular(8),
                 ),
 
@@ -2135,17 +2123,17 @@ class _MstCounterState extends State<MstCounter> {
                         ),
                         decoration: BoxDecoration(
                           color: checked
-                              ? theme.primary.withOpacity(0.07)
+                              ? theme.primary.withValues(alpha: 0.07)
                               : i ~/ 2 % 2 == 0
                               ? Colors.white
-                              : theme.bg.withOpacity(0.4),
+                              : theme.bg.withValues(alpha:0.4),
                           border: Border(
                             bottom: BorderSide(
-                              color: theme.border.withOpacity(0.4),
+                              color: theme.border.withValues(alpha:0.4),
                             ),
                             right: i % 2 == 0
                                 ? BorderSide(
-                                    color: theme.border.withOpacity(0.4),
+                                    color: theme.border.withValues(alpha:0.4),
                                   )
                                 : BorderSide.none,
                           ),
@@ -2273,7 +2261,7 @@ class _MstCounterState extends State<MstCounter> {
                             ),
                             decoration: BoxDecoration(
                               color: isDeptOpen
-                                  ? theme.primary.withOpacity(0.08)
+                                  ? theme.primary.withValues(alpha:0.08)
                                   : theme.bg,
                               border: Border(
                                 top: dEntry.key == 0
@@ -2428,13 +2416,13 @@ class _MstCounterState extends State<MstCounter> {
                                     ),
                                     decoration: BoxDecoration(
                                       color: isCounterOpen
-                                          ? theme.primary.withOpacity(0.05)
+                                          ? theme.primary.withValues(alpha:0.05)
                                           : cEntry.key.isEven
                                           ? Colors.white
-                                          : theme.bg.withOpacity(0.4),
+                                          : theme.bg.withValues(alpha:0.4),
                                       border: Border(
                                         top: BorderSide(
-                                          color: theme.border.withOpacity(0.5),
+                                          color: theme.border.withValues(alpha:0.5),
                                         ),
                                       ),
                                     ),
@@ -2499,7 +2487,7 @@ class _MstCounterState extends State<MstCounter> {
                                           child: Icon(
                                             Icons.keyboard_arrow_down_rounded,
                                             size: 14,
-                                            color: theme.primary.withOpacity(
+                                            color: theme.primary.withValues(alpha:
                                               0.7,
                                             ),
                                           ),
@@ -2564,11 +2552,11 @@ class _MstCounterState extends State<MstCounter> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: isChecked
-                                              ? theme.primary.withOpacity(0.06)
+                                              ? theme.primary.withValues(alpha:0.06)
                                               : Colors.white,
                                           border: Border(
                                             top: BorderSide(
-                                              color: theme.border.withOpacity(
+                                              color: theme.border.withValues(alpha:
                                                 0.4,
                                               ),
                                             ),
@@ -2733,7 +2721,7 @@ class _MstCounterState extends State<MstCounter> {
                             ),
                             decoration: BoxDecoration(
                               color: isDeptOpen
-                                  ? theme.primary.withOpacity(0.08)
+                                  ? theme.primary.withValues(alpha:0.08)
                                   : theme.bg,
                               border: Border(
                                 top: dEntry.key == 0
@@ -2882,13 +2870,13 @@ class _MstCounterState extends State<MstCounter> {
                                     ),
                                     decoration: BoxDecoration(
                                       color: isCounterOpen
-                                          ? theme.primary.withOpacity(0.05)
+                                          ? theme.primary.withValues(alpha:0.05)
                                           : cEntry.key.isEven
                                           ? Colors.white
-                                          : theme.bg.withOpacity(0.4),
+                                          : theme.bg.withValues(alpha:0.4),
                                       border: Border(
                                         top: BorderSide(
-                                          color: theme.border.withOpacity(0.5),
+                                          color: theme.border.withValues(alpha:0.5),
                                         ),
                                       ),
                                     ),
@@ -2953,7 +2941,7 @@ class _MstCounterState extends State<MstCounter> {
                                           child: Icon(
                                             Icons.keyboard_arrow_down_rounded,
                                             size: 14,
-                                            color: theme.primary.withOpacity(
+                                            color: theme.primary.withValues(alpha:
                                               0.7,
                                             ),
                                           ),
@@ -3019,11 +3007,11 @@ class _MstCounterState extends State<MstCounter> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: isChecked
-                                              ? theme.primary.withOpacity(0.06)
+                                              ? theme.primary.withValues(alpha:0.06)
                                               : Colors.white,
                                           border: Border(
                                             top: BorderSide(
-                                              color: theme.border.withOpacity(
+                                              color: theme.border.withValues(alpha:
                                                 0.4,
                                               ),
                                             ),
@@ -3289,17 +3277,17 @@ class _MstCounterState extends State<MstCounter> {
                                   ),
                                   decoration: BoxDecoration(
                                     color: isChecked
-                                        ? theme.primary.withOpacity(0.06)
+                                        ? theme.primary.withValues(alpha:0.06)
                                         : i ~/ 2 % 2 == 0
                                         ? Colors.white
-                                        : theme.bg.withOpacity(0.4),
+                                        : theme.bg.withValues(alpha:0.4),
                                     border: Border(
                                       top: BorderSide(
-                                        color: theme.border.withOpacity(0.4),
+                                        color: theme.border.withValues(alpha:0.4),
                                       ),
                                       right: i % 2 == 0
                                           ? BorderSide(
-                                              color: theme.border.withOpacity(
+                                              color: theme.border.withValues(alpha:
                                                 0.4,
                                               ),
                                             )
@@ -3369,8 +3357,8 @@ class _MstCounterState extends State<MstCounter> {
                         //       child: Container(
                         //         padding: const EdgeInsets.only(left: 44, right: 10, top: 3, bottom: 3),
                         //         decoration: BoxDecoration(
-                        //           color: isChecked ? theme.primary.withOpacity(0.06) : Colors.white,
-                        //           border: Border(top: BorderSide(color: theme.border.withOpacity(0.5))),
+                        //           color: isChecked ? theme.primary.withValues(alpha:0.06) : Colors.white,
+                        //           border: Border(top: BorderSide(color: theme.border.withValues(alpha:0.5))),
                         //         ),
                         //         child: Row(children: [
                         //           SizedBox(width: 18, height: 22,
@@ -3587,17 +3575,17 @@ class _MstCounterState extends State<MstCounter> {
                               ),
                               decoration: BoxDecoration(
                                 color: isChecked
-                                    ? theme.primary.withOpacity(0.06)
+                                    ? theme.primary.withValues(alpha:0.06)
                                     : i ~/ 2 % 2 == 0
                                     ? Colors.white
-                                    : theme.bg.withOpacity(0.4),
+                                    : theme.bg.withValues(alpha:0.4),
                                 border: Border(
                                   top: BorderSide(
-                                    color: theme.border.withOpacity(0.4),
+                                    color: theme.border.withValues(alpha:0.4),
                                   ),
                                   right: i % 2 == 0
                                       ? BorderSide(
-                                          color: theme.border.withOpacity(0.4),
+                                          color: theme.border.withValues(alpha:0.4),
                                         )
                                       : BorderSide.none,
                                 ),
@@ -3703,7 +3691,7 @@ class _MstCounterState extends State<MstCounter> {
                 ),
                 margin: const EdgeInsets.only(bottom: 6),
                 decoration: BoxDecoration(
-                  color: theme.primary.withOpacity(.06),
+                  color: theme.primary.withValues(alpha:.06),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -3808,7 +3796,7 @@ class _MstCounterState extends State<MstCounter> {
                 margin: const EdgeInsets.only(bottom: 6),
 
                 decoration: BoxDecoration(
-                  color: theme.primary.withOpacity(.06),
+                  color: theme.primary.withValues(alpha:.06),
                   borderRadius: BorderRadius.circular(8),
                 ),
 
@@ -3921,7 +3909,7 @@ class _MstCounterState extends State<MstCounter> {
                 margin: const EdgeInsets.only(bottom: 6),
 
                 decoration: BoxDecoration(
-                  color: theme.primary.withOpacity(.06),
+                  color: theme.primary.withValues(alpha:.06),
                   borderRadius: BorderRadius.circular(8),
                 ),
 
@@ -3988,15 +3976,15 @@ class _MstCounterState extends State<MstCounter> {
                         ),
                         decoration: BoxDecoration(
                           color: checked
-                              ? theme.primary.withOpacity(0.07)
+                              ? theme.primary.withValues(alpha:0.07)
                               : i.isEven
                               ? Colors.white
-                              : theme.bg.withOpacity(0.5),
+                              : theme.bg.withValues(alpha:0.5),
                           border: Border(
                             top: i == 0
                                 ? BorderSide.none
                                 : BorderSide(
-                                    color: theme.border.withOpacity(0.5),
+                                    color: theme.border.withValues(alpha:0.5),
                                   ),
                           ),
                         ),
@@ -4102,7 +4090,7 @@ class _MstCounterState extends State<MstCounter> {
                 margin: const EdgeInsets.only(bottom: 6),
 
                 decoration: BoxDecoration(
-                  color: theme.primary.withOpacity(.06),
+                  color: theme.primary.withValues(alpha:.06),
                   borderRadius: BorderRadius.circular(8),
                 ),
 
@@ -4169,15 +4157,15 @@ class _MstCounterState extends State<MstCounter> {
                         ),
                         decoration: BoxDecoration(
                           color: checked
-                              ? theme.primary.withOpacity(0.07)
+                              ? theme.primary.withValues(alpha:0.07)
                               : i.isEven
                               ? Colors.white
-                              : theme.bg.withOpacity(0.5),
+                              : theme.bg.withValues(alpha:0.5),
                           border: Border(
                             top: i == 0
                                 ? BorderSide.none
                                 : BorderSide(
-                                    color: theme.border.withOpacity(0.5),
+                                    color: theme.border.withValues(alpha:0.5),
                                   ),
                           ),
                         ),
@@ -4349,7 +4337,7 @@ class _MstCounterState extends State<MstCounter> {
                 margin: const EdgeInsets.only(bottom: 6),
 
                 decoration: BoxDecoration(
-                  color: theme.primary.withOpacity(.06),
+                  color: theme.primary.withValues(alpha:.06),
                   borderRadius: BorderRadius.circular(8),
                 ),
 
@@ -4416,15 +4404,15 @@ class _MstCounterState extends State<MstCounter> {
                         ),
                         decoration: BoxDecoration(
                           color: checked
-                              ? theme.primary.withOpacity(0.07)
+                              ? theme.primary.withValues(alpha:0.07)
                               : i.isEven
                               ? Colors.white
-                              : theme.bg.withOpacity(0.5),
+                              : theme.bg.withValues(alpha:0.5),
                           border: Border(
                             top: i == 0
                                 ? BorderSide.none
                                 : BorderSide(
-                                    color: theme.border.withOpacity(0.5),
+                                    color: theme.border.withValues(alpha:0.5),
                                   ),
                           ),
                         ),
@@ -4508,10 +4496,10 @@ class _MstCounterState extends State<MstCounter> {
       //       child: Container(
       //         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       //         decoration: BoxDecoration(
-      //           color: checked ? theme.primary.withOpacity(0.07)
-      //               : i.isEven ? Colors.white : theme.bg.withOpacity(0.5),
+      //           color: checked ? theme.primary.withValues(alpha:0.07)
+      //               : i.isEven ? Colors.white : theme.bg.withValues(alpha:0.5),
       //           border: Border(top: i == 0 ? BorderSide.none
-      //               : BorderSide(color: theme.border.withOpacity(0.5))),
+      //               : BorderSide(color: theme.border.withValues(alpha:0.5))),
       //         ),
       //         child: Row(children: [
       //           SizedBox(width: 20, height: 26, child: Checkbox(
@@ -4552,14 +4540,14 @@ class _MstCounterState extends State<MstCounter> {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: checked
-                    ? theme.primary.withOpacity(0.08)
+                    ? theme.primary.withValues(alpha:0.08)
                     : i ~/ 2 % 2 == 0
                     ? Colors.white
-                    : theme.bg.withOpacity(0.4),
+                    : theme.bg.withValues(alpha:0.4),
                 border: Border(
-                  bottom: BorderSide(color: theme.border.withOpacity(0.4)),
+                  bottom: BorderSide(color: theme.border.withValues(alpha:0.4)),
                   right: i % 2 == 0
-                      ? BorderSide(color: theme.border.withOpacity(0.4))
+                      ? BorderSide(color: theme.border.withValues(alpha:0.4))
                       : BorderSide.none,
                 ),
               ),
@@ -4615,11 +4603,11 @@ class _MstCounterState extends State<MstCounter> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: theme.primaryGradient
-              .map((c) => c.withOpacity(0.13))
+              .map((c) => c.withValues(alpha:0.13))
               .toList(),
         ),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.primary.withOpacity(0.3)),
+        border: Border.all(color: theme.primary.withValues(alpha:0.3)),
       ),
       child: Text(
         title,
@@ -4721,11 +4709,11 @@ class _DisplayCheckboxPanel extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: t.primaryGradient
-                  .map((c) => c.withOpacity(0.15))
+                  .map((c) => c.withValues(alpha:0.15))
                   .toList(),
             ),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-            border: Border.all(color: t.primary.withOpacity(0.3)),
+            border: Border.all(color: t.primary.withValues(alpha:0.3)),
           ),
           child: Row(
             children: [
@@ -4787,8 +4775,8 @@ class _DisplayCheckboxPanel extends StatelessWidget {
           //       child: Container(
           //         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
           //         color: checked
-          //             ? t.primary.withOpacity(0.08)
-          //             : isEven ? Colors.white : t.bg.withOpacity(0.5),
+          //             ? t.primary.withValues(alpha:0.08)
+          //             : isEven ? Colors.white : t.bg.withValues(alpha:0.5),
           //         child: Row(children: [
           //           SizedBox(width: 20, height: 24, child: Checkbox(
           //             value: checked, activeColor: t.primary,
@@ -4805,7 +4793,7 @@ class _DisplayCheckboxPanel extends StatelessWidget {
           //             Container(
           //               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
           //               decoration: BoxDecoration(
-          //                   color: t.primary.withOpacity(0.1),
+          //                   color: t.primary.withValues(alpha:0.1),
           //                   borderRadius: BorderRadius.circular(4)),
           //               child: Text(item.entryType!,
           //                   style: TextStyle(
@@ -4840,14 +4828,14 @@ class _DisplayCheckboxPanel extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: checked
-                        ? t.primary.withOpacity(0.08)
+                        ? t.primary.withValues(alpha:0.08)
                         : i ~/ 2 % 2 == 0
                         ? Colors.white
-                        : t.bg.withOpacity(0.4),
+                        : t.bg.withValues(alpha:0.4),
                     border: Border(
-                      bottom: BorderSide(color: t.border.withOpacity(0.4)),
+                      bottom: BorderSide(color: t.border.withValues(alpha:0.4)),
                       right: i % 2 == 0
-                          ? BorderSide(color: t.border.withOpacity(0.4))
+                          ? BorderSide(color: t.border.withValues(alpha:0.4))
                           : BorderSide.none,
                     ),
                   ),
@@ -4890,7 +4878,7 @@ class _DisplayCheckboxPanel extends StatelessWidget {
                             vertical: 1,
                           ),
                           decoration: BoxDecoration(
-                            color: t.primary.withOpacity(0.1),
+                            color: t.primary.withValues(alpha:0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(

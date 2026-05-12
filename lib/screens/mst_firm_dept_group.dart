@@ -133,7 +133,6 @@ class _MstDeptGroupState extends State<MstDeptGroup> {
     );
 
     if (skip) {
-      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
       return false;
     }
     /// ── API CHECK ─────────────────────────────

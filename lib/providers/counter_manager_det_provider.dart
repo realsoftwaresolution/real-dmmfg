@@ -126,8 +126,6 @@ class CounterManagerDetProvider extends BaseProvider {
       call:      () => api.get('/counterManagerDet?crId=$crId'),
       onSuccess: (res) {
         final data = res.data as List;
-        print('datamanager-----$data');
-
         return data.map((e) => CounterManagerDetModel.fromJson(e)).toList();
       },
     );

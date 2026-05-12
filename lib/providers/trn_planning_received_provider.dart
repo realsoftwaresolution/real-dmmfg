@@ -92,7 +92,6 @@ class TrnPlanningReceivedProvider extends BaseProvider {
           if(parsed[0].sarinData!.isNotEmpty) {
             final index = _scannedDetList.indexWhere(
                     (e) => e.bCode.toString() == item.bCode.toString());
-            print(index);
             if (index == -1) {
               _scannedDetList.insert(0,item);
             } else {

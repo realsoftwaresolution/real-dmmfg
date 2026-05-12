@@ -180,7 +180,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     }
   }
 
-
   String _remarksNameFor(int? code) {
     if (code == null) return '';
     try {
@@ -213,6 +212,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     }
     return merged;
   }
+
   @override
   void initState() {
     super.initState();
@@ -279,10 +279,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         counterType: 'FROM',
       );
     });
-
-    if (_fromDisplayFields.isNotEmpty) {
-      debugPrint('FROM → ${_fromDisplayFields.first.userVisibilityName}');
-    }
   }
 
   Future<void> _loadToDisplayFields(int crId) async {
@@ -300,10 +296,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         counterType: 'TO',
       );
     });
-
-    if (_toDisplayFields.isNotEmpty) {
-      debugPrint('TO → ${_toDisplayFields.first.userVisibilityName}');
-    }
   }
 
   /// Shared logic for building a sorted, validated UserVisibilityModel list.
@@ -412,7 +404,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       if (f.userVisibilityCode == null) continue;
       _formValues['entry_${f.userVisibilityCode}'] ??= '';
       _formValues['to_${f.userVisibilityCode}'] ??= '';
-      debugPrint('_toDisplayFields ${f.userVisibilityCode}');
     }
     for (final f in _fromDisplayFields) {
       if (f.userVisibilityCode == null) continue;
@@ -645,6 +636,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       qrCode: existing.qrCode,
       entryType: existing.entryType,
       formType: existing.formType,
+      fType: existing.fType,
       pktType: existing.pktType,
       fromDeptCode: _fromDeptCode,
       toDeptCode: _toDeptCodeVal,
@@ -745,7 +737,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
       dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
       entryType: 'I',
-      formType: 'MAKABLE',
+      formType: 'MAKABLE MANUAL',
+      fType: 'MAKABLE',
       pktType: 'A',
       diffDmWt: double.tryParse(_entryVals['diffDmWt'] ?? '0.000'),
       plDmWt: double.tryParse(_entryVals['dmWt'] ?? '0.000'),
@@ -1734,8 +1727,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
 
       onFieldChanged: (key, value) {
         _formValues[key] = value.toString();
-        debugPrint('onFieldChanged: $key');
-
         switch (key) {
           case 'fromCrId':
             _onFromSelected(value.toString());
@@ -1810,7 +1801,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         // ✅ Duplicate check
         if (_editingDetIndex == null) {
           final isDuplicate = _detRows.any(
-                (r) => r.bCode?.toString() == scanVal,
+            (r) => r.bCode?.toString() == scanVal,
           );
 
           if (isDuplicate) {
@@ -1820,7 +1811,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
 
             Future.delayed(
               const Duration(milliseconds: 100),
-                  () => _erpFormKey.currentState?.focusField('scanValue'),
+              () => _erpFormKey.currentState?.focusField('scanValue'),
             );
             return;
           }
@@ -1967,7 +1958,9 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     final counterProv = context.read<CounterProvider>();
     final procProv = context.read<DeptProcessProvider>();
 
-    final data = prov.list.where((e) => e.formType == 'MAKABLE MANUAL').map((e) {
+    final data = prov.list.where((e) => e.formType == 'MAKABLE MANUAL').map((
+      e,
+    ) {
       String fromName = '', toName = '', processName = '';
       String fromDeptName = '', toDeptName = '';
 

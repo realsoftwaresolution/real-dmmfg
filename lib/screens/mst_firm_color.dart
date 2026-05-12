@@ -160,7 +160,6 @@ class _MstColorState extends State<MstColor> {
     );
 
     if (skip) {
-      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
       return false;
     }
     /// ── API CHECK ─────────────────────────────

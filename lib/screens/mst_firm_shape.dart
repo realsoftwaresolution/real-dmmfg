@@ -207,7 +207,6 @@ class _MstShapeState extends State<MstShape> {
     );
 
     if (skip) {
-      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
       return false;
     }
     /// ── API CHECK ─────────────────────────────

@@ -200,10 +200,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         counterType: 'FROM',
       );
     });
-
-    if (_fromDisplayFields.isNotEmpty) {
-      debugPrint('FROM → ${_fromDisplayFields.first.userVisibilityName}');
-    }
   }
 
   Future<void> _loadToDisplayFields(int crId) async {
@@ -221,10 +217,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         counterType: 'TO',
       );
     });
-
-    if (_toDisplayFields.isNotEmpty) {
-      debugPrint('TO → ${_toDisplayFields.first.userVisibilityName}');
-    }
   }
 
   /// Shared logic for building a sorted, validated UserVisibilityModel list.
@@ -358,7 +350,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       entryType: 'I',
       formType: 'FACTORY ISSUE',
     );
-print(jsonEncode(newRow));
     _detRows.add(newRow);
     _syncDetGrid();
 
@@ -557,8 +548,6 @@ print(jsonEncode(newRow));
   }
 
   Future<void> _onRowTap(Map<String, dynamic> row) async {
-    print(row);
-
     final prov = context.read<FactoryIssueEntryProvider>();
     final id = int.tryParse(row['factoryIssMstID'].toString()) ?? 0;
 
@@ -572,7 +561,6 @@ print(jsonEncode(newRow));
       _editingDetIndex = null;
       _isAdding = false;
       _showTableOnMobile = false;
-print(jsonEncode(_detRows));
       // ✅ SINGLE SOURCE OF TRUTH
       _formValues = {
         'jno': _s(row['jno']),
@@ -649,7 +637,6 @@ print(jsonEncode(_detRows));
     };
 
     // 🔍 DEBUG (VERY IMPORTANT)
-    print("FINAL PAYLOAD: $payload");
     bool success = await prov.create(payload);
     if (!mounted) return;
     if (success) {
@@ -1035,8 +1022,6 @@ print(jsonEncode(_detRows));
       isEditMode: _isEditMode,
       onFieldChanged: (key, value) {
         _formValues[key] = value.toString();
-        debugPrint('onFieldChanged: $key');
-
         switch (key) {
           case 'entry':
             _entryVals[key] = value.toString();

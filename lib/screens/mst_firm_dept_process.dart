@@ -422,7 +422,6 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
     );
 
     if (skip) {
-      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
       return false;
     }
     /// ── API CHECK ─────────────────────────────

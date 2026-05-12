@@ -228,10 +228,6 @@ class _ReportScreenState extends State<ReportScreen> {
         counterType: 'TO',
       );
     });
-
-    if (_toDisplayFields.isNotEmpty) {
-      debugPrint('TO → ${_toDisplayFields.first.userVisibilityName}');
-    }
   }
 
   Future<void> _loadFromDisplayFields(int crId) async {
@@ -249,10 +245,6 @@ class _ReportScreenState extends State<ReportScreen> {
         counterType: 'FROM',
       );
     });
-
-    if (_fromDisplayFields.isNotEmpty) {
-      debugPrint('FROM → ${_fromDisplayFields.first.userVisibilityName}');
-    }
   }
 
   void _onFromSelected(String crIdStr) {
@@ -874,7 +866,6 @@ class _ReportScreenState extends State<ReportScreen> {
 
     final config = ReportRegistry.of(registryKey);
     if (config == null) {
-      debugPrint('No config found for key: $registryKey');
       return;
     }
 
@@ -972,7 +963,6 @@ class _ReportScreenState extends State<ReportScreen> {
       isShowSearch: true,
       onFieldChanged: (key, value) {
         _formValues[key] = value.toString();
-        debugPrint('onFieldChanged: $key');
         switch (key) {
           case 'type':
             final testCode = int.tryParse(value.toString());

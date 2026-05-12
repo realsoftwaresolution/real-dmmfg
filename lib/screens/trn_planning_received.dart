@@ -1784,7 +1784,6 @@ class _TrnPlanningReceivedEntryState
     }).toList();
 
     Future<void> _onRowTap(Map<String, dynamic> row) async {
-      print('raw.bCode?.toString() $row');
       final raw = row;
       setState(() {
         _selectedRow = row;

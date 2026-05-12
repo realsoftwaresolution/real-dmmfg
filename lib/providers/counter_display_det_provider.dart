@@ -132,7 +132,6 @@ class CounterDisplayDetProvider extends BaseProvider {
     // Option 1: Agar puri list already loaded hai toh locally filter karo
     if (_isLoaded) {
       _counterList = _list.where((e) {
-        print('mmm-${e.crId}-----${crId}');
      return e.crId?.toString() == crId.toString();}
       ).toList();
       notifyListeners();
@@ -144,7 +143,6 @@ class CounterDisplayDetProvider extends BaseProvider {
       showLoader: false,
       call:      () => api.get('/counterDisplayDet'),
       onSuccess: (res) {
-        print('displaydet---${res.data as List}');
         final data = res.data as List;
         return data.map((e) => CounterDisplayDetModel.fromJson(e)).toList();
       },

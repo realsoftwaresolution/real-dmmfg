@@ -71,15 +71,6 @@ class SpkDeptIssProvider extends BaseProvider {
             .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
             .toList();
       },
-      // onSuccess: (res) {
-      //   final list = res.data as List? ?? [];
-      //
-      //   print('listttt----${list}');
-      //
-      //   return list
-      //       .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
-      //       .toList();
-      // },
     );
     return result ?? [];
   }

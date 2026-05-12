@@ -57,11 +57,6 @@ class _PairScreenState extends State<PairScreen> {
       );
       return;
     }
-    // 🔥 Print / use selected rows here
-    debugPrint('Selected ${_selectedRows.length} rows:');
-    for (final row in _selectedRows) {
-      debugPrint(row.toString());
-    }
   }
 
   List<List<ErpFieldConfig>> _buildFormRows() {
@@ -229,7 +224,6 @@ class _PairScreenState extends State<PairScreen> {
       reportName.trim().toUpperCase().replaceAll(' ', '_');
 
   Future<void> _onSearch() async {
-    print('sadfhsdfhj');
     final prov = context.read<PairProvider>();
 
     final filter = {
@@ -332,7 +326,7 @@ class _PairScreenState extends State<PairScreen> {
                 data: prov.tableData,
                 columns: prov.columns,
                 showSearch: false,
-                title: 'PAIR DATA',
+                title: 'PAIR ENTRY',
                 token: '',
                 url: '',
                 isReportRow: false,
@@ -366,7 +360,7 @@ class _PairScreenState extends State<PairScreen> {
       isReportRow: false,
       token: token ?? '',
       url: '',
-      title: 'PAIR LIST',
+      title: 'PAIR ENTRY',
       columns: prov.columns,
       data: prov.tableData,
       showSearch: true,

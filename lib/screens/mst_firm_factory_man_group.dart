@@ -142,7 +142,6 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
     );
 
     if (skip) {
-      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
       return false;
     }
     /// ── API CHECK ─────────────────────────────

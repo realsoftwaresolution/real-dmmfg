@@ -1,3 +1,5 @@
+import 'package:diam_mfg/screens/PacketDeleteScreen.dart';
+import 'package:diam_mfg/screens/PacketEditScreen.dart';
 import 'package:diam_mfg/screens/PacketHistoryScreen.dart' show PacketHistoryScreen;
 import 'package:diam_mfg/screens/PairScreen.dart';
 import 'package:diam_mfg/screens/Report_screen.dart';
@@ -89,5 +91,7 @@ class AppRouter {
     '/4.01': (context) => const ReportScreen(),
     '/5.01': (context) => const PairScreen(),
     '/5.02': (context) => const PacketHistoryScreen(),
+    '/5.03': (context) => const PacketDeleteScreen(),
+    '/5.04': (context) => const PacketEditScreen(),
   });
 }

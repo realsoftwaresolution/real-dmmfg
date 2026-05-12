@@ -1,28 +1,3 @@
-// import 'package:rs_dashboard/rs_dashboard.dart';
-//
-// import '../models/menu_model.dart';
-//
-// class MenuProvider extends BaseProvider {
-//   final ApiService api = ApiService();
-//
-//   List<RSMenuItem> _menus = [];
-//
-//   List<RSMenuItem> get menus => _menus;
-//
-// //load menu for sidebar screens
-//
-//   Future<void> loadMenus() async {
-//     await request(call: () async {
-//       final data = await api.get('/menu?projectName=REAL_DMMFG');
-//       print('res----${data.data}');
-//       return data;
-//     }, onSuccess: (response) {
-//       _menus=(response.data as List)
-//           .map((e) => MenuModel.fromJson(e).toRSMenuItem())
-//           .toList();
-//     },);
-//   }
-// }
 import 'dart:convert';
 
 import 'package:rs_dashboard/rs_dashboard.dart';

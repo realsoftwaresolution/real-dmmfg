@@ -180,7 +180,6 @@ class _MstRemarksState extends State<MstRemarks> {
     );
 
     if (skip) {
-      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
       return false;
     }
     /// ── API CHECK ─────────────────────────────

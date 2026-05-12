@@ -89,7 +89,6 @@ class TrnLaserReceivedProvider extends BaseProvider {
           if(parsed[0].sarinData!.isNotEmpty) {
             final index = _scannedDetList.indexWhere(
                     (e) => e.bCode.toString() == item.bCode.toString());
-            print(index);
             if (index == -1) {
               _scannedDetList.add(item);
             } else {
@@ -124,14 +123,10 @@ class TrnLaserReceivedProvider extends BaseProvider {
       ),
       onSuccess: (res) {
         final responseData = res.data['data'];
-        if (kDebugMode) {
-          print('responseData -- ${responseData.toString()}');
-        }
         notifyListeners();
         return responseData;
       },
     );
-    print('result');
     return result ?? [];
   }
 

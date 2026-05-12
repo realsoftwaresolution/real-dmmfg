@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:diam_mfg/providers/PacketDelete_provider.dart';
+import 'package:diam_mfg/providers/PacketEdit_provider.dart';
 import 'package:diam_mfg/providers/PairProvider.dart';
 import 'package:diam_mfg/providers/ReportProvider.dart';
 import 'package:diam_mfg/providers/admin_menu_provider.dart';
@@ -160,12 +162,13 @@ Future<void> bootstrap({
           ChangeNotifierProvider<ReportProvider>.value(value: ReportProvider()),
           ChangeNotifierProvider<PairProvider>.value(value: PairProvider()),
           ChangeNotifierProvider<PacketHistoryProvider>.value(value: PacketHistoryProvider()),
+          ChangeNotifierProvider<PacketDeleteProvider>.value(value: PacketDeleteProvider()),
+          ChangeNotifierProvider<PacketEditProvider>.value(value: PacketEditProvider()),
         ],
         child: app,
       ),
     );
   }, (error, stack) {
-    debugPrint("GLOBAL ERROR: $error");
     debugPrintStack(stackTrace: stack);
   });
 }

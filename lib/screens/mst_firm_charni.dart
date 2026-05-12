@@ -239,7 +239,6 @@ class _MstCharniState extends State<MstCharni> {
     );
 
     if (skip) {
-      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
       return false;
     }
     /// ── API CHECK ─────────────────────────────

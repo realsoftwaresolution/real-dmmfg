@@ -144,7 +144,6 @@ class _MstHolidayState extends State<MstHoliday> {
     );
 
     if (skip) {
-      debugPrint('⏩ DUPLICATE CHECK SKIPPED');
       return false;
     }
     /// ── API CHECK ─────────────────────────────

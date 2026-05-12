@@ -46,7 +46,6 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
         context.read<ColorProvider>().load(),
         context.read<ShapeProvider>().load(),
         context.read<PurityProvider>().load(),
-        context.read<PktTypeProvider>().load(),
       ]);
     });
   }
@@ -55,7 +54,6 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
     final colorProv = context.read<ColorProvider>();
     final shapeProv = context.read<ShapeProvider>();
     final purityProv = context.read<PurityProvider>();
-    final pktTypeProv = context.read<PktTypeProvider>();
     final purityItems = purityProv.list
         .map(
           (e) => ErpDropdownItem(
@@ -83,15 +81,6 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
         )
         .toList();
 
-    final pktTypeItems = pktTypeProv.list
-        .map(
-          (e) => ErpDropdownItem(
-            label: e.pktTypeName ?? '',
-            value: e.pktTypeCode?.toString() ?? '',
-          ),
-        )
-        .toList();
-
     // ─────────────────────────────────────────────────────────────────────
     //  MASTER SECTION (sectionIndex 0)
     // ─────────────────────────────────────────────────────────────────────
@@ -108,7 +97,6 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
             const ErpDropdownItem(label: 'CUT NO', value: 'CUTNO'),
           ],
           sectionIndex: 0,
-          required: true,
         ),
 
         /// ── BCODE FIELD ─────────────────────────
@@ -118,28 +106,15 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
             label: 'BCODE',
             type: ErpFieldType.number,
             sectionIndex: 0,
-            required: true,
           ),
 
         /// ── CUT NO FIELD ────────────────────────
-        if (selectedType == 'CUTNO')
-          ErpFieldConfig(
-            key: 'pktType',
-            label: 'PKT TYPE',
-            type: ErpFieldType.dropdown,
-            dropdownItems: pktTypeItems,
-            initialDropValue: true,
-            sectionIndex: 0,
-            required: true,
-          ),
-
         if (selectedType == 'CUTNO')
           ErpFieldConfig(
             key: 'cutNo',
             label: 'CUT NO',
             type: ErpFieldType.text,
             sectionIndex: 0,
-            required: true,
           ),
 
         /// ── PKT NO ──────────────────────────────
@@ -149,7 +124,6 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
             label: 'PKT NO',
             type: ErpFieldType.text,
             sectionIndex: 0,
-            required: true,
           ),
 
         ErpFieldConfig(
@@ -223,8 +197,9 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
       "colorCode": int.tryParse(_formValues['colorCode'] ?? ''),
       "shapeCode": int.tryParse(_formValues['shapeCode'] ?? ''),
       "bcode": _formValues['bCode'],
+      "cutNo": _formValues['cutNo'],
+      "pktNo": _formValues['pktNo'],
     };
-
     await prov.loadPacketHistory(filter: filter);
   }
 
@@ -236,18 +211,6 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
     setState(() {
       _formValues.clear();
     });
-    _setDefaultFormValues();
-  }
-
-  void _setDefaultFormValues() {
-    final now = DateTime.now();
-    _formValues = {
-      'dateFrom': DateFormat('dd/MM/yyyy').format(now),
-      'dateTo': DateFormat('dd/MM/yyyy').format(now),
-      'timeFrom': DateFormat('hh:mm a').format(now),
-      'timeTo': DateFormat('hh:mm a').format(now),
-    };
-    if (mounted) setState(() {});
   }
 
   @override
@@ -279,19 +242,15 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
         if (key == 'type') {
           final type = (_formValues['type'] ?? '');
 
-          if (type == 'BCODE') {
-            _erpFormKey.currentState?.focusField('bCode');
-          } else {
-            _erpFormKey.currentState?.focusField('pktType');
-          }
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
 
-          return;
-        }
-
-        /// ── PKT TYPE ─────────────────────────────
-
-        if (key == 'pktType') {
-          _erpFormKey.currentState?.focusField('cutNo');
+            Future.delayed(const Duration(milliseconds: 100), () {
+              if (type == 'BCODE') {
+                _erpFormKey.currentState?.focusField('bCode');
+              }
+            });
+          });
 
           return;
         }
@@ -322,9 +281,6 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
 
             return;
           }
-
-          FocusScope.of(context).unfocus();
-
           await _onSearch();
 
           return;
@@ -333,21 +289,10 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
         /// ── PKT NO SEARCH ────────────────────────
 
         if (key == 'pktNo') {
-          final pktType = (_formValues['pktType'] ?? '').trim();
 
           final cutNo = (_formValues['cutNo'] ?? '').trim();
 
           final pktNo = (_formValues['pktNo'] ?? '').trim();
-
-          /// PKT TYPE
-
-          if (pktType.isEmpty) {
-            _showSnack('Please select Packet Type');
-
-            _erpFormKey.currentState?.focusField('pktType');
-
-            return;
-          }
 
           /// CUT NO
 
@@ -371,8 +316,6 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
 
           /// CLOSE KEYBOARD / FOCUS
 
-          FocusScope.of(context).unfocus();
-
           /// API CALL
 
           await _onSearch();
@@ -383,19 +326,18 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
       onFieldChanged: (key, value) {
         _formValues[key] = value.toString();
         if (key == 'type') {
-          FocusScope.of(context).unfocus();
-
           if (value == 'BCODE') {
             _formValues.remove('cutNo');
             _formValues.remove('pktNo');
-            _formValues.remove('pktType');
+            _erpFormKey.currentState?.updateFieldValue('cutNo','');
+            _erpFormKey.currentState?.updateFieldValue('pktNo','');
           } else {
             _formValues.remove('bCode');
+            _erpFormKey.currentState?.updateFieldValue('bCode','');
           }
 
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+          Future.delayed(const Duration(milliseconds: 50), () {
             if (!mounted) return;
-
             setState(() {});
           });
 
@@ -424,7 +366,7 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
                 data: prov.tableData,
                 columns: prov.columns,
                 showSearch: false,
-                title: 'PACKET HISTORY DATA',
+                title: 'PACKET HISTORY ENTRY',
                 token: '',
                 url: '',
                 isReportRow: false,

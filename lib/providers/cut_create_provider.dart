@@ -179,7 +179,6 @@ class CutCreateProvider extends BaseProvider {
           call: () => api.get('/cutCreate/${mst.cutCreateMstID}'),
           onSuccess: (res) {
             final data   = res.data;
-            print(data);
             final rawDet = (data is Map ? data['det'] : data) as List? ?? [];
             return rawDet
                 .map((e) => CutCreateDetModel.fromJson(e as Map<String, dynamic>))
