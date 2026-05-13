@@ -56,8 +56,8 @@ class MakableEntryProvider extends BaseProvider {
       showLoader: false,
       call: () => api.get(
         '/spkDeptIss/scan-bcode',
-
         query: {
+          'screenName': 'MAKABLE_ENTRY',
           'bCode':     bCode,
           'lastCrId':  fromCrId.toString(),
         },

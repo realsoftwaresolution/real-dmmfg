@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:collection/collection.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
 import 'package:diam_mfg/providers/color_provider.dart';
@@ -8,8 +10,11 @@ import 'package:diam_mfg/providers/dept_provider.dart';
 import 'package:diam_mfg/providers/dept_group_provider.dart';
 import 'package:diam_mfg/providers/dept_process_provider.dart';
 import 'package:diam_mfg/providers/employee_provider.dart';
+import 'package:diam_mfg/providers/fluo_provider.dart';
 import 'package:diam_mfg/providers/makable_entry_provider.dart';
+import 'package:diam_mfg/providers/polish_provider.dart';
 import 'package:diam_mfg/providers/remarks_provider.dart';
+import 'package:diam_mfg/providers/symmetry_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
@@ -234,6 +239,10 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         context.read<PurityProvider>().load(),
         context.read<ColorProvider>().load(),
         context.read<CutProvider>().loadCuts(),
+        context.read<PolishProvider>().loadPolish(),
+        context.read<SymmetryProvider>().loadSymmetry(),
+        context.read<FluoProvider>().load(),
+        context.read<TensionsProvider>().load(),
       ]);
       if (!mounted) return;
       _setDefaultFormValues();
@@ -460,7 +469,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         () => _erpFormKey.currentState?.focusField('dmWt'),
       );
     }
-
     final r = rows.first;
 
     void set(String k, String? v) {
@@ -477,6 +485,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     set('jnoRecPc', r.jnoRecPc?.toString());
     set('shapeCode', r.shapeCode?.toString());
     set('purityCode', r.purityCode?.toString());
+    set('diam', r.diam?.toString());
 
     setState(() => _scannedDet = r);
   }
@@ -631,7 +640,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       shapeCode: existing.shapeCode,
       purityCode: existing.purityCode,
       colorCode: existing.colorCode,
-      diam: existing.diam,
       kachaRec: existing.kachaRec,
       qrCode: existing.qrCode,
       entryType: existing.entryType,
@@ -663,14 +671,12 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       topsPc: int.tryParse(_entryVals['topsPc'] ?? ''),
       topsWt: double.tryParse(_entryVals['topsWt'] ?? ''),
       charniCode: existing.charniCode,
-      tensionsCode: int.tryParse(_formValues['tensionsCode'] ?? ''),
       employeeCode: int.tryParse(_entryVals['employee'] ?? ''),
       signerCode: int.tryParse(_entryVals['signer'] ?? ''),
       remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
       dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
       diffDmWt: double.tryParse(_entryVals['diffDmWt'] ?? ''),
       recutEmp: double.tryParse(_entryVals['recutEmp'] ?? '0.000'),
-      length: int.tryParse(_entryVals['Length'].toString()),
       ratio: double.tryParse(_entryVals['ratio'] ?? ''),
       planShape: _entryVals['shape'] ?? '',
       planPurity: _entryVals['planPurity'] ?? '',
@@ -682,6 +688,27 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       cutCode: int.tryParse(_entryVals['cutCode'] ?? ''),
       plDmWt: double.tryParse(_entryVals['dmWt'] ?? '0.000'),
       plDmPer: double.tryParse(_entryVals['dmPer'] ?? '0.00'),
+      fluo: _isFieldVisible('FLUO')
+          ? int.tryParse(_formValues['fluo'] ?? '')
+          : null,
+      symmetryCode: _isFieldVisible('SYMMETRY')
+          ? int.tryParse(_formValues['symmetryCode'] ?? '')
+          : null,
+      polishCode: _isFieldVisible('POLISH')
+          ? int.tryParse(_formValues['polishCode'] ?? '')
+          : null,
+      tensionsCode: _isFieldVisible('TENSIONS')
+          ? int.tryParse(_formValues['tensionCode'] ?? '')
+          : null,
+      length: _isFieldVisible('LENGTH')
+          ? int.tryParse(_entryVals['length'].toString())
+          : null,
+      diam: _isFieldVisible('DIAM')
+          ? double.tryParse(_entryVals['diam'].toString())
+          : null,
+      height: _isFieldVisible('HEIGHT')
+          ? double.tryParse(_entryVals['height'].toString())
+          : null,
     );
   }
 
@@ -705,7 +732,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       shapeCode: int.tryParse(_entryVals['shape'] ?? ''),
       purityCode: _scannedDet?.purityCode,
       colorCode: int.tryParse(_entryVals['color'] ?? ''),
-      diam: _scannedDet?.diam,
       kachaRec: _scannedDet?.kachaRec ?? 'Y',
       fromDeptCode: _fromDeptCode,
       toDeptCode: _toDeptCodeVal,
@@ -713,7 +739,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       toCrId: _toCrId,
       deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
       charniCode: int.tryParse(_entryVals['charniCode'] ?? ''),
-      tensionsCode: int.tryParse(_formValues['tensionsCode'] ?? ''),
       pc: int.tryParse(_entryVals['orgPc'] ?? ''),
       wt: double.tryParse(_entryVals['orgWt'] ?? ''),
       issPc: int.tryParse(issPcStr),
@@ -744,7 +769,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       plDmWt: double.tryParse(_entryVals['dmWt'] ?? '0.000'),
       plDmPer: double.tryParse(_entryVals['dmPer'] ?? '0.00'),
       recutEmp: double.tryParse(_entryVals['recutEmp'] ?? '0.000'),
-      length: int.tryParse(_entryVals['Length'].toString()),
       ratio: double.tryParse(_entryVals['ratio'] ?? ''),
       planShape: _entryVals['shape'] ?? '',
       planPurity: _entryVals['planPurity'] ?? '',
@@ -755,6 +779,27 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       amount: double.tryParse(_entryVals['amount'] ?? '0.000'),
       remarks: _entryVals['remarks'] ?? '',
       cutCode: int.tryParse(_entryVals['cutCode'] ?? ''),
+      fluo: _isFieldVisible('FLUO')
+          ? int.tryParse(_formValues['fluo'] ?? '')
+          : null,
+      symmetryCode: _isFieldVisible('SYMMETRY')
+          ? int.tryParse(_formValues['symmetryCode'] ?? '')
+          : null,
+      polishCode: _isFieldVisible('POLISH')
+          ? int.tryParse(_formValues['polishCode'] ?? '')
+          : null,
+      tensionsCode: _isFieldVisible('TENSIONS')
+          ? int.tryParse(_formValues['tensionCode'] ?? '')
+          : null,
+      length: _isFieldVisible('LENGTH')
+          ? int.tryParse(_entryVals['length'].toString())
+          : null,
+      diam: _isFieldVisible('DIAM')
+          ? double.tryParse(_entryVals['diam'].toString())
+          : null,
+      height: _isFieldVisible('HEIGHT')
+          ? double.tryParse(_entryVals['height'].toString())
+          : null,
     );
   }
 
@@ -800,6 +845,13 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     set('shape', r.shapeCode?.toString());
     set('purity', r.purityCode?.toString());
     set('color', r.colorCode?.toString());
+    set('tensionCode', r.tensionsCode?.toString());
+    set('fluo', r.fluo?.toString());
+    set('symmetryCode', r.symmetryCode?.toString());
+    set('polishCode', r.polishCode?.toString());
+    set('length', r.length?.toString());
+    set('diam', r.diam?.toString());
+    set('height', r.height?.toString());
   }
 
   void _deleteDetRow(int idx) {
@@ -869,6 +921,10 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           plDmPer: v.plDmPer,
           clvCut: v.clvCut,
           jnoRecPc: v.jnoRecPc,
+          height: v.height,
+          fluo: v.fluo,
+          symmetryCode: v.symmetryCode,
+          polishCode: v.polishCode,
         );
       }).toList();
 
@@ -898,9 +954,17 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       _entryVals.remove(k);
       _erpFormKey.currentState?.updateFieldValue(k, '');
     }
-    // _scannedDet = null;
-    // _isBCodePending = false;
-    // _entryVals['scanValue'] = '';
+  }
+
+  /// Returns true if the field name exists in the merged DEPT visibility map.
+  bool _isFieldVisible(String fieldName) {
+    // final name = fieldName.toUpperCase();
+    // for (final f in [..._fromDisplayFields, ..._toDisplayFields]) {
+    //   if (f.entryType != 'MAKABLE') continue;
+    //   final n = (f.userVisibilityName ?? '').toUpperCase();
+    //   if (n == name) return true;
+    // }
+    return true;
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -924,8 +988,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       'diffDmWt',
       'recutEmp',
       'remarks',
-      'diam',
-      'length',
       'ratio',
       'shapeCode',
       'cutCode',
@@ -938,6 +1000,15 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       'qrCode',
       'partName',
       'orderMstId',
+
+      // Conditional columns
+      if (_isFieldVisible('LENGTH')) 'length',
+      if (_isFieldVisible('DIAM')) 'diam',
+      // if (_isFieldVisible('HEIGHT')) 'height',
+      // if (_isFieldVisible('FLUO')) 'fluo',
+      // if (_isFieldVisible('TENSIONS')) 'tensionCode',
+      // if (_isFieldVisible('SYMMETRY')) 'symmetryCode',
+      // if (_isFieldVisible('POLISH')) 'polishCode',
     ];
 
     _detDisplay = _detRows
@@ -972,6 +1043,10 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
             'orderMstId': r.orderMstID ?? '',
             'plDmPer': r.plDmPer ?? '0.00',
             'plDmWt': r.plDmWt ?? '0.000',
+            'fluo': r.fluo ?? '',
+            'tensionCode': r.tensionsCode ?? '',
+            'symmetryCode': r.symmetryCode ?? '',
+            'polishCode': r.polishCode ?? '',
           },
         )
         .toList();
@@ -1174,6 +1249,10 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     final shapeProv = context.read<ShapeProvider>();
     final cutProv = context.read<CutProvider>();
     final remarkProv = context.read<RemarksProvider>();
+    final polishProv = context.read<PolishProvider>();
+    final symmetryProv = context.read<SymmetryProvider>();
+    final fluoProv = context.read<FluoProvider>();
+    final tensionProv = context.read<TensionsProvider>();
 
     final isFromSelected = _fromCrId != null;
     final isToSelected = _toCrId != null;
@@ -1294,7 +1373,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         )
         .toList();
 
-    //CUT
+    //REMARKS
     final remarkItems = remarkProv.list.where((e) => e.active == true).toList()
       ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
     final remarkDropdown = remarkItems
@@ -1306,14 +1385,54 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         )
         .toList();
 
-    // ── Merged DEPT fields (deduped) ──────────────────────────────────────
-    final Map<String, UserVisibilityModel> merged = {};
-    for (final f in [..._fromDisplayFields, ..._toDisplayFields]) {
-      final name = (f.userVisibilityName ?? '').toUpperCase();
-      if (f.entryType != 'DEPT') continue;
-      if (['ALL'].contains(name)) continue;
-      merged[name] = f;
-    }
+    //POLISH
+    final polishItems =
+        polishProv.polishs.where((e) => e.active == true).toList()
+          ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+    final polishDropdown = polishItems
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.polishName ?? '',
+            value: e.polishCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+    //SYMMETRY
+    final symmetryItems =
+        symmetryProv.symmetrys.where((e) => e.active == true).toList()
+          ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+    final symmetryDropdown = symmetryItems
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.symmetryName ?? '',
+            value: e.symmetryCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+    //FLUO
+    final fluoItems = fluoProv.list.where((e) => e.active == true).toList()
+      ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+    final fluoDropdown = fluoItems
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.fluoName ?? '',
+            value: e.fluoCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+
+    //TENSIONS
+    final tensionItems =
+        tensionProv.list.where((e) => e.active == true).toList()
+          ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+    final tensionDropdown = tensionItems
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.tensionsName ?? '',
+            value: e.tensionsCode?.toString() ?? '',
+          ),
+        )
+        .toList();
 
     // ─────────────────────────────────────────────────────────────────────
     //  MASTER SECTION (sectionIndex 0)
@@ -1493,6 +1612,62 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         dropdownItems: cutDropdown,
         sectionIndex: 3,
       ),
+      if (_isFieldVisible('POLISH'))
+        ErpFieldConfig(
+          key: 'polishCode',
+          label: 'POLISH',
+          type: ErpFieldType.dropdown,
+          dropdownItems: polishDropdown,
+          sectionIndex: 3,
+        ),
+      if (_isFieldVisible('SYMMETRY'))
+        ErpFieldConfig(
+          key: 'symmetryCode',
+          label: 'SYMMETRY',
+          type: ErpFieldType.dropdown,
+          dropdownItems: symmetryDropdown,
+          sectionIndex: 3,
+        ),
+      if (_isFieldVisible('FLUO'))
+        ErpFieldConfig(
+          key: 'fluo',
+          label: 'FLUO',
+          type: ErpFieldType.dropdown,
+          dropdownItems: fluoDropdown,
+          sectionIndex: 3,
+        ),
+      if (_isFieldVisible('TENSIONS'))
+        ErpFieldConfig(
+          key: 'tensionCode',
+          label: 'TENSIONS',
+          type: ErpFieldType.dropdown,
+          dropdownItems: tensionDropdown,
+          sectionIndex: 3,
+        ),
+      if (_isFieldVisible('LENGTH'))
+        ErpFieldConfig(
+          key: 'length',
+          label: 'LENGTH',
+          type: ErpFieldType.number,
+          sectionIndex: 3,
+          flex: 1,
+        ),
+      if (_isFieldVisible('DIAM'))
+        ErpFieldConfig(
+          key: 'diam',
+          label: 'DIAM',
+          type: ErpFieldType.amount,
+          sectionIndex: 3,
+          flex: 1,
+        ),
+      if (_isFieldVisible('HEIGHT'))
+        ErpFieldConfig(
+          key: 'height',
+          label: 'HEIGHT',
+          type: ErpFieldType.amount,
+          sectionIndex: 3,
+          flex: 1,
+        ),
       ErpFieldConfig(
         key: 'dmPer',
         label: 'DM PER',
@@ -1823,7 +1998,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       },
 
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
-      onSave: _onSave,
+      onSave: _detRows.isNotEmpty ? _onSave : null,
       onCancel: _resetForm,
       onDelete: _isEditMode ? _onDelete : null,
       onSearch: () => setState(() => _showTableOnMobile = true),

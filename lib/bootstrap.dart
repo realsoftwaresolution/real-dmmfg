@@ -47,6 +47,7 @@ import 'package:diam_mfg/providers/party_provider.dart';
 import 'package:diam_mfg/providers/party_type_provider.dart';
 import 'package:diam_mfg/providers/pc_provider.dart';
 import 'package:diam_mfg/providers/pkt_type_provider.dart';
+import 'package:diam_mfg/providers/polish_provider.dart';
 import 'package:diam_mfg/providers/purity_group_provider.dart';
 import 'package:diam_mfg/providers/purity_provider.dart';
 import 'package:diam_mfg/providers/purity_rpt_group_provider.dart';
@@ -61,6 +62,7 @@ import 'package:diam_mfg/providers/shape_group_provider.dart';
 import 'package:diam_mfg/providers/shape_provider.dart';
 import 'package:diam_mfg/providers/spk_dept_iss_provider.dart';
 import 'package:diam_mfg/providers/stock_type_provider.dart';
+import 'package:diam_mfg/providers/symmetry_provider.dart';
 import 'package:diam_mfg/providers/team_provider.dart';
 import 'package:diam_mfg/providers/tension_type_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
@@ -164,6 +166,8 @@ Future<void> bootstrap({
           ChangeNotifierProvider<PacketHistoryProvider>.value(value: PacketHistoryProvider()),
           ChangeNotifierProvider<PacketDeleteProvider>.value(value: PacketDeleteProvider()),
           ChangeNotifierProvider<PacketEditProvider>.value(value: PacketEditProvider()),
+          ChangeNotifierProvider<PolishProvider>.value(value: PolishProvider()),
+          ChangeNotifierProvider<SymmetryProvider>.value(value: SymmetryProvider()),
         ],
         child: app,
       ),

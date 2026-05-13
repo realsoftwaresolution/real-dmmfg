@@ -192,6 +192,7 @@ class SpkDeptIssDetModel {
   final int?    colorCode;
   final int?    length;
   final double? diam;
+  final double? height;
   final double? acuraecy;
   final double? amt;
   final bool?   manualAuto;
@@ -276,6 +277,9 @@ class SpkDeptIssDetModel {
   final dynamic planPurity;
   final dynamic planShape;
   final dynamic orderMstId;
+  final dynamic fluo;
+  final dynamic symmetryCode;
+  final dynamic polishCode;
 
   const SpkDeptIssDetModel({
     this.spkDeptIssDetID,
@@ -287,6 +291,7 @@ class SpkDeptIssDetModel {
     this.pktNo,
     this.cutNo,
     this.clvCut,
+    this.height,
     this.length,
     this.fromDeptCode,
     this.toDeptCode,
@@ -421,11 +426,14 @@ class SpkDeptIssDetModel {
     this.orderMstId,
     this.planPurity,
     this.planShape,
-    this.recutEmp,
+    this.recutEmp,  this.fluo, this.symmetryCode, this.polishCode,
   });
 
   factory SpkDeptIssDetModel.fromJson(Map<String, dynamic> json) =>
       SpkDeptIssDetModel(
+        fluo:  json['FluoCode'],
+        symmetryCode:  json['SymmetryCode'],
+        polishCode:  json['PolishCode'],
         spkDeptIssDetID:  json['SPKDeptIssDetID'],
         spkDeptIssMstID:  json['SPKDeptIssMstID'],
         srno:             json['Srno'],
@@ -488,6 +496,7 @@ class SpkDeptIssDetModel {
         purityCode:       json['PurityCode'],
         colorCode:        json['ColorCode'],
         diam:             _d(json['Diam']),
+        height:             _d(json['Height']),
         acuraecy:         _d(json['Acuraecy']),
         amt:              _d(json['Amt']),
         manualAuto:       json['ManualAuto'],
@@ -590,6 +599,9 @@ class SpkDeptIssDetModel {
     'Length':            length,
     'RecPc':            recPc,
     'sarinData':            sarinData,
+    if (polishCode != null) 'PolishCode': polishCode,
+    if (symmetryCode != null) 'SymmetryCode': symmetryCode,
+    if (fluo != null) 'FluoCode': fluo,
     if (fromDeptCode != null) 'FromDeptCode': fromDeptCode,
     if (toDeptCode   != null) 'ToDeptCode':   toDeptCode,
     'RecWt':            recWt,
@@ -642,6 +654,7 @@ class SpkDeptIssDetModel {
     if (purityCode       != null) 'PurityCode':       purityCode,
     if (colorCode        != null) 'ColorCode':        colorCode,
     if (diam             != null) 'Diam':             diam,
+    if (height             != null) 'Height':             height,
     if (acuraecy         != null) 'Acuraecy':         acuraecy,
     if (amt              != null) 'Amt':              amt,
     if (manualAuto       != null) 'ManualAuto':       manualAuto,
@@ -748,19 +761,3 @@ extension SpkDeptIssMstExt on SpkDeptIssMstModel {
     '_raw': this,
   };
 }
-// ─────────────────────────────────────────────────────────────────────────────
-//  toTableRow extension
-// ─────────────────────────────────────────────────────────────────────────────
-// extension SpkDeptIssMstExt on SpkDeptIssMstModel {
-//   Map<String, dynamic> toTableRow() => {
-//     'spkDeptIssMstID': spkDeptIssMstID,
-//     'spkDeptIssDate':  spkDeptIssDate ?? '',
-//     'fromCrID':        fromCrID?.toString() ?? '',
-//     'toCrID':          toCrID?.toString() ?? '',
-//     'deptProcessCode': deptProcessCode?.toString() ?? '',
-//     'entryType':       entryType ?? '',
-//     'totalPc':         totalPc.toString(),
-//     'totalWt':         totalWt.toStringAsFixed(3),
-//     '_raw': this,
-//   };
-// }

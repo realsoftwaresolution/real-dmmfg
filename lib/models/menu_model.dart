@@ -109,6 +109,12 @@ class MenuModel {
         return 'assets/images/2.26.png';
         case '2.27':
         return 'assets/images/2.27.png';
+        case '2.28':
+        return 'assets/images/3.2.png';
+        case '2.29':
+        return 'assets/images/3.3.png';
+      case '2.30':
+        return 'assets/images/3.4.png';
       default:
         return 'assets/images/1_black.png';
     }

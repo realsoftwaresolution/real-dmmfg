@@ -37,7 +37,11 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
 
   // ── Auth ───────────────────────────────────────────────────────────────────
   final String? token = AppStorage.getString('token');
+  List<ErpDropdownItem> _shapeItems = [];
 
+  List<ErpDropdownItem> _colorItems = [];
+
+  List<ErpDropdownItem> _purityItems = [];
   @override
   void initState() {
     super.initState();
@@ -47,40 +51,39 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
         context.read<ShapeProvider>().load(),
         context.read<PurityProvider>().load(),
       ]);
+
+      if (!mounted) return;
+
+      final colorProv = context.read<ColorProvider>();
+      final shapeProv = context.read<ShapeProvider>();
+      final purityProv = context.read<PurityProvider>();
+
+      _shapeItems = shapeProv.list
+          .map((e) => ErpDropdownItem(
+        label: e.shapeName ?? '',
+        value: e.shapeCode?.toString() ?? '',
+      ))
+          .toList(growable: false);
+
+      _colorItems = colorProv.list
+          .map((e) => ErpDropdownItem(
+        label: e.colorName ?? '',
+        value: e.colorCode?.toString() ?? '',
+      ))
+          .toList(growable: false);
+
+      _purityItems = purityProv.list
+          .map((e) => ErpDropdownItem(
+        label: e.purityName ?? '',
+        value: e.purityCode?.toString() ?? '',
+      ))
+          .toList(growable: false);
+
+      setState(() {});
     });
   }
 
   List<List<ErpFieldConfig>> _buildFormRows() {
-    final colorProv = context.read<ColorProvider>();
-    final shapeProv = context.read<ShapeProvider>();
-    final purityProv = context.read<PurityProvider>();
-    final purityItems = purityProv.list
-        .map(
-          (e) => ErpDropdownItem(
-            label: e.purityName ?? '',
-            value: e.purityCode?.toString() ?? '',
-          ),
-        )
-        .toList();
-
-    final colorItems = colorProv.list
-        .map(
-          (e) => ErpDropdownItem(
-            label: e.colorName ?? '',
-            value: e.colorCode?.toString() ?? '',
-          ),
-        )
-        .toList();
-
-    final shapeItems = shapeProv.list
-        .map(
-          (e) => ErpDropdownItem(
-            label: e.shapeName ?? '',
-            value: e.shapeCode?.toString() ?? '',
-          ),
-        )
-        .toList();
-
     // ─────────────────────────────────────────────────────────────────────
     //  MASTER SECTION (sectionIndex 0)
     // ─────────────────────────────────────────────────────────────────────
@@ -130,7 +133,7 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
           key: 'shapeCode',
           label: 'SHAPE',
           type: ErpFieldType.dropdown,
-          dropdownItems: shapeItems,
+          dropdownItems: _shapeItems,
           sectionIndex: 0,
           readOnly: true,
         ),
@@ -139,7 +142,7 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
           key: 'purityCode',
           label: 'PURITY',
           type: ErpFieldType.dropdown,
-          dropdownItems: purityItems,
+          dropdownItems: _purityItems,
           sectionIndex: 0,
           readOnly: true,
         ),
@@ -148,7 +151,7 @@ class _PacketHistoryScreenState extends State<PacketHistoryScreen> {
           key: 'colorCode',
           label: 'COLOR',
           type: ErpFieldType.dropdown,
-          dropdownItems: colorItems,
+          dropdownItems: _colorItems,
           sectionIndex: 0,
           readOnly: true,
         ),
