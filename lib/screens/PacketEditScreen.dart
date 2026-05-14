@@ -413,8 +413,6 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
                         e['DetId'] == row['DetId'],
                   );
 
-                  if (rowIndex == -1) return;
-
                   await _showEditPopup(context, rowIndex);
                 },
               ),

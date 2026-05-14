@@ -103,10 +103,10 @@ class _PairScreenState extends State<PairScreen> {
       );
       return;
     } else {
-      // final exists = await _checkDuplicate(
-      //   fields: {'PairName': _formValues['pairName']},
-      // );
-      // if (exists) return;
+      final exists = await _checkDuplicate(
+        fields: {'PairName': _formValues['pairName']},
+      );
+      if (exists) return;
       final selectedBCodes = _selectedRows
           .map((e) => int.tryParse(e['bCode'].toString()) ?? 0)
           .where((e) => e > 0)
@@ -182,11 +182,11 @@ class _PairScreenState extends State<PairScreen> {
           isEntryRequired: true,
           isEntryField: true,
             inputFormatters: [UpperCaseTextFormatter()],
-            // onDuplicateCheck: (value, allValues) async {
-            //   return await _checkDuplicate(
-            //     fields: {'PairName': value},
-            //   );
-            // },
+            onDuplicateCheck: (value, allValues) async {
+              return await _checkDuplicate(
+                fields: {'PairName': value},
+              );
+            },
           readOnly: _selectedRows.isEmpty
         ),
         ErpFieldConfig(

@@ -108,7 +108,7 @@ class PacketDeleteProvider extends BaseProvider {
     notifyListeners();
 
     final result = await request<List<Map<String, dynamic>>>(
-      call: () => api.get('/packet-history/delete-history'),
+      call: () => api.get('/packet-history/delete-history/${filter['bCode']}'),
 
       onSuccess: (res) {
         final data = res.data;

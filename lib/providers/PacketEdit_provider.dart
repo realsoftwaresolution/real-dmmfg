@@ -116,7 +116,7 @@ class PacketEditProvider extends BaseProvider {
     notifyListeners();
 
     final result = await request<List<Map<String, dynamic>>>(
-      call: () => api.get('/packet-history/delete-history'),
+      call: () => api.get('/packet-history/edit-history'),
 
       onSuccess: (res) {
         final data = res.data;

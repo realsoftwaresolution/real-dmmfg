@@ -122,7 +122,7 @@ class _PacketDeleteScreenState extends State<PacketDeleteScreen> {
   Future<void> _onSearch() async {
     final prov = context.read<PacketDeleteProvider>();
 
-    final filter = {"bcode": _formValues['bCode']};
+    final filter = {"bCode": _formValues['bCode']};
 
     await prov.loadPacketDeleteList(filter: filter);
   }
