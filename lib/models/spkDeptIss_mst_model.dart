@@ -477,7 +477,7 @@ class SpkDeptIssDetModel {
         confPcID:         json['ConfPcID'],
         confEver:         json['ConfEver'],
         confCrID:         json['ConfCrID'],
-        confRec:          json['ConfRec'],
+        confRec:          json['ConfRec'] ?? 'Y',
         recDate:          json['RecDate'],
         recTime:          json['RecTime'],
         lastDetID:        json['LastDetID'],

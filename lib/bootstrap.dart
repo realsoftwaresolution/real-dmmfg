@@ -69,6 +69,7 @@ import 'package:diam_mfg/providers/tensions_provider.dart';
 import 'package:diam_mfg/providers/test_provider.dart';
 import 'package:diam_mfg/providers/trn_laser_received_provider.dart';
 import 'package:diam_mfg/providers/trn_planning_received_provider.dart';
+import 'package:diam_mfg/providers/trn_process_issue_provider.dart';
 import 'package:diam_mfg/providers/user_visibility_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -168,6 +169,7 @@ Future<void> bootstrap({
           ChangeNotifierProvider<PacketEditProvider>.value(value: PacketEditProvider()),
           ChangeNotifierProvider<PolishProvider>.value(value: PolishProvider()),
           ChangeNotifierProvider<SymmetryProvider>.value(value: SymmetryProvider()),
+          ChangeNotifierProvider<ProcessIssueEntryProvider>.value(value: ProcessIssueEntryProvider()),
         ],
         child: app,
       ),

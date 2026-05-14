@@ -1,5 +1,6 @@
 import 'package:diam_mfg/providers/PacketEdit_provider.dart';
 import 'package:diam_mfg/utils/app_images.dart';
+import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -316,7 +317,7 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
   Future<void> _onSearch() async {
     final prov = context.read<PacketEditProvider>();
 
-    final filter = {"bcode": _formValues['bCode']};
+    final filter = {"bCode": _formValues['bCode']};
 
     await prov.loadPacketEditList(filter: filter);
   }
@@ -364,8 +365,50 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
             _erpFormKey.currentState?.focusField('bCode');
             return;
           }
-          await _onSearch();
-          return;
+          final prov = context.read<PacketEditProvider>();
+          final data = await prov.scanBcodeWiseData(bCode: scanVal);
+
+          if (data != null) {
+            _formValues.addAll({
+              'cutNo': data['CutNo']?.toString() ?? '',
+              'clv Cut': data['ClvCut']?.toString() ?? '',
+              'pktNo': data['PktNo']?.toString() ?? '',
+              'remarks': data['RemarksName']?.toString() ?? '',
+            });
+
+            _erpFormKey.currentState?.updateFieldValue(
+              'cutNo',
+              data['CutNo']?.toString() ?? '',
+            );
+
+            _erpFormKey.currentState?.updateFieldValue(
+              'clv Cut',
+              data['ClvCut']?.toString() ?? '',
+            );
+
+            _erpFormKey.currentState?.updateFieldValue(
+              'pktNo',
+              data['PktNo']?.toString() ?? '',
+            );
+
+            _erpFormKey.currentState?.updateFieldValue(
+              'remarks',
+              data['RemarksName']?.toString() ?? '',
+            );
+          }else{
+            ErpResultDialog.showError(
+              context: context,
+              theme: _theme,
+              title: 'BCode',
+              message: 'No packet details found for BCode: $scanVal',
+            );
+            _entryVals['scanValue'] = '';
+            _erpFormKey.currentState?.updateFieldValue('bCode', '');
+            Future.delayed(
+              const Duration(milliseconds: 100),
+                  () => _erpFormKey.currentState?.focusField('bCode'),
+            );
+          }
         }
         if (key == 'remarks') {
           return;

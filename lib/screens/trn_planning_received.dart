@@ -739,7 +739,7 @@ class _TrnPlanningReceivedEntryState
       signerCode: int.tryParse(_entryVals['signer'] ?? ''),
       remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
       dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
-      entryType: 'I',
+      entryType: 'B',
       formType: 'PLANNING_RECEIVED',
       pktType: 'A',
     );

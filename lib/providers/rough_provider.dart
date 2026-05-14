@@ -158,7 +158,6 @@ class RoughProvider extends BaseProvider {
       rateRs: toD(v['rateRs']),
       amtRs: toD(v['amtRs']),
       totWt: toD(v['totWt']),
-
     );
   }
   List<Map<String, dynamic>> tableDataWithNames({
@@ -184,28 +183,6 @@ class RoughProvider extends BaseProvider {
       '_raw': r,
     }).toList();
   }
-  // List<Map<String, dynamic>> tableDataWithNames({
-  //   required Map<String, String> partyNames,
-  //   required Map<String, String> roughTypeNames,
-  //   required Map<String, String> articleNames,
-  //   required Map<String, String> jangadCharniNames,
-  // }) {
-  //   return _roughs.map((e) {
-  //
-  //     final row = e.toTableRow();
-  //
-  //     return {
-  //       ...row,
-  //
-  //       /// Replace codes with names
-  //       'partyCode': partyNames[row['partyCode']] ?? row['partyCode'],
-  //       'roughTypeCode': roughTypeNames[row['roughTypeCode']] ?? row['roughTypeCode'],
-  //       'articalCode': articleNames[row['articalCode']] ?? row['articalCode'],
-  //       'jangadCharniCode': jangadCharniNames[row['jangadCharniCode']] ?? row['jangadCharniCode'],
-  //     };
-  //
-  //   }).toList();
-  // }
 }
 
 extension RoughModelExt on RoughModel {

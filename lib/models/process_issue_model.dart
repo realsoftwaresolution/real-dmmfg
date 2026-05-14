@@ -1,139 +1,86 @@
-class LaserMstModel {
-  final int?    spkDeptIssMstID;
-  final String? spkDeptIssDate;
-  final int?    fromCrID;
-  final int?    toCrID;
-  final int?    deptProcessCode;
-  final int?    deptCode;
-  final String? sflag;
-  final String? sdate;
-  final String? stime;
-  final int?    logID;
-  final String? pcID;
-  final int?    ever;
+class ProcessIssueMstModel {
+  final int? factoryIssMstID;
+  final dynamic jno;
+  final String? factoryIssDate;
+  final String? time;
+
+  final String? selectType;
+  final int? dueDay;
+  final String? dueDate;
+
+  final int? factoryCode;
+  final String? factoryName;
+  final String? factoryType;
+
   final String? entryType;
-  final String? repairing;
-  final String? formType;
-  final String? proType;
-  final String? formType1;
-  final int?    nukCrId;
-  final String? planType;
 
-  final List<LaserDetModel> details;
+  // 🔹 Totals (direct from API)
+  final int? pkt;
+  final int? pc;
+  final double? wt;
+  final int? issPc;
+  final double? issWt;
+  final double? dmWt;
+  final double? dmPer;
 
-  // ── totals from DB ─────────────────────────────────────────────────────────
-  final double? totalWtDb;
-  final int?    totalPcDb;
-  // Fields mein add karo (existing fields ke baad):
-  final int?    totPkt;
-  final String? users;
-  final int?    jnoFirst;
-  final int?    bCode;
-
-  // Replace karo:
-  double get totalWt => totalWtDb ?? details.fold(0.0, (s, d) => s + (d.totalWt ?? 0));
-  int    get totalPc => totalPcDb ?? details.fold(0,   (s, d) => s + (d.totalPc ?? 0));
-
-  const LaserMstModel({
-    this.spkDeptIssMstID,
-    this.spkDeptIssDate,
-    this.fromCrID,
-    this.toCrID,
-    this.deptProcessCode,
-    this.deptCode,
-    this.sflag,
-    this.sdate,
-    this.totPkt,
-    this.users,
-    this.jnoFirst,
-    this.stime,
-    this.logID,
-    this.pcID,
-    this.ever,
+  const ProcessIssueMstModel({
+    this.factoryIssMstID,
+    this.factoryIssDate,
+    this.jno,
+    this.time,
+    this.selectType,
+    this.dueDay,
+    this.dueDate,
+    this.factoryCode,
+    this.factoryName,
+    this.factoryType,
     this.entryType,
-    this.repairing,
-    this.formType,
-    this.proType,
-    this.formType1,
-    this.nukCrId,
-    this.planType,
-    this.details = const [],
-    this.totalWtDb,
-    this.totalPcDb,
-    this.bCode,
+    this.pkt,
+    this.pc,
+    this.wt,
+    this.issPc,
+    this.issWt,
+    this.dmWt,
+    this.dmPer,
   });
 
-  factory LaserMstModel.fromJson(Map<String, dynamic> json) =>
-      LaserMstModel(
-        spkDeptIssMstID: json['SPKDeptIssMstID'],
-        spkDeptIssDate:  _dateOnly(json['SPKDeptIssDate']),
-        fromCrID:        json['FromCrID'],
-        toCrID:          json['ToCrID'],
-        deptProcessCode: json['DeptProcessCode'],
-        deptCode:        json['DeptCode'],
-        sflag:           json['Sflag'],
-        sdate:           _dateOnly(json['Sdate']),
-        stime:           json['Stime'],
-        logID:           json['LogID'],
-        pcID:            json['PcID'],
-        ever:            json['Ever'],
-        entryType:       json['EntryType'],
-        repairing:       json['Repairing'],
-        formType:        json['FormType'],
-        proType:         json['ProType'],
-        formType1:       json['FormType1'],
-        nukCrId:         json['NukCrId'],
-        planType:        json['PlanType'],
-        bCode:        json['BCode'],
-        totPkt:   json['TotPkt']  != null ? (json['TotPkt']  as num).toInt() : null,
-        users:    json['Users']?.toString(),
-        jnoFirst: json['Jno']     != null ? (json['Jno']     as num).toInt() : null,
-        totalWtDb: json['TotalWt'] != null
-            ? double.tryParse(json['TotalWt'].toString())
-            : null,
-        totalPcDb: json['TotalPc'] != null
-            ? (json['TotalPc'] as num).toInt()
-            : null,
-        details: (json['details'] as List? ?? [])
-            .map((e) => LaserDetModel.fromJson(e as Map<String, dynamic>))
-            .toList(),
-      );
+  factory ProcessIssueMstModel.fromJson(Map<String, dynamic> json) {
+    return ProcessIssueMstModel(
+      factoryIssMstID: json['FactoryIssMstID'],
+      factoryIssDate: json['FactoryIssDate'],
+      time: json['Time'],
 
-  Map<String, dynamic> toJson() => {
-    'SPKDeptIssDate':  spkDeptIssDate,
-    'FromCrID':        fromCrID,
-    'ToCrID':          toCrID,
-    'DeptProcessCode': deptProcessCode,
-    'DeptCode':        deptCode,
-    'Sflag':           sflag,
-    'Sdate':           sdate,
-    'Stime':           stime,
-    'LogID':           logID,
-    'PcID':            pcID,
-    'Ever':            ever,
-    'EntryType':       entryType,
-    'Repairing':       repairing,
-    'FormType':        formType,
-    'ProType':         proType,
-    'FormType1':       formType1,
-    'NukCrId':         nukCrId,
-    'PlanType':        planType,
-    'BCode':        bCode,
-  };
+      selectType: json['SelectType'],
+      dueDay: json['DueDay'],
+      dueDate: json['DueDate'],
 
-  static String? _dateOnly(dynamic v) {
-    if (v == null) return null;
-    final s = v.toString();
-    return s.length >= 10 ? s.substring(0, 10) : s;
+      factoryCode: json['FactoryCode'],
+      factoryName: json['FactoryName'],
+      factoryType: json['FactoryType'],
+
+      entryType: json['EntryType'],
+
+      pkt: json['Pkt'],
+      jno: json['Jno'],
+      pc: json['Pc'],
+      wt: (json['Wt'] as num?)?.toDouble(),
+
+      issPc: json['IssPc'],
+      issWt: (json['IssWt'] as num?)?.toDouble(),
+
+      dmWt: (json['DmWt'] as num?)?.toDouble(),
+      dmPer: (json['DmPer'] as num?)?.toDouble(),
+    );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  LaserDetModel
+//  ProcessIssueDetModel
 // ─────────────────────────────────────────────────────────────────────────────
-class LaserDetModel {
+class ProcessIssueDetModel {
   final int?    spkDeptIssDetID;
   final int?    spkDeptIssMstID;
+  final int?    PacketMstID;
   final int?    srno;
   final int?    id;
   final int?    jno;
@@ -190,6 +137,7 @@ class LaserDetModel {
   final int?    cutCode;
   final int?    purityCode;
   final int?    colorCode;
+  final int?    length;
   final double? diam;
   final double? acuraecy;
   final double? amt;
@@ -200,6 +148,7 @@ class LaserDetModel {
   final double? plDmWt;
   final double? plDmPer;
   final double? diffDmWt;
+  final int?    charniCode;
   final double? mackRoughWt;
   final double? rateRs;
   final double? amountRs;
@@ -270,10 +219,15 @@ class LaserDetModel {
   final double? lsAmount;
   final int?    orderMstID;
   final List<Map<String, dynamic>>? sarinData;
+  final dynamic recutEmp;
+  final dynamic planPurity;
+  final dynamic planShape;
+  final dynamic orderMstId;
 
-  const LaserDetModel({
+  const ProcessIssueDetModel({
     this.spkDeptIssDetID,
     this.spkDeptIssMstID,
+    this.PacketMstID,
     this.srno,
     this.id,
     this.jno,
@@ -281,6 +235,7 @@ class LaserDetModel {
     this.pktNo,
     this.cutNo,
     this.clvCut,
+    this.length,
     this.fromDeptCode,
     this.toDeptCode,
     this.pc,
@@ -343,6 +298,7 @@ class LaserDetModel {
     this.plDmWt,
     this.plDmPer,
     this.diffDmWt,
+    this.charniCode,
     this.mackRoughWt,
     this.rateRs,
     this.amountRs,
@@ -410,155 +366,53 @@ class LaserDetModel {
     this.lsAmount,
     this.orderMstID,
     this.sarinData,
+    this.orderMstId,
+    this.planPurity,
+    this.planShape,
+    this.recutEmp,
   });
 
-  factory LaserDetModel.fromJson(Map<String, dynamic> json) =>
-      LaserDetModel(
-        spkDeptIssDetID:  json['SPKDeptIssDetID'],
-        spkDeptIssMstID:  json['SPKDeptIssMstID'],
-        srno:             json['Srno'],
-        id:               json['ID'],
-        fromDeptCode: json['FromDeptCode'],
-        toDeptCode:   json['ToDeptCode'],
-        jno:              json['Jno'],
-        bCode:            json['BCode']?.toString(),
-        pktNo:            json['PktNo'],
-        cutNo:            json['CutNo'],
-        clvCut:           json['ClvCut'],
-        fromCrId:        json['FromCrID'],
-        toCrId:          json['ToCrID'],
-        deptProcessCode: json['DeptProcessCode'],
-        pc:               json['Pc'],
-        wt:               _d(json['Wt']),
-        issPc:            json['IssPc'],
-        issWt:            _d(json['IssWt']),
-        recPc:            json['RecPc'],
-        recWt:            _d(json['RecWt']),
-        dmWt:             _d(json['DmWt']),
-        dmPer:            _d(json['DmPer']),
-        kPc:              json['KPc'],
-        kWt:              _d(json['KWt']),
-        brPc:             json['BrPc'],
-        brWt:             _d(json['BrWt']),
-        lossPc:           json['LossPc'],
-        lossWt:           _d(json['LossWt']),
-        lossPer:          _d(json['LossPer']),
-        topsPc:           json['TopsPc'],
-        topsWt:           _d(json['TopsWt']),
-        totalPc:          json['TotalPc'],
-        totalWt:          _d(json['TotalWt']),
-        employeeCode:     json['EmployeeCode'],
-        signerCode:       json['SignerCode'],
-        remarksCode:      json['RemarksCode'],
-        dueDay:           json['DueDay'],
-        confDate:         json['ConfDate'],
-        confTime:         json['ConfTime'],
-        confLogID:        json['ConfLogID'],
-        confPcID:         json['ConfPcID'],
-        confEver:         json['ConfEver'],
-        confCrID:         json['ConfCrID'],
-        confRec:          json['ConfRec'] ?? 'Y',
-        recDate:          json['RecDate'],
-        recTime:          json['RecTime'],
-        lastDetID:        json['LastDetID'],
-        entryType:        json['EntryType'],
-        kachaRec:         json['KachaRec'],
-        subPktCreate:     json['SubPktCreate'],
-        spkPlanningDetID: json['SPKPlanningDetID'],
-        pktType:          json['PktType'],
-        formType:         json['FormType'],
-        clvRec:           json['CLVRec'],
-        size:             _d(json['Size']),
-        jnoRecPc:         json['JnoRecPc'],
-        partName:         json['PartName'],
-        shapeCode:        json['ShapeCode'],
-        cutCode:          json['CutCode'],
-        purityCode:       json['PurityCode'],
-        colorCode:        json['ColorCode'],
-        diam:             _d(json['Diam']),
-        acuraecy:         _d(json['Acuraecy']),
-        amt:              _d(json['Amt']),
-        manualAuto:       json['ManualAuto'],
-        qrCode:           json['QrCode'],
-        checkerCrId:      json['CheckerCrId'],
-        signerCrId:       json['SignerCrId'],
-        plDmWt:           _d(json['PlDmWt']),
-        plDmPer:          _d(json['PlDmPer']),
-        diffDmWt:         _d(json['DiffDmWt']),
-        mackRoughWt:      _d(json['MackRoughWt']),
-        rateRs:           _d(json['RateRs']),
-        amountRs:         _d(json['AmountRs']),
-        rateID:           json['RateID'],
-        rateon:           json['Rateon'],
-        rate:             _d(json['Rate']),
-        amount:           _d(json['Amount']),
-        ratio:            _d(json['Ratio']),
-        pcName:           json['PcName'],
-        machineSrNo:      json['MachineSrNo'],
-        userName:         json['UserName'],
-        crHeightMM:       _d(json['CrHeightMM']),
-        crHeightPer:      _d(json['CrHeightPer']),
-        crAng:            _d(json['CrAng']),
-        totDepthMM:       _d(json['TotDepthMM']),
-        totDepthPer:      _d(json['TotDepthPer']),
-        pavDepthMM:       _d(json['PavDepthMM']),
-        pavDepthPer:      _d(json['PavDepthPer']),
-        pavAng:           _d(json['PavAng']),
-        gridleMM:         _d(json['GridleMM']),
-        gridlePer:        _d(json['GridlePer']),
-        tableMM:          _d(json['TableMM']),
-        tablePer:         _d(json['TablePer']),
-        tilt:             json['Tilt'],
-        stoneNo:          json['StoneNo'],
-        nukDeptCode:      json['NukDeptCode'],
-        nukRemarks:       json['NukRemarks'],
-        diffRgPc:         json['DiffRgPc'],
-        diffRgWt:         _d(json['DiffRgWt']),
-        diffPoWt:         _d(json['DiffPoWt']),
-        diffAmt:          _d(json['DiffAmt']),
-        remarks:          json['Remarks'],
-        oldDeptIssMstID:  json['OldDeptIssMstID'],
-        nukTopPc:         json['NukTopPc'],
-        nukTopWt:         _d(json['NukTopWt']),
-        nukAmt:           _d(json['NukAmt']),
-        oldShapeCode:     json['OldShapeCode'],
-        oldColorCode:     json['OldColorCode'],
-        oldPurityCode:    json['OldPurityCode'],
-        jobJno:           json['JobJno'],
-        jobBCode:         json['JobBCode'],
-        rRateID:          json['RRateID'],
-        rRateon:          json['RRateon'],
-        rRate:            _d(json['RRate']),
-        rAmount:          _d(json['RAmount']),
-        fType:            json['FType'],
-        pktValid:         json['PktValid'],
-        inValidReason:    json['InValidReason'],
-        highLightEntry:   json['HighLightEntry'],
-        tensionsCode:     json['TensionsCode'],
-        planSignerCrID:   json['PlanSignerCrID'],
-        sarinOpt:         json['SarinOpt'],
-        sarinMachine:     json['SarinMachine'],
-        optDate:          json['OptDate'],
-        optStartTime:     json['OptStartTime'],
-        optEndTime:       json['OptEndTime'],
-        optDiffTime:      json['OptDiffTime'],
-        optEmpCode:       json['OptEmpCode'],
-        tableDiam:        _d(json['TableDiam']),
-        dmDiam:           _d(json['DmDiam']),
-        optRateOn:        json['OptRateOn'],
-        optRateID:        json['OptRateID'],
-        optRate:          _d(json['OptRate']),
-        optAmount:        _d(json['OptAmount']),
-        lsAmount:         _d(json['LsAmount']),
-        orderMstID:       json['OrderMstID'],
-        sarinData: (json['sarinData'] as List?)
-            ?.map((e) => Map<String, dynamic>.from(e as Map))
-            .toList() ?? [],
+  factory ProcessIssueDetModel.fromJson(Map<String, dynamic> json) =>
+      ProcessIssueDetModel(
+        spkDeptIssDetID: json['FactoryIssDetID'],   // ✅ FIX
+        spkDeptIssMstID: json['FactoryIssMstID'],   // ✅ FIX
+
+        PacketMstID: json['PacketMstID'],
+        srno: json['Srno'],
+        jno: json['Jno'],
+
+        bCode: json['BCode']?.toString(),
+        pktNo: json['PktNo'],
+
+        cutNo: json['CutNo'],
+
+        pc: json['Pc'],
+        wt: _d(json['Wt']),
+
+        issPc: json['IssPc'],
+        issWt: _d(json['IssWt']),
+
+        lossWt: _d(json['GhatWt']),   // ✅ IMPORTANT FIX
+
+        dmWt: _d(json['DmWt']),
+        dmPer: _d(json['DmPer']),
+
+        purityCode: json['PurityCode'],
+        charniCode: json['CharniCode'],
+        colorCode: json['ColorCode'],
+
+        shapeCode: json['ShapeCode'],
+        cutCode: json['CutCode'],
+
+        size: _d(json['Size']),
+        diam: _d(json['Diam']),
+        length: json['Length'],
       );
 
   Map<String, dynamic> toJson() => {
     // ── Always send ───────────────────────────────────────────────────────────
     'SPKDeptIssMstID':  spkDeptIssMstID,
+    'PacketMstID':  PacketMstID,
     'Srno':             srno,
     'ID':               id,
     'Jno':              jno,
@@ -570,6 +424,7 @@ class LaserDetModel {
     'Wt':               wt,
     'IssPc':            issPc,
     'IssWt':            issWt,
+    'Length':            length,
     'RecPc':            recPc,
     'sarinData':            sarinData,
     if (fromDeptCode != null) 'FromDeptCode': fromDeptCode,
@@ -633,6 +488,7 @@ class LaserDetModel {
     if (plDmWt           != null) 'PlDmWt':           plDmWt,
     if (plDmPer          != null) 'PlDmPer':          plDmPer,
     if (diffDmWt         != null) 'DiffDmWt':         diffDmWt,
+    if (charniCode       != null) 'CharniCode':       charniCode,
     if (mackRoughWt      != null) 'MackRoughWt':      mackRoughWt,
     if (rateRs           != null) 'RateRs':           rateRs,
     if (amountRs         != null) 'AmountRs':         amountRs,
@@ -699,6 +555,10 @@ class LaserDetModel {
     if (optAmount        != null) 'OptAmount':        optAmount,
     if (lsAmount         != null) 'LsAmount':         lsAmount,
     if (orderMstID       != null) 'OrderMstID':       orderMstID,
+
+    if (planPurity       != null) 'PlanPurity':       planPurity,
+    if (recutEmp       != null) 'RecutEmp':       recutEmp,
+    if (planShape       != null) 'PlanShape':       planShape,
   };
 
   static double? _d(dynamic v) {
@@ -708,20 +568,29 @@ class LaserDetModel {
     return double.tryParse(v.toString());
   }
 }
-extension SpkDeptIssMstExt on LaserMstModel {
+extension FactoryIssMstExt on ProcessIssueMstModel {
   Map<String, dynamic> toTableRow() => {
-    'spkDeptIssMstID': spkDeptIssMstID,
-    'spkDeptIssDate':  spkDeptIssDate ?? '',
-    'fromCrID':        fromCrID?.toString() ?? '',
-    'toCrID':          toCrID?.toString() ?? '',
-    'deptProcessCode': deptProcessCode?.toString() ?? '',
-    'entryType':       entryType ?? '',
-    'totalPc':         totalPc.toString(),
-    'totalWt':         totalWt.toStringAsFixed(3),
-    'totPkt':          (totPkt ?? 0).toString(),   // ← ADD
-    'jno':             jnoFirst?.toString() ?? '',  // ← ADD
-    'users':           users ?? '',                 // ← ADD
-    'spkDeptIssTime':  stime ?? '',                 // ← ADD
-    '_raw': this,
+    'jno': jno,
+
+    'date': factoryIssDate ?? '',
+    'time': time ?? '',
+
+    'entry': selectType ?? '',
+    'dueDay': (dueDay ?? 0).toString(),
+    'dueDate': dueDate ?? '',
+
+    'factory': factoryName ?? '',
+    'type': factoryType ?? '',
+
+    'totPkt': (pkt ?? 0).toString(),
+
+    'pc': (pc ?? 0).toString(),
+    'wt': (wt ?? 0).toStringAsFixed(3),
+
+    'issPc': (issPc ?? 0).toString(),
+    'issWt': (issWt ?? 0).toStringAsFixed(3),
+
+    'dmWt': (dmWt ?? 0).toStringAsFixed(3),
+    'dmPer': (dmPer ?? 0).toStringAsFixed(2),
   };
 }

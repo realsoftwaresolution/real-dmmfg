@@ -95,12 +95,12 @@ class MenuProvider extends BaseProvider {
 
           // ================= FINAL MENU =================
           _menus = [
-            RSMenuItem(
-              id: "4",
-              title: "Admin",
-              icon: "assets/images/2.27.png",
-              route: "/4",
-            ),
+            // RSMenuItem(
+            //   id: "4",
+            //   title: "Admin",
+            //   icon: "assets/images/2.27.png",
+            //   route: "/4",
+            // ),
             RSMenuItem(
               id: "1",
               title: "Dashboard",

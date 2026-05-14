@@ -726,6 +726,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       signerCode: int.tryParse(_entryVals['signer'] ?? ''),
       remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
       dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
+      confRec: 'Y',
+      clvRec: 'N'
     );
   }
 
@@ -781,9 +783,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       signerCode: int.tryParse(_entryVals['signer'] ?? ''),
       remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
       dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
-      entryType: 'I',
+      entryType: 'B',
       formType: 'DEPT_ISS',
       pktType: 'A',
+      confRec: 'Y',
+        clvRec: 'N'
     );
   }
 
@@ -1276,7 +1280,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         ErpFieldConfig(
             key: 'time',
             label: 'TIME',
-            type: ErpFieldType.text,
+            type: ErpFieldType.time,
             readOnly: true,
             sectionIndex: 0),
         ErpFieldConfig(

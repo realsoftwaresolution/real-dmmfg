@@ -147,7 +147,7 @@ class RoughAssortProvider extends BaseProvider {
       sflag:           v['sflag'],
       logID:           toI(v['logID']),
       pcID:            v['pcID'],
-      ever:            toI(v['ever']),
+      ever:            v['ever'],
       jno:             toI(v['jno']),
       kapanNo:         v['kapanNo'],
     );

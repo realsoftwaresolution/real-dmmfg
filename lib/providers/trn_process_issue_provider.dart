@@ -1,43 +1,51 @@
+import 'package:diam_mfg/models/factory_issue_entry_model.dart';
+import 'package:diam_mfg/models/process_issue_model.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
-import '../models/spkDeptIss_mst_model.dart';
 
-class MakableEntryProvider extends BaseProvider {
-  List<SpkDeptIssMstModel> _list     = [];
+class ProcessIssueEntryProvider extends BaseProvider {
+  List<ProcessIssueMstModel> _list     = [];
   bool                     _isLoaded = false;
 
   bool                         get isLoaded => _isLoaded;
-  List<SpkDeptIssMstModel>     get list     => List.unmodifiable(_list);
+  List<ProcessIssueMstModel>     get list     => List.unmodifiable(_list);
   List<Map<String, dynamic>>   get tableData =>
       _list.map((e) => e.toTableRow()).toList();
 // Provider mein ye map maintain karo
 // detMap declare karo (class level)
-  Map<int, List<SpkDeptIssDetModel>> detMap = {};
+  Map<int, List<ProcessIssueDetModel>> detMap = {};
 
 // SIRF EK loadDetails rakho — dono merge karo:
-  Future<List<SpkDeptIssDetModel>> loadDetails(int mstID) async {
-    final result = await request<List<SpkDeptIssDetModel>>(
-      call: () => api.get('/spkDeptIss/$mstID'),
+  Future<List<ProcessIssueDetModel>> loadDetails(int mstID) async {
+    final result = await request<List<ProcessIssueDetModel>>(
+      call: () => api.get('/factoryIss/$mstID'),
       onSuccess: (res) {
-        final data   = res.data;
-        final rawDet = (data is Map ? data['det'] : data) as List? ?? [];
-        return rawDet
-            .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
+        final json = res.data as Map<String, dynamic>;
+        final data = json['data'] as List;
+
+        return data
+            .map((e) => ProcessIssueDetModel.fromJson(
+          e as Map<String, dynamic>,
+        ))
             .toList();
       },
     );
+
     final dets = result ?? [];
-    detMap[mstID] = dets;   // ← detMap update
+
+    detMap[mstID] = dets;
     notifyListeners();
+
     return dets;
   }
+
   // ── LOAD ALL ──────────────────────────────────────────────────────────────
   Future<void> load() async {
-    final result = await request<List<SpkDeptIssMstModel>>(
-      call: () => api.get('/spkDeptIss'),
+    final result = await request<List<ProcessIssueMstModel>>(
+      call: () => api.get('/factoryIss?page=1&limit=2000'),
       onSuccess: (res) {
-        final list = res.data as List;
+        final list = res.data['data'] as List;
         return list
-            .map((e) => SpkDeptIssMstModel.fromJson(e as Map<String, dynamic>))
+            .map((e) => ProcessIssueMstModel.fromJson(e as Map<String, dynamic>))
             .toList();
       },
     );
@@ -48,43 +56,34 @@ class MakableEntryProvider extends BaseProvider {
     }
   }
 // BCode scan → PacketDet rows fetch
-  Future<List<SpkDeptIssDetModel>> fetchByBCode({
-    required String bCode,
-    required String    fromCrId,
+  Future<List<ProcessIssueDetModel>> fetchByBCode({
+    required String bCode
   }) async {
-    final result = await request<List<SpkDeptIssDetModel>>(
+    final result = await request<List<ProcessIssueDetModel>>(
       showLoader: false,
       call: () => api.get(
-        '/spkDeptIss/scan-bcode',
-        query: {
-          'screenName': 'MAKABLE_ENTRY',
-          'bCode':     bCode,
-          'lastCrId':  fromCrId.toString(),
-        },
+        '/factoryIss/scan-bcode/$bCode',
       ),
       onSuccess: (res) {
         final data = res.data['data'];
         final list = data is List ? data : [data];
         return list
-            .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
+            .map((e) => ProcessIssueDetModel.fromJson(e as Map<String, dynamic>))
             .toList();
       },
     );
     return result ?? [];
   }
   // ── CREATE ────────────────────────────────────────────────────────────────
-  Future<bool> create(
-      Map<String, dynamic>       values,
-      List<SpkDeptIssDetModel>   details,
-      ) async {
-    final model  = _buildModel(values);
-    final result = await request<SpkDeptIssMstModel>(
-      call: () => api.post('/spkDeptIss/makable', data: {
-        ...model.toJson(),
-        'details': details.map((e) => e.toJson()).toList(),
-      }),
+  Future<bool> create(Map<String, dynamic> payload) async {
+    final result = await request<ProcessIssueMstModel>(
+      call: () => api.post(
+        '/factoryIss',
+        data: payload, // ✅ DIRECT PAYLOAD
+      ),
       onSuccess: (res) => _parseMstResponse(res.data),
     );
+
     if (result != null) {
       _list.insert(0, result);
       notifyListeners();
@@ -96,19 +95,14 @@ class MakableEntryProvider extends BaseProvider {
   // ── UPDATE ────────────────────────────────────────────────────────────────
   Future<bool> update(
       int                        id,
-      Map<String, dynamic>       values,
-      List<SpkDeptIssDetModel>   details,
+      Map<String, dynamic>       payload,
       ) async {
-    final model  = _buildModel(values);
-    final result = await request<SpkDeptIssMstModel>(
-      call: () => api.put('/spkDeptIss/makable/$id', data: {
-        ...model.toJson(),
-        'details': details.map((e) => e.toJson()).toList(),
-      }),
+    final result = await request<ProcessIssueMstModel>(
+      call: () => api.put('/factoryIss/$id', data: payload),
       onSuccess: (res) => _parseMstResponse(res.data),
     );
     if (result != null) {
-      final i = _list.indexWhere((e) => e.spkDeptIssMstID == id);
+      final i = _list.indexWhere((e) => e.factoryIssMstID == id);
       if (i != -1) _list[i] = result;
       notifyListeners();
       return true;
@@ -117,20 +111,30 @@ class MakableEntryProvider extends BaseProvider {
   }
 
   // ── DELETE ────────────────────────────────────────────────────────────────
-  Future<bool> delete(int id) async {
+  Future<bool> delete( id) async {
     final result = await request<bool>(
-      call: () => api.delete('/spkDeptIss/$id'),
+      call: () => api.delete('/factoryIss/all/$id'),
       onSuccess: (_) => true,
     );
     if (result == true) {
-      _list.removeWhere((e) => e.spkDeptIssMstID == id);
+      _list.removeWhere((e) => e.factoryIssMstID == id);
       notifyListeners();
       return true;
     }
     return false;
   }
-
-  SpkDeptIssMstModel _parseMstResponse(dynamic data) {
+  Future<bool> deleteRow( factoryIssMstID, factoryIssDetID, bCode) async {
+    final result = await request<bool>(
+      call: () => api.delete('/factoryIss/$factoryIssMstID/$factoryIssDetID/$bCode'),
+      onSuccess: (_) => true,
+    );
+    if (result == true) {
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+  ProcessIssueMstModel _parseMstResponse(dynamic data) {
     if (data is Map) {
       Map<String, dynamic> mstJson;
       if (data.containsKey('mst')) {
@@ -147,33 +151,39 @@ class MakableEntryProvider extends BaseProvider {
       } else {
         mstJson = Map<String, dynamic>.from(data);
       }
-      return SpkDeptIssMstModel.fromJson(mstJson);
+      return ProcessIssueMstModel.fromJson(mstJson);
     }
     throw Exception('Unexpected response format');
   }
   // ── BUILD MODEL from form values ──────────────────────────────────────────
-  SpkDeptIssMstModel _buildModel(Map<String, dynamic> v) {
-    int? toI(String? s) => s == null || s.isEmpty ? null : int.tryParse(s);
+  ProcessIssueMstModel _buildModel(Map<String, dynamic> v) {
+    int toI(dynamic x) => int.tryParse(x?.toString() ?? '0') ?? 0;
 
-    return SpkDeptIssMstModel(
-      spkDeptIssDate:  v['spkDeptIssDate'],
-      fromCrID:        toI(v['fromCrID']?.toString()),
-      toCrID:          toI(v['toCrID']?.toString()),
-      deptProcessCode: toI(v['deptProcessCode']?.toString()),
-      deptCode:        toI(v['deptCode']?.toString()),
-      sflag:           v['sflag'],
-      stime:           v['Stime'],    // ← ADD
-      sdate:           v['Sdate'],    // ← ADD
-      logID:           toI(v['logID']?.toString()),
-      pcID:            v['pcID'],
-      ever:            toI(v['ever']?.toString()),
-      entryType:       v['entryType'] ?? 'B',
-      repairing:       v['repairing'] ?? 'N',
-      formType:        v['formType'] ?? 'MAKABLE MANUAL',
-      proType:         v['proType'] ?? 'SPK',
-      formType1:       v['formType1'],
-      nukCrId:         toI(v['nukCrId']?.toString()),
-      planType:        v['planType'],
+    return ProcessIssueMstModel(
+      factoryIssDate: v['FactoryIssDate'],
+      time: v['Time'],
+
+      selectType: v['SelectType'],
+      dueDay: toI(v['DueDay']),
+      dueDate: v['DueDate'],
+
+      factoryCode: toI(v['FactoryCode']),
+      factoryName: v['FactoryName'],   // optional
+      factoryType: v['FactoryType'],
+
+      entryType: v['EntryType'],
+      jno: v['Jno'],
+
+      // totals (optional)
+      pkt: toI(v['Pkt']),
+      pc: toI(v['Pc']),
+      wt: (v['Wt'] as num?)?.toDouble(),
+
+      issPc: toI(v['IssPc']),
+      issWt: (v['IssWt'] as num?)?.toDouble(),
+
+      dmWt: (v['DmWt'] as num?)?.toDouble(),
+      dmPer: (v['DmPer'] as num?)?.toDouble(),
     );
   }
 }

@@ -156,34 +156,6 @@ class SpkDeptIssProvider extends BaseProvider {
     return false;
   }
 
-  // ── LOAD DETAILS ──────────────────────────────────────────────────────────
-  // Future<List<SpkDeptIssDetModel>> loadDetails(int mstID) async {
-  //   final result = await request<List<SpkDeptIssDetModel>>(
-  //     call: () => api.get('/spkDeptIss/$mstID'),
-  //     onSuccess: (res) {
-  //       final data   = res.data;
-  //       final rawDet = (data is Map ? data['det'] : data) as List? ?? [];
-  //       return rawDet
-  //           .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
-  //           .toList();
-  //     },
-  //   );
-  //   return result ?? [];
-  // }
-
-  // ── PARSE { mst, det } response ───────────────────────────────────────────
-  // SpkDeptIssMstModel _parseMstResponse(dynamic data) {
-  //   if (data is Map) {
-  //     if (data.containsKey('mst')) {
-  //       final mst    = Map<String, dynamic>.from(data['mst'] as Map);
-  //       final rawDet = data['det'] as List? ?? [];
-  //       mst['details'] = rawDet;
-  //       return SpkDeptIssMstModel.fromJson(mst);
-  //     }
-  //     return SpkDeptIssMstModel.fromJson(Map<String, dynamic>.from(data));
-  //   }
-  //   throw Exception('Unexpected response format');
-  // }
   SpkDeptIssMstModel _parseMstResponse(dynamic data) {
     if (data is Map) {
       Map<String, dynamic> mstJson;
@@ -221,10 +193,10 @@ class SpkDeptIssProvider extends BaseProvider {
       logID:           toI(v['logID']?.toString()),
       pcID:            v['pcID'],
       ever:            toI(v['ever']?.toString()),
-      entryType:       v['entryType'],
-      repairing:       v['repairing'],
+      entryType:       v['entryType'] ?? 'B',
+      repairing:       v['repairing'] ?? 'N',
       formType:        v['formType'] ?? 'SPK',
-      proType:         v['proType'],
+      proType:         v['proType'] ?? 'SPK',
       formType1:       v['formType1'],
       nukCrId:         toI(v['nukCrId']?.toString()),
       planType:        v['planType'],

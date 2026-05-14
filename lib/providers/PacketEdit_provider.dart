@@ -43,15 +43,15 @@ class PacketEditProvider extends BaseProvider {
     ErpColumnConfig(key: 'BrWt', label: 'Br Wt'),
     ErpColumnConfig(key: 'LossPc', label: 'Loss Pc'),
     ErpColumnConfig(key: 'LossWt', label: 'Loss Wt'),
-    ErpColumnConfig(key: 'LossPer', label: 'Loss Per',width: 160),
-    ErpColumnConfig(key: 'CrossPc', label: 'Cross Pc',width: 160),
+    ErpColumnConfig(key: 'LossPer', label: 'Loss Per', width: 160),
+    ErpColumnConfig(key: 'CrossPc', label: 'Cross Pc', width: 160),
     ErpColumnConfig(key: 'PelPc', label: 'Pel Pc'),
     ErpColumnConfig(key: 'RepPc', label: 'Rep Pc'),
     ErpColumnConfig(key: 'SarinMistake', label: 'Sarin Mistake', width: 180),
     ErpColumnConfig(key: 'LsLossWt', label: 'Ls Loss Wt', width: 160),
     ErpColumnConfig(key: 'SubPktWt', label: 'Sub Pkt Wt', width: 160),
     ErpColumnConfig(key: 'TotalPc', label: 'Total Pc'),
-    ErpColumnConfig(key: 'TotalWt', label: 'Total Wt',width: 160),
+    ErpColumnConfig(key: 'TotalWt', label: 'Total Wt', width: 160),
     ErpColumnConfig(key: 'MstID', label: 'Mst ID'),
     ErpColumnConfig(key: 'DetID', label: 'Det ID'),
     ErpColumnConfig(key: 'FromMan', label: 'From Man', width: 180),
@@ -107,6 +107,28 @@ class PacketEditProvider extends BaseProvider {
     }).toList();
   }
 
+  Future<Map<String, dynamic>?> scanBcodeWiseData({
+    required dynamic bCode,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    final result = await request<Map<String, dynamic>?>(
+      call: () => api.get('/packet-history/edit-display/$bCode'),
+      onSuccess: (res) {
+        final data = res.data['data'];
+        if (data == null) {
+          return null;
+        }
+        return Map<String, dynamic>.from(data);
+      },
+    );
+    _isLoaded = true;
+    _isLoading = false;
+    notifyListeners();
+    return result;
+  }
+
   Future<List<Map<String, dynamic>>> loadPacketEditList({
     required Map<String, dynamic> filter,
   }) async {
@@ -116,7 +138,7 @@ class PacketEditProvider extends BaseProvider {
     notifyListeners();
 
     final result = await request<List<Map<String, dynamic>>>(
-      call: () => api.get('/packet-history/edit-history'),
+      call: () => api.get('/packet-history/edit-display/${filter['bCode']}'),
 
       onSuccess: (res) {
         final data = res.data;

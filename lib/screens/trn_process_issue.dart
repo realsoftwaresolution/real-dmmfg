@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:diam_mfg/models/factory_issue_entry_model.dart';
+import 'package:diam_mfg/models/process_issue_model.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
 import 'package:diam_mfg/providers/counter_manager_det_provider.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
@@ -12,6 +13,7 @@ import 'package:diam_mfg/providers/employee_provider.dart';
 import 'package:diam_mfg/providers/factory_provider.dart';
 import 'package:diam_mfg/providers/remarks_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
+import 'package:diam_mfg/providers/trn_process_issue_provider.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
@@ -39,18 +41,18 @@ String _f3(double? v) => v == null ? '0.000' : v.toStringAsFixed(3);
 //  WIDGET
 // ─────────────────────────────────────────────────────────────────────────────
 
-class TrnFactoryIssueEntry extends StatefulWidget {
-  const TrnFactoryIssueEntry({super.key});
+class TrnProcessIssueEntry extends StatefulWidget {
+  const TrnProcessIssueEntry({super.key});
 
   @override
-  State<TrnFactoryIssueEntry> createState() => _TrnFactoryIssueEntryState();
+  State<TrnProcessIssueEntry> createState() => _TrnProcessIssueEntryState();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
+class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
   // ── Theme ──────────────────────────────────────────────────────────────────
   final ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
 
@@ -85,7 +87,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   int? _toDeptCodeVal;
 
   // ── Detail rows ────────────────────────────────────────────────────────────
-  List<FactoryIssueDetModel> _detRows = [];
+  List<ProcessIssueDetModel> _detRows = [];
   List<Map<String, dynamic>> _detDisplay = [];
   List<String> _activeDetColumns = [];
   int? _editingDetIndex;
@@ -112,10 +114,10 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     if (deptCode == null) return '';
     try {
       return context
-          .read<DeptProvider>()
-          .list
-          .firstWhere((d) => d.deptCode == deptCode)
-          .deptName ??
+              .read<DeptProvider>()
+              .list
+              .firstWhere((d) => d.deptCode == deptCode)
+              .deptName ??
           '';
     } catch (_) {
       return '';
@@ -126,10 +128,10 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     if (code == null) return '';
     try {
       return context
-          .read<PurityProvider>()
-          .list
-          .firstWhere((p) => p.purityCode == code)
-          .purityName ??
+              .read<PurityProvider>()
+              .list
+              .firstWhere((p) => p.purityCode == code)
+              .purityName ??
           '';
     } catch (_) {
       return '';
@@ -141,7 +143,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.wait([
-        context.read<FactoryIssueEntryProvider>().load(),
+        context.read<ProcessIssueEntryProvider>().load(),
         context.read<CounterProvider>().load(),
         context.read<CounterManagerDetProvider>().load(),
         context.read<DeptProvider>().load(),
@@ -174,10 +176,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
   void _setDefaultFormValues() {
     final now = DateTime.now();
-    _formValues = {
-      'date': DateFormat('dd/MM/yyyy').format(now),
-      'jno': '0',
-    };
+    _formValues = {'date': DateFormat('dd/MM/yyyy').format(now), 'jno': '0'};
     if (mounted) setState(() {});
   }
 
@@ -187,7 +186,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
   Future<void> _loadFromDisplayFields(int crId) async {
     final counter = context.read<CounterProvider>().list.firstWhereOrNull(
-          (c) => c.crId == crId,
+      (c) => c.crId == crId,
     );
     if (counter == null || counter.counterMstID == null) return;
 
@@ -204,7 +203,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
   Future<void> _loadToDisplayFields(int crId) async {
     final counter = context.read<CounterProvider>().list.firstWhereOrNull(
-          (c) => c.crId == crId,
+      (c) => c.crId == crId,
     );
     if (counter == null || counter.counterMstID == null) return;
 
@@ -227,23 +226,23 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     return rawList
         .where(
           (r) =>
-      r.counterType == counterType &&
-          r.userVisibilityCode != null &&
-          _visProv.list.any(
+              r.counterType == counterType &&
+              r.userVisibilityCode != null &&
+              _visProv.list.any(
                 (v) => v.userVisibilityCode == r.userVisibilityCode,
-          ),
-    )
+              ),
+        )
         .map(
           (r) => _visProv.list.firstWhereOrNull(
             (v) => v.userVisibilityCode == r.userVisibilityCode,
-      ),
-    )
+          ),
+        )
         .where(
           (v) =>
-      v != null &&
-          v!.userVisibilityCode != null &&
-          (v.userVisibilityName ?? '').isNotEmpty,
-    )
+              v != null &&
+              v!.userVisibilityCode != null &&
+              (v.userVisibilityName ?? '').isNotEmpty,
+        )
         .cast<UserVisibilityModel>()
         .toList()
       ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
@@ -259,7 +258,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
     try {
       final counter = context.read<CounterProvider>().list.firstWhere(
-            (c) => c.crId == crId,
+        (c) => c.crId == crId,
       );
       final deptName = _deptNameFor(counter.deptCode);
 
@@ -294,9 +293,9 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     if (_isBCodePending) return;
     _isBCodePending = true;
 
-    final rows = await context
-        .read<FactoryIssueEntryProvider>()
-        .fetchByBCode(bCode: bCode);
+    final rows = await context.read<ProcessIssueEntryProvider>().fetchByBCode(
+      bCode: bCode,
+    );
 
     if (!mounted) return;
 
@@ -312,7 +311,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
     // ✅ Duplicate check
     final exists = _detRows.any(
-          (e) => e.bCode?.toString() == r.bCode?.toString(),
+      (e) => e.bCode?.toString() == r.bCode?.toString(),
     );
 
     if (exists) {
@@ -321,12 +320,12 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       return;
     }
 
-    final newRow = FactoryIssueDetModel(
+    final newRow = ProcessIssueDetModel(
       srno: _detRows.length + 1,
 
       bCode: r.bCode?.toString() ?? '',
       pktNo: r.pktNo ?? '',
-      PacketMstID:r.PacketMstID,
+      PacketMstID: r.PacketMstID,
       cutNo: r.cutNo ?? '',
       pc: r.pc ?? 0,
       wt: r.wt ?? 0,
@@ -347,8 +346,8 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       fromCrId: _fromCrId,
       toCrId: _toCrId,
 
-      entryType: 'B',
-      formType: 'FACTORY ISSUE',
+      entryType: 'I',
+      formType: 'PROCESS ISSUE',
     );
     _detRows.add(newRow);
     _syncDetGrid();
@@ -372,6 +371,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       _entryVals[k] = v ?? '';
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
+
     set('scanValue', r.bCode);
   }
 
@@ -379,12 +379,12 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     final confirm = await ErpDeleteDialog.show(
       context: context,
       theme: _theme,
-      title: 'Factory Issue',
+      title: 'Process Issue',
       itemName: 'ID: ${_detRows[idx].spkDeptIssDetID?.toString()}',
     );
     if (confirm != true || !mounted) return;
 
-    final success = await context.read<FactoryIssueEntryProvider>().deleteRow(
+    final success = await context.read<ProcessIssueEntryProvider>().deleteRow(
       _detRows[idx].spkDeptIssMstID?.toString(),
       _detRows[idx].spkDeptIssDetID?.toString(),
       _detRows[idx].bCode,
@@ -396,7 +396,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         // Re-number srno
         _detRows = _detRows.asMap().entries.map((e) {
           final v = e.value;
-          return FactoryIssueDetModel(
+          return ProcessIssueDetModel(
             srno: e.key + 1,
             spkDeptIssMstID: v.spkDeptIssMstID,
             id: v.id,
@@ -478,7 +478,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   void _syncDetGrid() {
     _activeDetColumns = [
       'srno',
-      'cutNo',        // Mfg Cut
+      'cutNo', // Mfg Cut
       'qrCode',
       'bCode',
       'pktNo',
@@ -486,49 +486,53 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       'wt',
       'issPc',
       'issWt',
-      'ghatWt',       // custom (lossWt or calculated)
+      'ghatWt', // custom (lossWt or calculated)
       'purityCode',
       'charniCode',
       'colorCode',
       'dmWt',
       'dmPer',
-      'size',         // optional (if available)
+      'size', // optional (if available)
       'diam',
       'length',
     ];
 
-    _detDisplay = _detRows.map((r) => {
-      'srno': r.srno?.toString() ?? '',
+    _detDisplay = _detRows
+        .map(
+          (r) => {
+            'srno': r.srno?.toString() ?? '',
 
-      'cutNo': r.cutNo ?? '',
+            'cutNo': r.cutNo ?? '',
 
-      'qrCode': '',
+            'qrCode': '',
 
-      'bCode': r.bCode ?? '',
-      'pktNo': r.pktNo ?? '',
+            'bCode': r.bCode ?? '',
+            'pktNo': r.pktNo ?? '',
 
-      'pc': (r.pc ?? 0).toString(),
-      'wt': _f3(r.wt ?? 0),
+            'pc': (r.pc ?? 0).toString(),
+            'wt': _f3(r.wt ?? 0),
 
-      'issPc': (r.issPc ?? r.pc ?? 0).toString(),
-      'issWt': _f3(r.issWt ?? r.wt ?? 0),
+            'issPc': (r.issPc ?? r.pc ?? 0).toString(),
+            'issWt': _f3(r.issWt ?? r.wt ?? 0),
 
-      'ghatWt': _f3(r.lossWt ?? 0),
+            'ghatWt': _f3(r.lossWt ?? 0),
 
-      'purityCode': _purityNameFor(r.purityCode),
+            'purityCode': _purityNameFor(r.purityCode),
 
-      'charniCode': r.charniCode?.toString() ?? '',
+            'charniCode': r.charniCode?.toString() ?? '',
 
-      'colorCode': r.colorCode?.toString() ?? '',
+            'colorCode': r.colorCode?.toString() ?? '',
 
-      'dmWt': _f3(r.dmWt ?? 0),
-      'dmPer': (r.dmPer ?? 0).toStringAsFixed(2),
+            'dmWt': _f3(r.dmWt ?? 0),
+            'dmPer': (r.dmPer ?? 0).toStringAsFixed(2),
 
-      'size': '',
+            'size': '',
 
-      'diam': (r.diam ?? 0).toString(),
-      'length': (r.length ?? 0).toString(),
-    }).toList();
+            'diam': (r.diam ?? 0).toString(),
+            'length': (r.length ?? 0).toString(),
+          },
+        )
+        .toList();
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -548,7 +552,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   }
 
   Future<void> _onRowTap(Map<String, dynamic> row) async {
-    final prov = context.read<FactoryIssueEntryProvider>();
+    final prov = context.read<ProcessIssueEntryProvider>();
     final id = int.tryParse(row['factoryIssMstID'].toString()) ?? 0;
 
     final details = await prov.loadDetails(id);
@@ -585,12 +589,13 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
     _rebuildForm();
   }
+
   // ─────────────────────────────────────────────────────────────────────────
   //  SAVE
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _onSave(Map<String, dynamic> values) async {
-    final prov = context.read<FactoryIssueEntryProvider>();
+    final prov = context.read<ProcessIssueEntryProvider>();
     // ✅ MASTER PAYLOAD
     final payload = {
       "FactoryIssDate": toUtcIso(_formValues['date']),
@@ -643,12 +648,16 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       final wasEdit = _isEditMode;
       _resetForm();
       await ErpResultDialog.showSuccess(
-        context: context, theme: _theme,
-        title:   wasEdit ? 'Updated' : 'Saved',
-        message: wasEdit ? 'Factory Issue Entry updated.' : 'Factory Issue Entry saved.',
+        context: context,
+        theme: _theme,
+        title: wasEdit ? 'Updated' : 'Saved',
+        message: wasEdit
+            ? 'Process Issue Entry updated.'
+            : 'Process Issue Entry saved.',
       );
     }
   }
+
   // ─────────────────────────────────────────────────────────────────────────
   //  DELETE
   // ─────────────────────────────────────────────────────────────────────────
@@ -659,12 +668,12 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     final confirm = await ErpDeleteDialog.show(
       context: context,
       theme: _theme,
-      title: 'Factory Issue',
+      title: 'Process Issue',
       itemName: 'ID: ${_formValues['factoryIssMstID'].toString()}',
     );
     if (confirm != true || !mounted) return;
 
-    final success = await context.read<FactoryIssueEntryProvider>().delete(
+    final success = await context.read<ProcessIssueEntryProvider>().delete(
       _formValues['factoryIssMstID'].toString(),
     );
 
@@ -674,15 +683,12 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       await ErpResultDialog.showDeleted(
         context: context,
         theme: _theme,
-        itemName: 'Factory Issue $id',
+        itemName: 'Process Issue $id',
       );
     }
   }
 
-  Future<void> _onDeleteRow() async {
-
-
-  }
+  Future<void> _onDeleteRow() async {}
 
   // ─────────────────────────────────────────────────────────────────────────
   //  RESET
@@ -736,102 +742,162 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
       _formValues['dueDayCount'] = formatted;
 
-      _erpFormKey.currentState?.updateFieldValue(
-        'dueDayCount',
-        formatted,
-      );
+      _erpFormKey.currentState?.updateFieldValue('dueDayCount', formatted);
     } else {
       _formValues['dueDayCount'] = '';
       _erpFormKey.currentState?.updateFieldValue('dueDayCount', '');
     }
   }
-  List<List<ErpFieldConfig>> _buildFormRows() {
-    final factoryProv = context.read<FactoryProvider>();
 
-    // factoryDropdown
-    final factoryItems = factoryProv.factories.where((e) => e.active == true).toList();
-    final factoryDropdown = factoryItems
-        .map(
-          (e) => ErpDropdownItem(
-        label: e.factoryName ?? '',
-        value: e.factoryCode?.toString() ?? '',
-      ),
-    )
+  String _deptGroupNameFor(int? code) {
+    if (code == null) return '';
+    try {
+      return context
+              .read<DeptGroupProvider>()
+              .list
+              .firstWhere((d) => d.deptGroupCode == code)
+              .deptGroupName ??
+          '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  List<List<ErpFieldConfig>> _buildFormRows() {
+    final counterProv = context.read<CounterProvider>();
+    final mgDetProv = context.read<CounterManagerDetProvider>();
+    final procProv = context.read<DeptProcessProvider>();
+    final deptProv = context.read<DeptProvider>();
+    final employeeProv = context.read<EmployeeProvider>();
+
+    // ── TO dropdown — allowCrIds from CounterManagerDet ───────────────────
+    final toItems = mgDetProv.list
+        .where((m) => m.allowCrId != null)
+        .map((m) => m.allowCrId!)
+        .toSet()
+        .map((allowId) {
+          try {
+            final c = counterProv.list.firstWhere((c) => c.crId == allowId);
+            return ErpDropdownItem(
+              label: '${c.crName ?? ''}  |  ${_deptNameFor(c.deptCode)}',
+              value: c.crId?.toString() ?? '',
+            );
+          } catch (_) {
+            return ErpDropdownItem(label: 'ID:$allowId', value: '$allowId');
+          }
+        })
         .toList();
 
-    // ── Merged DEPT fields (deduped) ──────────────────────────────────────
-    final Map<String, UserVisibilityModel> merged = {};
-    for (final f in [..._fromDisplayFields, ..._toDisplayFields]) {
-      final name = (f.userVisibilityName ?? '').toUpperCase();
-      if (f.entryType != 'DEPT') continue;
-      if (['ALL'].contains(name)) continue;
-      merged[name] = f;
-    }
+    // ── PROCESS dropdown — intersection of FROM-issue ∩ TO-receive codes ──
+    final processItems = () {
+      final issueCodes = mgDetProv.list
+          .where((m) => m.deptProcessCode != null)
+          .map((m) => m.deptProcessCode!)
+          .toSet();
 
+      final recvCodes = mgDetProv.list
+          .where((m) => m.deptProcessCode != null)
+          .map((m) => m.deptProcessCode!)
+          .toSet();
+
+      return issueCodes.intersection(recvCodes).map((code) {
+        String label = '$code';
+        try {
+          label =
+              procProv.list
+                  .firstWhere((p) => p.deptProcessCode == code)
+                  .deptProcessName ??
+              '$code';
+        } catch (_) {}
+        return ErpDropdownItem(label: label, value: code.toString());
+      }).toList();
+    }();
+
+    // ── deptItems dropdown ─────────────────────────────────────────────────
+    final deptItems = deptProv.list.where((e) => e.active == true).toList()
+      ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+    final deptDropdown = deptItems
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.deptName ?? '',
+            value: e.deptCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+
+    // ── deptItems dropdown ─────────────────────────────────────────────────
+    final employeeItems = employeeProv.list
+        .where((e) => e.active == true)
+        .toList();
+    final employeeDropdown = employeeItems
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.employeeName ?? '',
+            value: e.employeeCode?.toString() ?? '',
+          ),
+        )
+        .toList();
 
     // ─────────────────────────────────────────────────────────────────────
     //  MASTER SECTION (sectionIndex 0)
     // ─────────────────────────────────────────────────────────────────────
     final List<List<ErpFieldConfig>> rows = [
-      // Row 1 — date / time / ID
       [
         ErpFieldConfig(
-          key: 'entry',
-          label: 'ENTRY',
+          key: 'manager',
+          label: 'MANAGER',
           type: ErpFieldType.dropdown,
-          dropdownItems:  [
-        ErpDropdownItem(label: 'SPK', value: 'SPK'),
-        ErpDropdownItem(label: 'GENERAL', value: 'GENERAL'),
+          dropdownItems: toItems,
+          sectionIndex: 0,
+        ),
+        ErpFieldConfig(
+          key: 'deptProcessCode',
+          label: 'PROCESS',
+          type: ErpFieldType.dropdown,
+          dropdownItems: processItems,
+          sectionIndex: 0,
+        ),
+        ErpFieldConfig(
+          key: 'employee',
+          label: 'EMPLOYEE',
+          type: ErpFieldType.dropdown,
+          dropdownItems: employeeDropdown,
+          sectionIndex: 0,
+        ),
+        ErpFieldConfig(
+          key: 'deptName',
+          label: 'DEPT',
+          type: ErpFieldType.dropdown,
+          dropdownItems: deptDropdown,
+          sectionIndex: 0,
+        ),
       ],
-          sectionIndex: 0,
-        ),
-        ErpFieldConfig(
-          key: 'dueDay',
-          label: 'DUE DAY',
-          type: ErpFieldType.number,
-          sectionIndex: 0,
-        ),
-        ErpFieldConfig(
-          key: 'dueDayCount',
-          label: '',
-          type: ErpFieldType.date,
-          sectionIndex: 0,
-          readOnly: true,
-        ),
+
+      // Row 2 — date / time / ID
+      [
         ErpFieldConfig(
           key: 'date',
           label: 'DATE',
           type: ErpFieldType.date,
           readOnly: true,
-          sectionIndex: 0,
+          sectionIndex: 1,
         ),
         ErpFieldConfig(
-          key: 'jno',
-          label: 'JNO',
+          key: 'time',
+          label: 'TIME',
+          type: ErpFieldType.time,
+          readOnly: true,
+          sectionIndex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'id',
+          label: 'ID',
           type: ErpFieldType.number,
           readOnly: true,
-          sectionIndex: 0,
+          sectionIndex: 1,
         ),
       ],
 
-      [
-        ErpFieldConfig(
-          key: 'factory',
-          label: 'FACTORY',
-          type: ErpFieldType.dropdown,
-          dropdownItems: factoryDropdown,
-          sectionIndex: 1,
-          width: 500
-        ),
-        ErpFieldConfig(
-          key: 'type',
-          label: 'FACTORY TYPE',
-          type: ErpFieldType.text,
-          readOnly: true,
-          sectionIndex: 1,
-          width: 250
-        ),
-      ],
 
       [
         ErpFieldConfig(
@@ -893,18 +959,8 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   List<ErpColumnConfig> get _tableColumns => [
-    ErpColumnConfig(
-      key: 'jno',
-      label: 'Jno',
-      width: 70,
-      required: true,
-    ),
-    ErpColumnConfig(
-      key: 'date',
-      label: 'DATE',
-      width: 160,
-      isDate: true,
-    ),
+    ErpColumnConfig(key: 'jno', label: 'Jno', width: 70, required: true),
+    ErpColumnConfig(key: 'date', label: 'DATE', width: 160, isDate: true),
     ErpColumnConfig(key: 'time', label: 'TIME', width: 140),
     ErpColumnConfig(key: 'entry', label: 'ENTRY', width: 180),
     ErpColumnConfig(key: 'dueDay', label: 'DUE DAY', width: 180),
@@ -984,20 +1040,20 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<FactoryIssueEntryProvider>(
+    return Consumer<ProcessIssueEntryProvider>(
       builder: (ctx, prov, _) => Padding(
         padding: const EdgeInsets.all(8),
         child: Responsive.isMobile(context)
             ? (_showTableOnMobile ? _buildTable(prov) : _buildForm(context))
             : Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!_showTableOnMobile)
-              Expanded(flex: 2, child: _buildForm(context)),
-            if (_showTableOnMobile)
-              Expanded(flex: 2, child: _buildTable(prov)),
-          ],
-        ),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!_showTableOnMobile)
+                    Expanded(flex: 2, child: _buildForm(context)),
+                  if (_showTableOnMobile)
+                    Expanded(flex: 2, child: _buildTable(prov)),
+                ],
+              ),
       ),
     );
   }
@@ -1013,7 +1069,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       autoStartAdding: _isAdding,
       addButtonSections: const {3},
       logo: AppImages.logo,
-      title: 'FACTORY ISSUE ENTRY',
+      title: 'PROCESS ISSUE ENTRY',
       tabBarBackgroundColor: const Color(0xfff2f0ef),
       tabBarSelectedColor: _theme.primaryGradient.first,
       tabBarSelectedTxtColor: Colors.white,
@@ -1027,7 +1083,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
             _entryVals[key] = value.toString();
             Future.delayed(
               const Duration(milliseconds: 50),
-                  () => _erpFormKey.currentState?.focusField('dueDay'),
+              () => _erpFormKey.currentState?.focusField('dueDay'),
             );
 
           case 'dueDay':
@@ -1041,7 +1097,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
             final factoryProv = context.read<FactoryProvider>();
 
             final selectedFactory = factoryProv.factories.firstWhereOrNull(
-                  (f) => f.factoryCode.toString() == value.toString(),
+              (f) => f.factoryCode.toString() == value.toString(),
             );
 
             if (selectedFactory != null) {
@@ -1118,10 +1174,10 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
   /// Compute footer totals map for ErpEntryGrid.
   Map<String, String> _buildFooterTotals() {
-    double sumDouble(double Function(FactoryIssueDetModel) fn) =>
+    double sumDouble(double Function(ProcessIssueDetModel) fn) =>
         _detRows.fold(0.0, (s, r) => s + fn(r));
 
-    int sumInt(int Function(FactoryIssueDetModel) fn) =>
+    int sumInt(int Function(ProcessIssueDetModel) fn) =>
         _detRows.fold(0, (s, r) => s + fn(r));
 
     final totPc = sumInt((r) => r.pc ?? 0);
@@ -1136,9 +1192,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
     final baseWt = totWt > 0 ? totWt : totIssWt;
 
-    final dmPer = baseWt > 0
-        ? (totDmWt / baseWt * 100)
-        : 0;
+    final dmPer = baseWt > 0 ? (totDmWt / baseWt * 100) : 0;
 
     final avgSize = _detRows.isNotEmpty
         ? sumDouble((r) => (r.diam ?? 0)) / _detRows.length
@@ -1156,6 +1210,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       'size': avgSize.toStringAsFixed(2),
     };
   }
+
   // ─────────────────────────────────────────────────────────────────────────
   //  TABLE WIDGET
   // ─────────────────────────────────────────────────────────────────────────
@@ -1169,7 +1224,8 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       return value;
     }
   }
-  Widget _buildTable(FactoryIssueEntryProvider prov) {
+
+  Widget _buildTable(ProcessIssueEntryProvider prov) {
     final data = prov.list.map((e) {
       return {
         // ✅ JNO (if not available keep empty)
@@ -1225,7 +1281,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       isReportRow: false,
       token: token ?? '',
       url: '',
-      title: 'FACTORY ISSUE ENTRY LIST',
+      title: 'PROCESS ISSUE ENTRY LIST',
       columns: _tableColumns,
       data: data,
       showSearch: true,
