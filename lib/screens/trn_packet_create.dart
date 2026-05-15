@@ -944,6 +944,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     final merged = Map<String, dynamic>.from(values);
     merged['packetDate'] = toIso(merged['packetDate']?.toString());
     merged['cutNo'] = _formValues['cutNo'] ?? '';
+    merged['entryType'] = 'Packet Create';
 
     bool success;
     if (_isEditMode && _selectedMst != null) {

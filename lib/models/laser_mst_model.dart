@@ -141,6 +141,7 @@ class LaserDetModel {
   final String? pktNo;
   final int? fromDeptCode;  // ← ADD
   final int? toDeptCode;
+  final int?    deptCode;
   final String? cutNo;
   final String? clvCut;
   final int?    pc;
@@ -409,7 +410,7 @@ class LaserDetModel {
     this.optAmount,
     this.lsAmount,
     this.orderMstID,
-    this.sarinData,
+    this.sarinData, this.deptCode,
   });
 
   factory LaserDetModel.fromJson(Map<String, dynamic> json) =>
@@ -420,6 +421,7 @@ class LaserDetModel {
         id:               json['ID'],
         fromDeptCode: json['FromDeptCode'],
         toDeptCode:   json['ToDeptCode'],
+        deptCode:        json['DeptCode'],
         jno:              json['Jno'],
         bCode:            json['BCode']?.toString(),
         pktNo:            json['PktNo'],
@@ -574,6 +576,7 @@ class LaserDetModel {
     'sarinData':            sarinData,
     if (fromDeptCode != null) 'FromDeptCode': fromDeptCode,
     if (toDeptCode   != null) 'ToDeptCode':   toDeptCode,
+    if (deptCode   != null) 'DeptCode':   deptCode,
     'RecWt':            recWt,
     'TotalPc':          totalPc,
     'TotalWt':          totalWt,

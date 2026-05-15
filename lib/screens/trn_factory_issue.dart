@@ -566,8 +566,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         'jno': _s(row['jno']),
         'factoryIssMstID': _s(row['factoryIssMstID'], '0'),
         'factoryIssDetID': _s(row['factoryIssDetID'], '0'),
-        'scanValue': _s(row['BCode'], '0'),
-
         'date': _date(row['date']),
         'time': _s(row['time']),
 
@@ -578,6 +576,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         'dueDayCount': _date(row['dueDate']),
 
         'factory': _s(row['factoryCode']),
+        'scanValue': _s(_detRows.first.bCode),
       };
 
       _syncDetGrid();
@@ -600,11 +599,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       "FactoryCode": int.tryParse(_formValues['factory'] ?? '0') ?? 0,
       "FactoryType": _formValues['type'] ?? '',
       "EntryType": _formValues['entry'],
-      "Sflag": "A",
       "Sdate": DateTime.now().toUtc().toIso8601String(),
-      "LogID": 1,
-      "PcID": "PC-01",
-      "Ever": 1,
 
       // ✅ DETAILS
       "details": _detRows.map((r) {
@@ -647,6 +642,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         title:   wasEdit ? 'Updated' : 'Saved',
         message: wasEdit ? 'Factory Issue Entry updated.' : 'Factory Issue Entry saved.',
       );
+      await context.read<FactoryIssueEntryProvider>().load();
     }
   }
   // ─────────────────────────────────────────────────────────────────────────
@@ -1230,6 +1226,11 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       data: data,
       showSearch: true,
       dateFilter: true,
+      onClose: (){
+        setState(() {
+          _showTableOnMobile = false;
+        });
+      },
       searchFields: const [
         ErpSearchFieldConfig(key: 'fromName', label: 'FROM', width: 150),
         ErpSearchFieldConfig(key: 'toName', label: 'TO', width: 150),

@@ -88,7 +88,7 @@ class SpkDeptIssProvider extends BaseProvider {
       ..remove('FromCrID');
     // 🔥 REMOVE HERE
     final result = await request<SpkDeptIssMstModel>(
-      call: () => api.post('/spkDeptIss', data: {
+      call: () => api.post('/spkDeptIsssssss', data: {
         ...modelMap, // ✅ cleaned
         'details': details.map((e) {
           final map = e.toJson();

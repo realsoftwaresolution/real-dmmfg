@@ -56,6 +56,7 @@ class TrnSpkDeptIssEntry extends StatefulWidget {
 class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   // ── Theme ──────────────────────────────────────────────────────────────────
   final ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
+
   ErpTheme get _theme => ErpTheme(_themeVariant);
 
   // ── Form ───────────────────────────────────────────────────────────────────
@@ -115,9 +116,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   String _deptNameFor(int? deptCode) {
     if (deptCode == null) return '';
     try {
-      return context.read<DeptProvider>().list
-          .firstWhere((d) => d.deptCode == deptCode)
-          .deptName ??
+      return context
+              .read<DeptProvider>()
+              .list
+              .firstWhere((d) => d.deptCode == deptCode)
+              .deptName ??
           '';
     } catch (_) {
       return '';
@@ -127,9 +130,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   String _deptGroupNameFor(int? code) {
     if (code == null) return '';
     try {
-      return context.read<DeptGroupProvider>().list
-          .firstWhere((d) => d.deptGroupCode == code)
-          .deptGroupName ??
+      return context
+              .read<DeptGroupProvider>()
+              .list
+              .firstWhere((d) => d.deptGroupCode == code)
+              .deptGroupName ??
           '';
     } catch (_) {
       return '';
@@ -139,9 +144,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   String _shapeNameFor(int? code) {
     if (code == null) return '';
     try {
-      return context.read<ShapeProvider>().list
-          .firstWhere((s) => s.shapeCode == code)
-          .shapeName ??
+      return context
+              .read<ShapeProvider>()
+              .list
+              .firstWhere((s) => s.shapeCode == code)
+              .shapeName ??
           '';
     } catch (_) {
       return '';
@@ -151,9 +158,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   String _purityNameFor(int? code) {
     if (code == null) return '';
     try {
-      return context.read<PurityProvider>().list
-          .firstWhere((p) => p.purityCode == code)
-          .purityName ??
+      return context
+              .read<PurityProvider>()
+              .list
+              .firstWhere((p) => p.purityCode == code)
+              .purityName ??
           '';
     } catch (_) {
       return '';
@@ -163,9 +172,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   String _employeeNameFor(int? code) {
     if (code == null) return '';
     try {
-      return context.read<EmployeeProvider>().list
-          .firstWhere((e) => e.employeeCode == code)
-          .employeeName ??
+      return context
+              .read<EmployeeProvider>()
+              .list
+              .firstWhere((e) => e.employeeCode == code)
+              .employeeName ??
           '';
     } catch (_) {
       return '';
@@ -175,9 +186,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   String _signerNameFor(int? crId) {
     if (crId == null) return '';
     try {
-      return context.read<CounterProvider>().list
-          .firstWhere((c) => c.crId == crId)
-          .logInName ??
+      return context
+              .read<CounterProvider>()
+              .list
+              .firstWhere((c) => c.crId == crId)
+              .logInName ??
           '';
     } catch (_) {
       return '';
@@ -187,9 +200,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   String _remarksNameFor(int? code) {
     if (code == null) return '';
     try {
-      return context.read<RemarksProvider>().list
-          .firstWhere((r) => r.remarksCode == code)
-          .remarksName ??
+      return context
+              .read<RemarksProvider>()
+              .list
+              .firstWhere((r) => r.remarksCode == code)
+              .remarksName ??
           '';
     } catch (_) {
       return '';
@@ -296,8 +311,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _loadFromDisplayFields(int crId) async {
-    final counter = context.read<CounterProvider>().list
-        .firstWhereOrNull((c) => c.crId == crId);
+    final counter = context.read<CounterProvider>().list.firstWhereOrNull(
+      (c) => c.crId == crId,
+    );
     if (counter == null || counter.counterMstID == null) return;
 
     await _displayProv.loadByCounter(counter.counterMstID!);
@@ -311,8 +327,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   }
 
   Future<void> _loadToDisplayFields(int crId) async {
-    final counter = context.read<CounterProvider>().list
-        .firstWhereOrNull((c) => c.crId == crId);
+    final counter = context.read<CounterProvider>().list.firstWhereOrNull(
+      (c) => c.crId == crId,
+    );
     if (counter == null || counter.counterMstID == null) return;
 
     await _displayProv.loadByCounter(counter.counterMstID!);
@@ -332,17 +349,25 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     required String counterType,
   }) {
     return rawList
-        .where((r) =>
-    r.counterType == counterType &&
-        r.userVisibilityCode != null &&
-        _visProv.list
-            .any((v) => v.userVisibilityCode == r.userVisibilityCode))
-        .map((r) => _visProv.list.firstWhereOrNull(
-            (v) => v.userVisibilityCode == r.userVisibilityCode))
-        .where((v) =>
-    v != null &&
-        v!.userVisibilityCode != null &&
-        (v.userVisibilityName ?? '').isNotEmpty)
+        .where(
+          (r) =>
+              r.counterType == counterType &&
+              r.userVisibilityCode != null &&
+              _visProv.list.any(
+                (v) => v.userVisibilityCode == r.userVisibilityCode,
+              ),
+        )
+        .map(
+          (r) => _visProv.list.firstWhereOrNull(
+            (v) => v.userVisibilityCode == r.userVisibilityCode,
+          ),
+        )
+        .where(
+          (v) =>
+              v != null &&
+              v!.userVisibilityCode != null &&
+              (v.userVisibilityName ?? '').isNotEmpty,
+        )
         .cast<UserVisibilityModel>()
         .toList()
       ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
@@ -357,8 +382,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     if (crId == null) return;
 
     try {
-      final counter =
-      context.read<CounterProvider>().list.firstWhere((c) => c.crId == crId);
+      final counter = context.read<CounterProvider>().list.firstWhere(
+        (c) => c.crId == crId,
+      );
       final deptName = _deptNameFor(counter.deptCode);
 
       setState(() {
@@ -386,8 +412,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     if (crId == null) return;
 
     try {
-      final counter =
-      context.read<CounterProvider>().list.firstWhere((c) => c.crId == crId);
+      final counter = context.read<CounterProvider>().list.firstWhere(
+        (c) => c.crId == crId,
+      );
       final deptName = _deptNameFor(counter.deptCode);
 
       setState(() {
@@ -478,7 +505,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       _erpFormKey.currentState?.updateFieldValue('scanValue', '');
       Future.delayed(
         const Duration(milliseconds: 100),
-            () => _erpFormKey.currentState?.focusField('scanValue'),
+        () => _erpFormKey.currentState?.focusField('scanValue'),
       );
       return;
     }
@@ -502,7 +529,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
     Future.delayed(
       const Duration(milliseconds: 100),
-          () => _erpFormKey.currentState?.focusField('recpc'),
+      () => _erpFormKey.currentState?.focusField('recpc'),
     );
   }
 
@@ -524,11 +551,12 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   /// Loss WT = Iss WT − K WT,  Loss PC = Iss PC − K PC
   void _calcLoss() {
     final issWt = double.tryParse(_entryVals['issWt'] ?? '') ?? 0;
-    final recWt = double.tryParse(_entryVals['recwt'] ?? '') ?? 0; // 👈 ADD THIS
+    final recWt =
+        double.tryParse(_entryVals['recwt'] ?? '') ?? 0; // 👈 ADD THIS
     final kWt = double.tryParse(_entryVals['kwt'] ?? '') ?? 0;
     final issPc = int.tryParse(_entryVals['issPc'] ?? '') ?? 0;
     final kPc = int.tryParse(_entryVals['kpc'] ?? '') ?? 0;
- 
+
     // ✅ UPDATED FORMULA
     final lossWt = issWt - recWt - kWt;
 
@@ -549,7 +577,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     // Resolve selected scan-type name from radio fields (either list)
     final selectedName = () {
       final f = _getRadioFields().values.firstWhereOrNull(
-              (f) => f.userVisibilityCode.toString() == _selectedRadioCode);
+        (f) => f.userVisibilityCode.toString() == _selectedRadioCode,
+      );
       return (f?.userVisibilityName ?? '').toUpperCase();
     }();
 
@@ -557,8 +586,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     if (selectedName == 'BCODE' && _editingDetIndex == null) {
       if (_scannedDet == null) {
         _isBCodePending = false;
-        Future.delayed(const Duration(milliseconds: 50),
-                () => _erpFormKey.currentState?.focusField('scanValue'));
+        Future.delayed(
+          const Duration(milliseconds: 50),
+          () => _erpFormKey.currentState?.focusField('scanValue'),
+        );
         return;
       }
     }
@@ -581,12 +612,14 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     if (hasRecPair || hasKPair) {
       if (totalPc > issPc && issPc > 0) {
         _showSnack(
-            'Rec PC ($recPc) + K PC ($kPc) = $totalPc cannot exceed Iss PC ($issPc)');
+          'Rec PC ($recPc) + K PC ($kPc) = $totalPc cannot exceed Iss PC ($issPc)',
+        );
         return;
       }
       if (totalWt > issWt + 0.0005 && issWt > 0) {
         _showSnack(
-            'Rec Wt (${_f3(recWt)}) + K Wt (${_f3(kWt)}) = ${_f3(totalWt)} cannot exceed Iss Wt (${_f3(issWt)})');
+          'Rec Wt (${_f3(recWt)}) + K Wt (${_f3(kWt)}) = ${_f3(totalWt)} cannot exceed Iss Wt (${_f3(issWt)})',
+        );
         return;
       }
     }
@@ -630,20 +663,20 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
     final newRow = _editingDetIndex != null
         ? _buildEditedRow(
-      srno: srno,
-      existing: _detRows[_editingDetIndex!],
-      issPcStr: issPcStr,
-      issWtStr: issWtStr,
-      recPc: recPc,
-      recWt: recWt,
-    )
+            srno: srno,
+            existing: _detRows[_editingDetIndex!],
+            issPcStr: issPcStr,
+            issWtStr: issWtStr,
+            recPc: recPc,
+            recWt: recWt,
+          )
         : _buildNewRow(
-      srno: srno,
-      issPcStr: issPcStr,
-      issWtStr: issWtStr,
-      recPc: recPc,
-      recWt: recWt,
-    );
+            srno: srno,
+            issPcStr: issPcStr,
+            issWtStr: issWtStr,
+            recPc: recPc,
+            recWt: recWt,
+          );
 
     setState(() {
       if (_editingDetIndex != null) {
@@ -660,7 +693,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
     // Return focus to scan field
     WidgetsBinding.instance.addPostFrameCallback(
-            (_) => _erpFormKey.currentState?.focusField('scanValue'));
+      (_) => _erpFormKey.currentState?.focusField('scanValue'),
+    );
 
     _erpFormKey.currentState?.setFieldReadOnly('fromCrId', true);
     _erpFormKey.currentState?.setFieldReadOnly('toCrId', true);
@@ -699,8 +733,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       toDeptCode: _toDeptCodeVal,
       fromCrId: _fromCrId,
       toCrId: _toCrId,
-      deptProcessCode:
-      int.tryParse(_formValues['deptProcessCode'] ?? ''),
+      deptCode: _toDeptCodeVal,
+      deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
       // User-entered fields
       pc: int.tryParse(_entryVals['orgPc'] ?? '') ?? existing.pc,
       wt: double.tryParse(_entryVals['orgWt'] ?? '') ?? existing.wt,
@@ -727,7 +761,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
       dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
       confRec: 'Y',
-      clvRec: 'N'
+      clvRec: 'N',
     );
   }
 
@@ -757,8 +791,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       toDeptCode: _toDeptCodeVal,
       fromCrId: _fromCrId,
       toCrId: _toCrId,
-      deptProcessCode:
-      int.tryParse(_formValues['deptProcessCode'] ?? ''),
+      deptCode: _toDeptCodeVal,
+      deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
       charniCode: int.tryParse(_formValues['charniCode'] ?? ''),
       tensionsCode: int.tryParse(_formValues['tensionsCode'] ?? ''),
       pc: int.tryParse(_entryVals['orgPc'] ?? ''),
@@ -787,7 +821,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       formType: 'DEPT_ISS',
       pktType: 'A',
       confRec: 'Y',
-        clvRec: 'N'
+      clvRec: 'N',
     );
   }
 
@@ -891,14 +925,26 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
   void _clearEntryFields() {
     const keys = [
-      'orgPc', 'orgWt', 'issPc', 'issWt',
-      'recpc', 'recwt',
-      'dmwt', 'dmper',
-      'kpc', 'kwt',
-      'brpc', 'brwt',
-      'losspc', 'losswt',
-      'topspc', 'topswt',
-      'employee', 'signer', 'remarks', 'dueDay',
+      'orgPc',
+      'orgWt',
+      'issPc',
+      'issWt',
+      'recpc',
+      'recwt',
+      'dmwt',
+      'dmper',
+      'kpc',
+      'kwt',
+      'brpc',
+      'brwt',
+      'losspc',
+      'losswt',
+      'topspc',
+      'topswt',
+      'employee',
+      'signer',
+      'remarks',
+      'dueDay',
       'scanValue',
     ];
     for (final k in keys) {
@@ -918,7 +964,16 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     final merged = _getMergedFields();
 
     // Build column list based on what fields are actually configured
-    final cols = <String>['srno', 'bCode', 'pktNo', 'cutNo', 'orgPc', 'orgWt', 'issPc', 'issWt'];
+    final cols = <String>[
+      'srno',
+      'bCode',
+      'pktNo',
+      'cutNo',
+      'orgPc',
+      'orgWt',
+      'issPc',
+      'issWt',
+    ];
 
     void addIfPresent(String key1, String key2, List<String> colKeys) {
       if (merged.containsKey(key1) || merged.containsKey(key2)) {
@@ -940,34 +995,38 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     cols.addAll(['jnoRecPc', 'shapeCode', 'purityCode']);
     _activeDetColumns = cols;
 
-    _detDisplay = _detRows.map((r) => {
-      'srno': r.srno?.toString() ?? '',
-      'bCode': r.bCode ?? '',
-      'pktNo': r.pktNo ?? '',
-      'cutNo': r.cutNo ?? '',
-      'orgPc': r.pc?.toString() ?? '',
-      'orgWt': _f3(r.wt),
-      'issPc': r.issPc?.toString() ?? '',
-      'issWt': _f3(r.issWt),
-      'recPc': r.recPc?.toString() ?? '',
-      'recWt': _f3(r.recWt),
-      'dmPer': r.dmPer?.toStringAsFixed(2) ?? '',
-      'dmWt': _f3(r.dmWt),
-      'kPc': r.kPc?.toString() ?? '',
-      'kWt': _f3(r.kWt),
-      'brPc': r.brPc?.toString() ?? '',
-      'brWt': _f3(r.brWt),
-      'lossPc': r.lossPc?.toString() ?? '',
-      'lossWt': _f3(r.lossWt),
-      'topsPc': r.topsPc?.toString() ?? '',
-      'topsWt': _f3(r.topsWt),
-      'employee': _employeeNameFor(r.employeeCode),
-      'signer': _signerNameFor(r.signerCode),
-      'remarks': _remarksNameFor(r.remarksCode),
-      'jnoRecPc': r.jnoRecPc?.toString() ?? '',
-      'shapeCode': _shapeNameFor(r.shapeCode),
-      'purityCode': _purityNameFor(r.purityCode),
-    }).toList();
+    _detDisplay = _detRows
+        .map(
+          (r) => {
+            'srno': r.srno?.toString() ?? '',
+            'bCode': r.bCode ?? '',
+            'pktNo': r.pktNo ?? '',
+            'cutNo': r.cutNo ?? '',
+            'orgPc': r.pc?.toString() ?? '',
+            'orgWt': _f3(r.wt),
+            'issPc': r.issPc?.toString() ?? '',
+            'issWt': _f3(r.issWt),
+            'recPc': r.recPc?.toString() ?? '',
+            'recWt': _f3(r.recWt),
+            'dmPer': r.dmPer?.toStringAsFixed(2) ?? '',
+            'dmWt': _f3(r.dmWt),
+            'kPc': r.kPc?.toString() ?? '',
+            'kWt': _f3(r.kWt),
+            'brPc': r.brPc?.toString() ?? '',
+            'brWt': _f3(r.brWt),
+            'lossPc': r.lossPc?.toString() ?? '',
+            'lossWt': _f3(r.lossWt),
+            'topsPc': r.topsPc?.toString() ?? '',
+            'topsWt': _f3(r.topsWt),
+            'employee': _employeeNameFor(r.employeeCode),
+            'signer': _signerNameFor(r.signerCode),
+            'remarks': _remarksNameFor(r.remarksCode),
+            'jnoRecPc': r.jnoRecPc?.toString() ?? '',
+            'shapeCode': _shapeNameFor(r.shapeCode),
+            'purityCode': _purityNameFor(r.purityCode),
+          },
+        )
+        .toList();
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1053,8 +1112,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     String toIso(String? v) {
       if (v == null || v.isEmpty) return '';
       try {
-        return DateFormat('yyyy-MM-dd')
-            .format(DateFormat('dd/MM/yyyy').parse(v));
+        return DateFormat(
+          'yyyy-MM-dd',
+        ).format(DateFormat('dd/MM/yyyy').parse(v));
       } catch (_) {
         return v;
       }
@@ -1063,7 +1123,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     int? toDeptCode;
     if (_toCrId != null) {
       try {
-        toDeptCode = context.read<CounterProvider>().list
+        toDeptCode = context
+            .read<CounterProvider>()
+            .list
             .firstWhere((c) => c.crId == _toCrId)
             .deptCode;
       } catch (_) {}
@@ -1109,15 +1171,18 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     );
     if (confirm != true || !mounted) return;
 
-    final success = await context
-        .read<SpkDeptIssProvider>()
-        .delete(_selectedMst!.spkDeptIssMstID!);
+    final success = await context.read<SpkDeptIssProvider>().delete(
+      _selectedMst!.spkDeptIssMstID!,
+    );
 
     if (success && mounted) {
       final id = _selectedMst?.spkDeptIssMstID;
       _resetForm();
       await ErpResultDialog.showDeleted(
-          context: context, theme: _theme, itemName: 'Dept Issue $id');
+        context: context,
+        theme: _theme,
+        itemName: 'Dept Issue $id',
+      );
     }
   }
 
@@ -1178,82 +1243,92 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     // ── FROM dropdown ────────────────────────────────────────────────────────
     final fromItems = counterProv.list
         .where((c) {
-      final grp = _deptGroupNameFor(c.deptGroupCode).toUpperCase();
-      return grp.contains('CLEAVING') || grp.contains('CLV');
-    })
-        .map((c) => ErpDropdownItem(
-      label: '${c.crName ?? ''}  |  ${_deptNameFor(c.deptCode)}',
-      value: c.crId?.toString() ?? '',
-    ))
+          final grp = _deptGroupNameFor(c.deptGroupCode).toUpperCase();
+          return grp.contains('CLEAVING') || grp.contains('CLV');
+        })
+        .map(
+          (c) => ErpDropdownItem(
+            label: '${c.crName ?? ''}  |  ${_deptNameFor(c.deptCode)}',
+            value: c.crId?.toString() ?? '',
+          ),
+        )
         .toList();
 
     // ── TO dropdown — allowCrIds from CounterManagerDet ───────────────────
     final toItems = _fromCrId == null
         ? <ErpDropdownItem>[]
         : mgDetProv.list
-        .where((m) => m.crId == _fromCrId && m.allowCrId != null)
-        .map((m) => m.allowCrId!)
-        .toSet()
-        .map((allowId) {
-      try {
-        final c =
-        counterProv.list.firstWhere((c) => c.crId == allowId);
-        return ErpDropdownItem(
-          label: '${c.crName ?? ''}  |  ${_deptNameFor(c.deptCode)}',
-          value: c.crId?.toString() ?? '',
-        );
-      } catch (_) {
-        return ErpDropdownItem(
-            label: 'ID:$allowId', value: '$allowId');
-      }
-    }).toList();
+              .where((m) => m.crId == _fromCrId && m.allowCrId != null)
+              .map((m) => m.allowCrId!)
+              .toSet()
+              .map((allowId) {
+                try {
+                  final c = counterProv.list.firstWhere(
+                    (c) => c.crId == allowId,
+                  );
+                  return ErpDropdownItem(
+                    label: '${c.crName ?? ''}  |  ${_deptNameFor(c.deptCode)}',
+                    value: c.crId?.toString() ?? '',
+                  );
+                } catch (_) {
+                  return ErpDropdownItem(
+                    label: 'ID:$allowId',
+                    value: '$allowId',
+                  );
+                }
+              })
+              .toList();
 
     // ── PROCESS dropdown — intersection of FROM-issue ∩ TO-receive codes ──
     final processItems = (_fromCrId == null || _toCrId == null)
         ? <ErpDropdownItem>[]
         : () {
-      final issueCodes = mgDetProv.list
-          .where((m) =>
-      m.crId == _fromCrId && m.deptProcessCode != null)
-          .map((m) => m.deptProcessCode!)
-          .toSet();
+            final issueCodes = mgDetProv.list
+                .where((m) => m.crId == _fromCrId && m.deptProcessCode != null)
+                .map((m) => m.deptProcessCode!)
+                .toSet();
 
-      final recvCodes = mgDetProv.list
-          .where((m) =>
-      m.allowCrId == _toCrId && m.deptProcessCode != null)
-          .map((m) => m.deptProcessCode!)
-          .toSet();
+            final recvCodes = mgDetProv.list
+                .where(
+                  (m) => m.allowCrId == _toCrId && m.deptProcessCode != null,
+                )
+                .map((m) => m.deptProcessCode!)
+                .toSet();
 
-      return issueCodes.intersection(recvCodes).map((code) {
-        String label = '$code';
-        try {
-          label = procProv.list
-              .firstWhere((p) => p.deptProcessCode == code)
-              .deptProcessName ??
-              '$code';
-        } catch (_) {}
-        return ErpDropdownItem(
-            label: label, value: code.toString());
-      }).toList();
-    }();
+            return issueCodes.intersection(recvCodes).map((code) {
+              String label = '$code';
+              try {
+                label =
+                    procProv.list
+                        .firstWhere((p) => p.deptProcessCode == code)
+                        .deptProcessName ??
+                    '$code';
+              } catch (_) {}
+              return ErpDropdownItem(label: label, value: code.toString());
+            }).toList();
+          }();
 
     // ── CHARNI dropdown ───────────────────────────────────────────────────
     final charniItems = charniProv.list
         .where((e) => e.active == true)
-        .map((e) => ErpDropdownItem(
-      label: e.charniName ?? '',
-      value: e.charniCode?.toString() ?? '',
-    ))
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.charniName ?? '',
+            value: e.charniCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     // ── TENSIONS dropdown ─────────────────────────────────────────────────
     final tensItems = tensProv.list.where((e) => e.active == true).toList()
       ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
     final tensDropdown = tensItems
-        .map((e) => ErpDropdownItem(
-      label: e.tensionsName ?? '',
-      value: e.tensionsCode?.toString() ?? '',
-    ))
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.tensionsName ?? '',
+            value: e.tensionsCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     // ── Merged DEPT fields (deduped) ──────────────────────────────────────
@@ -1272,65 +1347,74 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       // Row 1 — date / time / ID
       [
         ErpFieldConfig(
-            key: 'spkDeptIssDate',
-            label: 'DATE',
-            type: ErpFieldType.date,
-            readOnly: true,
-            sectionIndex: 0),
+          key: 'spkDeptIssDate',
+          label: 'DATE',
+          type: ErpFieldType.date,
+          readOnly: true,
+          sectionIndex: 0,
+        ),
         ErpFieldConfig(
-            key: 'time',
-            label: 'TIME',
-            type: ErpFieldType.time,
-            readOnly: true,
-            sectionIndex: 0),
+          key: 'time',
+          label: 'TIME',
+          type: ErpFieldType.time,
+          readOnly: true,
+          sectionIndex: 0,
+        ),
         ErpFieldConfig(
-            key: 'spkDeptIssMstID',
-            label: 'ID',
-            type: ErpFieldType.number,
-            readOnly: true,
-            sectionIndex: 0),
+          key: 'spkDeptIssMstID',
+          label: 'ID',
+          type: ErpFieldType.number,
+          readOnly: true,
+          sectionIndex: 0,
+        ),
       ],
       // Row 2 — FROM / TO / PROCESS
       [
         ErpFieldConfig(
-            key: 'fromCrId',
-            label: 'FROM',
-            type: ErpFieldType.dropdown,
-            dropdownItems: fromItems,
-            sectionIndex: 0,
-            readOnly: _lockMasterFields || _isEditMode),
+          key: 'fromCrId',
+          label: 'FROM',
+          type: ErpFieldType.dropdown,
+          dropdownItems: fromItems,
+          sectionIndex: 0,
+          readOnly: _lockMasterFields || _isEditMode,
+        ),
         ErpFieldConfig(
-            key: 'fromDept',
-            label: 'DEPT',
-            type: ErpFieldType.text,
-            readOnly: true,
-            sectionIndex: 0),
+          key: 'fromDept',
+          label: 'DEPT',
+          type: ErpFieldType.text,
+          readOnly: true,
+          sectionIndex: 0,
+        ),
         ErpFieldConfig(
-            key: 'toCrId',
-            label: 'TO',
-            type: ErpFieldType.dropdown,
-            dropdownItems: toItems,
-            readOnly: !isFromSelected || _lockMasterFields || _isEditMode,
-            sectionIndex: 0),
+          key: 'toCrId',
+          label: 'TO',
+          type: ErpFieldType.dropdown,
+          dropdownItems: toItems,
+          readOnly: !isFromSelected || _lockMasterFields || _isEditMode,
+          sectionIndex: 0,
+        ),
         ErpFieldConfig(
-            key: 'toDept',
-            label: 'DEPT',
-            type: ErpFieldType.text,
-            readOnly: true,
-            sectionIndex: 0),
+          key: 'toDept',
+          label: 'DEPT',
+          type: ErpFieldType.text,
+          readOnly: true,
+          sectionIndex: 0,
+        ),
         ErpFieldConfig(
-            key: 'deptProcessCode',
-            label: 'PROCESS',
-            type: ErpFieldType.dropdown,
-            dropdownItems: processItems,
-            readOnly: !isToSelected || _lockMasterFields || _isEditMode,
-            sectionIndex: 0),
+          key: 'deptProcessCode',
+          label: 'PROCESS',
+          type: ErpFieldType.dropdown,
+          dropdownItems: processItems,
+          readOnly: !isToSelected || _lockMasterFields || _isEditMode,
+          sectionIndex: 0,
+        ),
         ErpFieldConfig(
-            key: 'deptName',
-            label: 'DEPT',
-            type: ErpFieldType.text,
-            readOnly: true,
-            sectionIndex: 0),
+          key: 'deptName',
+          label: 'DEPT',
+          type: ErpFieldType.text,
+          readOnly: true,
+          sectionIndex: 0,
+        ),
       ],
     ];
 
@@ -1340,22 +1424,28 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     if (_processSelected) {
       final charniTensRow = <ErpFieldConfig>[];
       if (merged.containsKey('CHARNI')) {
-        charniTensRow.add(ErpFieldConfig(
+        charniTensRow.add(
+          ErpFieldConfig(
             key: 'charniCode',
             label: 'CHARNI',
             type: ErpFieldType.dropdown,
             dropdownItems: charniItems,
             sectionIndex: 2,
-            width: 200));
+            width: 200,
+          ),
+        );
       }
       if (merged.containsKey('TENSIONS')) {
-        charniTensRow.add(ErpFieldConfig(
+        charniTensRow.add(
+          ErpFieldConfig(
             key: 'tensionsCode',
             label: 'TENSION',
             type: ErpFieldType.dropdown,
             dropdownItems: tensDropdown,
             sectionIndex: 2,
-            width: 200));
+            width: 200,
+          ),
+        );
       }
       if (charniTensRow.isNotEmpty) rows.add(charniTensRow);
     }
@@ -1369,17 +1459,20 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       final radioFieldsMap = _getRadioFields();
 
       final radioItems = radioFieldsMap.values
-          .map((f) => ErpRadioOption(
-        label: f.userVisibilityName ?? '',
-        value: f.userVisibilityCode.toString(),
-      ))
+          .map(
+            (f) => ErpRadioOption(
+              label: f.userVisibilityName ?? '',
+              value: f.userVisibilityCode.toString(),
+            ),
+          )
           .toList();
 
       // Resolve currently selected radio name from whichever list has it
       final selectedField = radioFieldsMap.values.firstWhereOrNull(
-              (f) => f.userVisibilityCode.toString() == _selectedRadioCode);
-      final selectedName =
-      (selectedField?.userVisibilityName ?? '').toUpperCase();
+        (f) => f.userVisibilityCode.toString() == _selectedRadioCode,
+      );
+      final selectedName = (selectedField?.userVisibilityName ?? '')
+          .toUpperCase();
 
       // Compute radio widget width based on option count
       final radioWidth = switch (radioItems.length) {
@@ -1394,21 +1487,23 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       if (radioItems.isNotEmpty) {
         rows.add([
           ErpFieldConfig(
-              key: 'scanType',
-              label: '',
-              type: ErpFieldType.radio,
-              radioItems: radioItems,
-              isEntryField: true,
-              sectionIndex: 3,
-              width: radioWidth),
+            key: 'scanType',
+            label: '',
+            type: ErpFieldType.radio,
+            radioItems: radioItems,
+            isEntryField: true,
+            sectionIndex: 3,
+            width: radioWidth,
+          ),
           ErpFieldConfig(
-              key: 'scanValue',
-              label: '',
-              type: ErpFieldType.text,
-              isEntryField: true,
-              readOnly: selectedName == 'CUT LOT',
-              sectionIndex: 3,
-              width: 200),
+            key: 'scanValue',
+            label: '',
+            type: ErpFieldType.text,
+            isEntryField: true,
+            readOnly: selectedName == 'CUT LOT',
+            sectionIndex: 3,
+            width: 200,
+          ),
         ]);
       }
 
@@ -1416,23 +1511,26 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       if (selectedName == 'CUT LOT') {
         rows.add([
           ErpFieldConfig(
-              key: 'cutNo',
-              label: 'CUT NO',
-              type: ErpFieldType.text,
-              isEntryField: true,
-              sectionIndex: 3),
+            key: 'cutNo',
+            label: 'CUT NO',
+            type: ErpFieldType.text,
+            isEntryField: true,
+            sectionIndex: 3,
+          ),
           ErpFieldConfig(
-              key: 'cutFrom',
-              label: 'FROM',
-              type: ErpFieldType.text,
-              isEntryField: true,
-              sectionIndex: 3),
+            key: 'cutFrom',
+            label: 'FROM',
+            type: ErpFieldType.text,
+            isEntryField: true,
+            sectionIndex: 3,
+          ),
           ErpFieldConfig(
-              key: 'cutTo',
-              label: 'TO',
-              type: ErpFieldType.text,
-              isEntryField: true,
-              sectionIndex: 3),
+            key: 'cutTo',
+            label: 'TO',
+            type: ErpFieldType.text,
+            isEntryField: true,
+            sectionIndex: 3,
+          ),
         ]);
       }
 
@@ -1449,139 +1547,176 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       ];
 
       final hasAnyPair = pairs.any(
-              (p) => merged.containsKey(p[0]) || merged.containsKey(p[1]));
+        (p) => merged.containsKey(p[0]) || merged.containsKey(p[1]),
+      );
 
       // Fixed ORG / ISS fields (only when there are PC-WT pairs)
       if (hasAnyPair) {
         singleRow.addAll([
           ErpFieldConfig(
-              key: 'orgPc',
-              label: 'ORG PC',
-              type: ErpFieldType.number,
-              readOnly: true,
-              isEntryField: true,
-              sectionIndex: 3,
-              flex: 1),
+            key: 'orgPc',
+            label: 'ORG PC',
+            type: ErpFieldType.number,
+            readOnly: true,
+            isEntryField: true,
+            sectionIndex: 3,
+            flex: 1,
+          ),
           ErpFieldConfig(
-              key: 'orgWt',
-              label: 'ORG WT',
-              type: ErpFieldType.amount,
-              readOnly: true,
-              isEntryField: true,
-              sectionIndex: 3,
-              flex: 1),
+            key: 'orgWt',
+            label: 'ORG WT',
+            type: ErpFieldType.amount,
+            readOnly: true,
+            isEntryField: true,
+            sectionIndex: 3,
+            flex: 1,
+          ),
           ErpFieldConfig(
-              key: 'issPc',
-              label: 'ISS PC',
-              type: ErpFieldType.number,
-              readOnly: true,
-              isEntryField: true,
-              sectionIndex: 3,
-              flex: 1),
+            key: 'issPc',
+            label: 'ISS PC',
+            type: ErpFieldType.number,
+            readOnly: true,
+            isEntryField: true,
+            sectionIndex: 3,
+            flex: 1,
+          ),
           ErpFieldConfig(
-              key: 'issWt',
-              label: 'ISS WT',
-              type: ErpFieldType.amount,
-              readOnly: true,
-              isEntryField: true,
-              showAddButton: true,
-              sectionIndex: 3,
-              flex: 1),
+            key: 'issWt',
+            label: 'ISS WT',
+            type: ErpFieldType.amount,
+            readOnly: true,
+            isEntryField: true,
+            showAddButton: true,
+            sectionIndex: 3,
+            flex: 1,
+          ),
         ]);
       }
 
       // PC-WT pairs
       for (final pair in pairs) {
         if (merged.containsKey(pair[0]) || merged.containsKey(pair[1])) {
-          singleRow.add(ErpFieldConfig(
+          singleRow.add(
+            ErpFieldConfig(
               key: pair[0].replaceAll(' ', '').toLowerCase(),
               label: pair[0],
               type: ErpFieldType.text,
               readOnly: pair[0] == 'LOSS PC',
               isEntryField: true,
               sectionIndex: 3,
-              flex: 1));
-          singleRow.add(ErpFieldConfig(
+              flex: 1,
+            ),
+          );
+          singleRow.add(
+            ErpFieldConfig(
               key: pair[1].replaceAll(' ', '').toLowerCase(),
               label: pair[1],
               type: ErpFieldType.text,
               readOnly: pair[1] == 'DM WT' || pair[1] == 'LOSS WT',
               isEntryField: true,
               sectionIndex: 3,
-              flex: 1));
+              flex: 1,
+            ),
+          );
         }
       }
 
       // EMPLOYEE
       if (merged.containsKey('EMPLOYEE')) {
-        singleRow.add(ErpFieldConfig(
+        singleRow.add(
+          ErpFieldConfig(
             key: 'employee',
             label: 'EMPLOYEE',
             type: ErpFieldType.dropdown,
-            dropdownItems: context.read<EmployeeProvider>().list
-                .map((e) => ErpDropdownItem(
-              label: e.employeeName ?? '',
-              value: e.employeeCode?.toString() ?? '',
-            ))
+            dropdownItems: context
+                .read<EmployeeProvider>()
+                .list
+                .map(
+                  (e) => ErpDropdownItem(
+                    label: e.employeeName ?? '',
+                    value: e.employeeCode?.toString() ?? '',
+                  ),
+                )
                 .toList(),
             isEntryField: true,
             sectionIndex: 3,
-            flex: 2));
+            flex: 2,
+          ),
+        );
       }
 
       // SIGNER
       if (merged.containsKey('SIGNER')) {
         final signerCounters = context.read<CounterProvider>().list.where(
-                (c) => _deptNameFor(c.deptCode).toUpperCase() == 'SIGNER');
-        singleRow.add(ErpFieldConfig(
+          (c) => _deptNameFor(c.deptCode).toUpperCase() == 'SIGNER',
+        );
+        singleRow.add(
+          ErpFieldConfig(
             key: 'signer',
             label: 'SIGNER',
             type: ErpFieldType.dropdown,
             isEntryField: true,
             dropdownItems: signerCounters
-                .map((e) => ErpDropdownItem(
-              label: e.logInName ?? '',
-              value: e.crId?.toString() ?? '',
-            ))
+                .map(
+                  (e) => ErpDropdownItem(
+                    label: e.logInName ?? '',
+                    value: e.crId?.toString() ?? '',
+                  ),
+                )
                 .toList(),
             sectionIndex: 3,
-            flex: 2));
+            flex: 2,
+          ),
+        );
       }
 
       // REMARKS (filtered by selected process)
       if (merged.containsKey('REMARKS')) {
-        final selectedProcess =
-        int.tryParse(_formValues['deptProcessCode'] ?? '');
-        final remarksItems = context.read<RemarksProvider>().list
-            .where((e) =>
-        e.active == true &&
-            (selectedProcess == null ||
-                e.deptProcessCode == selectedProcess))
-            .map((e) => ErpDropdownItem(
-          label: e.remarksName ?? '',
-          value: e.remarksCode?.toString() ?? '',
-        ))
+        final selectedProcess = int.tryParse(
+          _formValues['deptProcessCode'] ?? '',
+        );
+        final remarksItems = context
+            .read<RemarksProvider>()
+            .list
+            .where(
+              (e) =>
+                  e.active == true &&
+                  (selectedProcess == null ||
+                      e.deptProcessCode == selectedProcess),
+            )
+            .map(
+              (e) => ErpDropdownItem(
+                label: e.remarksName ?? '',
+                value: e.remarksCode?.toString() ?? '',
+              ),
+            )
             .toList();
-        singleRow.add(ErpFieldConfig(
+        singleRow.add(
+          ErpFieldConfig(
             key: 'remarks',
             label: 'REMARKS',
             type: ErpFieldType.dropdown,
             isEntryField: true,
             dropdownItems: remarksItems,
             sectionIndex: 3,
-            flex: 2));
+            flex: 2,
+          ),
+        );
       }
 
       // DUE DAY
       if (merged.containsKey('DUE DAY')) {
-        singleRow.add(ErpFieldConfig(
+        singleRow.add(
+          ErpFieldConfig(
             key: 'dueDay',
             label: 'DUE DAY',
             type: ErpFieldType.text,
             isEntryField: true,
             showAddButton: true,
             sectionIndex: 3,
-            flex: 1));
+            flex: 1,
+          ),
+        );
       }
 
       if (singleRow.isNotEmpty) rows.add(singleRow);
@@ -1594,8 +1729,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   //  SANITIZE ROWS (null-safety wrapper)
   // ─────────────────────────────────────────────────────────────────────────
 
-  List<List<ErpFieldConfig>> _sanitizeRows(
-      List<List<ErpFieldConfig>> rows) {
+  List<List<ErpFieldConfig>> _sanitizeRows(List<List<ErpFieldConfig>> rows) {
     return rows.map((section) {
       return section.whereType<ErpFieldConfig>().map((field) {
         final safeItems = (field.dropdownItems ?? [])
@@ -1630,42 +1764,48 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
   List<ErpColumnConfig> get _tableColumns => [
     ErpColumnConfig(
-        key: 'spkDeptIssMstID', label: 'ID', width: 70, required: true),
+      key: 'spkDeptIssMstID',
+      label: 'ID',
+      width: 70,
+      required: true,
+    ),
     ErpColumnConfig(
-        key: 'spkDeptIssDate',
-        label: 'DATE',
-        width: 160,
-        isDate: true),
+      key: 'spkDeptIssDate',
+      label: 'DATE',
+      width: 160,
+      isDate: true,
+    ),
     ErpColumnConfig(key: 'spkDeptIssTime', label: 'TIME', width: 140),
-    ErpColumnConfig(
-        key: 'fromName', label: 'FROM MGR', width: 180),
-    ErpColumnConfig(
-        key: 'fromDeptName', label: 'FROM DEPT', width: 180),
+    ErpColumnConfig(key: 'fromName', label: 'FROM MGR', width: 180),
+    ErpColumnConfig(key: 'fromDeptName', label: 'FROM DEPT', width: 180),
     ErpColumnConfig(key: 'toName', label: 'TO MGR', width: 160),
     ErpColumnConfig(key: 'toDeptName', label: 'TO DEPT', width: 160),
-    ErpColumnConfig(
-        key: 'processName', label: 'PROCESS', width: 150),
+    ErpColumnConfig(key: 'processName', label: 'PROCESS', width: 150),
     ErpColumnConfig(key: 'deptName', label: 'DEPT', width: 140),
     ErpColumnConfig(
-        key: 'jno',
-        label: 'JNO',
-        width: 140,
-        align: ColumnAlign.right),
+      key: 'jno',
+      label: 'JNO',
+      width: 140,
+      align: ColumnAlign.right,
+    ),
     ErpColumnConfig(
-        key: 'totPkt',
-        label: 'TOT PKT',
-        width: 170,
-        align: ColumnAlign.right),
+      key: 'totPkt',
+      label: 'TOT PKT',
+      width: 170,
+      align: ColumnAlign.right,
+    ),
     ErpColumnConfig(
-        key: 'totalPc',
-        label: 'TOT PC',
-        width: 170,
-        align: ColumnAlign.right),
+      key: 'totalPc',
+      label: 'TOT PC',
+      width: 170,
+      align: ColumnAlign.right,
+    ),
     ErpColumnConfig(
-        key: 'totalWt',
-        label: 'TOT WT',
-        width: 170,
-        align: ColumnAlign.right),
+      key: 'totalWt',
+      label: 'TOT WT',
+      width: 170,
+      align: ColumnAlign.right,
+    ),
   ];
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1726,14 +1866,14 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         child: Responsive.isMobile(context)
             ? (_showTableOnMobile ? _buildTable(prov) : _buildForm(context))
             : Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!_showTableOnMobile)
-              Expanded(flex: 2, child: _buildForm(context)),
-            if (_showTableOnMobile)
-              Expanded(flex: 2, child: _buildTable(prov)),
-          ],
-        ),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!_showTableOnMobile)
+                    Expanded(flex: 2, child: _buildForm(context)),
+                  if (_showTableOnMobile)
+                    Expanded(flex: 2, child: _buildTable(prov)),
+                ],
+              ),
       ),
     );
   }
@@ -1763,15 +1903,18 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         // Resolve selected scan-type from radio fields (either list)
         final selectedName = () {
           final f = _getRadioFields().values.firstWhereOrNull(
-                  (f) => f.userVisibilityCode.toString() == _selectedRadioCode);
+            (f) => f.userVisibilityCode.toString() == _selectedRadioCode,
+          );
           return (f?.userVisibilityName ?? '').toUpperCase();
         }();
 
         if (selectedName == 'BCODE' &&
             _scannedDet == null &&
             _editingDetIndex == null) {
-          Future.delayed(const Duration(milliseconds: 50),
-                  () => _erpFormKey.currentState?.focusField('scanValue'));
+          Future.delayed(
+            const Duration(milliseconds: 50),
+            () => _erpFormKey.currentState?.focusField('scanValue'),
+          );
           return;
         }
         _addEntry();
@@ -1782,18 +1925,24 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         switch (key) {
           case 'fromCrId':
             _onFromSelected(value.toString());
-            Future.delayed(const Duration(milliseconds: 50),
-                    () => _erpFormKey.currentState?.focusField('toCrId'));
+            Future.delayed(
+              const Duration(milliseconds: 50),
+              () => _erpFormKey.currentState?.focusField('toCrId'),
+            );
 
           case 'toCrId':
             _onToSelected(value.toString());
-            Future.delayed(const Duration(milliseconds: 50),
-                    () => _erpFormKey.currentState?.focusField('deptProcessCode'));
+            Future.delayed(
+              const Duration(milliseconds: 50),
+              () => _erpFormKey.currentState?.focusField('deptProcessCode'),
+            );
 
           case 'deptProcessCode':
             _onProcessSelected(value.toString());
-            Future.delayed(const Duration(milliseconds: 100),
-                    () => _erpFormKey.currentState?.focusField('charniCode'));
+            Future.delayed(
+              const Duration(milliseconds: 100),
+              () => _erpFormKey.currentState?.focusField('charniCode'),
+            );
 
           case 'scanValue':
             _entryVals[key] = value.toString();
@@ -1836,15 +1985,17 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         if (merged.isEmpty) return;
 
         final selectedField = merged.values.firstWhereOrNull(
-                (f) => f.userVisibilityCode.toString() == _selectedRadioCode);
-        final selectedName =
-        (selectedField?.userVisibilityName ?? '').toUpperCase();
+          (f) => f.userVisibilityCode.toString() == _selectedRadioCode,
+        );
+        final selectedName = (selectedField?.userVisibilityName ?? '')
+            .toUpperCase();
 
         if (selectedName == 'BCODE') {
           // Duplicate check before scanning
           if (_editingDetIndex == null) {
-            final isDuplicate =
-            _detRows.any((r) => r.bCode?.toString() == scanVal);
+            final isDuplicate = _detRows.any(
+              (r) => r.bCode?.toString() == scanVal,
+            );
             if (isDuplicate) {
               ErpResultDialog.showError(
                 context: context,
@@ -1855,9 +2006,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
               _erpFormKey.currentState?.updateFieldValue('scanValue', '');
               _entryVals['scanValue'] = '';
               Future.delayed(
-                  const Duration(milliseconds: 100),
-                      () =>
-                      _erpFormKey.currentState?.focusField('scanValue'));
+                const Duration(milliseconds: 100),
+                () => _erpFormKey.currentState?.focusField('scanValue'),
+              );
               return;
             }
           }
@@ -1869,7 +2020,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         // Non-BCODE duplicate check
         if (_editingDetIndex == null) {
           final isDuplicate = _detRows.any(
-                  (r) => r.id?.toString() == scanVal || r.jno?.toString() == scanVal);
+            (r) => r.id?.toString() == scanVal || r.jno?.toString() == scanVal,
+          );
           if (isDuplicate) {
             ErpResultDialog.showError(
               context: context,
@@ -1902,7 +2054,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
                 onEditRow: _editDetRow,
                 editingIndex: _editingDetIndex,
                 columnLabels: {
-                  for (final c in _activeDetColumns) c: _colLabel(c)
+                  for (final c in _activeDetColumns) c: _colLabel(c),
                 },
                 columnAlignments: const {
                   'orgPc': TextAlign.right,
@@ -1948,8 +2100,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     final totRecWt = fold((r) => r.recWt ?? 0);
     final totIssWt = fold((r) => r.issWt ?? 0);
     final base = totRecWt > 0 ? totRecWt : totIssWt;
-    final dmPerStr =
-    base > 0 ? (totDmWt / base * 100).toStringAsFixed(2) : '0.00';
+    final dmPerStr = base > 0
+        ? (totDmWt / base * 100).toStringAsFixed(2)
+        : '0.00';
 
     return {
       'orgPc': '${foldInt((r) => r.pc ?? 0)}',
@@ -1995,9 +2148,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       } catch (_) {}
 
       try {
-        processName = procProv.list
-            .firstWhere((p) => p.deptProcessCode == e.deptProcessCode)
-            .deptProcessName ??
+        processName =
+            procProv.list
+                .firstWhere((p) => p.deptProcessCode == e.deptProcessCode)
+                .deptProcessName ??
             '';
       } catch (_) {}
 
@@ -2011,13 +2165,12 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         ..['deptName'] = toDeptName
         ..['processName'] = processName
         ..['spkDeptIssTime'] = _formatTime(e.stime)
-        ..['jno'] =
-        dets.isNotEmpty ? (dets.first.jno?.toString() ?? '') : ''
+        ..['jno'] = dets.isNotEmpty ? (dets.first.jno?.toString() ?? '') : ''
         ..['totPkt'] = '${dets.length}'
-        ..['totalPc'] =
-            '${dets.fold<int>(0, (s, r) => s + (r.totalPc ?? 0))}'
+        ..['totalPc'] = '${dets.fold<int>(0, (s, r) => s + (r.totalPc ?? 0))}'
         ..['totalWt'] = _f3(
-            dets.fold<double>(0.0, (s, r) => s + (r.totalWt ?? 0.0)));
+          dets.fold<double>(0.0, (s, r) => s + (r.totalWt ?? 0.0)),
+        );
 
       return row;
     }).toList();
@@ -2031,6 +2184,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       data: data,
       showSearch: true,
       dateFilter: true,
+      onClose: (){
+        setState(() {
+          _showTableOnMobile = false;
+        });
+      },
       searchFields: const [
         ErpSearchFieldConfig(key: 'fromName', label: 'FROM', width: 150),
         ErpSearchFieldConfig(key: 'toName', label: 'TO', width: 150),

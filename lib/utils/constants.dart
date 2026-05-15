@@ -96,3 +96,13 @@ String toIsoDate(String value) {
   }
 }
 
+String toIso(String? v) {
+  if (v == null || v.isEmpty) return '';
+  try {
+    return DateFormat(
+      'yyyy-MM-dd',
+    ).format(DateFormat('dd/MM/yyyy').parse(v));
+  } catch (_) {
+    return v;
+  }
+}

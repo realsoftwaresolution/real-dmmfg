@@ -107,7 +107,9 @@ class TrnLaserReceivedProvider extends BaseProvider {
   Future<List<LaserDetModel>> laserSelectData({
     required String bCode,
     required String fromCrId,
-    required  gridData,
+    required dynamic gridData,
+    required dynamic time,
+    required dynamic spkDeptIssDate,
   }) async {
     final result = await request<List<LaserDetModel>>(
       showLoader: false,
@@ -116,17 +118,30 @@ class TrnLaserReceivedProvider extends BaseProvider {
         data: {
           'bCode': bCode,
           'lastCrId': fromCrId.toString(),
-          'screenName': 'LASER_RECEIVED', // ✅ match backend condition
+          'screenName': 'LASER_RECEIVED',
           'gridData': gridData,
-          'FormType':  'LASERREC',
+          'FormType': 'LASERREC',
         },
       ),
       onSuccess: (res) {
         final responseData = res.data['data'];
-        notifyListeners();
-        return responseData;
+
+        if (responseData == null) {
+          return <LaserDetModel>[];
+        }
+
+        return (responseData as List)
+            .map(
+              (e) => LaserDetModel.fromJson(
+            Map<String, dynamic>.from(e),
+          ),
+        )
+            .toList();
       },
     );
+
+    notifyListeners();
+
     return result ?? [];
   }
 

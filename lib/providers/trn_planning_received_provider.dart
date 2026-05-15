@@ -1,20 +1,19 @@
-// lib/providers/spk_dept_iss_provider.dart
 
+import 'package:diam_mfg/models/planning_received_model.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
-import '../models/spkDeptIss_mst_model.dart';
 
 class TrnPlanningReceivedProvider extends BaseProvider {
-  List<SpkDeptIssMstModel> _list     = [];
+  List<PlanningReceivedMstModel> _list     = [];
   bool                     _isLoaded = false;
 
   bool                         get isLoaded => _isLoaded;
-  List<SpkDeptIssMstModel>     get list     => List.unmodifiable(_list);
+  List<PlanningReceivedMstModel>     get list     => List.unmodifiable(_list);
   List<Map<String, dynamic>>   get tableData =>
       _list.map((e) => e.toTableRow()).toList();
 // Provider mein ye map maintain karo
 // detMap declare karo (class level)
-  Map<int, List<SpkDeptIssDetModel>> detMap = {};
+  Map<int, List<PlanningReceivedDetModel>> detMap = {};
 
   void clearForReset() {
     _scannedDetList.clear();   // clear barcode scan data
@@ -23,14 +22,14 @@ class TrnPlanningReceivedProvider extends BaseProvider {
   }
 
 // SIRF EK loadDetails rakho — dono merge karo:
-  Future<List<SpkDeptIssDetModel>> loadDetails(int mstID) async {
-    final result = await request<List<SpkDeptIssDetModel>>(
+  Future<List<PlanningReceivedDetModel>> loadDetails(int mstID) async {
+    final result = await request<List<PlanningReceivedDetModel>>(
       call: () => api.get('/spkDeptIss/$mstID'),
       onSuccess: (res) {
         final data   = res.data;
         final rawDet = (data is Map ? data['det'] : data) as List? ?? [];
         return rawDet
-            .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
+            .map((e) => PlanningReceivedDetModel.fromJson(e as Map<String, dynamic>))
             .toList();
       },
     );
@@ -41,12 +40,12 @@ class TrnPlanningReceivedProvider extends BaseProvider {
   }
   // ── LOAD ALL ──────────────────────────────────────────────────────────────
   Future<void> load() async {
-    final result = await request<List<SpkDeptIssMstModel>>(
+    final result = await request<List<PlanningReceivedMstModel>>(
       call: () => api.get('/spkDeptIss'),
       onSuccess: (res) {
         final list = res.data as List;
         return list
-            .map((e) => SpkDeptIssMstModel.fromJson(e as Map<String, dynamic>))
+            .map((e) => PlanningReceivedMstModel.fromJson(e as Map<String, dynamic>))
             .toList();
       },
     );
@@ -58,21 +57,21 @@ class TrnPlanningReceivedProvider extends BaseProvider {
   }
 
   // Store scanned det rows (which carry sarinData)
-  List<SpkDeptIssDetModel> _scannedDetList = [];
-  List<SpkDeptIssDetModel> get scannedDetList => _scannedDetList;
-  List<SpkDeptIssDetModel> _planningDetList = [];
-  List<SpkDeptIssDetModel> get planningDetList => _planningDetList;
+  List<PlanningReceivedDetModel> _scannedDetList = [];
+  List<PlanningReceivedDetModel> get scannedDetList => _scannedDetList;
+  List<PlanningReceivedDetModel> _planningDetList = [];
+  List<PlanningReceivedDetModel> get planningDetList => _planningDetList;
 
   void clearScannedDetList() {
     _scannedDetList = [];
     notifyListeners();
   }
 
-  Future<List<SpkDeptIssDetModel>> fetchByBCode({
+  Future<List<PlanningReceivedDetModel>> fetchByBCode({
     required String bCode,
     required String fromCrId,
   }) async {
-    final result = await request<List<SpkDeptIssDetModel>>(
+    final result = await request<List<PlanningReceivedDetModel>>(
       showLoader: false,
       call: () => api.get(
         '/spkDeptIss/scan-bcode',
@@ -86,7 +85,7 @@ class TrnPlanningReceivedProvider extends BaseProvider {
         final data = res.data['data'];
         final list = data is List ? data : [data];
         final parsed = list
-            .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
+            .map((e) => PlanningReceivedDetModel.fromJson(e as Map<String, dynamic>))
             .toList();
         for (var item in parsed) {
           if(parsed[0].sarinData!.isNotEmpty) {
@@ -107,12 +106,14 @@ class TrnPlanningReceivedProvider extends BaseProvider {
     return result ?? [];
   }
 
-  Future<List<SpkDeptIssDetModel>> fetchByBCodePlanningList({
+  Future<List<PlanningReceivedDetModel>> fetchByBCodePlanningList({
     required String bCode,
     required String fromCrId,
   }) async {
-    final result = await request<List<SpkDeptIssDetModel>>(
+
+    final result = await request<List<PlanningReceivedDetModel>>(
       showLoader: false,
+
       call: () => api.get(
         '/spkDeptIss/scan-bcode-wise-planning-list',
         query: {
@@ -121,24 +122,30 @@ class TrnPlanningReceivedProvider extends BaseProvider {
           'screenName': 'PLANNING_RECEIVED',
         },
       ),
-      onSuccess: (res) {
-        final data = res.data['data'];
-        final list = data is List ? data : [data];
 
-        final parsed = list
-            .map((e) {
-          try {
-            return SpkDeptIssDetModel.fromJson(
-                e as Map<String, dynamic>);
-          } catch (err) {
-            print('❌ Parse Error: $err');
-            return null;
-          }
-        })
-            .whereType<SpkDeptIssDetModel>()
-            .toList();
+      onSuccess: (res) {
+        final responseData = res.data['data'];
+        if (responseData == null) {
+          _planningDetList = [];
+          notifyListeners();
+          return <PlanningReceivedDetModel>[];
+        }
+
+        final List<dynamic> list =
+        responseData is List
+            ? responseData
+            : [responseData];
+
+        final parsed = list.map((e) {
+
+          return PlanningReceivedDetModel.fromJson(
+            Map<String, dynamic>.from(e),
+          );
+
+        }).toList();
 
         _planningDetList = parsed;
+
         notifyListeners();
 
         return parsed;
@@ -151,10 +158,10 @@ class TrnPlanningReceivedProvider extends BaseProvider {
   // ── CREATE ────────────────────────────────────────────────────────────────
   Future<bool> create(
       Map<String, dynamic>       values,
-      List<SpkDeptIssDetModel>   details,
+      List<PlanningReceivedDetModel>   details,
       ) async {
     final model  = _buildModel(values);
-    final result = await request<SpkDeptIssMstModel>(
+    final result = await request<PlanningReceivedMstModel>(
       call: () => api.post('/spkDeptIss', data: {
         ...model.toJson(),
         'details': details.map((e) => e.toJson()).toList(),
@@ -173,10 +180,10 @@ class TrnPlanningReceivedProvider extends BaseProvider {
   Future<bool> update(
       int                        id,
       Map<String, dynamic>       values,
-      List<SpkDeptIssDetModel>   details,
+      List<PlanningReceivedDetModel>   details,
       ) async {
     final model  = _buildModel(values);
-    final result = await request<SpkDeptIssMstModel>(
+    final result = await request<PlanningReceivedMstModel>(
       call: () => api.put('/spkDeptIss/$id', data: {
         ...model.toJson(),
         'details': details.map((e) => e.toJson()).toList(),
@@ -205,36 +212,8 @@ class TrnPlanningReceivedProvider extends BaseProvider {
     }
     return false;
   }
-
-  // ── LOAD DETAILS ──────────────────────────────────────────────────────────
-  // Future<List<SpkDeptIssDetModel>> loadDetails(int mstID) async {
-  //   final result = await request<List<SpkDeptIssDetModel>>(
-  //     call: () => api.get('/spkDeptIss/$mstID'),
-  //     onSuccess: (res) {
-  //       final data   = res.data;
-  //       final rawDet = (data is Map ? data['det'] : data) as List? ?? [];
-  //       return rawDet
-  //           .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
-  //           .toList();
-  //     },
-  //   );
-  //   return result ?? [];
-  // }
-
-  // ── PARSE { mst, det } response ───────────────────────────────────────────
-  // SpkDeptIssMstModel _parseMstResponse(dynamic data) {
-  //   if (data is Map) {
-  //     if (data.containsKey('mst')) {
-  //       final mst    = Map<String, dynamic>.from(data['mst'] as Map);
-  //       final rawDet = data['det'] as List? ?? [];
-  //       mst['details'] = rawDet;
-  //       return SpkDeptIssMstModel.fromJson(mst);
-  //     }
-  //     return SpkDeptIssMstModel.fromJson(Map<String, dynamic>.from(data));
-  //   }
-  //   throw Exception('Unexpected response format');
-  // }
-  SpkDeptIssMstModel _parseMstResponse(dynamic data) {
+  
+  PlanningReceivedMstModel _parseMstResponse(dynamic data) {
     if (data is Map) {
       Map<String, dynamic> mstJson;
       if (data.containsKey('mst')) {
@@ -251,15 +230,15 @@ class TrnPlanningReceivedProvider extends BaseProvider {
       } else {
         mstJson = Map<String, dynamic>.from(data);
       }
-      return SpkDeptIssMstModel.fromJson(mstJson);
+      return PlanningReceivedMstModel.fromJson(mstJson);
     }
     throw Exception('Unexpected response format');
   }
   // ── BUILD MODEL from form values ──────────────────────────────────────────
-  SpkDeptIssMstModel _buildModel(Map<String, dynamic> v) {
+  PlanningReceivedMstModel _buildModel(Map<String, dynamic> v) {
     int? toI(String? s) => s == null || s.isEmpty ? null : int.tryParse(s);
 
-    return SpkDeptIssMstModel(
+    return PlanningReceivedMstModel(
       spkDeptIssDate:  v['spkDeptIssDate'],
       fromCrID:        toI(v['fromCrID']?.toString()),
       toCrID:          toI(v['toCrID']?.toString()),

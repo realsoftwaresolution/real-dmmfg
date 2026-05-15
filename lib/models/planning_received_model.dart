@@ -1,4 +1,4 @@
-class SpkDeptIssMstModel {
+class PlanningReceivedMstModel {
   final int?    spkDeptIssMstID;
   final String? spkDeptIssDate;
   final int?    fromCrID;
@@ -19,7 +19,7 @@ class SpkDeptIssMstModel {
   final int?    nukCrId;
   final String? planType;
 
-  final List<SpkDeptIssDetModel> details;
+  final List<PlanningReceivedDetModel> details;
 
   // ── totals from DB ─────────────────────────────────────────────────────────
   final double? totalWtDb;
@@ -34,7 +34,7 @@ class SpkDeptIssMstModel {
   double get totalWt => totalWtDb ?? details.fold(0.0, (s, d) => s + (d.totalWt ?? 0));
   int    get totalPc => totalPcDb ?? details.fold(0,   (s, d) => s + (d.totalPc ?? 0));
 
-  const SpkDeptIssMstModel({
+  const PlanningReceivedMstModel({
     this.spkDeptIssMstID,
     this.spkDeptIssDate,
     this.fromCrID,
@@ -63,8 +63,8 @@ class SpkDeptIssMstModel {
     this.bCode,
   });
 
-  factory SpkDeptIssMstModel.fromJson(Map<String, dynamic> json) =>
-      SpkDeptIssMstModel(
+  factory PlanningReceivedMstModel.fromJson(Map<String, dynamic> json) =>
+      PlanningReceivedMstModel(
         spkDeptIssMstID: json['SPKDeptIssMstID'],
         spkDeptIssDate:  _dateOnly(json['SPKDeptIssDate']),
         fromCrID:        json['FromCrID'],
@@ -95,7 +95,7 @@ class SpkDeptIssMstModel {
             ? (json['TotalPc'] as num).toInt()
             : null,
         details: (json['details'] as List? ?? [])
-            .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
+            .map((e) => PlanningReceivedDetModel.fromJson(e as Map<String, dynamic>))
             .toList(),
       );
 
@@ -129,9 +129,9 @@ class SpkDeptIssMstModel {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SpkDeptIssDetModel
+//  PlanningReceivedDetModel
 // ─────────────────────────────────────────────────────────────────────────────
-class SpkDeptIssDetModel {
+class PlanningReceivedDetModel {
   final int?    spkDeptIssDetID;
   final int?    spkDeptIssMstID;
   final int?    srno;
@@ -282,7 +282,7 @@ class SpkDeptIssDetModel {
   final dynamic symmetryCode;
   final dynamic polishCode;
 
-  const SpkDeptIssDetModel({
+  const PlanningReceivedDetModel({
     this.deptCode,
     this.spkDeptIssDetID,
     this.spkDeptIssMstID,
@@ -431,8 +431,8 @@ class SpkDeptIssDetModel {
     this.recutEmp,  this.fluo, this.symmetryCode, this.polishCode,
   });
 
-  factory SpkDeptIssDetModel.fromJson(Map<String, dynamic> json) =>
-      SpkDeptIssDetModel(
+  factory PlanningReceivedDetModel.fromJson(Map<String, dynamic> json) =>
+      PlanningReceivedDetModel(
         fluo:  json['FluoCode'],
         symmetryCode:  json['SymmetryCode'],
         polishCode:  json['PolishCode'],
@@ -748,7 +748,7 @@ class SpkDeptIssDetModel {
     return double.tryParse(v.toString());
   }
 }
-extension SpkDeptIssMstExt on SpkDeptIssMstModel {
+extension SpkDeptIssMstExt on PlanningReceivedMstModel {
   Map<String, dynamic> toTableRow() => {
     'spkDeptIssMstID': spkDeptIssMstID,
     'spkDeptIssDate':  spkDeptIssDate ?? '',

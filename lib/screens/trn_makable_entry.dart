@@ -650,6 +650,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       toDeptCode: _toDeptCodeVal,
       fromCrId: _fromCrId,
       toCrId: _toCrId,
+      deptCode: _toDeptCodeVal,
       deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
       // User-entered fields
       pc: int.tryParse(_entryVals['orgPc'] ?? '') ?? existing.pc,
@@ -709,6 +710,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       height: _isFieldVisible('HEIGHT')
           ? double.tryParse(_entryVals['height'].toString())
           : null,
+      confRec: 'Y',
+      clvRec: 'N',
     );
   }
 
@@ -737,6 +740,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       toDeptCode: _toDeptCodeVal,
       fromCrId: _fromCrId,
       toCrId: _toCrId,
+      deptCode: _toDeptCodeVal,
       deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
       charniCode: int.tryParse(_entryVals['charniCode'] ?? ''),
       pc: int.tryParse(_entryVals['orgPc'] ?? ''),
@@ -761,7 +765,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       signerCode: int.tryParse(_entryVals['signer'] ?? ''),
       remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
       dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
-      entryType: 'I',
+      entryType: 'B',
       formType: 'MAKABLE MANUAL',
       fType: 'MAKABLE',
       pktType: 'A',
@@ -800,6 +804,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       height: _isFieldVisible('HEIGHT')
           ? double.tryParse(_entryVals['height'].toString())
           : null,
+      confRec: 'Y',
+      clvRec: 'N',
     );
   }
 
@@ -2188,6 +2194,11 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       data: data,
       showSearch: true,
       dateFilter: true,
+      onClose: (){
+        setState(() {
+          _showTableOnMobile = false;
+        });
+      },
       searchFields: const [
         ErpSearchFieldConfig(key: 'fromName', label: 'FROM', width: 150),
         ErpSearchFieldConfig(key: 'toName', label: 'TO', width: 150),

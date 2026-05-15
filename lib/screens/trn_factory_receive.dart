@@ -1305,17 +1305,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     final payload = {
       "FactoryRecDate": toUtcIso(values['factoryRecDate']),   // already yyyy-MM-dd
       "FactoryCode": int.tryParse(values['factory'] ?? '0') ?? 0,
-
-      "Sflag": "S",
       "Sdate": DateTime.now().toUtc().toIso8601String(),
       "Stime": DateTime.now().toUtc().toIso8601String(),
-
-      "LogID": 1001,
-      "PcID": "PC-01",
-      "Ever": 1,
-
       "EntryType": _formValues['type'] ?? '',
-
       "details": _detRows.map(_mapToApiDetail).toList(),
     };
 
@@ -2375,6 +2367,11 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       data: data,
       showSearch: true,
       dateFilter: true,
+      onClose: (){
+        setState(() {
+          _showTableOnMobile = false;
+        });
+      },
       selectedRow: _selectedRow,
       onRowTap: _onRowTap,
       emptyMessage: prov.isLoaded ? 'No entries found' : 'Loading...',
