@@ -15,7 +15,6 @@ class TrnLaserReceivedProvider extends BaseProvider {
   Map<int, List<LaserDetModel>> detMap = {};
 
   void clearForReset() {
-    _scannedDetList.clear();   // clear barcode scan data
     detMap.clear();            // clear details map (important)
     _list.clear();            // clear details map (important)
     notifyListeners();
@@ -56,12 +55,8 @@ class TrnLaserReceivedProvider extends BaseProvider {
     }
   }
 
-  // Store scanned det rows (which carry sarinData)
-  List<LaserDetModel> _scannedDetList = [];
-  List<LaserDetModel> get scannedDetList => _scannedDetList;
 
   void clearScannedDetList() {
-    _scannedDetList = [];
     notifyListeners();
   }
 
@@ -85,17 +80,6 @@ class TrnLaserReceivedProvider extends BaseProvider {
         final parsed = list
             .map((e) => LaserDetModel.fromJson(e as Map<String, dynamic>))
             .toList();
-        for (var item in parsed) {
-          if(parsed[0].sarinData!.isNotEmpty) {
-            final index = _scannedDetList.indexWhere(
-                    (e) => e.bCode.toString() == item.bCode.toString());
-            if (index == -1) {
-              _scannedDetList.add(item);
-            } else {
-              _scannedDetList[index] = item; // update existing
-            }
-          }
-        }
         notifyListeners();
         return parsed;
       },

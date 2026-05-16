@@ -208,6 +208,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
           type: ErpFieldType.dropdown,
           dropdownItems: cutNoItems,
           required: true,
+          readOnly:  _detDisplay.isNotEmpty || _isEditMode,
           flex: 2,
           sectionIndex: 0,
         ),
@@ -670,7 +671,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
 
       wt: entryWt,
 
-      pktType: typeVal,
+      pktType: 'ORG',
 
       colorCode: int.tryParse(colorVal),
 
@@ -816,15 +817,6 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     }).toList();
   }
 
-  String _nameFromCode(List<dynamic> list, int? code) {
-    if (code == null) return '';
-    try {
-      final item = list.firstWhere((e) => e.code == code);
-      return item.name ?? '';
-    } catch (_) {
-      return '';
-    }
-  }
 
   List<String> get _detGridColumns => [
     'bCode',

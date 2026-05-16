@@ -557,29 +557,42 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
         )
         .toList();
 
+    // ── TO dropdown — allowCrIds from CounterManagerDet ───────────────────
     final toItems = _fromCrId == null
         ? <ErpDropdownItem>[]
         : mgDetProv.list
-              .where((m) => m.crId == _fromCrId && m.allowCrId != null)
-              .map((m) => m.allowCrId!)
-              .toSet()
-              .map((allowId) {
-                try {
-                  final c = counterProv.list.firstWhere(
-                    (c) => c.crId == allowId,
-                  );
-                  return ErpDropdownItem(
-                    label: '${c.crName ?? ''}  |  ${_deptNameFor(c.deptCode)}',
-                    value: c.crId?.toString() ?? '',
-                  );
-                } catch (_) {
-                  return ErpDropdownItem(
-                    label: 'ID:$allowId',
-                    value: '$allowId',
-                  );
-                }
-              })
-              .toList();
+        .where(
+          (m) =>
+      m.crId == _fromCrId &&
+          m.allowCrId != null,
+    )
+        .map((m) => m.allowCrId!)
+        .toSet()
+        .map((allowId) {
+      try {
+        final c = counterProv.list.firstWhere(
+              (c) =>
+          c.crId == allowId &&
+              c.active == true,
+        );
+
+        // OPTIONAL:
+        // avoid same FROM manager in TO
+        if (c.crId == _fromCrId) {
+          return null;
+        }
+
+        return ErpDropdownItem(
+          label:
+          '${c.crName ?? ''} | ${_deptNameFor(c.deptCode)}',
+          value: c.crId?.toString() ?? '',
+        );
+      } catch (_) {
+        return null;
+      }
+    })
+        .whereType<ErpDropdownItem>()
+        .toList();
 
     final processItems = (_fromCrId == null || _toCrId == null)
         ? <ErpDropdownItem>[]

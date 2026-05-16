@@ -88,6 +88,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   int? _toCrId;
   String? _toDeptName;
   int? _toDeptCodeVal;
+  String _autoRec = 'N';
 
   // ── Detail rows ────────────────────────────────────────────────────────────
   List<SpkDeptIssDetModel> _detRows = [];
@@ -289,6 +290,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       if (loggedUser?.crId != null) {
         _onFromSelected(loggedUser!.crId!.toString());
       }
+      _resetForm();
     });
   }
 
@@ -421,6 +423,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         _toCrId = crId;
         _toDeptName = deptName;
         _toDeptCodeVal = counter.deptCode;
+        // AUTO REC SET
+        _autoRec = (counter.autoRec ?? 'N').toString();
         _formValues['toCrId'] = crIdStr;
         _formValues['toDept'] = deptName;
       });
@@ -573,6 +577,13 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
   void _addEntry() {
     final merged = _getMergedFields();
+    final hasRecPc = merged.containsKey('REC PC');
+
+    final hasRecWt = merged.containsKey('REC WT');
+
+    final hasDmWt = merged.containsKey('DM WT');
+
+    final hasDmPer = merged.containsKey('DM PER');
 
     // Resolve selected scan-type name from radio fields (either list)
     final selectedName = () {
@@ -603,7 +614,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
     final totalPc = recPc + kPc;
     final totalWt = recWt + kWt;
+    final finalRecPc = hasRecPc ? recPc : issPc;
 
+    final finalRecWt = hasRecWt ? recWt : issWt;
     final hasRecPair =
         merged.containsKey('REC PC') || merged.containsKey('REC WT');
     final hasKPair = merged.containsKey('K PC') || merged.containsKey('K WT');
@@ -667,15 +680,15 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             existing: _detRows[_editingDetIndex!],
             issPcStr: issPcStr,
             issWtStr: issWtStr,
-            recPc: recPc,
-            recWt: recWt,
+            recPc: finalRecPc,
+            recWt: finalRecWt,
           )
         : _buildNewRow(
             srno: srno,
             issPcStr: issPcStr,
             issWtStr: issWtStr,
-            recPc: recPc,
-            recWt: recWt,
+            recPc: finalRecPc,
+            recWt: finalRecWt,
           );
 
     setState(() {
@@ -729,11 +742,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       entryType: existing.entryType,
       formType: existing.formType,
       pktType: existing.pktType,
-      fromDeptCode: _fromDeptCode,
-      toDeptCode: _toDeptCodeVal,
-      fromCrId: _fromCrId,
-      toCrId: _toCrId,
-      deptCode: _toDeptCodeVal,
+      fromDeptCode: existing.fromDeptCode,
+      toDeptCode: existing.toDeptCode,
+      fromCrId: existing.fromCrId,
+      toCrId: existing.toCrId,
+      deptCode: existing.deptCode,
       deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
       // User-entered fields
       pc: int.tryParse(_entryVals['orgPc'] ?? '') ?? existing.pc,
@@ -760,8 +773,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       signerCode: int.tryParse(_entryVals['signer'] ?? ''),
       remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
       dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
-      confRec: 'Y',
-      clvRec: 'N',
+      confRec: _autoRec,
+      clvRec: 'S',
+      confCrID: _toCrId,
     );
   }
 
@@ -818,10 +832,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
       dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
       entryType: 'B',
-      formType: 'DEPT_ISS',
+      formType: 'SPK',
       pktType: 'A',
-      confRec: 'Y',
-      clvRec: 'N',
+      confRec: _autoRec,
+      clvRec: 'S',
+      confCrID: _toCrId,
     );
   }
 
@@ -917,43 +932,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       _syncDetGrid();
       if (_editingDetIndex == idx) _editingDetIndex = null;
     });
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  //  CLEAR ENTRY FIELDS
-  // ─────────────────────────────────────────────────────────────────────────
-
-  void _clearEntryFields() {
-    const keys = [
-      'orgPc',
-      'orgWt',
-      'issPc',
-      'issWt',
-      'recpc',
-      'recwt',
-      'dmwt',
-      'dmper',
-      'kpc',
-      'kwt',
-      'brpc',
-      'brwt',
-      'losspc',
-      'losswt',
-      'topspc',
-      'topswt',
-      'employee',
-      'signer',
-      'remarks',
-      'dueDay',
-      'scanValue',
-    ];
-    for (final k in keys) {
-      _entryVals.remove(k);
-      _erpFormKey.currentState?.updateFieldValue(k, '');
-    }
-    _scannedDet = null;
-    _isBCodePending = false;
-    _entryVals['scanValue'] = '';
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1258,26 +1236,38 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     final toItems = _fromCrId == null
         ? <ErpDropdownItem>[]
         : mgDetProv.list
-              .where((m) => m.crId == _fromCrId && m.allowCrId != null)
-              .map((m) => m.allowCrId!)
-              .toSet()
-              .map((allowId) {
-                try {
-                  final c = counterProv.list.firstWhere(
-                    (c) => c.crId == allowId,
-                  );
-                  return ErpDropdownItem(
-                    label: '${c.crName ?? ''}  |  ${_deptNameFor(c.deptCode)}',
-                    value: c.crId?.toString() ?? '',
-                  );
-                } catch (_) {
-                  return ErpDropdownItem(
-                    label: 'ID:$allowId',
-                    value: '$allowId',
-                  );
-                }
-              })
-              .toList();
+        .where(
+          (m) =>
+      m.crId == _fromCrId &&
+          m.allowCrId != null,
+    )
+        .map((m) => m.allowCrId!)
+        .toSet()
+        .map((allowId) {
+      try {
+        final c = counterProv.list.firstWhere(
+              (c) =>
+          c.crId == allowId &&
+              c.active == true,
+        );
+
+        // OPTIONAL:
+        // avoid same FROM manager in TO
+        if (c.crId == _fromCrId) {
+          return null;
+        }
+
+        return ErpDropdownItem(
+          label:
+          '${c.crName ?? ''} | ${_deptNameFor(c.deptCode)}',
+          value: c.crId?.toString() ?? '',
+        );
+      } catch (_) {
+        return null;
+      }
+    })
+        .whereType<ErpDropdownItem>()
+        .toList();
 
     // ── PROCESS dropdown — intersection of FROM-issue ∩ TO-receive codes ──
     final processItems = (_fromCrId == null || _toCrId == null)
@@ -1307,7 +1297,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
               return ErpDropdownItem(label: label, value: code.toString());
             }).toList();
           }();
-
     // ── CHARNI dropdown ───────────────────────────────────────────────────
     final charniItems = charniProv.list
         .where((e) => e.active == true)
@@ -1991,29 +1980,51 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             .toUpperCase();
 
         if (selectedName == 'BCODE') {
-          // Duplicate check before scanning
-          if (_editingDetIndex == null) {
-            final isDuplicate = _detRows.any(
-              (r) => r.bCode?.toString() == scanVal,
+          // Duplicate check
+          final isDuplicate = _detRows.any(
+            (r) => r.bCode?.toString() == scanVal,
+          );
+
+          if (isDuplicate) {
+            ErpResultDialog.showError(
+              context: context,
+              theme: _theme,
+              title: 'Duplicate',
+              message: 'This BCode already added.',
             );
-            if (isDuplicate) {
-              ErpResultDialog.showError(
-                context: context,
-                theme: _theme,
-                title: 'Duplicate',
-                message: 'This bCode already added.',
-              );
-              _erpFormKey.currentState?.updateFieldValue('scanValue', '');
-              _entryVals['scanValue'] = '';
-              Future.delayed(
-                const Duration(milliseconds: 100),
-                () => _erpFormKey.currentState?.focusField('scanValue'),
-              );
-              return;
-            }
+
+            _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+
+            Future.delayed(
+              const Duration(milliseconds: 50),
+              () => _erpFormKey.currentState?.focusField('scanValue'),
+            );
+
+            return;
           }
-          _isBCodePending = true;
-          _onBCodeScanned(scanVal);
+
+          // API Call
+          _onBCodeScanned(scanVal).then((_) {
+
+            // Record direct add only when no entry fields
+            if (_scannedDet != null && !_hasEntryFields()) {
+
+              _addEntry();
+
+              // Clear scan field
+              _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+
+              _entryVals['scanValue'] = '';
+
+              _scannedDet = null;
+
+              Future.delayed(
+                const Duration(milliseconds: 50),
+                    () => _erpFormKey.currentState?.focusField('scanValue'),
+              );
+            }
+          });
+
           return;
         }
 
@@ -2184,7 +2195,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       data: data,
       showSearch: true,
       dateFilter: true,
-      onClose: (){
+      onClose: () {
         setState(() {
           _showTableOnMobile = false;
         });
@@ -2198,4 +2209,27 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       emptyMessage: prov.isLoaded ? 'No entries found' : 'Loading...',
     );
   }
-}
+  bool _hasEntryFields() {
+    final merged = _getMergedFields();
+
+    final pairs = [
+      ['REC PC', 'REC WT'],
+      ['K PC', 'K WT'],
+      ['BR PC', 'BR WT'],
+      ['TOPS PC', 'TOPS WT'],
+      ['LOSS PC', 'LOSS WT'],
+      ['DM PER', 'DM WT'],
+    ];
+
+    final hasAnyPair = pairs.any(
+          (p) => merged.containsKey(p[0]) || merged.containsKey(p[1]),
+    );
+
+    return hasAnyPair ||
+        merged.containsKey('EMPLOYEE') ||
+        merged.containsKey('SIGNER') ||
+        merged.containsKey('REMARKS') ||
+        merged.containsKey('DUE DAY');
+  }
+  }
+

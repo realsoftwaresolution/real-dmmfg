@@ -102,7 +102,7 @@ class FactoryReceiveMstModel {
   }
 
   static double? _toDouble(dynamic v) {
-    if (v == null) return null;
+    if (v == null) return 0;
     return double.tryParse(v.toString());
   }
 }
@@ -721,7 +721,7 @@ class FactoryReceiveDetModel {
   };
 
   static double? _d(dynamic v) {
-    if (v == null) return null;
+    if (v == null) return 0;
     if (v is double) return v;
     if (v is int) return v.toDouble();
     return double.tryParse(v.toString());

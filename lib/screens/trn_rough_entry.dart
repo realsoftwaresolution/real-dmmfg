@@ -861,7 +861,6 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
     merged['rateRs'] = _formValues['rateRs'] ?? '0';
     merged['amtDollar'] = _formValues['amtDollar'] ?? '0';
     merged['amtRs'] = _formValues['amtRs'] ?? '0';
-    merged['dueDate'] = _formValues['dueDate'] ?? '';
     merged['totWt'] = _totalWt.toStringAsFixed(2);
     merged['roughDate'] = toIso(merged['roughDate']?.toString());
     merged['dueDate'] = toIso(merged['dueDate']?.toString());

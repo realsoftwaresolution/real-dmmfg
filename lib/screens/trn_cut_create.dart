@@ -5,6 +5,8 @@ import 'package:diam_mfg/providers/cut_create_provider.dart';
 import 'package:diam_mfg/providers/purity_provider.dart';
 import 'package:diam_mfg/providers/rough_assort_provider.dart';
 import 'package:diam_mfg/providers/rough_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
@@ -243,7 +245,31 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
       ],
     ];
   }
+  Future<bool> _checkDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      allowRowData: true,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {
+        'CutNo': 'CutNo',
+      },
+    );
 
+    if (skip) {
+      return false;
+    }
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'Cut',
+      fields: fields,
+    );
+  }
   // ── INIT ───────────────────────────────────────────────────────────────────
   @override
   void initState() {
@@ -415,7 +441,13 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
       _erpFormKey.currentState?.focusField('entryWt');
       return;
     }
+    final assortProv = context.read<RoughAssortProvider>();
+    final mst = assortProv.list.firstWhere(
+          (e) => e.kapanNo == _formValues['kapanNo'],
+      orElse: () => RoughAssortModel(),
+    );
 
+    final dets = await assortProv.loadDetails(mst.roughAssortMstID!);
     final newRow = CutCreateDetModel(
       srno: _editingDetIndex != null
           ? _detRows[_editingDetIndex!].srno
@@ -429,6 +461,14 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
       ),
       purityType: purityType.isEmpty ? null : purityType,
       kapanNo: _formValues['kapanNo'],
+      finish: 'N',
+      clvFinish: 'N',
+      pmFinish: 'N',
+      lsFinish: 'N',
+      cutRec: 'N',
+      autoPktCreate: true,
+      purityCode: dets.first.purityCode,
+      lastCrId: 1,
     );
 
     setState(() {
@@ -584,6 +624,13 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
 
   // ── SAVE ───────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
+    // final exists = await _checkDuplicate(
+    //   fields: {
+    //     'CutNo': values['entryCutNo'].toString(),
+    //   },
+    // );
+    // if (exists) return;
+
     final prov = context.read<CutCreateProvider>();
     final merged = Map<String, dynamic>.from(values);
     merged['cutCreateDate'] = toUtcIso(merged['cutCreateDate']?.toString());

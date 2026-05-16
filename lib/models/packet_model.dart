@@ -70,17 +70,14 @@ class PacketMstModel {
   }
 
   Map<String, dynamic> toJson() => {
-    'PacketDate': packetDate,
-    'CutNo':      cutNo,
-    'ClvCut':     clvCut,
-    'Sflag':      sflag,
-    'Sdate':      sdate,
-    'LogID':      logID,
-    'PcID':       pcID,
-    'Ever':       ever,
-    'PacketRec':  packetRec,
-    'EntryType':  entryType,
-    'SLType':     slType,
+    'PacketDate': packetDate ?? '',
+    'CutNo': cutNo ?? '',
+    'ClvCut': clvCut ?? '',
+    'Sflag': sflag ?? '',
+    'Ever': ever ?? 1,
+    'PacketRec': packetRec ?? '',
+    'EntryType': entryType ?? '',
+    'SLType': slType ?? '',
   };
 }
 
@@ -309,49 +306,59 @@ class PacketDetModel {
   );
 
   Map<String, dynamic> toJson() => {
-    // ── Master link ──────────────────────────────────────────────────────────
-    if (packetMstID != null) 'PacketMstID': packetMstID,
 
-    // ── Lot identity (form se aata hai) ──────────────────────────────────────
-    if (cutNo    != null) 'CutNo':   cutNo,
-    if (lotNo    != null) 'LotNo':   lotNo,
-    if (lotCode  != null) 'LotCode': lotCode,   // default 'A' already set in model
-    if (srno     != null) 'Srno':    srno,
-    // ── Piece & Weight (form se) ──────────────────────────────────────────────
-    if (pc != null) 'Pc': pc,
-    if (wt != null) 'Wt': wt,
+    'PacketMstID': packetMstID ?? 0,
 
-    // ── Type / Grading (form dropdowns) ──────────────────────────────────────
-    if (pktType      != null && pktType!.isNotEmpty)  'PKTType':      pktType,
-    if (colorCode    != null) 'ColorCode':    colorCode,
-    if (tensionsCode != null) 'TensionsCode': tensionsCode,
-    if (fluoCode     != null) 'FluoCode':     fluoCode,
+    'CutNo': cutNo ?? '',
 
-    // ── Optional form fields (agar entry screen se aayein) ───────────────────
-    'PurityCode':            (purityCode   == null || purityCode   == 0) ? 1 : purityCode,
-    'ShapeCode':             (shapeCode    == null || shapeCode    == 0) ? 1 : shapeCode,
+    'LotNo': lotNo ?? 0,
 
-    // if (shapeCode  != null) 'ShapeCode':  shapeCode,
-    if (charniCode != null) 'CharniCode': charniCode,
-    if (pDmPer     != null) 'PDmPer':     pDmPer,
-    if (pDmWt      != null) 'PDmWt':      pDmWt,
-    if (remarksCode!= null) 'RemarksCode':remarksCode,
-    if (orderMstID != null && orderMstID! > 0) 'OrderMstID': orderMstID,
+    'LotCode': lotCode ?? '',
 
-    // ── Audit / process fields (screen mein set hote hain) ───────────────────
-    if (entryType   != null) 'EntryType':   entryType,
-    if (lastProcess != null) 'LastProcess': lastProcess,
-    if (packetDate  != null) 'PacketDate':  packetDate,
-    if (pktValid    != null) 'PktValid':    pktValid,
-    if (jno         != null) 'Jno':         jno,
-    if (logID       != null) 'LogID':       logID,
-    if (pcID        != null) 'PcID':        pcID,
+    'Srno': srno ?? 0,
 
-    // ── Edit-only: PacketDetID bhejo taaki UPDATE sahi row pe lage ───────────
-    if (packetDetID != null) 'PacketDetID': packetDetID,
+    'Pc': pc ?? 0,
+
+    'Wt': wt ?? 0,
+
+    'PKTType': pktType ?? '',
+
+    'ColorCode': colorCode ?? 0,
+
+    'TensionsCode': tensionsCode ?? 0,
+
+    'FluoCode': fluoCode ?? 0,
+
+    'PurityCode': purityCode ?? 1,
+
+    'ShapeCode': shapeCode ?? 1,
+
+    'CharniCode': charniCode ?? 0,
+
+    'PDmPer': pDmPer ?? 0,
+
+    'PDmWt': pDmWt ?? 0,
+
+    'RemarksCode': remarksCode ?? 0,
+
+    'OrderMstID': orderMstID ?? 0,
+
+    'EntryType': entryType ?? '',
+
+    'LastProcess': lastProcess ?? '',
+
+    'PacketDate': packetDate ?? '',
+
+    'PktValid': pktValid ?? '',
+
+    'Jno': jno ?? 0,
+    'PacketDetID': packetDetID ?? 0,
   };
+
+
+
   static double? _d(dynamic v) {
-    if (v == null) return null;
+    if (v == null) return 0;
     if (v is double) return v;
     if (v is int) return v.toDouble();
     return double.tryParse(v.toString());

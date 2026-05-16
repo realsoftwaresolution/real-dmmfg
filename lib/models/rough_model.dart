@@ -93,7 +93,7 @@ class RoughModel {
     lsPer: _toDouble(json['LsPer']),
     lsAmt: _toDouble(json['LsAmt']),
     mainCutNo: json['MainCutNo'],
-    dueDay: json['DueDay'],
+    dueDay: json['DueDay'] ?? 0,
     dueDate: json['DueDate'],
     remarks: json['Remarks'],
     totWt: _toDouble(json['TotWt']),
@@ -103,44 +103,60 @@ class RoughModel {
     amtDollar: _toDouble(json['AmtDollar']),
     rateRs: _toDouble(json['RateRs']),
     amtRs: _toDouble(json['AmtRs']),
-    totPcDb: json['TotPc'] != null ? (json['TotPc'] as num).toInt() : null,
+    totPcDb: json['TotPc'] != null ? (json['TotPc'] as num).toInt() : 0,
 
   );
 
   Map<String, dynamic> toJson() => {
-    'RoughDate': roughDate,
-    'Jno': jno,
-    'KapanNo': kapanNo,
-    'Site': site,
-    'PartyCode': partyCode,
-    'RoughTypeCode': roughTypeCode,
-    'ArticalCode': articalCode,
-    'JangadCharniCode': jangadCharniCode,
-    'RgExpPer': rgExpPer,
-    'RgExpAmt': rgExpAmt,
-    'PoExpPer': poExpPer,
-    'PoExpAmt': poExpAmt,
-    'RgSize': rgSize,
-    'RgSizeAmt': rgSizeAmt,
-    'PoSize': poSize,
-    'PoSizeAmt': poSizeAmt,
-    'LsPer': lsPer,
-    'LsAmt': lsAmt,
-    'MainCutNo': mainCutNo,
-    'DueDay': dueDay,
-    'DueDate': dueDate,
-    'Remarks': remarks,
-    'TotWt': totWt,
-    'Inv': inv,
-    'ExRate': exRate,
-    'RateDollar': rateDollar,
-    'AmtDollar': amtDollar,
-    'RateRs': rateRs,
-    'AmtRs': amtRs,
+    'RoughDate': roughDate ?? '',
+    'Jno': jno ?? 0,
+    'KapanNo': kapanNo ?? '',
+    'Site': site ?? '',
+    'PartyCode': partyCode ?? 0,
+    'RoughTypeCode': roughTypeCode ?? 0,
+    'ArticalCode': articalCode ?? 0,
+    'JangadCharniCode': jangadCharniCode ?? 0,
+
+    'RgExpPer': rgExpPer ?? 0,
+    'RgExpAmt': rgExpAmt ?? 0,
+
+    'PoExpPer': poExpPer ?? 0,
+    'PoExpAmt': poExpAmt ?? 0,
+
+    'RgSize': rgSize ?? 0,
+    'RgSizeAmt': rgSizeAmt ?? 0,
+
+    'PoSize': poSize ?? 0,
+    'PoSizeAmt': poSizeAmt ?? 0,
+
+    'LsPer': lsPer ?? 0,
+    'LsAmt': lsAmt ?? 0,
+
+    'MainCutNo': mainCutNo ?? '',
+
+    'DueDay': dueDay ?? 0,
+
+    'DueDate': dueDate ?? '',
+
+    'Remarks': remarks ?? '',
+
+    'TotWt': totWt ?? 0,
+
+    'Inv': inv ?? '',
+
+    'ExRate': exRate ?? 0,
+
+    'RateDollar': rateDollar ?? 0,
+
+    'AmtDollar': amtDollar ?? 0,
+
+    'RateRs': rateRs ?? 0,
+
+    'AmtRs': amtRs ?? 0,
   };
 
   static double? _toDouble(dynamic v) {
-    if (v == null) return null;
+    if (v == null) return 0;
     if (v is double) return v;
     if (v is int) return v.toDouble();
     return double.tryParse(v.toString());
@@ -189,7 +205,7 @@ class RoughDetModel {
   };
 
   static double? _toDouble(dynamic v) {
-    if (v == null) return null;
+    if (v == null) return 0;
     if (v is double) return v;
     if (v is int) return v.toDouble();
     return double.tryParse(v.toString());
@@ -231,7 +247,7 @@ class RoughProcessDaysModel {
   };
 
   static double? _toDouble(dynamic v) {
-    if (v == null) return null;
+    if (v == null) return 0;
     if (v is double) return v;
     if (v is int) return v.toDouble();
     return double.tryParse(v.toString());

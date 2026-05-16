@@ -121,18 +121,6 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
         // tabIndex: 0,
       ),
 
-      // ErpFieldConfig(
-      //   key: 'active',
-      //   label: 'ACTIVE',
-      //   type: ErpFieldType.dropdown,
-      //   hint: 'Select',
-      //   flex: 1,
-      //   dropdownItems: const [
-      //     ErpDropdownItem(label: 'Yes', value: 'Y'),
-      //     ErpDropdownItem(label: 'No', value: 'N'),
-      //   ],        sectionIndex: 0,
-      //   // tabIndex: 0,
-      // ),
     ],
     [
       ErpFieldConfig(
@@ -515,6 +503,8 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _formValues['active'] = 'true';
+    _erpFormKey.currentState?.updateFieldValue('active', 'true');
   }
 
   bool _showTableOnMobile = false;
@@ -582,6 +572,14 @@ class _MstFirmCompanyState extends State<MstFirmCompany> {
                         isEditMode: _isEditMode,
                         onFieldChanged: (key, value) {
                           _formValues[key] = value;
+                        },
+                        onFieldSubmitted: (key, value) {
+                          _formValues[key] = value;
+                          switch
+                          (key) {
+                            case 'companyName':
+                             _erpFormKey.currentState?.focusField('contactPerson');
+                          }
                         },
                         onSave: _onSave,
                         onCancel: _resetForm,

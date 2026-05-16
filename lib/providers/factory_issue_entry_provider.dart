@@ -154,35 +154,4 @@ class FactoryIssueEntryProvider extends BaseProvider {
     }
     throw Exception('Unexpected response format');
   }
-  // ── BUILD MODEL from form values ──────────────────────────────────────────
-  FactoryIssueMstModel _buildModel(Map<String, dynamic> v) {
-    int toI(dynamic x) => int.tryParse(x?.toString() ?? '0') ?? 0;
-
-    return FactoryIssueMstModel(
-      factoryIssDate: v['FactoryIssDate'],
-      time: v['Time'],
-
-      selectType: v['SelectType'],
-      dueDay: toI(v['DueDay']),
-      dueDate: v['DueDate'],
-
-      factoryCode: toI(v['FactoryCode']),
-      factoryName: v['FactoryName'],   // optional
-      factoryType: v['FactoryType'],
-
-      entryType: v['EntryType'],
-      jno: v['Jno'],
-
-      // totals (optional)
-      pkt: toI(v['Pkt']),
-      pc: toI(v['Pc']),
-      wt: (v['Wt'] as num?)?.toDouble(),
-
-      issPc: toI(v['IssPc']),
-      issWt: (v['IssWt'] as num?)?.toDouble(),
-
-      dmWt: (v['DmWt'] as num?)?.toDouble(),
-      dmPer: (v['DmPer'] as num?)?.toDouble(),
-    );
-  }
 }

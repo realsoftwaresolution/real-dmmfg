@@ -410,159 +410,232 @@ class FactoryIssueDetModel {
       );
 
   Map<String, dynamic> toJson() => {
-    // ── Always send ───────────────────────────────────────────────────────────
-    'SPKDeptIssMstID':  spkDeptIssMstID,
-    'PacketMstID':  PacketMstID,
-    'Srno':             srno,
-    'ID':               id,
-    'Jno':              jno,
-    'BCode':            bCode,
-    'PktNo':            pktNo,
-    'CutNo':            cutNo,
-    'ClvCut':           clvCut,
-    'Pc':               pc,
-    'Wt':               wt,
-    'IssPc':            issPc,
-    'IssWt':            issWt,
-    'Length':            length,
-    'RecPc':            recPc,
-    'sarinData':            sarinData,
-    if (fromDeptCode != null) 'FromDeptCode': fromDeptCode,
-    if (toDeptCode   != null) 'ToDeptCode':   toDeptCode,
-    'RecWt':            recWt,
-    'TotalPc':          totalPc,
-    'TotalWt':          totalWt,
-    'EntryType':        entryType,
-    if (fromCrId        != null) 'FromCrID':        fromCrId,
-    if (toCrId          != null) 'ToCrID':          toCrId,
-    if (deptProcessCode != null) 'DeptProcessCode': deptProcessCode,
 
-    // ── FK fields — 0 ya null dono null bhejo ────────────────────────────────
-    'EmployeeCode': (employeeCode == null || employeeCode == 0) ? null : employeeCode,
-    'RemarksCode':  (remarksCode  == null || remarksCode  == 0) ? null : remarksCode,
+    'SPKDeptIssMstID': spkDeptIssMstID ?? 0,
+    'PacketMstID': PacketMstID ?? 0,
 
-    // ── DEFAULT value fields — sirf tab bhejo jab value ho ───────────────────
-    if (dmWt             != null) 'DmWt':             dmWt,
-    if (dmPer            != null) 'DmPer':            dmPer,
-    if (kPc              != null) 'KPc':              kPc,
-    if (kWt              != null) 'KWt':              kWt,
-    if (brPc             != null) 'BrPc':             brPc,
-    if (brWt             != null) 'BrWt':             brWt,
-    if (lossPc           != null) 'LossPc':           lossPc,
-    if (lossWt           != null) 'LossWt':           lossWt,
-    if (lossPer          != null) 'LossPer':          lossPer,
-    if (topsPc           != null) 'TopsPc':           topsPc,
-    if (topsWt           != null) 'TopsWt':           topsWt,
-    if (signerCode       != null) 'SignerCode':       signerCode,
-    if (dueDay           != null) 'DueDay':           dueDay,
-    if (confDate         != null) 'ConfDate':         confDate,
-    if (confTime         != null) 'ConfTime':         confTime,
-    if (confLogID        != null) 'ConfLogID':        confLogID,
-    if (confPcID         != null) 'ConfPcID':         confPcID,
-    if (confEver         != null) 'ConfEver':         confEver,
-    if (confCrID         != null) 'ConfCrID':         confCrID,
-    if (confRec          != null) 'ConfRec':          confRec,
-    if (recDate          != null) 'RecDate':          recDate,
-    if (recTime          != null) 'RecTime':          recTime,
-    if (lastDetID        != null) 'LastDetID':        lastDetID,
-    if (kachaRec         != null) 'KachaRec':         kachaRec,
-    if (subPktCreate     != null) 'SubPktCreate':     subPktCreate,
-    if (spkPlanningDetID != null) 'SPKPlanningDetID': spkPlanningDetID,
-    if (pktType          != null) 'PktType':          pktType,
-    if (formType         != null) 'FormType':         formType,
-    if (clvRec           != null) 'CLVRec':           clvRec,
-    if (size             != null) 'Size':             size,
-    if (jnoRecPc         != null) 'JnoRecPc':         jnoRecPc,
-    if (partName         != null) 'PartName':         partName,
-    if (shapeCode        != null) 'ShapeCode':        shapeCode,
-    if (cutCode          != null) 'CutCode':          cutCode,
-    if (purityCode       != null) 'PurityCode':       purityCode,
-    if (colorCode        != null) 'ColorCode':        colorCode,
-    if (diam             != null) 'Diam':             diam,
-    if (acuraecy         != null) 'Acuraecy':         acuraecy,
-    if (amt              != null) 'Amt':              amt,
-    if (manualAuto       != null) 'ManualAuto':       manualAuto,
-    if (qrCode           != null) 'QrCode':           qrCode,
-    if (checkerCrId      != null) 'CheckerCrId':      checkerCrId,
-    if (signerCrId       != null) 'SignerCrId':       signerCrId,
-    if (plDmWt           != null) 'PlDmWt':           plDmWt,
-    if (plDmPer          != null) 'PlDmPer':          plDmPer,
-    if (diffDmWt         != null) 'DiffDmWt':         diffDmWt,
-    if (charniCode       != null) 'CharniCode':       charniCode,
-    if (mackRoughWt      != null) 'MackRoughWt':      mackRoughWt,
-    if (rateRs           != null) 'RateRs':           rateRs,
-    if (amountRs         != null) 'AmountRs':         amountRs,
-    if (rateID           != null) 'RateID':           rateID,
-    if (rateon           != null) 'Rateon':           rateon,
-    if (rate             != null) 'Rate':             rate,
-    if (amount           != null) 'Amount':           amount,
-    if (ratio            != null) 'Ratio':            ratio,
-    if (pcName           != null) 'PcName':           pcName,
-    if (machineSrNo      != null) 'MachineSrNo':      machineSrNo,
-    if (userName         != null) 'UserName':         userName,
-    if (crHeightMM       != null) 'CrHeightMM':       crHeightMM,
-    if (crHeightPer      != null) 'CrHeightPer':      crHeightPer,
-    if (crAng            != null) 'CrAng':            crAng,
-    if (totDepthMM       != null) 'TotDepthMM':       totDepthMM,
-    if (totDepthPer      != null) 'TotDepthPer':      totDepthPer,
-    if (pavDepthMM       != null) 'PavDepthMM':       pavDepthMM,
-    if (pavDepthPer      != null) 'PavDepthPer':      pavDepthPer,
-    if (pavAng           != null) 'PavAng':           pavAng,
-    if (gridleMM         != null) 'GridleMM':         gridleMM,
-    if (gridlePer        != null) 'GridlePer':        gridlePer,
-    if (tableMM          != null) 'TableMM':          tableMM,
-    if (tablePer         != null) 'TablePer':         tablePer,
-    if (tilt             != null) 'Tilt':             tilt,
-    if (stoneNo          != null) 'StoneNo':          stoneNo,
-    if (nukDeptCode      != null) 'NukDeptCode':      nukDeptCode,
-    if (nukRemarks       != null) 'NukRemarks':       nukRemarks,
-    if (diffRgPc         != null) 'DiffRgPc':         diffRgPc,
-    if (diffRgWt         != null) 'DiffRgWt':         diffRgWt,
-    if (diffPoWt         != null) 'DiffPoWt':         diffPoWt,
-    if (diffAmt          != null) 'DiffAmt':          diffAmt,
-    if (remarks          != null) 'Remarks':          remarks,
-    if (oldDeptIssMstID  != null) 'OldDeptIssMstID':  oldDeptIssMstID,
-    if (nukTopPc         != null) 'NukTopPc':         nukTopPc,
-    if (nukTopWt         != null) 'NukTopWt':         nukTopWt,
-    if (nukAmt           != null) 'NukAmt':           nukAmt,
-    if (oldShapeCode     != null) 'OldShapeCode':     oldShapeCode,
-    if (oldColorCode     != null) 'OldColorCode':     oldColorCode,
-    if (oldPurityCode    != null) 'OldPurityCode':    oldPurityCode,
-    if (jobJno           != null) 'JobJno':           jobJno,
-    if (jobBCode         != null) 'JobBCode':         jobBCode,
-    if (rRateID          != null) 'RRateID':          rRateID,
-    if (rRateon          != null) 'RRateon':          rRateon,
-    if (rRate            != null) 'RRate':            rRate,
-    if (rAmount          != null) 'RAmount':          rAmount,
-    if (fType            != null) 'FType':            fType,
-    if (pktValid         != null) 'PktValid':         pktValid,
-    if (inValidReason    != null) 'InValidReason':    inValidReason,
-    if (highLightEntry   != null) 'HighLightEntry':   highLightEntry,
-    if (tensionsCode     != null) 'TensionsCode':     tensionsCode,
-    if (planSignerCrID   != null) 'PlanSignerCrID':   planSignerCrID,
-    if (sarinOpt         != null) 'SarinOpt':         sarinOpt,
-    if (sarinMachine     != null) 'SarinMachine':     sarinMachine,
-    if (optDate          != null) 'OptDate':          optDate,
-    if (optStartTime     != null) 'OptStartTime':     optStartTime,
-    if (optEndTime       != null) 'OptEndTime':       optEndTime,
-    if (optDiffTime      != null) 'OptDiffTime':      optDiffTime,
-    if (optEmpCode       != null) 'OptEmpCode':       optEmpCode,
-    if (tableDiam        != null) 'TableDiam':        tableDiam,
-    if (dmDiam           != null) 'DmDiam':           dmDiam,
-    if (optRateOn        != null) 'OptRateOn':        optRateOn,
-    if (optRateID        != null) 'OptRateID':        optRateID,
-    if (optRate          != null) 'OptRate':          optRate,
-    if (optAmount        != null) 'OptAmount':        optAmount,
-    if (lsAmount         != null) 'LsAmount':         lsAmount,
-    if (orderMstID       != null) 'OrderMstID':       orderMstID,
+    'Srno': srno ?? 0,
+    'ID': id ?? 0,
+    'Jno': jno ?? 0,
 
-    if (planPurity       != null) 'PlanPurity':       planPurity,
-    if (recutEmp       != null) 'RecutEmp':       recutEmp,
-    if (planShape       != null) 'PlanShape':       planShape,
+    'BCode': bCode ?? '',
+    'PktNo': pktNo ?? '',
+    'CutNo': cutNo ?? '',
+    'ClvCut': clvCut ?? '',
+
+    'Pc': pc ?? 0,
+    'Wt': wt ?? 0,
+
+    'IssPc': issPc ?? 0,
+    'IssWt': issWt ?? 0,
+
+    'Length': length ?? 0,
+
+    'RecPc': recPc ?? 0,
+    'RecWt': recWt ?? 0,
+
+    'sarinData': sarinData ?? [],
+
+    'FromDeptCode': fromDeptCode ?? 0,
+    'ToDeptCode': toDeptCode ?? 0,
+
+    'TotalPc': totalPc ?? 0,
+    'TotalWt': totalWt ?? 0,
+
+    'EntryType': entryType ?? '',
+
+    'FromCrID': fromCrId ?? 0,
+    'ToCrID': toCrId ?? 0,
+
+    'DeptProcessCode': deptProcessCode ?? 0,
+
+    'EmployeeCode': employeeCode ?? 0,
+    'RemarksCode': remarksCode ?? 0,
+
+    'DmWt': dmWt ?? 0,
+    'DmPer': dmPer ?? 0,
+
+    'KPc': kPc ?? 0,
+    'KWt': kWt ?? 0,
+
+    'BrPc': brPc ?? 0,
+    'BrWt': brWt ?? 0,
+
+    'LossPc': lossPc ?? 0,
+    'LossWt': lossWt ?? 0,
+    'LossPer': lossPer ?? 0,
+
+    'TopsPc': topsPc ?? 0,
+    'TopsWt': topsWt ?? 0,
+
+    'SignerCode': signerCode ?? 0,
+
+    'DueDay': dueDay ?? 0,
+
+    'ConfDate': confDate ?? '',
+    'ConfTime': confTime ?? '',
+
+    'ConfLogID': confLogID ?? 0,
+    'ConfPcID': confPcID ?? '',
+
+    'ConfEver': confEver ?? 0,
+    'ConfCrID': confCrID ?? 0,
+
+    'ConfRec': confRec ?? '',
+
+    'RecDate': recDate ?? '',
+    'RecTime': recTime ?? '',
+
+    'LastDetID': lastDetID ?? 0,
+
+    'KachaRec': kachaRec ?? '',
+
+    'SubPktCreate': subPktCreate ?? false,
+
+    'SPKPlanningDetID': spkPlanningDetID ?? 0,
+
+    'PktType': pktType ?? '',
+    'FormType': formType ?? '',
+    'CLVRec': clvRec ?? '',
+
+    'Size': size ?? 0,
+
+    'JnoRecPc': jnoRecPc ?? 0,
+
+    'PartName': partName ?? 0,
+    'ShapeCode': shapeCode ?? 0,
+    'CutCode': cutCode ?? 0,
+    'PurityCode': purityCode ?? 0,
+    'ColorCode': colorCode ?? 0,
+
+    'Diam': diam ?? 0,
+
+    'Acuraecy': acuraecy ?? 0,
+
+    'Amt': amt ?? 0,
+
+    'ManualAuto': manualAuto ?? false,
+
+    'QrCode': qrCode ?? '',
+
+    'CheckerCrId': checkerCrId ?? 0,
+    'SignerCrId': signerCrId ?? 0,
+
+    'PlDmWt': plDmWt ?? 0,
+    'PlDmPer': plDmPer ?? 0,
+
+    'DiffDmWt': diffDmWt ?? 0,
+
+    'CharniCode': charniCode ?? 0,
+
+    'MackRoughWt': mackRoughWt ?? 0,
+
+    'RateRs': rateRs ?? 0,
+    'AmountRs': amountRs ?? 0,
+
+    'RateID': rateID ?? '',
+    'Rateon': rateon ?? '',
+
+    'Rate': rate ?? 0,
+    'Amount': amount ?? 0,
+    'Ratio': ratio ?? 0,
+
+    'PcName': pcName ?? '',
+    'MachineSrNo': machineSrNo ?? '',
+    'UserName': userName ?? '',
+
+    'CrHeightMM': crHeightMM ?? 0,
+    'CrHeightPer': crHeightPer ?? 0,
+    'CrAng': crAng ?? 0,
+
+    'TotDepthMM': totDepthMM ?? 0,
+    'TotDepthPer': totDepthPer ?? 0,
+
+    'PavDepthMM': pavDepthMM ?? 0,
+    'PavDepthPer': pavDepthPer ?? 0,
+    'PavAng': pavAng ?? 0,
+
+    'GridleMM': gridleMM ?? 0,
+    'GridlePer': gridlePer ?? 0,
+
+    'TableMM': tableMM ?? 0,
+    'TablePer': tablePer ?? 0,
+
+    'Tilt': tilt ?? 0,
+
+    'StoneNo': stoneNo ?? '',
+
+    'NukDeptCode': nukDeptCode ?? 0,
+    'NukRemarks': nukRemarks ?? '',
+
+    'DiffRgPc': diffRgPc ?? 0,
+    'DiffRgWt': diffRgWt ?? 0,
+    'DiffPoWt': diffPoWt ?? 0,
+    'DiffAmt': diffAmt ?? 0,
+
+    'Remarks': remarks ?? '',
+
+    'OldDeptIssMstID': oldDeptIssMstID ?? 0,
+
+    'NukTopPc': nukTopPc ?? 0,
+    'NukTopWt': nukTopWt ?? 0,
+    'NukAmt': nukAmt ?? 0,
+
+    'OldShapeCode': oldShapeCode ?? 0,
+    'OldColorCode': oldColorCode ?? 0,
+    'OldPurityCode': oldPurityCode ?? 0,
+
+    'JobJno': jobJno ?? 0,
+    'JobBCode': jobBCode ?? 0,
+
+    'RRateID': rRateID ?? '',
+    'RRateon': rRateon ?? '',
+
+    'RRate': rRate ?? 0,
+    'RAmount': rAmount ?? 0,
+
+    'FType': fType ?? '',
+
+    'PktValid': pktValid ?? '',
+
+    'InValidReason': inValidReason ?? '',
+
+    'HighLightEntry': highLightEntry ?? false,
+
+    'TensionsCode': tensionsCode ?? 0,
+
+    'PlanSignerCrID': planSignerCrID ?? 0,
+
+    'SarinOpt': sarinOpt ?? '',
+    'SarinMachine': sarinMachine ?? '',
+
+    'OptDate': optDate ?? '',
+    'OptStartTime': optStartTime ?? '',
+    'OptEndTime': optEndTime ?? '',
+    'OptDiffTime': optDiffTime ?? '',
+
+    'OptEmpCode': optEmpCode ?? 0,
+
+    'TableDiam': tableDiam ?? 0,
+    'DmDiam': dmDiam ?? 0,
+
+    'OptRateOn': optRateOn ?? '',
+    'OptRateID': optRateID ?? '',
+
+    'OptRate': optRate ?? 0,
+    'OptAmount': optAmount ?? 0,
+
+    'LsAmount': lsAmount ?? 0,
+
+    'OrderMstID': orderMstID ?? 0,
+
+    'PlanPurity': planPurity ?? '',
+    'RecutEmp': recutEmp ?? '',
+    'PlanShape': planShape ?? '',
   };
 
   static double? _d(dynamic v) {
-    if (v == null) return null;
+    if (v == null) return 0;
     if (v is double) return v;
     if (v is int) return v.toDouble();
     return double.tryParse(v.toString());

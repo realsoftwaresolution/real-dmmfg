@@ -88,7 +88,7 @@ class SpkDeptIssProvider extends BaseProvider {
       ..remove('FromCrID');
     // 🔥 REMOVE HERE
     final result = await request<SpkDeptIssMstModel>(
-      call: () => api.post('/spkDeptIsssssss', data: {
+      call: () => api.post('/spkDeptIssasaadadada', data: {
         ...modelMap, // ✅ cleaned
         'details': details.map((e) {
           final map = e.toJson();
@@ -193,7 +193,7 @@ class SpkDeptIssProvider extends BaseProvider {
       logID:           toI(v['logID']?.toString()),
       pcID:            v['pcID'],
       ever:            toI(v['ever']?.toString()),
-      entryType:       v['entryType'] ?? 'B',
+      entryType:       v['entryType'] ?? 'DEPTISS',
       repairing:       v['repairing'] ?? 'N',
       formType:        v['formType'] ?? 'SPK',
       proType:         v['proType'] ?? 'SPK',
