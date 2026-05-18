@@ -33,12 +33,7 @@ import '../providers/counter_display_det_provider.dart';
 import '../providers/purity_provider.dart';
 import '../providers/shape_provider.dart';
 import '../providers/user_visibility_provider.dart';
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-
-String _f3(double? v) => v == null ? '0.000' : v.toStringAsFixed(3);
+import '../utils/constants.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  WIDGET
@@ -88,6 +83,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
   int? _fromDeptCode;
 
   int? _toCrId;
+  String _autoRec = 'N';
+
   String? _toDeptName;
   int? _toDeptCodeVal;
 
@@ -385,6 +382,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         _toCrId = crId;
         _toDeptName = deptName;
         _toDeptCodeVal = counter.deptCode;
+        // AUTO REC SET
+        _autoRec = (counter.autoRec ?? 'N').toString();
         _formValues['toCrId'] = crIdStr;
         _formValues['toDept'] = deptName;
       });
@@ -476,12 +475,12 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
 
-    set('orgPc', r.pc?.toString());
-    set('orgWt', _f3(r.wt));
-    set('recWt', _f3(r.recWt));
+    set('orgPc', r.pc?.toString() );
+    set('orgWt', fThreeDecimal(r.wt));
+    set('recWt', fThreeDecimal(r.recWt));
     set('recPc', r.recPc.toString());
     set('issPc', r.issPc?.toString());
-    set('issWt', _f3(r.issWt));
+    set('issWt', fThreeDecimal(r.issWt));
     set('jnoRecPc', r.jnoRecPc?.toString());
     set('shapeCode', r.shapeCode?.toString());
     set('purityCode', r.purityCode?.toString());
@@ -501,8 +500,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     final base = recWt > 0 ? recWt : issWt;
     final dmPer = double.tryParse(_entryVals['dmPer'] ?? '') ?? 0;
     final dmWt = base * dmPer / 100;
-    _entryVals['dmWt'] = _f3(dmWt);
-    _erpFormKey.currentState?.updateFieldValue('dmWt', _f3(dmWt));
+    _entryVals['dmWt'] = fThreeDecimal(dmWt);
+    _erpFormKey.currentState?.updateFieldValue('dmWt', fThreeDecimal(dmWt));
   }
 
   // DM PER
@@ -536,10 +535,10 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     // ✅ UPDATED FORMULA
     final lossWt = issWt - recWt - kWt;
 
-    _entryVals['lossWt'] = _f3(lossWt);
+    _entryVals['lossWt'] = fThreeDecimal(lossWt);
     _entryVals['lossPc'] = '${issPc - kPc}';
 
-    _erpFormKey.currentState?.updateFieldValue('lossWt', _f3(lossWt));
+    _erpFormKey.currentState?.updateFieldValue('lossWt', fThreeDecimal(lossWt));
     _erpFormKey.currentState?.updateFieldValue('lossPc', '${issPc - kPc}');
   }
 
@@ -608,14 +607,14 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
 
     _clearEntryFields();
 
-    // Return focus to scan field
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _erpFormKey.currentState?.focusField('scanValue'),
-    );
-
     _erpFormKey.currentState?.setFieldReadOnly('fromCrId', true);
     _erpFormKey.currentState?.setFieldReadOnly('toCrId', true);
     _erpFormKey.currentState?.setFieldReadOnly('deptProcessCode', true);
+
+    Future.delayed(
+      const Duration(milliseconds: 50),
+          () => _erpFormKey.currentState?.focusField('scanValue'),
+    );
   }
 
   /// Build a detail row for an existing (edit) record.
@@ -643,7 +642,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       kachaRec: existing.kachaRec,
       qrCode: existing.qrCode,
       entryType: existing.entryType,
-      formType: existing.formType,
       fType: existing.fType,
       pktType: existing.pktType,
       fromDeptCode: _fromDeptCode,
@@ -710,8 +708,10 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       height: _isFieldVisible('HEIGHT')
           ? double.tryParse(_entryVals['height'].toString())
           : null,
-      confRec: 'Y',
-      clvRec: 'N',
+      formType: 'SPK',
+      confRec: _autoRec,
+      clvRec: 'S',
+      confCrID: _toCrId,
     );
   }
 
@@ -766,7 +766,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
       dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
       entryType: 'B',
-      formType: 'MAKABLE MANUAL',
       fType: 'MAKABLE',
       pktType: 'A',
       diffDmWt: double.tryParse(_entryVals['diffDmWt'] ?? '0.000'),
@@ -804,8 +803,10 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       height: _isFieldVisible('HEIGHT')
           ? double.tryParse(_entryVals['height'].toString())
           : null,
-      confRec: 'Y',
-      clvRec: 'N',
+      formType: 'SPK',
+      confRec: _autoRec,
+      clvRec: 'S',
+      confCrID: _toCrId,
     );
   }
 
@@ -823,21 +824,21 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     }
 
     set('orgPc', r.pc?.toString());
-    set('orgWt', _f3(r.wt));
+    set('orgWt', fThreeDecimal(r.wt));
     set('issPc', r.issPc?.toString());
-    set('issWt', _f3(r.issWt));
+    set('issWt', fThreeDecimal(r.issWt));
     set('recPc', r.recPc?.toString());
-    set('recWt', _f3(r.recWt));
+    set('recWt', fThreeDecimal(r.recWt));
     set('dmPer', r.dmPer?.toStringAsFixed(2));
-    set('dmWt', _f3(r.dmWt));
+    set('dmWt', fThreeDecimal(r.dmWt));
     set('kpc', r.kPc?.toString());
-    set('kwt', _f3(r.kWt));
+    set('kwt', fThreeDecimal(r.kWt));
     set('brPc', r.brPc?.toString());
-    set('brWt', _f3(r.brWt));
+    set('brWt', fThreeDecimal(r.brWt));
     set('lossPc', r.lossPc?.toString());
-    set('lossWt', _f3(r.lossWt));
+    set('lossWt', fThreeDecimal(r.lossWt));
     set('topsPc', r.topsPc?.toString());
-    set('topsWt', _f3(r.topsWt));
+    set('topsWt', fThreeDecimal(r.topsWt));
     set('employee', r.employeeCode?.toString());
     set('signer', r.signerCode?.toString());
     set('remarks', r.remarksCode?.toString());
@@ -944,22 +945,64 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _clearEntryFields() {
+
     const keys = [
+
+      // SCAN
+      'scanValue',
+
+      // ORG
+      'orgPc',
+      'orgWt',
+
+      // ISSUE
+      'issPc',
+      'issWt',
+
+      // RECEIVE
+      'recPc',
+      'recWt',
+
+      // DM
       'dmWt',
       'dmPer',
+
+      // SHAPE / COLOR / PURITY
       'shape',
       'color',
       'purity',
       'cutCode',
+
+      // OTHER
       'plDmWt',
       'diffDmWt',
       'recutEmp',
       'amount',
+
+      // OPTIONAL
+      'diam',
+      'length',
+      'height',
+
+      'polishCode',
+      'symmetryCode',
+      'fluo',
+      'tensionCode',
+
+      'remarks',
+      'qrCode',
     ];
+
     for (final k in keys) {
       _entryVals.remove(k);
-      _erpFormKey.currentState?.updateFieldValue(k, '');
+      _erpFormKey.currentState
+          ?.updateFieldValue(
+        k,
+        '',
+      );
     }
+    // CLEAR SCANNED MODEL
+    _scannedDet = null;
   }
 
   /// Returns true if the field name exists in the merged DEPT visibility map.
@@ -1024,13 +1067,13 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
             'bCode': r.bCode ?? '',
             'pktNo': r.pktNo ?? '',
             'cutNo': r.cutNo ?? '',
-            'issPc': r.issPc?.toString() ?? '',
-            'issWt': _f3(r.issWt),
-            'recPc': r.recPc?.toString() ?? '',
-            'recWt': _f3(r.recWt),
-            'dmWt': _f3(r.dmWt),
+            'issPc': r.issPc?.toString() ?? '0',
+            'issWt': fThreeDecimal(r.issWt),
+            'recPc': r.recPc?.toString() ?? '0',
+            'recWt': fThreeDecimal(r.recWt),
+            'dmWt': fThreeDecimal(r.dmWt),
             'dmPer': r.dmPer?.toStringAsFixed(2) ?? '',
-            'diffDmWt': r.diffDmWt ?? '0.000',
+            'diffDmWt': r.diffDmWt?.toStringAsFixed(3) ?? '',
             'recutEmp': r.recutEmp ?? '',
             'remarks': _remarksNameFor(r.remarksCode),
             'diam': r.diam?.toString() ?? '0.00',
@@ -1048,7 +1091,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
             'partName': r.partName ?? '',
             'orderMstId': r.orderMstID ?? '',
             'plDmPer': r.plDmPer ?? '0.00',
-            'plDmWt': r.plDmWt ?? '0.000',
+            'plDmWt': r.plDmWt?.toStringAsFixed(3) ?? '',
             'fluo': r.fluo ?? '',
             'tensionCode': r.tensionsCode ?? '',
             'symmetryCode': r.symmetryCode ?? '',
@@ -1542,7 +1585,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           key: 'scanValue',
           label: 'BCODE',
           type: ErpFieldType.text,
-          readOnly: _detDisplay.isNotEmpty,
+          readOnly: _isEditMode,
           sectionIndex: 2,
           width: 200,
         ),
@@ -1985,35 +2028,91 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         }
       },
 
-      onFieldSubmitted: (key, value) {
-        if (key != 'scanValue') return;
+        onFieldSubmitted: (key, value) async {
 
-        final scanVal = value.toString().trim();
-        if (scanVal.isEmpty) return;
+          // ─────────────────────────────
+          // HEIGHT SUBMIT
+          // ─────────────────────────────
 
-        // ✅ Duplicate check
-        if (_editingDetIndex == null) {
-          final isDuplicate = _detRows.any(
-            (r) => r.bCode?.toString() == scanVal,
-          );
+          if (key == 'height') {
 
-          if (isDuplicate) {
-            _showSnack('This BCode already added');
-            _erpFormKey.currentState?.updateFieldValue('scanValue', '');
-            _entryVals['scanValue'] = '';
+            // VALIDATION
+            final height =
+                double.tryParse(
+                  value.toString(),
+                ) ?? 0;
 
-            Future.delayed(
-              const Duration(milliseconds: 100),
-              () => _erpFormKey.currentState?.focusField('scanValue'),
-            );
+            if (height <= 0) {
+
+              _showSnack(
+                'Height must be greater than 0',
+              );
+
+              return;
+            }
+
+            // ADD ENTRY
+            _addEntry();
+
             return;
           }
-        }
 
-        // 🚀 MAIN API CALL
-        _isBCodePending = true;
-        _onBCodeScanned(scanVal);
-      },
+          // ─────────────────────────────
+          // SCAN VALUE
+          // ─────────────────────────────
+
+          if (key != 'scanValue') return;
+
+          final scanVal =
+          value.toString().trim();
+
+          if (scanVal.isEmpty) return;
+
+          // DUPLICATE CHECK
+          if (_editingDetIndex == null) {
+
+            final isDuplicate =
+            _detRows.any(
+                  (r) =>
+              r.bCode?.toString() ==
+                  scanVal,
+            );
+
+            if (isDuplicate) {
+
+              _showSnack(
+                'This BCode already added',
+              );
+
+              _erpFormKey.currentState
+                  ?.updateFieldValue(
+                'scanValue',
+                '',
+              );
+
+              _entryVals['scanValue'] = '';
+
+              Future.delayed(
+
+                const Duration(
+                  milliseconds: 100,
+                ),
+
+                    () => _erpFormKey.currentState
+                    ?.focusField(
+                  'scanValue',
+                ),
+              );
+
+              return;
+            }
+          }
+
+          // MAIN API CALL
+          _isBCodePending = true;
+
+          _onBCodeScanned(scanVal);
+        },
 
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
       onSave: _detRows.isNotEmpty ? _onSave : null,
@@ -2105,39 +2204,39 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     return {
       // 🔹 PCS / WT
       'orgPc': '${foldInt((r) => r.pc ?? 0)}',
-      'orgWt': _f3(fold((r) => r.wt ?? 0)),
+      'orgWt': fThreeDecimal(fold((r) => r.wt ?? 0)),
 
       'issPc': '${foldInt((r) => r.issPc ?? 0)}',
-      'issWt': _f3(totIssWt),
+      'issWt': fThreeDecimal(totIssWt),
 
       'recPc': '${foldInt((r) => r.recPc ?? 0)}',
-      'recWt': _f3(totRecWt),
+      'recWt': fThreeDecimal(totRecWt),
 
       // 🔹 DM
       'dmPer': dmPerStr,
-      'dmWt': _f3(totDmWt),
+      'dmWt': fThreeDecimal(totDmWt),
 
       // 🔹 K
       'kPc': '${foldInt((r) => r.kPc ?? 0)}',
-      'kWt': _f3(fold((r) => r.kWt ?? 0)),
+      'kWt': fThreeDecimal(fold((r) => r.kWt ?? 0)),
 
       // 🔹 BR
       'brPc': '${foldInt((r) => r.brPc ?? 0)}',
-      'brWt': _f3(fold((r) => r.brWt ?? 0)),
+      'brWt': fThreeDecimal(fold((r) => r.brWt ?? 0)),
 
       // 🔹 LOSS
       'lossPc': '${foldInt((r) => r.lossPc ?? 0)}',
-      'lossWt': _f3(fold((r) => r.lossWt ?? 0)),
+      'lossWt': fThreeDecimal(fold((r) => r.lossWt ?? 0)),
 
       // 🔹 TOPS
       'topsPc': '${foldInt((r) => r.topsPc ?? 0)}',
-      'topsWt': _f3(fold((r) => r.topsWt ?? 0)),
-      'plDmWt': _f3(fold((r) => r.plDmWt ?? 0)),
-      'plDmPer': _f3(fold((r) => r.plDmPer ?? 0)),
-      'diffDmWt': _f3(fold((r) => r.diffDmWt ?? 0)),
+      'topsWt': fThreeDecimal(fold((r) => r.topsWt ?? 0)),
+      'plDmWt': fThreeDecimal(fold((r) => r.plDmWt ?? 0)),
+      'plDmPer': fThreeDecimal(fold((r) => r.plDmPer ?? 0)),
+      'diffDmWt': fThreeDecimal(fold((r) => r.diffDmWt ?? 0)),
 
       // 🔹 NEW (IMPORTANT)
-      'amount': _f3(fold((r) => r.amount ?? 0)), // ✅ if exists
+      'amount': fThreeDecimal(fold((r) => r.amount ?? 0)), // ✅ if exists
       // ❌ DO NOT add totals for:
       // diam, length, ratio, shape, color, purity etc.
     };
@@ -2190,7 +2289,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         ..['jno'] = dets.isNotEmpty ? (dets.first.jno?.toString() ?? '') : ''
         ..['totPkt'] = '${dets.length}'
         ..['totalPc'] = '${dets.fold<int>(0, (s, r) => s + (r.totalPc ?? 0))}'
-        ..['totalWt'] = _f3(
+        ..['totalWt'] = fThreeDecimal(
           dets.fold<double>(0.0, (s, r) => s + (r.totalWt ?? 0.0)),
         );
 

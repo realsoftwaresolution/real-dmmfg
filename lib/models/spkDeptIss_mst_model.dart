@@ -1,3 +1,5 @@
+import '../utils/constants.dart';
+
 class SpkDeptIssMstModel {
   final int?    spkDeptIssMstID;
   final String? spkDeptIssDate;
@@ -268,6 +270,8 @@ class SpkDeptIssDetModel {
   final double? optRate;
   final double? optAmount;
   final double? lsAmount;
+  final double? LastDmPer;
+  final double? LastDmWt;
   final int?    orderMstID;
   final dynamic recutEmp;
   final dynamic planPurity;
@@ -422,6 +426,8 @@ class SpkDeptIssDetModel {
     this.orderMstId,
     this.planPurity,
     this.planShape,
+    this.LastDmWt,
+    this.LastDmPer,
     this.recutEmp,  this.fluo, this.symmetryCode, this.polishCode,
   });
 
@@ -500,8 +506,10 @@ class SpkDeptIssDetModel {
         qrCode:           json['QrCode'],
         checkerCrId:      json['CheckerCrId'],
         signerCrId:       json['SignerCrId'],
+        LastDmWt:           _d(json['LastDmWt']),
         plDmWt:           _d(json['PlDmWt']),
         plDmPer:          _d(json['PlDmPer']),
+        LastDmPer:          _d(json['LastDmPer']),
         diffDmWt:         _d(json['DiffDmWt']),
         charniCode:       json['CharniCode'],
         mackRoughWt:      _d(json['MackRoughWt']),
@@ -588,7 +596,9 @@ class SpkDeptIssDetModel {
     'Pc': pc ?? 0,
     'Wt': wt ?? 0,
     'IssPc': issPc ?? 0,
-    'IssWt': issWt ?? 0,
+    'IssWt': issWt ?? 0.000,
+    'LastDmWt': LastDmWt ?? 0.000,
+    'LastDmPer': LastDmPer ?? 0,
     'Length': length ?? 0,
     'RecPc': recPc ?? 0,
     'RecWt': recWt ?? 0,
@@ -744,7 +754,7 @@ extension SpkDeptIssMstExt on SpkDeptIssMstModel {
     'deptProcessCode': deptProcessCode?.toString() ?? '',
     'entryType':       entryType ?? '',
     'totalPc':         totalPc.toString(),
-    'totalWt':         totalWt.toStringAsFixed(3),
+    'totalWt':         fThreeDecimal(totalWt),
     'totPkt':          (totPkt ?? 0).toString(),   // ← ADD
     'jno':             jnoFirst?.toString() ?? '',  // ← ADD
     'users':           users ?? '',                 // ← ADD

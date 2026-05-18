@@ -106,3 +106,9 @@ String toIso(String? v) {
     return v;
   }
 }
+
+
+
+String f2TwoDecimal(double? v) => v == null ? '' : v.toStringAsFixed(2);
+
+String fThreeDecimal(double? v) => v == null ? '' : v.toStringAsFixed(3);

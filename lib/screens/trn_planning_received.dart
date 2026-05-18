@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:collection/collection.dart';
 import 'package:diam_mfg/models/planning_received_model.dart';
+import 'package:diam_mfg/models/spkDeptIss_mst_model.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
 import 'package:diam_mfg/providers/counter_manager_det_provider.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
@@ -26,12 +29,7 @@ import '../providers/purity_provider.dart';
 import '../providers/shape_provider.dart';
 import '../providers/trn_planning_received_provider.dart';
 import '../providers/user_visibility_provider.dart';
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-
-String _f3(double? v) => v == null ? '0.000' : v.toStringAsFixed(3);
+import '../utils/constants.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  WIDGET
@@ -83,6 +81,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
   String? _fromDeptName;
   int? _fromDeptCode;
   String? _filteredBCode; // ← add this with your other state variables
+  String _autoRec = 'N';
 
   int? _toCrId;
   String? _toDeptName;
@@ -184,6 +183,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
         context.read<UserVisibilityProvider>().load(),
       ]);
       if (!mounted) return;
+      _resetForm();
       _setDefaultFormValues();
 
       final loggedUser = context.read<AuthProvider>().user;
@@ -322,6 +322,8 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
         _toCrId = crId;
         _toDeptName = deptName;
         _toDeptCodeVal = counter.deptCode;
+        // AUTO REC SET
+        _autoRec = (counter.autoRec ?? 'N').toString();
         _formValues['toCrId'] = crIdStr;
         _formValues['toDept'] = deptName;
       });
@@ -374,44 +376,128 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
   //  BCODE SCAN
   // ─────────────────────────────────────────────────────────────────────────
 
+  // ─────────────────────────────────────────────
+  // _onBCodeScanned
+  // ─────────────────────────────────────────────
+
   Future<void> _onBCodeScanned(String bCode) async {
-    await context.read<TrnPlanningReceivedProvider>().fetchByBCodePlanningList(
+    final prov = context.read<TrnPlanningReceivedProvider>();
+
+    // CLEAR OLD TEMP DATA
+    prov.clearTempScanData();
+
+    final planningData = await prov.fetchByBCodePlanningList(
       bCode: bCode,
+
       fromCrId: _fromCrId!.toString(),
     );
 
-    final rows = await context.read<TrnPlanningReceivedProvider>().fetchByBCode(
-      bCode: bCode,
-      fromCrId: _fromCrId!.toString(),
-    );
+    // ─────────────────────────────
+    // SARIN API
+    // ─────────────────────────────
 
-    if (!mounted) return;
-    _isBCodePending = false;
+    List<PlanningReceivedDetModel> sarinData = [];
 
-    if (rows.isEmpty) {
-      ErpResultDialog.showError(
-        context: context,
-        theme: _theme,
-        title: 'BCode',
-        message: 'BCode "$bCode" not found!',
+    try {
+      sarinData = await prov.fetchByBCode(
+        bCode: bCode,
+
+        fromCrId: _fromCrId!.toString(),
+        context:context,
       );
+    } catch (e) {
+      if (!mounted) return;
+
+      prov.clearTempScanData();
+
+      await ErpResultDialog.showError(
+        context: context,
+
+        theme: _theme,
+
+        title: 'Sarin Validation',
+
+        message: e.toString().replaceAll('Exception: ', ''),
+      );
+
       _entryVals['scanValue'] = '';
+
       _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+
       Future.delayed(
         const Duration(milliseconds: 100),
+
         () => _erpFormKey.currentState?.focusField('scanValue'),
       );
+
       return;
     }
 
-    final r = rows.first;
-    setState(() => _scannedDet = r);
-    // ── Now also update the BarCode table with sarinData from scanned row ──
-    if (r.sarinData != null && r.sarinData!.isNotEmpty) {
-      // sarinData is already on the model; _buildTableByBarCodeData
-      // reads from prov.list which uses e.sarinData — so just rebuild
-      setState(() {});
+    if (!mounted) return;
+
+    _isBCodePending = false;
+
+    // ─────────────────────────────
+    // VALIDATION
+    // ─────────────────────────────
+
+    final hasPlanning = planningData.isNotEmpty;
+
+    final hasSarin =
+        sarinData.isNotEmpty &&
+        sarinData.any((e) => e.sarinData != null && e.sarinData!.isNotEmpty);
+
+    // ─────────────────────────────
+    // ERROR
+    // ─────────────────────────────
+
+    if (!hasPlanning || !hasSarin) {
+      prov.clearTempScanData();
+
+      await ErpResultDialog.showError(
+        context: context,
+
+        theme: _theme,
+
+        title: 'BCode',
+
+        message: !hasPlanning
+            ? 'Planning data not found!'
+            : 'Sarin data not found!',
+      );
+
+      _entryVals['scanValue'] = '';
+
+      _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+
+      Future.delayed(
+        const Duration(milliseconds: 100),
+
+        () => _erpFormKey.currentState?.focusField('scanValue'),
+      );
+
+      return;
     }
+
+    // ─────────────────────────────
+    // SUCCESS
+    // ─────────────────────────────
+
+    prov.commitTempScanData();
+
+    setState(() {
+      _highlightedBCode = bCode;
+    });
+
+    _entryVals['scanValue'] = '';
+
+    _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+
+    Future.delayed(
+      const Duration(milliseconds: 100),
+
+      () => _erpFormKey.currentState?.focusField('scanValue'),
+    );
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -421,7 +507,8 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
   Future<void> _onRowTap(Map<String, dynamic> row) async {
     final raw = row['_raw'] as PlanningReceivedMstModel;
     final prov = context.read<TrnPlanningReceivedProvider>();
-    final details = await prov.loadDetails(raw.spkDeptIssMstID!);
+    await prov.loadDetails(raw.spkDeptIssMstID!);
+    await prov.loadSarinDataDetails(raw.spkDeptIssMstID!);
     if (!mounted) return;
 
     if (raw.fromCrID != null) _onFromSelected(raw.fromCrID.toString());
@@ -437,7 +524,6 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
       _selectedRow = row;
       _selectedMst = raw;
       _isEditMode = true;
-      _detRows = details;
       _editingDetIndex = null;
       _processSelected = raw.deptProcessCode != null;
       _isAdding = false;
@@ -472,27 +558,76 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
 
   //  DELETE
   Future<void> _onDelete() async {
-    if (_selectedMst?.spkDeptIssMstID == null) return;
+    if (_selectedMst?.spkDeptIssMstID == null) {
+      return;
+    }
+
+    final prov = context.read<TrnPlanningReceivedProvider>();
+
+    // UNIQUE DELETE DATA
+    final seen = <String>{};
+
+    final data = prov.planningDetList
+        .where((e) {
+          print(jsonEncode(e));
+          final key = '${e.bCode}_${e.spkDeptIssMstID}';
+
+          if (seen.contains(key)) {
+            return false;
+          }
+
+          seen.add(key);
+
+          return true;
+        })
+        .map((e) {
+          return {'bcode': e.bCode, 'spkDeptIssMstId': e.spkDeptIssMstID};
+        })
+        .toList();
+
+    if (data.isEmpty) {
+      await ErpResultDialog.showError(
+        context: context,
+
+        theme: _theme,
+
+        title: 'Delete',
+
+        message: 'No planning data found for delete.',
+      );
+
+      return;
+    }
 
     final confirm = await ErpDeleteDialog.show(
       context: context,
+
       theme: _theme,
-      title: 'Dept Issue',
-      itemName: 'ID: ${_selectedMst!.spkDeptIssMstID}',
-    );
-    if (confirm != true || !mounted) return;
 
-    final success = await context.read<TrnPlanningReceivedProvider>().delete(
-      _selectedMst!.spkDeptIssMstID!,
+      title: 'Planning Delete',
+
+      itemName: '${data.length} Planning Record(s)',
     );
 
-    if (success && mounted) {
-      final id = _selectedMst?.spkDeptIssMstID;
+    if (confirm != true || !mounted) {
+      return;
+    }
+
+    final success = await prov.deleteBulk(data);
+
+    if (!mounted) return;
+
+    if (success) {
+      final deletedCount = data.length;
+
       _resetForm();
+
       await ErpResultDialog.showDeleted(
         context: context,
+
         theme: _theme,
-        itemName: 'Dept Issue $id',
+
+        itemName: '$deletedCount Planning Record(s)',
       );
     }
   }
@@ -502,7 +637,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _resetForm() {
-    _erpFormKey.currentState?.resetForm();
+    // _erpFormKey.currentState?.resetForm();
     _entryVals.clear();
     final prov = context.read<TrnPlanningReceivedProvider>();
     prov.clearForReset(); // 🔥 THIS LINE
@@ -561,38 +696,31 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
     final toItems = _fromCrId == null
         ? <ErpDropdownItem>[]
         : mgDetProv.list
-        .where(
-          (m) =>
-      m.crId == _fromCrId &&
-          m.allowCrId != null,
-    )
-        .map((m) => m.allowCrId!)
-        .toSet()
-        .map((allowId) {
-      try {
-        final c = counterProv.list.firstWhere(
-              (c) =>
-          c.crId == allowId &&
-              c.active == true,
-        );
+              .where((m) => m.crId == _fromCrId && m.allowCrId != null)
+              .map((m) => m.allowCrId!)
+              .toSet()
+              .map((allowId) {
+                try {
+                  final c = counterProv.list.firstWhere(
+                    (c) => c.crId == allowId && c.active == true,
+                  );
 
-        // OPTIONAL:
-        // avoid same FROM manager in TO
-        if (c.crId == _fromCrId) {
-          return null;
-        }
+                  // OPTIONAL:
+                  // avoid same FROM manager in TO
+                  if (c.crId == _fromCrId) {
+                    return null;
+                  }
 
-        return ErpDropdownItem(
-          label:
-          '${c.crName ?? ''} | ${_deptNameFor(c.deptCode)}',
-          value: c.crId?.toString() ?? '',
-        );
-      } catch (_) {
-        return null;
-      }
-    })
-        .whereType<ErpDropdownItem>()
-        .toList();
+                  return ErpDropdownItem(
+                    label: '${c.crName ?? ''} | ${_deptNameFor(c.deptCode)}',
+                    value: c.crId?.toString() ?? '',
+                  );
+                } catch (_) {
+                  return null;
+                }
+              })
+              .whereType<ErpDropdownItem>()
+              .toList();
 
     final processItems = (_fromCrId == null || _toCrId == null)
         ? <ErpDropdownItem>[]
@@ -836,6 +964,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
 
   @override
   Widget build(BuildContext context) {
+    print(_isEditMode);
     return Consumer<TrnPlanningReceivedProvider>(
       builder: (ctx, prov, _) => Padding(
         padding: const EdgeInsets.all(8),
@@ -950,8 +1079,197 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
         _onBCodeScanned(scanVal);
       },
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
-      isShowSaveButton: false,
       onCancel: _resetForm,
+      onSave: (val) async {
+        final prov = context.read<TrnPlanningReceivedProvider>();
+
+        String toIso(String? v) {
+          if (v == null || v.isEmpty) return '';
+          try {
+            return DateFormat(
+              'yyyy-MM-dd',
+            ).format(DateFormat('dd/MM/yyyy').parse(v));
+          } catch (_) {
+            return v;
+          }
+        }
+
+        int? toDeptCode;
+        if (_toCrId != null) {
+          try {
+            toDeptCode = context
+                .read<CounterProvider>()
+                .list
+                .firstWhere((c) => c.crId == _toCrId)
+                .deptCode;
+          } catch (_) {}
+        }
+        final merged = Map<String, dynamic>.from(val)
+          ..['Stime'] = DateFormat('hh:mm a').format(DateTime.now())
+          ..['Sdate'] = DateFormat('yyyy-MM-dd').format(DateTime.now())
+          ..['spkDeptIssDate'] = toIso(val['spkDeptIssDate']?.toString())
+          ..['fromCrID'] = _fromCrId?.toString() ?? ''
+          ..['toCrID'] = _toCrId?.toString() ?? ''
+          ..['deptCode'] = toDeptCode?.toString() ?? '';
+
+        final rows = prov.planningDetList.map((e) {
+          return PlanningReceivedDetModel(
+            jno: e.jno,
+            jnoRecPc: e.jnoRecPc,
+            bCode: e.bCode,
+            pktNo: e.pktNo,
+            cutNo: e.cutNo,
+            clvCut: e.clvCut,
+            shapeCode: e.shapeCode,
+            purityCode: e.purityCode,
+            colorCode: e.colorCode,
+            diam: e.diam,
+            kachaRec: e.kachaRec ?? 'Y',
+            fromDeptCode: _fromDeptCode,
+            toDeptCode: _toDeptCodeVal,
+            fromCrId: _fromCrId,
+            toCrId: _toCrId,
+            deptCode: _toDeptCodeVal,
+            deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
+            charniCode: int.tryParse(_formValues['charniCode'] ?? ''),
+            tensionsCode: int.tryParse(_formValues['tensionsCode'] ?? ''),
+            pc: e.pc,
+            wt: e.wt,
+            issPc: e.issPc,
+            issWt: e.issWt,
+            recPc: e.recPc,
+            recWt: e.recWt,
+            totalPc: e.recPc,
+            totalWt: e.recWt,
+            dmWt: e.dmWt,
+            dmPer: e.dmPer,
+            kPc: e.kPc,
+            kWt: e.kWt,
+            brPc: e.brPc,
+            brWt: e.brWt,
+            lossPc: e.lossPc,
+            lossWt: e.lossWt,
+            topsPc: e.topsPc,
+            topsWt: e.topsWt,
+            employeeCode: e.employeeCode,
+            signerCode: e.signerCode,
+            remarksCode: e.remarksCode,
+            dueDay: e.dueDay,
+            entryType: 'B',
+            formType: 'SPK',
+            pktType: 'A',
+            confRec: _autoRec,
+            clvRec: 'S',
+            confCrID: _toCrId,
+          );
+        }).toList();
+
+        final scannedDetList = prov.scannedDetList.expand((e) {
+          final sarinList = e.sarinData ?? <Map<String, dynamic>>[];
+
+          return sarinList.map((sarin) {
+            return SpkPlanningSaveModel(
+              spkDeptIssMstID: e.spkDeptIssMstID ?? 0,
+
+              bCode: e.bCode ?? '',
+
+              pktNo: int.tryParse(e.pktNo ?? '0') ?? 0,
+
+              cutNo: e.cutNo ?? '',
+
+              clvCut: e.clvCut ?? '',
+
+              shapeCode: e.shapeCode ?? 0,
+
+              cutCode: e.cutCode ?? 0,
+
+              purityCode: e.purityCode ?? 0,
+
+              colorCode: e.colorCode ?? 0,
+
+              // SARIN RECORD
+              rgWt: ((sarin['RoughWt'] ?? 0) as num).toDouble(),
+
+              poWt: ((sarin['PolishWT'] ?? 0) as num).toDouble(),
+
+              poPer: ((sarin['PolishPer'] ?? 0) as num).toDouble(),
+
+              optName: sarin['operatorName']?.toString(),
+
+              disc: ((sarin['DISC'] ?? 0) as num).toDouble(),
+
+              rate: ((sarin['Rate'] ?? 0) as num).toDouble(),
+
+              amt: ((sarin['AMT'] ?? 0) as num).toDouble(),
+
+              netAmt: ((sarin['AMT'] ?? 0) as num).toDouble(),
+
+              ratio: ((sarin['Ration'] ?? 0) as num).toDouble(),
+
+              length: ((sarin['LENGTH'] ?? 0) as num).toDouble(),
+
+              width: ((sarin['WIDTH'] ?? 0) as num).toDouble(),
+
+              height: ((sarin['HEIGHT'] ?? 0) as num).toDouble(),
+
+              heightPer: ((sarin['HEIGHTPER'] ?? 0) as num).toDouble(),
+
+              tDepth: ((sarin['TABPER'] ?? 0) as num).toDouble(),
+
+              // OTHER
+              fluoCode: e.fluo ?? 0,
+
+              rateRs: e.rateRs ?? 0,
+
+              amountRs: e.amountRs ?? 0,
+
+              partName: (e.partName ?? 0).toDouble(),
+
+              topsPc: e.topsPc ?? 0,
+
+              topsWt: e.topsWt ?? 0,
+
+              piePc: e.brPc ?? 0,
+
+              lsPc: e.lossPc ?? 0,
+
+              remarks: e.remarks ?? '',
+            );
+          });
+        }).toList();
+
+        final success = await prov.savePlanningDetails(
+          merged,
+          rows,
+          scannedDetList,
+        );
+
+        if (rows.isEmpty) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: _theme,
+            title: 'Planning',
+            message: 'No planning rows found',
+          );
+
+          return;
+        }
+
+        if (!mounted) return;
+
+        if (success) {
+          ErpResultDialog.showSuccess(
+            context: context,
+            theme: _theme,
+            title: 'Planning',
+            message: 'Planning saved successfully',
+          );
+
+          prov.clearScannedDetList();
+        }
+
+        await prov.load();
+      },
       onDelete: _isEditMode ? _onDelete : null,
       onSearch: () => setState(() => _showTableOnMobile = true),
     );
@@ -965,9 +1283,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
     final counterProv = context.read<CounterProvider>();
     final procProv = context.read<DeptProcessProvider>();
 
-    final data = prov.list.map((
-      e,
-    ) {
+    final data = prov.list.where((e) => e.formType == 'PLANNINGREC').map((e) {
       String fromName = '', toName = '', processName = '';
       String fromDeptName = '', toDeptName = '';
 
@@ -1004,7 +1320,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
         ..['jno'] = dets.isNotEmpty ? (dets.first.jno?.toString() ?? '') : ''
         ..['totPkt'] = '${dets.length}'
         ..['totalPc'] = '${dets.fold<int>(0, (s, r) => s + (r.totalPc ?? 0))}'
-        ..['totalWt'] = _f3(
+        ..['totalWt'] = fThreeDecimal(
           dets.fold<double>(0.0, (s, r) => s + (r.totalWt ?? 0.0)),
         );
     }).toList();
@@ -1033,44 +1349,62 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
     );
   }
 
-  Widget _buildTableDefaultData(
-      TrnPlanningReceivedProvider prov,
-      ) {
+  Widget _buildTableDefaultData(TrnPlanningReceivedProvider prov) {
+    final data = prov.planningDetList.asMap().entries.map((entry) {
+      final index = entry.key;
 
-    final data = prov.planningDetList.map((r) => {
-      'Srno': r.srno?.toString() ?? '',
-      'BCode': r.bCode?.toString() ?? '',
-      'PktNo': r.pktNo?.toString() ?? '',
-      'CutNo': r.cutNo?.toString() ?? '',
-      'Pc': r.pc?.toString() ?? '0',
-      'Wt': _f3(r.wt ?? 0),
-      'IssPc': r.issPc ?? r.pc?.toString() ?? '0',
-      'IssWt': _f3(r.issWt ?? r.wt ?? 0),
-      'RecPc': r.recPc ?? r.pc?.toString() ?? '0',
-      'RecWt': _f3(r.recWt ?? r.wt ?? 0),
-      'DmWt': _f3(r.dmWt ?? 0),
-      'DmPer': (r.dmPer ?? 0).toStringAsFixed(2),
-      'Employee':
-      _employeeNameFor(r.employeeCode).isEmpty
-          ? '-'
-          : _employeeNameFor(r.employeeCode),
-      'Signer':
-      _signerNameFor(r.signerCode).isEmpty
-          ? '-'
-          : _signerNameFor(r.signerCode),
-      'CheckerMan': '-',
-      'SignerMan': '-',
+      final r = entry.value;
 
+      return {
+        // AUTO SR NO
+        'Srno': '${index + 1}',
+
+        'BCode': r.bCode?.toString() ?? '',
+
+        'PktNo': r.pktNo?.toString() ?? '',
+
+        'CutNo': r.cutNo?.toString() ?? '',
+
+        'Pc': r.pc?.toString() ?? '0',
+
+        'Wt': fThreeDecimal(r.wt ?? 0),
+
+        'IssPc': r.issPc ?? r.pc?.toString() ?? '0',
+
+        'IssWt': fThreeDecimal(r.issWt ?? r.wt ?? 0),
+
+        'RecPc': r.recPc ?? r.pc?.toString() ?? '0',
+
+        'RecWt': fThreeDecimal(r.recWt ?? r.wt ?? 0),
+
+        'DmWt': fThreeDecimal(r.dmWt ?? 0),
+
+        'DmPer': (r.dmPer ?? 0).toStringAsFixed(2),
+
+        'Employee': _employeeNameFor(r.employeeCode).isEmpty
+            ? '-'
+            : _employeeNameFor(r.employeeCode),
+
+        'Signer': _signerNameFor(r.signerCode).isEmpty
+            ? '-'
+            : _signerNameFor(r.signerCode),
+
+        'CheckerMan': '-',
+
+        'SignerMan': '-',
+      };
     }).toList();
 
-    Future<void> _onRowTap(
-        Map<String, dynamic> row,
-        ) async {
-
+    Future<void> _onRowTap(Map<String, dynamic> row) async {
+      print(row);
       setState(() {
         _selectedRow = row;
         _highlightedBCode = row['BCode'];
       });
+      final rowIndex = prov.planningDetList.indexWhere(
+        (e) => e.bCode == row['BCode'],
+      );
+      await _showDeletePopup(context, rowIndex);
     }
 
     return ErpDataTable(
@@ -1090,12 +1424,54 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
 
       onRowTap: (val) => _onRowTap(val),
 
-      emptyMessage:
-      prov.isLoaded
-          ? 'No entries found'
-          : 'Loading...',
+      emptyMessage: prov.isLoaded ? 'No entries found' : 'Loading...',
     );
   }
+
+  Future<void> _showDeletePopup(BuildContext context, int rowIndex) async {
+    final isYes = await showDialog<bool>(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: const Text('Delete Confirmation'),
+          content: Text('Are You Sure You Want To Delete?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text('No'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (isYes != true) return;
+
+    /// API CALL
+    final success = await context.read<TrnPlanningReceivedProvider>().delete(
+      spkDeptIssMstId: _selectedMst!.spkDeptIssMstID!,
+      bcode: _highlightedBCode,
+    );
+    if (success && mounted) {
+      final id = _selectedMst?.spkDeptIssMstID;
+      _resetForm();
+      await ErpResultDialog.showDeleted(
+        context: context,
+        theme: _theme,
+        itemName: 'Dept Issue $id',
+      );
+    }
+    if (!mounted) return;
+  }
+
   Widget _buildTableByBarCodeData(TrnPlanningReceivedProvider prov) {
     final List<Map<String, dynamic>> data = [];
     // sarinData lives on PlanningReceivedDetModel from the scan response

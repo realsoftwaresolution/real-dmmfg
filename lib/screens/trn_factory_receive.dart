@@ -33,12 +33,6 @@ import '../providers/shape_provider.dart';
 import '../providers/user_visibility_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-
-String _f3(double? v) => v == null ? '0.000' : v.toStringAsFixed(3);
-
-// ─────────────────────────────────────────────────────────────────────────────
 //  WIDGET
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -471,11 +465,11 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     }
 
     set('orgPc', r.pc?.toString());
-    set('orgWt', _f3(r.wt));
-    set('recWt', _f3(r.issWt));
+    set('orgWt', fThreeDecimal(r.wt));
+    set('recWt', fThreeDecimal(r.issWt));
     set('recPc', r.issPc?.toString() ?? '0');
     set('issPc', r.issPc?.toString());
-    set('issWt', _f3(r.issWt));
+    set('issWt', fThreeDecimal(r.issWt));
     set('jno', r.jno?.toString());
     set('mfgCut', r.MfgCut?.toString());
     set('lotNo', r.pktNo?.toString());
@@ -513,10 +507,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     final double safeLossWt = lossWt < 0 ? 0.0 : lossWt;
     final safeLossPc = lossPc < 0 ? 0 : lossPc;
 
-    _entryVals['lossWt'] = _f3(safeLossWt);
+    _entryVals['lossWt'] = fThreeDecimal(safeLossWt);
     _entryVals['lossPc'] = '$safeLossPc';
 
-    _erpFormKey.currentState?.updateFieldValue('lossWt', _f3(safeLossWt));
+    _erpFormKey.currentState?.updateFieldValue('lossWt', fThreeDecimal(safeLossWt));
     _erpFormKey.currentState?.updateFieldValue('lossPc', '$safeLossPc');
   }
   // ─────────────────────────────────────────────────────────────────────────
@@ -624,10 +618,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     final safeLossWt = lossWt < 0 ? 0.0 : lossWt;
     final safeLossPc = lossPc < 0 ? 0 : lossPc;
 
-    _entryVals['lossWt'] = _f3(safeLossWt);
+    _entryVals['lossWt'] = fThreeDecimal(safeLossWt);
     _entryVals['lossPc'] = '$safeLossPc';
 
-    _erpFormKey.currentState?.updateFieldValue('lossWt', _f3(safeLossWt));
+    _erpFormKey.currentState?.updateFieldValue('lossWt', fThreeDecimal(safeLossWt));
     _erpFormKey.currentState?.updateFieldValue('lossPc', '$safeLossPc');
 
     // ─────────────────────────────
@@ -906,21 +900,21 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
     set('orgPc', r.pc?.toString());
-    set('orgWt', _f3(r.wt));
+    set('orgWt', fThreeDecimal(r.wt));
     set('issPc', r.issPc?.toString());
-    set('issWt', _f3(r.issWt));
+    set('issWt', fThreeDecimal(r.issWt));
     set('recPc', r.recPc?.toString());
-    set('recWt', _f3(r.recWt));
+    set('recWt', fThreeDecimal(r.recWt));
     set('dmPer', r.dmPer?.toStringAsFixed(2));
-    set('dmWt', _f3(r.dmWt));
+    set('dmWt', fThreeDecimal(r.dmWt));
     set('kpc', r.kPc?.toString());
-    set('kwt', _f3(r.kWt));
+    set('kwt', fThreeDecimal(r.kWt));
     set('brPc', r.brPc?.toString());
-    set('brWt', _f3(r.brWt));
+    set('brWt', fThreeDecimal(r.brWt));
     set('lossPc', r.lossPc?.toString());
-    set('lossWt', _f3(r.lossWt));
+    set('lossWt', fThreeDecimal(r.lossWt));
     set('topsPc', r.topsPc?.toString());
-    set('topsWt', _f3(r.topsWt));
+    set('topsWt', fThreeDecimal(r.topsWt));
     set('employee', r.employeeCode?.toString());
     set('signer', r.signerCode?.toString());
     set('remarks', r.remarksCode?.toString());
@@ -936,7 +930,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     set('color', r.colorCode?.toString());
     set('size', r.size?.toString());
     set('kPc', r.kPc.toString());
-    set('kWt', _f3(r.kWt));
+    set('kWt', fThreeDecimal(r.kWt));
     set('charni', r.charniCode.toString());
     set('scanValue', r.bCode.toString());
     set('jno', r.jno.toString());
@@ -1132,22 +1126,22 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         'mfgCut': r.MfgCut ?? '',
 
         'orgPc': r.pc ?? '',
-        'orgWt': _f3(r.wt),
+        'orgWt': fThreeDecimal(r.wt),
 
         'issPc': r.issPc ?? '',
-        'issWt': _f3(r.issWt),
+        'issWt': fThreeDecimal(r.issWt),
 
         'recPc': r.recPc ?? '',
-        'recWt': _f3(r.recWt),
+        'recWt': fThreeDecimal(r.recWt),
 
         'kPc': r.kPc ?? '',
-        'kWt': _f3(r.kWt),
+        'kWt': fThreeDecimal(r.kWt),
 
         'brPc': r.brPc ?? '',
-        'brWt': _f3(r.brWt),
+        'brWt': fThreeDecimal(r.brWt),
 
         'lossPc': r.lossPc ?? '',
-        'lossWt': _f3(r.lossWt),
+        'lossWt': fThreeDecimal(r.lossWt),
 
         'diam': r.diam ?? '',
         'length': r.length ?? '',
@@ -1158,7 +1152,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         'cutCode': _cutNameFor(r.cutCode),
         'shapeCode': _shapeNameFor(r.shapeCode),
 
-        'dmWt': _f3(r.dmWt),
+        'dmWt': fThreeDecimal(r.dmWt),
         'dmPer': r.dmPer ?? '',
 
         // 👇 Custom calculated (as per your image)
@@ -2273,39 +2267,39 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
       // 🔹 ORG
       'orgPc': '$orgPc',
-      'orgWt': _f3(orgWt),
+      'orgWt': fThreeDecimal(orgWt),
 
       // 🔹 ISS
       'issPc': '$issPc',
-      'issWt': _f3(issWt),
+      'issWt': fThreeDecimal(issWt),
 
       // 🔹 REC
       'recPc': '$recPc',
-      'recWt': _f3(recWt),
+      'recWt': fThreeDecimal(recWt),
 
       // 🔹 K
       'kPc': '$kPc',
-      'kWt': _f3(kWt),
+      'kWt': fThreeDecimal(kWt),
 
       // 🔹 BR
       'brPc': '$brPc',
-      'brWt': _f3(brWt),
+      'brWt': fThreeDecimal(brWt),
 
       // 🔹 LOSS
       'lossPc': '$lossPc',
-      'lossWt': _f3(lossWt),
+      'lossWt': fThreeDecimal(lossWt),
 
       // 🔹 DM
-      'dmWt': _f3(dmWt),
+      'dmWt': fThreeDecimal(dmWt),
       'dmPer': per.toStringAsFixed(2),
 
       // 🔹 EXTRA (MATCH IMAGE)
       'per': per.toStringAsFixed(2),
       'diffPer': diffPer.toStringAsFixed(2),
-      'diffWt': _f3(diffWt),
+      'diffWt': fThreeDecimal(diffWt),
 
       // 🔹 SIZE
-      'size': _f3(size),
+      'size': fThreeDecimal(size),
     };
   }
 
@@ -2336,24 +2330,24 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         'totPkt': (e.pkt ?? 0).toString(),
 
         'pc': (e.pc ?? 0).toString(),
-        'wt': _f3(e.wt ?? 0),
+        'wt': fThreeDecimal(e.wt ?? 0),
 
         'issPc': (e.issPc ?? 0).toString(),
-        'issWt': _f3(e.issWt ?? 0),
+        'issWt': fThreeDecimal(e.issWt ?? 0),
 
         'recPc': (e.recPc ?? 0).toString(),
-        'recWt': _f3(e.recWt ?? 0),
+        'recWt': fThreeDecimal(e.recWt ?? 0),
 
         'kPc': (e.kPc ?? 0).toString(),
-        'kWt': _f3(e.kWt ?? 0),
+        'kWt': fThreeDecimal(e.kWt ?? 0),
 
         'brPc': (e.brPc ?? 0).toString(),
-        'brWt': _f3(e.brWt ?? 0),
+        'brWt': fThreeDecimal(e.brWt ?? 0),
 
         'lossPc': (e.lossPc ?? 0).toString(),
-        'lossWt': _f3(e.lossWt ?? 0),
+        'lossWt': fThreeDecimal(e.lossWt ?? 0),
 
-        'dmWt': _f3(e.dmWt ?? 0),
+        'dmWt': fThreeDecimal(e.dmWt ?? 0),
         'dmPer': (e.dmPer ?? 0).toStringAsFixed(2),
       };
     }).toList();

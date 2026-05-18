@@ -257,6 +257,8 @@ class _MstTeamEntryState extends State<MstTeamEntry> {
       _showTableOnMobile = false;
       _formValues        = {};
     });
+    _formValues['active'] = 'true';
+    _erpFormKey.currentState?.updateFieldValue('active', 'true');
     _setDefaultSortId();
   }
 

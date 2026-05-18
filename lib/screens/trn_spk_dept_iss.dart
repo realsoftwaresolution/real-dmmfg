@@ -31,12 +31,7 @@ import '../providers/counter_display_det_provider.dart';
 import '../providers/purity_provider.dart';
 import '../providers/shape_provider.dart';
 import '../providers/user_visibility_provider.dart';
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-
-String _f3(double? v) => v == null ? '0.000' : v.toStringAsFixed(3);
+import '../utils/constants.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  WIDGET
@@ -522,9 +517,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     }
 
     set('orgPc', r.pc?.toString());
-    set('orgWt', _f3(r.wt));
+    set('orgWt', fThreeDecimal(r.wt));
     set('issPc', r.issPc?.toString());
-    set('issWt', _f3(r.issWt));
+    set('issWt', fThreeDecimal(r.issWt));
     set('jnoRecPc', r.jnoRecPc?.toString());
     set('shapeCode', r.shapeCode?.toString());
     set('purityCode', r.purityCode?.toString());
@@ -548,8 +543,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     final base = recWt > 0 ? recWt : issWt;
     final dmPer = double.tryParse(_entryVals['dmper'] ?? '') ?? 0;
     final dmWt = base * dmPer / 100;
-    _entryVals['dmwt'] = _f3(dmWt);
-    _erpFormKey.currentState?.updateFieldValue('dmwt', _f3(dmWt));
+    _entryVals['dmwt'] = fThreeDecimal(dmWt);
+    _erpFormKey.currentState?.updateFieldValue('dmwt', fThreeDecimal(dmWt));
   }
 
   /// Loss WT = Iss WT − K WT,  Loss PC = Iss PC − K PC
@@ -564,10 +559,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     // ✅ UPDATED FORMULA
     final lossWt = issWt - recWt - kWt;
 
-    _entryVals['losswt'] = _f3(lossWt);
+    _entryVals['losswt'] = fThreeDecimal(lossWt);
     _entryVals['losspc'] = '${issPc - kPc}';
 
-    _erpFormKey.currentState?.updateFieldValue('losswt', _f3(lossWt));
+    _erpFormKey.currentState?.updateFieldValue('losswt', fThreeDecimal(lossWt));
     _erpFormKey.currentState?.updateFieldValue('losspc', '${issPc - kPc}');
   }
 
@@ -631,7 +626,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       }
       if (totalWt > issWt + 0.0005 && issWt > 0) {
         _showSnack(
-          'Rec Wt (${_f3(recWt)}) + K Wt (${_f3(kWt)}) = ${_f3(totalWt)} cannot exceed Iss Wt (${_f3(issWt)})',
+          'Rec Wt (${fThreeDecimal(recWt)}) + K Wt (${fThreeDecimal(kWt)}) = ${fThreeDecimal(totalWt)} cannot exceed Iss Wt (${fThreeDecimal(issWt)})',
         );
         return;
       }
@@ -668,8 +663,17 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       }
     }
 
-    final issPcStr = _entryVals['issPc'] ?? '';
-    final issWtStr = _entryVals['issWt'] ?? '';
+    final issPcStr = _entryVals['issPc'] ?? '0';
+    final issWtStr = _entryVals['issWt'] ?? '0.000';
+
+    final finalDmWt = hasDmWt
+        ? double.tryParse(_entryVals['dmwt'] ?? '')
+        : _scannedDet?.LastDmWt;
+
+    final finalDmPer = hasDmPer
+        ? double.tryParse(_entryVals['dmper'] ?? '')
+        : _scannedDet?.LastDmPer;
+
     final srno = _editingDetIndex != null
         ? _detRows[_editingDetIndex!].srno
         : _detRows.length + 1;
@@ -682,6 +686,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             issWtStr: issWtStr,
             recPc: finalRecPc,
             recWt: finalRecWt,
+            dmWt: finalDmWt,
+            dmPer: finalDmPer,
           )
         : _buildNewRow(
             srno: srno,
@@ -689,6 +695,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             issWtStr: issWtStr,
             recPc: finalRecPc,
             recWt: finalRecWt,
+            dmWt: finalDmWt,
+            dmPer: finalDmPer,
           );
 
     setState(() {
@@ -722,6 +730,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     required String issWtStr,
     required int recPc,
     required double recWt,
+    required double? dmWt,
+    required double? dmPer,
   }) {
     return SpkDeptIssDetModel(
       srno: srno,
@@ -757,8 +767,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       recWt: recWt,
       totalPc: recPc,
       totalWt: recWt,
-      dmWt: double.tryParse(_entryVals['dmwt'] ?? ''),
-      dmPer: double.tryParse(_entryVals['dmper'] ?? ''),
+      dmWt: dmWt,
+      dmPer: dmPer,
       kPc: int.tryParse(_entryVals['kpc'] ?? ''),
       kWt: double.tryParse(_entryVals['kwt'] ?? ''),
       brPc: int.tryParse(_entryVals['brpc'] ?? ''),
@@ -786,6 +796,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     required String issWtStr,
     required int recPc,
     required double recWt,
+    required double? dmWt,
+    required double? dmPer,
   }) {
     return SpkDeptIssDetModel(
       srno: srno,
@@ -817,8 +829,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       recWt: recWt,
       totalPc: recPc,
       totalWt: recWt,
-      dmWt: double.tryParse(_entryVals['dmwt'] ?? ''),
-      dmPer: double.tryParse(_entryVals['dmper'] ?? ''),
+      dmWt: dmWt,
+      dmPer: dmPer,
       kPc: int.tryParse(_entryVals['kpc'] ?? ''),
       kWt: double.tryParse(_entryVals['kwt'] ?? ''),
       brPc: int.tryParse(_entryVals['brpc'] ?? ''),
@@ -854,21 +866,21 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     }
 
     set('orgPc', r.pc?.toString());
-    set('orgWt', _f3(r.wt));
+    set('orgWt', fThreeDecimal(r.wt));
     set('issPc', r.issPc?.toString());
-    set('issWt', _f3(r.issWt));
+    set('issWt', fThreeDecimal(r.issWt));
     set('recpc', r.recPc?.toString());
-    set('recwt', _f3(r.recWt));
+    set('recwt', fThreeDecimal(r.recWt));
     set('dmper', r.dmPer?.toStringAsFixed(2));
-    set('dmwt', _f3(r.dmWt));
+    set('dmwt', fThreeDecimal(r.dmWt));
     set('kpc', r.kPc?.toString());
-    set('kwt', _f3(r.kWt));
+    set('kwt', fThreeDecimal(r.kWt));
     set('brpc', r.brPc?.toString());
-    set('brwt', _f3(r.brWt));
+    set('brwt', fThreeDecimal(r.brWt));
     set('losspc', r.lossPc?.toString());
-    set('losswt', _f3(r.lossWt));
+    set('losswt', fThreeDecimal(r.lossWt));
     set('topspc', r.topsPc?.toString());
-    set('topswt', _f3(r.topsWt));
+    set('topswt', fThreeDecimal(r.topsWt));
     set('employee', r.employeeCode?.toString());
     set('signer', r.signerCode?.toString());
     set('remarks', r.remarksCode?.toString());
@@ -980,22 +992,22 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             'bCode': r.bCode ?? '',
             'pktNo': r.pktNo ?? '',
             'cutNo': r.cutNo ?? '',
-            'orgPc': r.pc?.toString() ?? '',
-            'orgWt': _f3(r.wt),
-            'issPc': r.issPc?.toString() ?? '',
-            'issWt': _f3(r.issWt),
-            'recPc': r.recPc?.toString() ?? '',
-            'recWt': _f3(r.recWt),
+            'orgPc': r.pc?.toString() ?? '0',
+            'orgWt': fThreeDecimal(r.wt),
+            'issPc': r.issPc?.toString() ?? '0',
+            'issWt': fThreeDecimal(r.issWt),
+            'recPc': r.recPc?.toString() ?? '0',
+            'recWt': fThreeDecimal(r.recWt),
             'dmPer': r.dmPer?.toStringAsFixed(2) ?? '',
-            'dmWt': _f3(r.dmWt),
+            'dmWt': fThreeDecimal(r.dmWt),
             'kPc': r.kPc?.toString() ?? '',
-            'kWt': _f3(r.kWt),
-            'brPc': r.brPc?.toString() ?? '',
-            'brWt': _f3(r.brWt),
+            'kWt': fThreeDecimal(r.kWt),
+            'brPc': r.brPc?.toString() ?? '0',
+            'brWt': fThreeDecimal(r.brWt),
             'lossPc': r.lossPc?.toString() ?? '',
-            'lossWt': _f3(r.lossWt),
+            'lossWt': fThreeDecimal(r.lossWt),
             'topsPc': r.topsPc?.toString() ?? '',
-            'topsWt': _f3(r.topsWt),
+            'topsWt': fThreeDecimal(r.topsWt),
             'employee': _employeeNameFor(r.employeeCode),
             'signer': _signerNameFor(r.signerCode),
             'remarks': _remarksNameFor(r.remarksCode),
@@ -1236,38 +1248,31 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     final toItems = _fromCrId == null
         ? <ErpDropdownItem>[]
         : mgDetProv.list
-        .where(
-          (m) =>
-      m.crId == _fromCrId &&
-          m.allowCrId != null,
-    )
-        .map((m) => m.allowCrId!)
-        .toSet()
-        .map((allowId) {
-      try {
-        final c = counterProv.list.firstWhere(
-              (c) =>
-          c.crId == allowId &&
-              c.active == true,
-        );
+              .where((m) => m.crId == _fromCrId && m.allowCrId != null)
+              .map((m) => m.allowCrId!)
+              .toSet()
+              .map((allowId) {
+                try {
+                  final c = counterProv.list.firstWhere(
+                    (c) => c.crId == allowId && c.active == true,
+                  );
 
-        // OPTIONAL:
-        // avoid same FROM manager in TO
-        if (c.crId == _fromCrId) {
-          return null;
-        }
+                  // OPTIONAL:
+                  // avoid same FROM manager in TO
+                  if (c.crId == _fromCrId) {
+                    return null;
+                  }
 
-        return ErpDropdownItem(
-          label:
-          '${c.crName ?? ''} | ${_deptNameFor(c.deptCode)}',
-          value: c.crId?.toString() ?? '',
-        );
-      } catch (_) {
-        return null;
-      }
-    })
-        .whereType<ErpDropdownItem>()
-        .toList();
+                  return ErpDropdownItem(
+                    label: '${c.crName ?? ''} | ${_deptNameFor(c.deptCode)}',
+                    value: c.crId?.toString() ?? '',
+                  );
+                } catch (_) {
+                  return null;
+                }
+              })
+              .whereType<ErpDropdownItem>()
+              .toList();
 
     // ── PROCESS dropdown — intersection of FROM-issue ∩ TO-receive codes ──
     final processItems = (_fromCrId == null || _toCrId == null)
@@ -2005,10 +2010,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
           // API Call
           _onBCodeScanned(scanVal).then((_) {
-
             // Record direct add only when no entry fields
             if (_scannedDet != null && !_hasEntryFields()) {
-
               _addEntry();
 
               // Clear scan field
@@ -2020,7 +2023,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
               Future.delayed(
                 const Duration(milliseconds: 50),
-                    () => _erpFormKey.currentState?.focusField('scanValue'),
+                () => _erpFormKey.currentState?.focusField('scanValue'),
               );
             }
           });
@@ -2117,21 +2120,21 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
     return {
       'orgPc': '${foldInt((r) => r.pc ?? 0)}',
-      'orgWt': _f3(fold((r) => r.wt ?? 0)),
+      'orgWt': fThreeDecimal(fold((r) => r.wt ?? 0)),
       'issPc': '${foldInt((r) => r.issPc ?? 0)}',
-      'issWt': _f3(totIssWt),
+      'issWt': fThreeDecimal(totIssWt),
       'recPc': '${foldInt((r) => r.recPc ?? 0)}',
-      'recWt': _f3(totRecWt),
+      'recWt': fThreeDecimal(totRecWt),
       'dmPer': dmPerStr,
-      'dmWt': _f3(totDmWt),
+      'dmWt': fThreeDecimal(totDmWt),
       'kPc': '${foldInt((r) => r.kPc ?? 0)}',
-      'kWt': _f3(fold((r) => r.kWt ?? 0)),
+      'kWt': fThreeDecimal(fold((r) => r.kWt ?? 0)),
       'brPc': '${foldInt((r) => r.brPc ?? 0)}',
-      'brWt': _f3(fold((r) => r.brWt ?? 0)),
+      'brWt': fThreeDecimal(fold((r) => r.brWt ?? 0)),
       'lossPc': '${foldInt((r) => r.lossPc ?? 0)}',
-      'lossWt': _f3(fold((r) => r.lossWt ?? 0)),
+      'lossWt': fThreeDecimal(fold((r) => r.lossWt ?? 0)),
       'topsPc': '${foldInt((r) => r.topsPc ?? 0)}',
-      'topsWt': _f3(fold((r) => r.topsWt ?? 0)),
+      'topsWt': fThreeDecimal(fold((r) => r.topsWt ?? 0)),
     };
   }
 
@@ -2179,7 +2182,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         ..['jno'] = dets.isNotEmpty ? (dets.first.jno?.toString() ?? '') : ''
         ..['totPkt'] = '${dets.length}'
         ..['totalPc'] = '${dets.fold<int>(0, (s, r) => s + (r.totalPc ?? 0))}'
-        ..['totalWt'] = _f3(
+        ..['totalWt'] = fThreeDecimal(
           dets.fold<double>(0.0, (s, r) => s + (r.totalWt ?? 0.0)),
         );
 
@@ -2209,6 +2212,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       emptyMessage: prov.isLoaded ? 'No entries found' : 'Loading...',
     );
   }
+
   bool _hasEntryFields() {
     final merged = _getMergedFields();
 
@@ -2222,7 +2226,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     ];
 
     final hasAnyPair = pairs.any(
-          (p) => merged.containsKey(p[0]) || merged.containsKey(p[1]),
+      (p) => merged.containsKey(p[0]) || merged.containsKey(p[1]),
     );
 
     return hasAnyPair ||
@@ -2231,5 +2235,4 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         merged.containsKey('REMARKS') ||
         merged.containsKey('DUE DAY');
   }
-  }
-
+}

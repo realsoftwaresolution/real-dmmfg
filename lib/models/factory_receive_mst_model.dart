@@ -1,3 +1,5 @@
+import '../utils/constants.dart';
+
 class FactoryReceiveMstModel {
   final int? factoryRecMstID;
   final String? factoryRecDate;
@@ -742,24 +744,24 @@ extension FactoryReceiveMstExt on FactoryReceiveMstModel {
     'totPkt': (pkt ?? 0).toString(),
 
     'pc': (pc ?? 0).toString(),
-    'wt': (wt ?? 0).toStringAsFixed(3),
+    'wt': fThreeDecimal(wt ?? 0),
 
     'issPc': (issPc ?? 0).toString(),
-    'issWt': (issWt ?? 0).toStringAsFixed(3),
+    'issWt': fThreeDecimal(issWt ?? 0),
 
     'recPc': (recPc ?? 0).toString(),
-    'recWt': (recWt ?? 0).toStringAsFixed(3),
+    'recWt': fThreeDecimal(recWt ?? 0),
 
     'kPc': (kPc ?? 0).toString(),
-    'kWt': (kWt ?? 0).toStringAsFixed(3),
+    'kWt': fThreeDecimal(kWt ?? 0),
 
     'brPc': (brPc ?? 0).toString(),
-    'brWt': (brWt ?? 0).toStringAsFixed(3),
+    'brWt': fThreeDecimal(brWt ?? 0),
 
     'lossPc': (lossPc ?? 0).toString(),
-    'lossWt': (lossWt ?? 0).toStringAsFixed(3),
+    'lossWt': fThreeDecimal(lossWt ?? 0),
 
-    'dmWt': (dmWt ?? 0).toStringAsFixed(3),
+    'dmWt': fThreeDecimal(dmWt ?? 0),
     'dmPer': (dmPer ?? 0).toStringAsFixed(2),
 
     // 🔥 keep raw for rowTap

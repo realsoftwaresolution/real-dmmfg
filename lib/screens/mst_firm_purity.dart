@@ -411,6 +411,8 @@ class _MstPurityState extends State<MstPurity> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _formValues['active'] = 'true';
+    _erpFormKey.currentState?.updateFieldValue('active', 'true');
     _setDefaultSortId();
   }
   bool _showTableOnMobile = false;

@@ -1,43 +1,182 @@
+import 'dart:convert';
 
 import 'package:diam_mfg/models/planning_received_model.dart';
+import 'package:diam_mfg/utils/msg_dialogue.dart';
+import 'package:flutter/material.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
-
 class TrnPlanningReceivedProvider extends BaseProvider {
-  List<PlanningReceivedMstModel> _list     = [];
-  bool                     _isLoaded = false;
+  List<PlanningReceivedMstModel> _list = [];
+  bool _isLoaded = false;
 
-  bool                         get isLoaded => _isLoaded;
-  List<PlanningReceivedMstModel>     get list     => List.unmodifiable(_list);
-  List<Map<String, dynamic>>   get tableData =>
+  bool get isLoaded => _isLoaded;
+
+  List<PlanningReceivedMstModel> get list => List.unmodifiable(_list);
+
+  List<Map<String, dynamic>> get tableData =>
       _list.map((e) => e.toTableRow()).toList();
-// Provider mein ye map maintain karo
-// detMap declare karo (class level)
+
+  // Provider mein ye map maintain karo
+  // detMap declare karo (class level)
   Map<int, List<PlanningReceivedDetModel>> detMap = {};
 
   void clearForReset() {
-    _scannedDetList.clear();   // clear barcode scan data
-    detMap.clear();            // clear details map (important)
+    // TABLE 1
+    _planningDetList.clear();
+
+    // TABLE 2
+    _scannedDetList.clear();
+
+    // TEMP LISTS
+    _tempPlanningDetList.clear();
+
+    _tempScannedDetList.clear();
+
+    // MASTER DETAIL CACHE
+    detMap.clear();
+
     notifyListeners();
   }
 
-// SIRF EK loadDetails rakho — dono merge karo:
+  // SIRF EK loadDetails rakho — dono merge karo:
   Future<List<PlanningReceivedDetModel>> loadDetails(int mstID) async {
     final result = await request<List<PlanningReceivedDetModel>>(
       call: () => api.get('/spkDeptIss/$mstID'),
+
       onSuccess: (res) {
-        final data   = res.data;
-        final rawDet = (data is Map ? data['det'] : data) as List? ?? [];
-        return rawDet
-            .map((e) => PlanningReceivedDetModel.fromJson(e as Map<String, dynamic>))
-            .toList();
+        final responseData = res.data['det'];
+        if (responseData == null) {
+          _planningDetList = [];
+          detMap[mstID] = [];
+          notifyListeners();
+          return <PlanningReceivedDetModel>[];
+        }
+
+        final List<dynamic> list = responseData is List
+            ? responseData
+            : [responseData];
+
+        final parsed = list.map((e) {
+          return PlanningReceivedDetModel.fromJson(
+            Map<String, dynamic>.from(e),
+          );
+        }).toList();
+
+        // TABLE DATA
+        _planningDetList = parsed;
+
+        // MASTER DETAIL MAP
+        detMap[mstID] = parsed;
+
+        notifyListeners();
+
+        return parsed;
       },
     );
-    final dets = result ?? [];
-    detMap[mstID] = dets;   // ← detMap update
-    notifyListeners();
-    return dets;
+
+    return result ?? [];
   }
+
+  Future<List<PlanningReceivedDetModel>> loadSarinDataDetails(int mstID) async {
+    final result = await request<List<PlanningReceivedDetModel>>(
+      call: () => api.get('/spkPlanning/planning-details/$mstID'),
+
+      onSuccess: (res) {
+        final responseData = res.data['data'];
+
+        print('responseData $responseData');
+
+        if (responseData == null) {
+          _scannedDetList = [];
+
+          notifyListeners();
+
+          return <PlanningReceivedDetModel>[];
+        }
+
+        final List<dynamic> list = responseData is List
+            ? responseData
+            : [responseData];
+
+        // GROUP BY BCODE
+        final Map<String, List<Map<String, dynamic>>> grouped = {};
+
+        for (final item in list) {
+          final map = Map<String, dynamic>.from(item);
+
+          final bcode = map['BCode'].toString();
+
+          grouped.putIfAbsent(bcode, () => []);
+
+          grouped[bcode]!.add({
+            // CONVERT TO SARIN FORMAT
+            'SarinPolID': map['SPKPlanningDetID'],
+
+            'StoneID': map['PktNo'],
+
+            'PolishWT': map['PoWt'],
+
+            'PolishPer': map['PoPer'],
+
+            'SHAPE': map['ShapeName'],
+
+            'CUT': map['CutName'],
+
+            'Color': map['ColorName'],
+
+            'Clarity': map['PurityName'],
+
+            'TWT': map['RgWt'],
+
+            'Rate': map['Rate'],
+
+            'AMT': map['Amt'],
+
+            'LotCode': map['PktNo'],
+
+            'KapanNo': map['CutNo'],
+
+            'SrNum': map['PktNo'],
+
+            'CrownHeight': map['HeightPer'],
+
+            'operatorName': map['OptName'],
+
+            'THmm': map['Height'],
+
+            'DISC': map['Disc'],
+
+            'Rec': map['NetAmt'],
+
+            'BCode': map['BCode'],
+          });
+        }
+
+        final parsed = grouped.entries.map((entry) {
+          final first = entry.value.first;
+
+          return PlanningReceivedDetModel(
+            bCode: entry.key,
+
+            sarinData: entry.value,
+
+            pktNo: first['StoneID']?.toString(),
+
+            cutNo: first['KapanNo']?.toString(),
+          );
+        }).toList();
+
+        _scannedDetList = parsed;
+
+        notifyListeners();
+
+        return parsed;
+      },
+    );
+
+    return result ?? [];
+  }
+
   // ── LOAD ALL ──────────────────────────────────────────────────────────────
   Future<void> load() async {
     final result = await request<List<PlanningReceivedMstModel>>(
@@ -45,12 +184,15 @@ class TrnPlanningReceivedProvider extends BaseProvider {
       onSuccess: (res) {
         final list = res.data as List;
         return list
-            .map((e) => PlanningReceivedMstModel.fromJson(e as Map<String, dynamic>))
+            .map(
+              (e) =>
+                  PlanningReceivedMstModel.fromJson(e as Map<String, dynamic>),
+            )
             .toList();
       },
     );
     if (result != null) {
-      _list     = result;
+      _list = result;
       _isLoaded = true;
       notifyListeners();
     }
@@ -58,64 +200,44 @@ class TrnPlanningReceivedProvider extends BaseProvider {
 
   // Store scanned det rows (which carry sarinData)
   List<PlanningReceivedDetModel> _scannedDetList = [];
+
   List<PlanningReceivedDetModel> get scannedDetList => _scannedDetList;
   List<PlanningReceivedDetModel> _planningDetList = [];
+
   List<PlanningReceivedDetModel> get planningDetList => _planningDetList;
+
+  List<PlanningReceivedDetModel> _tempPlanningDetList = [];
+
+  List<PlanningReceivedDetModel> _tempScannedDetList = [];
 
   void clearScannedDetList() {
     _scannedDetList = [];
     notifyListeners();
   }
 
-  Future<List<PlanningReceivedDetModel>> fetchByBCode({
-    required String bCode,
-    required String fromCrId,
-  }) async {
-    final result = await request<List<PlanningReceivedDetModel>>(
-      showLoader: false,
-      call: () => api.get(
-        '/spkDeptIss/scan-bcode',
-        query: {
-          'bCode': bCode,
-          'lastCrId': fromCrId.toString(),
-          'screenName': 'PLANNING_RECEIVED',
-        },
-      ),
-      onSuccess: (res) {
-        final data = res.data['data'];
-        final list = data is List ? data : [data];
-        final parsed = list
-            .map((e) => PlanningReceivedDetModel.fromJson(e as Map<String, dynamic>))
-            .toList();
-        for (var item in parsed) {
-          if(parsed[0].sarinData!.isNotEmpty) {
-            final index = _scannedDetList.indexWhere(
-                    (e) => e.bCode.toString() == item.bCode.toString());
-            if (index == -1) {
-              _scannedDetList.insert(0,item);
-            } else {
-              _scannedDetList[index] = item; // update existing
-            }
-          }
-        }
-        notifyListeners();
+  void clearTempScanData() {
+    _tempPlanningDetList = [];
 
-        return parsed;
-      },
-    );
-    return result ?? [];
+    _tempScannedDetList = [];
+  }
+
+  void commitTempScanData() {
+    _planningDetList.addAll(_tempPlanningDetList);
+
+    _scannedDetList.addAll(_tempScannedDetList);
+
+    notifyListeners();
   }
 
   Future<List<PlanningReceivedDetModel>> fetchByBCodePlanningList({
     required String bCode,
     required String fromCrId,
   }) async {
-
     final result = await request<List<PlanningReceivedDetModel>>(
       showLoader: false,
 
       call: () => api.get(
-        '/spkDeptIss/scan-bcode-wise-planning-list',
+        '/spkDeptIss/scan-bcode',
         query: {
           'bCode': bCode,
           'lastCrId': fromCrId,
@@ -131,22 +253,113 @@ class TrnPlanningReceivedProvider extends BaseProvider {
           return <PlanningReceivedDetModel>[];
         }
 
-        final List<dynamic> list =
-        responseData is List
+        final List<dynamic> list = responseData is List
             ? responseData
             : [responseData];
 
         final parsed = list.map((e) {
-
           return PlanningReceivedDetModel.fromJson(
             Map<String, dynamic>.from(e),
           );
-
         }).toList();
 
-        _planningDetList = parsed;
+        _tempPlanningDetList = parsed;
+        return parsed;
+      },
+    );
 
-        notifyListeners();
+    return result ?? [];
+  }
+
+  // ── Theme ──────────────────────────────────────────────────────────────────
+  final ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
+
+  ErpTheme get _theme => ErpTheme(_themeVariant);
+
+  // ─────────────────────────────────────────────
+  // fetchByBCode
+  // ─────────────────────────────────────────────
+
+  Future<List<PlanningReceivedDetModel>> fetchByBCode({
+    required String bCode,
+
+    required String fromCrId,
+    required BuildContext context,
+  }) async {
+    final result = await request<List<PlanningReceivedDetModel>>(
+      call: () => api.get(
+        '/spkDeptIss/scan-bcode',
+        query: {
+          'bCode': bCode,
+          'lastCrId': fromCrId.toString(),
+          'screenName': 'SARIN_PLANNING_RECEIVED',
+        },
+      ),
+
+      onSuccess: (res) {
+        final data = res.data;
+
+        print('fetchByBCode data => $data');
+
+        // ─────────────────────────────
+        // API VALIDATION ERROR
+        // ─────────────────────────────
+
+        final apiData = data['data'];
+
+        if (apiData != null && apiData['success'] == false) {
+          final errors =
+              (apiData['errors'] as List?)?.join('\n') ??
+              'Sarin data not found';
+          ErpResultDialog.showError(
+            context: context,
+            theme: _theme,
+            message: errors,
+            title: 'Error',
+          );
+        }
+
+        // ─────────────────────────────
+        // NORMAL DATA
+        // ─────────────────────────────
+
+        final responseData = data['data'];
+
+        if (responseData == null) {
+          return <PlanningReceivedDetModel>[];
+        }
+
+        final List<dynamic> list = responseData is List
+            ? responseData
+            : [responseData];
+
+        final grouped = <String, List<Map<String, dynamic>>>{};
+
+        for (final item in list) {
+          final map = Map<String, dynamic>.from(item);
+
+          final bcode = map['BCode'].toString();
+
+          grouped.putIfAbsent(bcode, () => []);
+
+          grouped[bcode]!.add(map);
+        }
+
+        final parsed = grouped.entries.map((entry) {
+          final first = entry.value.first;
+
+          return PlanningReceivedDetModel(
+            bCode: entry.key,
+
+            pktNo: first['PktNo']?.toString(),
+
+            cutNo: first['CutNo']?.toString(),
+
+            sarinData: entry.value,
+          );
+        }).toList();
+
+        _tempScannedDetList = parsed;
 
         return parsed;
       },
@@ -156,43 +369,40 @@ class TrnPlanningReceivedProvider extends BaseProvider {
   }
 
   // ── CREATE ────────────────────────────────────────────────────────────────
-  Future<bool> create(
-      Map<String, dynamic>       values,
-      List<PlanningReceivedDetModel>   details,
-      ) async {
-    final model  = _buildModel(values);
+  Future<bool> savePlanningDetails(
+    Map<String, dynamic> values,
+    List<PlanningReceivedDetModel> details,
+    List<SpkPlanningSaveModel> scannedDetList,
+  ) async {
+    final model = _buildModel(values);
+    // ✅ Convert model → map and remove BCode
+    final modelMap = Map<String, dynamic>.from(model.toJson())
+      ..remove('DeptCode')
+      ..remove('DeptCode')
+      ..remove('DeptProcessCode')
+      ..remove('ToCrID')
+      ..remove('FromCrID');
+    // 🔥 REMOVE HERE
     final result = await request<PlanningReceivedMstModel>(
-      call: () => api.post('/spkDeptIss', data: {
-        ...model.toJson(),
-        'details': details.map((e) => e.toJson()).toList(),
-      }),
-      onSuccess: (res) => _parseMstResponse(res.data),
-    );
-    if (result != null) {
-      _list.insert(0, result);
-      notifyListeners();
-      return true;
-    }
-    return false;
-  }
+      call: () => api.post(
+        '/spkPlanning/save-planning-details',
+        data: {
+          'spk': {
+            ...modelMap, // ✅ cleaned
+            'details': details.map((e) {
+              final map = Map<String, dynamic>.from(e.toJson())
+                ..remove('LastDmWt')
+                ..remove('LastDmPer');
 
-  // ── UPDATE ────────────────────────────────────────────────────────────────
-  Future<bool> update(
-      int                        id,
-      Map<String, dynamic>       values,
-      List<PlanningReceivedDetModel>   details,
-      ) async {
-    final model  = _buildModel(values);
-    final result = await request<PlanningReceivedMstModel>(
-      call: () => api.put('/spkDeptIss/$id', data: {
-        ...model.toJson(),
-        'details': details.map((e) => e.toJson()).toList(),
-      }),
+              return map;
+            }).toList(),
+          },
+          'planning': scannedDetList.map((e) => e.toJson()).toList(),
+        },
+      ),
       onSuccess: (res) => _parseMstResponse(res.data),
     );
     if (result != null) {
-      final i = _list.indexWhere((e) => e.spkDeptIssMstID == id);
-      if (i != -1) _list[i] = result;
       notifyListeners();
       return true;
     }
@@ -200,19 +410,36 @@ class TrnPlanningReceivedProvider extends BaseProvider {
   }
 
   // ── DELETE ────────────────────────────────────────────────────────────────
-  Future<bool> delete(int id) async {
+  Future<bool> delete({required int spkDeptIssMstId, bcode}) async {
     final result = await request<bool>(
-      call: () => api.delete('/spkDeptIss/$id'),
+      call: () => api.post(
+        '/spkPlanning/planning/single-delete',
+        data: {'bcode': bcode, 'spkDeptIssMstId': spkDeptIssMstId},
+      ),
       onSuccess: (_) => true,
     );
     if (result == true) {
-      _list.removeWhere((e) => e.spkDeptIssMstID == id);
+      _list.removeWhere((e) => e.spkDeptIssMstID == spkDeptIssMstId);
       notifyListeners();
       return true;
     }
     return false;
   }
-  
+
+  Future<bool> deleteBulk(data) async {
+    final result = await request<bool>(
+      call: () =>
+          api.post('/spkPlanning/planning/bulk-delete', data: {'items': data}),
+      onSuccess: (_) => true,
+    );
+    if (result == true) {
+      _list.clear();
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
   PlanningReceivedMstModel _parseMstResponse(dynamic data) {
     if (data is Map) {
       Map<String, dynamic> mstJson;
@@ -222,10 +449,14 @@ class TrnPlanningReceivedProvider extends BaseProvider {
         mstJson['details'] = rawDet;
         // Det se totals calculate karo (create/update ke baad)
         mstJson['TotPkt'] = rawDet.length;
-        mstJson['TotalPc'] = rawDet.fold<int>(0, (s, d) =>
-        s + ((d['TotalPc'] ?? 0) as num).toInt());
-        mstJson['TotalWt'] = rawDet.fold<double>(0.0, (s, d) =>
-        s + ((d['TotalWt'] ?? 0) as num).toDouble());
+        mstJson['TotalPc'] = rawDet.fold<int>(
+          0,
+          (s, d) => s + ((d['TotalPc'] ?? 0) as num).toInt(),
+        );
+        mstJson['TotalWt'] = rawDet.fold<double>(
+          0.0,
+          (s, d) => s + ((d['TotalWt'] ?? 0) as num).toDouble(),
+        );
         mstJson['Jno'] = rawDet.isNotEmpty ? rawDet.first['Jno'] : null;
       } else {
         mstJson = Map<String, dynamic>.from(data);
@@ -234,29 +465,33 @@ class TrnPlanningReceivedProvider extends BaseProvider {
     }
     throw Exception('Unexpected response format');
   }
+
   // ── BUILD MODEL from form values ──────────────────────────────────────────
   PlanningReceivedMstModel _buildModel(Map<String, dynamic> v) {
     int? toI(String? s) => s == null || s.isEmpty ? null : int.tryParse(s);
 
     return PlanningReceivedMstModel(
-      spkDeptIssDate:  v['spkDeptIssDate'],
-      fromCrID:        toI(v['fromCrID']?.toString()),
-      toCrID:          toI(v['toCrID']?.toString()),
+      spkDeptIssDate: v['spkDeptIssDate'],
+      fromCrID: toI(v['fromCrID']?.toString()),
+      toCrID: toI(v['toCrID']?.toString()),
       deptProcessCode: toI(v['deptProcessCode']?.toString()),
-      deptCode:        toI(v['deptCode']?.toString()),
-      sflag:           v['sflag'],
-      stime:           v['Stime'],    // ← ADD
-      sdate:           v['Sdate'],    // ← ADD
-      logID:           toI(v['logID']?.toString()),
-      pcID:            v['pcID'],
-      ever:            toI(v['ever']?.toString()),
-      entryType:       v['entryType'] ?? 'B',
-      repairing:       v['repairing'] ?? 'N',
-      formType:        v['formType'] ?? 'PLANNING RECEIVED',
-      proType:         v['proType'] ?? 'SPK',
-      formType1:       v['formType1'],
-      nukCrId:         toI(v['nukCrId']?.toString()),
-      planType:        v['planType'],
+      deptCode: toI(v['deptCode']?.toString()),
+      sflag: v['sflag'],
+      stime: v['Stime'],
+      // ← ADD
+      sdate: v['Sdate'],
+      // ← ADD
+      logID: toI(v['logID']?.toString()),
+      pcID: v['pcID'],
+      ever: toI(v['ever']?.toString()),
+      entryType: v['entryType'] ?? 'B',
+      repairing: v['repairing'] ?? 'N',
+      formType: v['formType'] ?? 'PLANNINGREC',
+      //d det spk
+      proType: v['proType'] ?? 'SPK',
+      formType1: v['formType1'],
+      nukCrId: toI(v['nukCrId']?.toString()),
+      planType: v['planType'],
     );
   }
 }

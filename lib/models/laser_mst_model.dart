@@ -1,3 +1,5 @@
+import '../utils/constants.dart';
+
 class LaserMstModel {
   final int? spkDeptIssMstID;
   final String? spkDeptIssDate;
@@ -789,7 +791,7 @@ extension SpkDeptIssMstExt on LaserMstModel {
     'deptProcessCode': deptProcessCode?.toString() ?? '',
     'entryType': entryType ?? '',
     'totalPc': totalPc.toString(),
-    'totalWt': totalWt.toStringAsFixed(3),
+    'totalWt': fThreeDecimal(totalWt),
     'totPkt': (totPkt ?? 0).toString(), // ← ADD
     'jno': jnoFirst?.toString() ?? '', // ← ADD
     'users': users ?? '', // ← ADD

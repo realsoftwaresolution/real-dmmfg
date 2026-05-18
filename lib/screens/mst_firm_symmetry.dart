@@ -239,6 +239,8 @@ class _MstSymmetryState extends State<MstSymmetry> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _formValues['active'] = 'true';
+    _erpFormKey.currentState?.updateFieldValue('active', 'true');
     _setDefaultSortId();
   }
 

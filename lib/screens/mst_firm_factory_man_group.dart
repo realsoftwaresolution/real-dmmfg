@@ -333,6 +333,8 @@ class _MstFactoryManGroupState extends State<MstFactoryManGroup> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _formValues['active'] = 'true';
+    _erpFormKey.currentState?.updateFieldValue('active', 'true');
     _setDefaultSortId(); // 👈 IMPORTANT
 
   }

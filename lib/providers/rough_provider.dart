@@ -1,5 +1,6 @@
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../models/rough_model.dart';
+import '../utils/constants.dart';
 
 class RoughProvider extends BaseProvider {
   List<RoughModel> _roughs = [];
@@ -193,7 +194,7 @@ extension RoughModelExt on RoughModel {
     'jno':              jno?.toString()                    ?? '',
     'site':             site                               ?? '',
     'partyCode':        partyCode?.toString()              ?? '',
-    'totWt':            totWt?.toStringAsFixed(2)          ?? '0.000',
+    'totWt':            fThreeDecimal(totWt)          ?? '0.000',
     'amtDollar':        amtDollar?.toStringAsFixed(2)      ?? '0.00',
     'amtRs':            amtRs?.toStringAsFixed(2)          ?? '0.00',
 
@@ -219,45 +220,3 @@ extension RoughModelExt on RoughModel {
     '_raw': this,
   };
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// extension RoughModelExt on RoughModel {
-//   Map<String, dynamic> toTableRow() => {
-//     'roughMstID': roughMstID,
-//     'roughDate': roughDate ?? '',
-//     'jno': jno?.toString() ?? '',
-//     'site': site ?? '',
-//     'partyCode': partyCode?.toString() ?? '',
-//     'totWt': totWt?.toStringAsFixed(3) ?? '0.000',
-//     'amtDollar': amtDollar?.toStringAsFixed(2) ?? '0.00',
-//     'amtRs': amtRs?.toStringAsFixed(2) ?? '0.00',
-//     '_raw': this,
-//   };
-// }

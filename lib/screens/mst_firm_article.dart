@@ -325,6 +325,8 @@ class _MstArticleState extends State<MstArticle> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _formValues['active'] = 'true';
+    _erpFormKey.currentState?.updateFieldValue('active', 'true');
     _setDefaultSortId();
   }
 

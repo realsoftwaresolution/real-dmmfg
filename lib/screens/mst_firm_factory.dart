@@ -543,6 +543,8 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _formValues['active'] = 'true';
+    _erpFormKey.currentState?.updateFieldValue('active', 'true');
   }
 
   bool _showTableOnMobile = false;

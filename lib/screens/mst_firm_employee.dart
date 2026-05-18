@@ -699,6 +699,8 @@ class _MstEmployeeState extends State<MstEmployee> {
       _collapsedCounters = {};
     });
     _erpFormKey.currentState?.resetForm();
+    _formValues['active'] = 'true';
+    _erpFormKey.currentState?.updateFieldValue('active', 'true');
   }
 
   @override

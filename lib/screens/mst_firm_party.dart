@@ -496,6 +496,8 @@ class _MstFirmPartyState extends State<MstFirmParty> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _formValues['active'] = 'true';
+    _erpFormKey.currentState?.updateFieldValue('active', 'true');
   }
 
   bool _showTableOnMobile = false;

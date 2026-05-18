@@ -363,6 +363,8 @@ class _MstRemarksState extends State<MstRemarks> {
       _showTableOnMobile = false;
     });
     _erpFormKey.currentState?.resetForm();
+    _formValues['active'] = 'true';
+    _erpFormKey.currentState?.updateFieldValue('active', 'true');
     _setDefaultSortId();
   }
   bool _showTableOnMobile = false;

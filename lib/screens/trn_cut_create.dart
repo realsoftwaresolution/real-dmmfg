@@ -22,10 +22,6 @@ import '../bootstrap.dart';
 import '../models/rough_assort_model.dart';
 import '../models/rough_model.dart';
 
-String _f2(double? v) => v == null ? '' : v.toStringAsFixed(2);
-
-String _f3(double? v) => v == null ? '' : v.toStringAsFixed(2);
-
 const List<ErpDropdownItem> _cutTypeItems = [
   ErpDropdownItem(label: 'GENERAL', value: 'GENERAL'),
   ErpDropdownItem(label: 'SPK', value: 'SPK'),
@@ -85,16 +81,8 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
     ),
     ErpColumnConfig(key: 'kapanNo', label: 'KAPAN', width: 150),
     ErpColumnConfig(key: 'jno', label: 'JNO', width: 130),
-    ErpColumnConfig(
-      key: 'totalPc',
-      label: 'TOT PC',
-      width: 140,
-    ), // ✅
-    ErpColumnConfig(
-      key: 'totalWt',
-      label: 'TOT WT',
-      width: 140,
-    ), // ✅
+    ErpColumnConfig(key: 'totalPc', label: 'TOT PC', width: 140), // ✅
+    ErpColumnConfig(key: 'totalWt', label: 'TOT WT', width: 140), // ✅
   ];
 
   // ── FORM ROWS ──────────────────────────────────────────────────────────────
@@ -164,6 +152,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
           label: 'KAPAN NO',
           type: ErpFieldType.dropdown,
           dropdownItems: kapanItems,
+          readOnly: _detDisplay.isNotEmpty || _isEditMode,
           required: true,
           flex: 2,
           sectionIndex: 0,
@@ -198,6 +187,13 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
           sectionIndex: 1,
           isEntryField: true,
           isEntryRequired: true,
+          onDuplicateCheck: (value, allValues) async {
+            return await _checkDuplicate(
+              fields: {
+                'CutNo': value,
+              },
+            );
+          },
         ),
         ErpFieldConfig(
           key: 'entryPc',
@@ -245,31 +241,30 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
       ],
     ];
   }
-  Future<bool> _checkDuplicate({
-    required Map<dynamic, dynamic> fields,
-  }) async {
+
+  Future<bool> _checkDuplicate({required Map<dynamic, dynamic> fields}) async {
     /// ── SKIP SAME VALUE IN EDIT ───────────────
     final skip = shouldSkipDuplicateCheck(
       isEditMode: _isEditMode,
       selectedRow: _selectedRow,
       allowRowData: true,
       newFields: Map<String, dynamic>.from(fields),
-      fieldMapping: {
-        'CutNo': 'CutNo',
-      },
+      fieldMapping: {'CutNo': 'CutNo'},
     );
 
     if (skip) {
       return false;
     }
+
     /// ── API CHECK ─────────────────────────────
     return await checkDuplicateRecord(
       context: context,
       theme: _theme,
-      formName: 'Cut',
+      formName: 'CutCreate',
       fields: fields,
     );
   }
+
   // ── INIT ───────────────────────────────────────────────────────────────────
   @override
   void initState() {
@@ -365,7 +360,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
     setState(() {
       _assortDets = dets;
       _pendingPc = '${_totalAssortPc - formUsedPc}';
-      _pendingWt = _f3(_totalAssortWt - formUsedWt);
+      _pendingWt = fThreeDecimal(_totalAssortWt - formUsedWt);
     });
   }
 
@@ -375,7 +370,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
     final formUsedWt = _detRows.fold(0.0, (s, r) => s + (r.wt ?? 0));
     setState(() {
       _pendingPc = '${_totalAssortPc - formUsedPc}';
-      _pendingWt = _f3(_totalAssortWt - formUsedWt);
+      _pendingWt = fThreeDecimal(_totalAssortWt - formUsedWt);
     });
   }
 
@@ -432,18 +427,18 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
         theme: _theme,
         title: 'Weight Exceeded',
         message:
-            'Entry Wt (${_f3(entryWt)}) exceeds Pending Wt (${_f3(pendWt)}).\n\n'
-            'Available : ${_f3(_totalAssortWt)}\n'
-            'Pending   : ${_f3(pendWt)}\n'
-            'Entered   : ${_f3(entryWt)}\n\n'
-            'Please reduce weight to ${_f3(pendWt)} or less.',
+            'Entry Wt (${fThreeDecimal(entryWt)}) exceeds Pending Wt (${fThreeDecimal(pendWt)}).\n\n'
+            'Available : ${fThreeDecimal(_totalAssortWt)}\n'
+            'Pending   : ${fThreeDecimal(pendWt)}\n'
+            'Entered   : ${fThreeDecimal(entryWt)}\n\n'
+            'Please reduce weight to ${fThreeDecimal(pendWt)} or less.',
       );
       _erpFormKey.currentState?.focusField('entryWt');
       return;
     }
     final assortProv = context.read<RoughAssortProvider>();
     final mst = assortProv.list.firstWhere(
-          (e) => e.kapanNo == _formValues['kapanNo'],
+      (e) => e.kapanNo == _formValues['kapanNo'],
       orElse: () => RoughAssortModel(),
     );
 
@@ -455,7 +450,9 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
       cutType: cutType,
       cutNo: cutNo,
       pc: int.tryParse(_entryVals['entryPc'] ?? ''),
-      wt: double.tryParse(wtStr),
+      wt: double.parse(
+        (double.tryParse(wtStr) ?? 0).toStringAsFixed(3),
+      ),
       comparisionCode: double.tryParse(
         _entryVals['entryComparisionCode'] ?? '',
       ),
@@ -496,8 +493,8 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
     set('entryCutType', r.cutType);
     set('entryCutNo', r.cutNo);
     set('entryPc', r.pc?.toString());
-    set('entryWt', _f3(r.wt));
-    set('entryComparisionCode', _f2(r.comparisionCode));
+    set('entryWt', fThreeDecimal(r.wt));
+    set('entryComparisionCode', f2TwoDecimal(r.comparisionCode));
     set('entryAssortNo', _assortNo);
     set('entryPurityType', r.purityType);
 
@@ -541,9 +538,9 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
             'cutType': r.cutType ?? '',
             'cutNo': r.cutNo ?? '',
             'pc': r.pc?.toString() ?? '',
-            'wt': _f3(r.wt),
+            'wt': fThreeDecimal(r.wt),
             'comparisionCode': r.comparisionCode != null
-                ? _f2(r.comparisionCode)
+                ? f2TwoDecimal(r.comparisionCode)
                 : '',
             'assortNo': _assortNo,
             'purityType': r.purityType ?? '',
@@ -624,39 +621,50 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
 
   // ── SAVE ───────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
-    // final exists = await _checkDuplicate(
-    //   fields: {
-    //     'CutNo': values['entryCutNo'].toString(),
-    //   },
-    // );
-    // if (exists) return;
+    final exists = await _checkDuplicate(
+      fields: {
+        'CutNo': values['entryCutNo'].toString(),
+      },
+    );
+    if (exists) return;
 
-    final prov = context.read<CutCreateProvider>();
-    final merged = Map<String, dynamic>.from(values);
-    merged['cutCreateDate'] = toUtcIso(merged['cutCreateDate']?.toString());
-    merged['Sdate'] = DateTime.now().toUtc().toIso8601String();
+    if (_detDisplay.isNotEmpty) {
+      final prov = context.read<CutCreateProvider>();
+      final merged = Map<String, dynamic>.from(values);
+      merged['cutCreateDate'] = toUtcIso(merged['cutCreateDate']?.toString());
+      merged['Sdate'] = DateTime.now().toUtc().toIso8601String();
 
-    bool success;
-    if (_isEditMode && _selectedMst != null) {
-      success = await prov.update(
-        _selectedMst!.cutCreateMstID!,
-        merged,
-        _detRows,
-      );
-    } else {
-      success = await prov.create(merged, _detRows);
-    }
-    if (!mounted) return;
-    if (success) {
-      final wasEdit = _isEditMode;
-      _resetForm();
-      await ErpResultDialog.showSuccess(
+      bool success;
+      if (_isEditMode && _selectedMst != null) {
+        success = await prov.update(
+          _selectedMst!.cutCreateMstID!,
+          merged,
+          _detRows,
+        );
+      } else {
+        success = await prov.create(merged, _detRows);
+      }
+      if (!mounted) return;
+      if (success) {
+        final wasEdit = _isEditMode;
+        _resetForm();
+        await ErpResultDialog.showSuccess(
+          context: context,
+          theme: _theme,
+          title: wasEdit ? 'Updated' : 'Saved',
+          message: wasEdit
+              ? 'Cut Create Entry updated.'
+              : 'Cut Create Entry saved.',
+        );
+      }
+    }else {
+      await ErpResultDialog.showError(
         context: context,
         theme: _theme,
-        title: wasEdit ? 'Updated' : 'Saved',
-        message: wasEdit
-            ? 'Cut Create Entry updated.'
-            : 'Cut Create Entry saved.',
+        title: 'Entry Required',
+        message:
+        'Entry is required to proceed.\n'
+            'Please enter entry before continuing.',
       );
     }
   }
@@ -817,7 +825,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
                     _infoChip(
                       t,
                       'TOT WT',
-                      _f3(tots['wt'] as double),
+                      fThreeDecimal(tots['wt'] as double),
                       t.primary,
                     ),
                   ],
@@ -945,7 +953,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
           blank(),
           const SizedBox(width: 35),
           cell('PC', '${tots['pc']}'),
-          cell('WT', _f3(tots['wt'] as double)),
+          cell('WT', fThreeDecimal(tots['wt'] as double)),
           blank(),
           blank(),
           blank(),

@@ -88,11 +88,16 @@ class SpkDeptIssProvider extends BaseProvider {
       ..remove('FromCrID');
     // 🔥 REMOVE HERE
     final result = await request<SpkDeptIssMstModel>(
-      call: () => api.post('/spkDeptIssasaadadada', data: {
+      call: () => api.post('/spkDeptIss', data: {
         ...modelMap, // ✅ cleaned
         'details': details.map((e) {
-          final map = e.toJson();
-          map.remove('sarinData'); // ✅ REMOVE HERE
+          final map = Map<String, dynamic>.from(e.toJson())
+            ..remove('sarinData')
+            ..remove('LastDmWt')
+            ..remove('LastDmPer')
+          ..remove('LastDmWt')
+          ..remove('LastDmPer');
+
           return map;
         }).toList(),
       }),
@@ -126,8 +131,12 @@ class SpkDeptIssProvider extends BaseProvider {
       call: () => api.put('/spkDeptIss/$id', data: {
         ...modelMap, // ✅ cleaned
         'details': details.map((e) {
-          final map = e.toJson();
-          map.remove('sarinData'); // ✅ REMOVE HERE
+          final map = Map<String, dynamic>.from(e.toJson())
+            ..remove('sarinData')
+            ..remove('LastDmWt')
+            ..remove('LastDmPer')
+            ..remove('LastDmWt')
+            ..remove('LastDmPer');
           return map;
         }).toList(),
       }),

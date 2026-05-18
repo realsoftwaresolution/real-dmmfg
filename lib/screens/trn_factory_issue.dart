@@ -30,12 +30,6 @@ import '../providers/shape_provider.dart';
 import '../providers/user_visibility_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-
-String _f3(double? v) => v == null ? '0.000' : v.toStringAsFixed(3);
-
-// ─────────────────────────────────────────────────────────────────────────────
 //  WIDGET
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -508,12 +502,12 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       'pktNo': r.pktNo ?? '',
 
       'pc': (r.pc ?? 0).toString(),
-      'wt': _f3(r.wt ?? 0),
+      'wt': fThreeDecimal(r.wt ?? 0),
 
       'issPc': (r.issPc ?? r.pc ?? 0).toString(),
-      'issWt': _f3(r.issWt ?? r.wt ?? 0),
+      'issWt': fThreeDecimal(r.issWt ?? r.wt ?? 0),
 
-      'ghatWt': _f3(r.lossWt ?? 0),
+      'ghatWt': fThreeDecimal(r.lossWt ?? 0),
 
       'purityCode': _purityNameFor(r.purityCode),
 
@@ -521,7 +515,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
       'colorCode': r.colorCode?.toString() ?? '',
 
-      'dmWt': _f3(r.dmWt ?? 0),
+      'dmWt': fThreeDecimal(r.dmWt ?? 0),
       'dmPer': (r.dmPer ?? 0).toStringAsFixed(2),
 
       'size': '',
@@ -1143,11 +1137,11 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     return {
       'srno': 'Tot...',
       'pc': '$totPc',
-      'wt': _f3(totWt),
+      'wt': fThreeDecimal(totWt),
       'issPc': '$totIssPc',
-      'issWt': _f3(totIssWt),
-      'ghatWt': _f3(totGhatWt),
-      'dmWt': _f3(totDmWt),
+      'issWt': fThreeDecimal(totIssWt),
+      'ghatWt': fThreeDecimal(totGhatWt),
+      'dmWt': fThreeDecimal(totDmWt),
       'dmPer': dmPer.toStringAsFixed(2),
       'size': avgSize.toStringAsFixed(2),
     };
@@ -1201,16 +1195,16 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         'pc': (e.pc ?? 0).toString(),
 
         // ✅ WT
-        'wt': _f3(e.wt ?? 0),
+        'wt': fThreeDecimal(e.wt ?? 0),
 
         // ✅ ISS PC
         'issPc': (e.issPc ?? 0).toString(),
 
         // ✅ ISS WT
-        'issWt': _f3(e.issWt ?? 0),
+        'issWt': fThreeDecimal(e.issWt ?? 0),
 
         // ✅ DM WT
-        'dmWt': _f3(e.dmWt ?? 0),
+        'dmWt': fThreeDecimal(e.dmWt ?? 0),
 
         // ✅ DM PER
         'dmPer': (e.dmPer ?? 0).toStringAsFixed(2),

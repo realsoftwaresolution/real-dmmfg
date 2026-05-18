@@ -33,12 +33,6 @@ import '../providers/shape_provider.dart';
 import '../providers/user_visibility_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-
-String _f3(double? v) => v == null ? '0.000' : v.toStringAsFixed(3);
-
-// ─────────────────────────────────────────────────────────────────────────────
 //  WIDGET
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -518,13 +512,13 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     }
 
     set('orgPc', r.pc?.toString());
-    set('orgWt', _f3(r.wt));
+    set('orgWt', fThreeDecimal(r.wt));
     set('issPc', r.issPc?.toString());
-    set('issWt', _f3(r.issWt));
+    set('issWt', fThreeDecimal(r.issWt));
     set('recPc', r.recPc?.toString());
-    set('recWt', _f3(r.recWt));
-    set('dmWt', _f3(r.dmWt));
-    set('dmPer', _f3(r.dmPer));
+    set('recWt', fThreeDecimal(r.recWt));
+    set('dmWt', fThreeDecimal(r.dmWt));
+    set('dmPer', fThreeDecimal(r.dmPer));
     set('jnoRecPc', r.jnoRecPc?.toString());
     set('shapeCode', r.shapeCode?.toString());
     set('purityCode', r.purityCode?.toString());
@@ -548,8 +542,8 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     final base = recWt > 0 ? recWt : issWt;
     final dmPer = double.tryParse(_entryVals['dmPer'] ?? '') ?? 0;
     final dmWt = base * dmPer / 100;
-    _entryVals['dmWt'] = _f3(dmWt);
-    _erpFormKey.currentState?.updateFieldValue('dmWt', _f3(dmWt));
+    _entryVals['dmWt'] = fThreeDecimal(dmWt);
+    _erpFormKey.currentState?.updateFieldValue('dmWt', fThreeDecimal(dmWt));
   }
 
   void _calcLoss() {
@@ -559,8 +553,8 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
 
     final lossWt = issWt - (recWt + topsWt);
 
-    _entryVals['lossWt'] = _f3(lossWt);
-    _erpFormKey.currentState?.updateFieldValue('lossWt', _f3(lossWt));
+    _entryVals['lossWt'] = fThreeDecimal(lossWt);
+    _erpFormKey.currentState?.updateFieldValue('lossWt', fThreeDecimal(lossWt));
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -804,21 +798,21 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     }
 
     set('orgPc', r.pc?.toString());
-    set('orgWt', _f3(r.wt));
+    set('orgWt', fThreeDecimal(r.wt));
     set('issPc', r.issPc?.toString());
-    set('issWt', _f3(r.issWt));
+    set('issWt', fThreeDecimal(r.issWt));
     set('recPc', r.recPc?.toString());
-    set('recWt', _f3(r.recWt));
+    set('recWt', fThreeDecimal(r.recWt));
     set('dmPer', r.dmPer?.toStringAsFixed(2));
-    set('dmWt', _f3(r.dmWt));
+    set('dmWt', fThreeDecimal(r.dmWt));
     set('kpc', r.kPc?.toString());
-    set('kwt', _f3(r.kWt));
+    set('kwt', fThreeDecimal(r.kWt));
     set('brpc', r.brPc?.toString());
-    set('brwt', _f3(r.brWt));
+    set('brwt', fThreeDecimal(r.brWt));
     set('lossPc', r.lossPc?.toString());
-    set('lossWt', _f3(r.lossWt));
+    set('lossWt', fThreeDecimal(r.lossWt));
     set('topsPc', r.topsPc?.toString());
-    set('topsWt', _f3(r.topsWt));
+    set('topsWt', fThreeDecimal(r.topsWt));
     set('employee', r.employeeCode?.toString());
     set('signer', r.signerCode?.toString());
     set('remarks', r.remarksCode?.toString());
@@ -1011,12 +1005,12 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         "topsPc": r.topsPc,
         "topsWt": r.topsWt,
         'recPc': r.recPc?.toString() ?? '',
-        'recWt': _f3(r.recWt),
-        'mackRoughWt': _f3(r.mackRoughWt),
-        'dmWt': _f3(r.dmWt),
-        'diffPoWt': _f3(r.diffPoWt),
+        'recWt': fThreeDecimal(r.recWt),
+        'mackRoughWt': fThreeDecimal(r.mackRoughWt),
+        'dmWt': fThreeDecimal(r.dmWt),
+        'diffPoWt': fThreeDecimal(r.diffPoWt),
         'dmPer': r.dmPer?.toStringAsFixed(2) ?? '',
-        'lossWt': isFirst ? _f3(totalLossWt) : '0.000',
+        'lossWt': isFirst ? fThreeDecimal(totalLossWt) : '0.000',
         'lossPer': isFirst
             ? (totalIssWt > 0 ? (totalLossWt / totalIssWt) * 100 : 0)
                   .toStringAsFixed(2)
@@ -1919,8 +1913,8 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
                 'rPartName': r.partName?.toString() ?? '-',
                 'rColor': r.colorCode?.toString() ?? '-',
                 'rPurity': _purityNameFor(r.purityCode),
-                'rRgWt': _f3(r.mackRoughWt),
-                'rPoWt': _f3(r.diffPoWt),
+                'rRgWt': fThreeDecimal(r.mackRoughWt),
+                'rPoWt': fThreeDecimal(r.diffPoWt),
               },
             )
             .toList();
@@ -1987,13 +1981,13 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
                       columnAlignments: rightAlignments,
                       footerTotCount: 'Tot: ${_detRows.length}',
                       footerTotals: {
-                        'rRgWt': _f3(
+                        'rRgWt': fThreeDecimal(
                           _detRows.fold(
                             0.0,
                             (s, r) => s! + (r.mackRoughWt ?? 0),
                           ),
                         ),
-                        'rPoWt': _f3(
+                        'rPoWt': fThreeDecimal(
                           _detRows.fold(0.0, (s, r) => s! + (r.diffPoWt ?? 0)),
                         ),
                       },
@@ -2026,12 +2020,12 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
 
     return {
       'recPc': '${foldInt((r) => r.recPc ?? 0)}',
-      'recWt': _f3(totRecWt),
-      'mackRoughWt': _f3(fold((r) => r.mackRoughWt ?? 0)),
-      'dmWt': _f3(totDmWt),
-      'diffPoWt': _f3(fold((r) => r.diffPoWt ?? 0)),
+      'recWt': fThreeDecimal(totRecWt),
+      'mackRoughWt': fThreeDecimal(fold((r) => r.mackRoughWt ?? 0)),
+      'dmWt': fThreeDecimal(totDmWt),
+      'diffPoWt': fThreeDecimal(fold((r) => r.diffPoWt ?? 0)),
       'dmPer': dmPerStr,
-      'lossWt': _f3(firstIssWt - (totalRecWt + totalTopsWt)),
+      'lossWt': fThreeDecimal(firstIssWt - (totalRecWt + totalTopsWt)),
     };
   }
 
@@ -2080,7 +2074,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         ..['jno'] = dets.isNotEmpty ? (dets.first.jno?.toString() ?? '') : ''
         ..['totPkt'] = '${dets.length}'
         ..['totalPc'] = '${dets.fold<int>(0, (s, r) => s + (r.totalPc ?? 0))}'
-        ..['totalWt'] = _f3(
+        ..['totalWt'] = fThreeDecimal(
           dets.fold<double>(0.0, (s, r) => s + (r.totalWt ?? 0.0)),
         );
 

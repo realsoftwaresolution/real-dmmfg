@@ -23,7 +23,7 @@ import 'package:rs_dashboard/rs_dashboard.dart';
 import '../bootstrap.dart';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
-String _f3(double? v) => v == null ? '0.00' : v.toStringAsFixed(2);
+String fThreeDecimal(double? v) => v == null ? '0.00' : v.toStringAsFixed(2);
 
 // ── Lot group size ─────────────────────────────────────────────────────────────
 const int _kLotSize = 20;
@@ -123,7 +123,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
           final pendingWt = _getPendingWtForCut(cc);
           return ErpDropdownItem(
             // ✅ Edit mode mein current cut ka label
-            label: 'Cut: ${spkDet.cutNo ?? ''}  Pending WT: ${_f3(pendingWt)}',
+            label: 'Cut: ${spkDet.cutNo ?? ''}  Pending WT: ${fThreeDecimal(pendingWt)}',
             value: spkDet.cutNo ?? '',
           );
         })
@@ -465,17 +465,17 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     // plusWt = pendWt * 0.15 / 100
     final plusWt = pendWt * 0.15 / 100;
 
-    _formValues['pendWt'] = _f3(pendWt);
+    _formValues['pendWt'] = fThreeDecimal(pendWt);
     _formValues['pendPc'] = '$pendPc';
 
-    _erpFormKey.currentState?.updateFieldValue('pendWt', _f3(pendWt));
+    _erpFormKey.currentState?.updateFieldValue('pendWt', fThreeDecimal(pendWt));
     _erpFormKey.currentState?.updateFieldValue('pendPc', '$pendPc');
 
     // Auto-fill entry fields
     _entryVals['entryPc'] = '1';
-    _entryVals['entryPlusWt'] = _f3(plusWt);
+    _entryVals['entryPlusWt'] = fThreeDecimal(plusWt);
     _erpFormKey.currentState?.updateFieldValue('entryPc', '1');
-    _erpFormKey.currentState?.updateFieldValue('entryPlusWt', _f3(plusWt));
+    _erpFormKey.currentState?.updateFieldValue('entryPlusWt', fThreeDecimal(plusWt));
 
     // Auto lotNo for this cutNo
     final lastLot = _lotNoMap[cutNo] ?? 0;
@@ -498,15 +498,15 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     final pendWt = _pendingWt - formUsedWt;
     final pendPc = _pendingPc - formUsedPc;
 
-    _formValues['pendWt'] = _f3(pendWt);
+    _formValues['pendWt'] = fThreeDecimal(pendWt);
     _formValues['pendPc'] = '$pendPc';
-    _erpFormKey.currentState?.updateFieldValue('pendWt', _f3(pendWt));
+    _erpFormKey.currentState?.updateFieldValue('pendWt', fThreeDecimal(pendWt));
     _erpFormKey.currentState?.updateFieldValue('pendPc', '$pendPc');
 
     // Update plusWt based on new pendWt
     final plusWt = pendWt * 0.15 / 100;
-    _entryVals['entryPlusWt'] = _f3(plusWt);
-    _erpFormKey.currentState?.updateFieldValue('entryPlusWt', _f3(plusWt));
+    _entryVals['entryPlusWt'] = fThreeDecimal(plusWt);
+    _erpFormKey.currentState?.updateFieldValue('entryPlusWt', fThreeDecimal(plusWt));
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -608,8 +608,8 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         theme: _theme,
         title: 'Weight Exceeded',
         message:
-            'Entry Wt (${_f3(entryWt)}) exceeds '
-            'Pending Wt (${_f3(pendWt)}).\n'
+            'Entry Wt (${fThreeDecimal(entryWt)}) exceeds '
+            'Pending Wt (${fThreeDecimal(pendWt)}).\n'
             'Please reduce weight.',
       );
 
@@ -730,8 +730,8 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     final formUsedWt = _detRows.fold(0.0, (s, r) => s + (r.wt ?? 0));
     final pendWt = _pendingWt - formUsedWt;
     final plusWt = pendWt * 0.15 / 100;
-    _entryVals['entryPlusWt'] = _f3(plusWt);
-    _erpFormKey.currentState?.updateFieldValue('entryPlusWt', _f3(plusWt));
+    _entryVals['entryPlusWt'] = fThreeDecimal(plusWt);
+    _erpFormKey.currentState?.updateFieldValue('entryPlusWt', fThreeDecimal(plusWt));
 
     Future.delayed(
       const Duration(milliseconds: 50),
@@ -754,13 +754,13 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     set('entryTensions', r.tensionsCode?.toString());
     set('entryFluo', r.fluoCode?.toString());
     set('entryLotNo', r.lotNo?.toString());
-    set('entryWt', _f3(r.wt));
+    set('entryWt', fThreeDecimal(r.wt));
     set('entryPc', '1');
 
     final formUsedWt =
         _detRows.fold(0.0, (s, d) => s + (d.wt ?? 0)) - (r.wt ?? 0);
     final pendWt = _pendingWt - formUsedWt;
-    set('entryPlusWt', _f3(pendWt * 0.15 / 100));
+    set('entryPlusWt', fThreeDecimal(pendWt * 0.15 / 100));
   }
 
   void _deleteDetRow(int idx) {
@@ -808,7 +808,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         'lotNo': r.lotNo?.toString() ?? '',
         'lotCode': r.lotCode ?? 'A',
         'pc': r.pc?.toString() ?? '',
-        'wt': _f3(r.wt),
+        'wt': fThreeDecimal(r.wt),
         'pktType': _pktTypeName(r.pktType), // ✅ name
         'color': _colorName(r.colorCode), // ✅ name
         'tensions': _tensionsName(r.tensionsCode), // ✅ name
@@ -887,7 +887,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         'packetMstID': raw.packetMstID?.toString() ?? '0',
         'packetDate': toDisplayDate(raw.packetDate),
         'cutNo': raw.cutNo ?? '',
-        'pendWt': _f3(
+        'pendWt': fThreeDecimal(
           _pendingWt - details.fold(0.0, (s, r) => s + (r.wt ?? 0)),
         ),
         'pendPc': '${_pendingPc - details.fold(0, (s, r) => s + (r.pc ?? 0))}',
@@ -1184,7 +1184,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
           blank(),
           blank(),
           cell('PC', '${tots['pc']}'),
-          cell('WT', _f3(tots['wt'] as double)),
+          cell('WT', fThreeDecimal(tots['wt'] as double)),
           blank(),
           blank(),
           blank(),
@@ -1295,7 +1295,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
                   ),
                   Expanded(
                     child: Text(
-                      _f3(g['wt'] as double),
+                      fThreeDecimal(g['wt'] as double),
                       textAlign: TextAlign.right,
                       style: TextStyle(
                         fontSize: 11,
@@ -1346,7 +1346,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
                 ),
                 Expanded(
                   child: Text(
-                    _f3(groups.fold(0.0, (s, g) => s! + (g['wt'] as double))),
+                    fThreeDecimal(groups.fold(0.0, (s, g) => s! + (g['wt'] as double))),
                     textAlign: TextAlign.right,
                     style: TextStyle(
                       fontSize: 11,

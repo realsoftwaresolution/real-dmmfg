@@ -1,5 +1,7 @@
 // lib/models/cut_create_model.dart
 
+import '../utils/constants.dart';
+
 class CutCreateModel {
   final int?    cutCreateMstID;
   final String? cutCreateDate;
@@ -327,7 +329,7 @@ extension CutCreateModelExt on CutCreateModel {
     'cutCreateDate':  cutCreateDate ?? '',
     'jno':            jno?.toString() ?? '',
     'kapanNo':        kapanNo         ?? '',
-    'totalWt':        totalWt.toStringAsFixed(2),  // ✅
+    'totalWt':        fThreeDecimal(totalWt),  // ✅
     'totalPc':        totalPc.toString(),
     '_raw': this,
   };

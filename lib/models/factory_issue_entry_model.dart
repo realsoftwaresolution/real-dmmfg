@@ -1,3 +1,5 @@
+import '../utils/constants.dart';
+
 class FactoryIssueMstModel {
   final int? factoryIssMstID;
   final dynamic jno;
@@ -658,12 +660,12 @@ extension FactoryIssMstExt on FactoryIssueMstModel {
     'totPkt': (pkt ?? 0).toString(),
 
     'pc': (pc ?? 0).toString(),
-    'wt': (wt ?? 0).toStringAsFixed(3),
+    'wt': fThreeDecimal(wt ?? 0),
 
     'issPc': (issPc ?? 0).toString(),
-    'issWt': (issWt ?? 0).toStringAsFixed(3),
+    'issWt': fThreeDecimal(issWt ?? 0),
 
-    'dmWt': (dmWt ?? 0).toStringAsFixed(3),
+    'dmWt': fThreeDecimal(dmWt ?? 0),
     'dmPer': (dmPer ?? 0).toStringAsFixed(2),
   };
 }

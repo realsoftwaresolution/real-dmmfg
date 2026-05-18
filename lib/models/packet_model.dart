@@ -1,5 +1,7 @@
 // lib/models/packet_model.dart
 
+import '../utils/constants.dart';
+
 class PacketMstModel {
   final int?    packetMstID;
   final String? packetDate;
@@ -379,7 +381,7 @@ extension PacketMstModelExt on PacketMstModel {
     'clvCut':      clvCut     ?? '',
     'entryType':   entryType  ?? 'Packet Create',
     'slType':      slType     ?? '',
-    'totalWt':     totalWt.toStringAsFixed(3),
+    'totalWt':     fThreeDecimal(totalWt),
     'totalPc':     totalPc.toString(),
     '_raw': this,
   };

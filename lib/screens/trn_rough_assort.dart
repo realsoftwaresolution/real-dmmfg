@@ -19,11 +19,6 @@ import '../models/purity_group_model.dart';
 import '../models/purity_model.dart';
 import '../models/rough_model.dart';
 
-// ─── field fmt helpers ────────────────────────────────────────────────────────
-String _f2(double? v) => v == null ? '' : v.toStringAsFixed(2);
-
-String _f3(double? v) => v == null ? '' : v.toStringAsFixed(3);
-
 double _d(dynamic v) => v == null ? 0 : (double.tryParse(v.toString()) ?? 0);
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -410,8 +405,8 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
 
     setState(() {
       _formValues['jno'] = jno;
-      _knoWt = _f3(totWt);
-      _pendingWt = _f3(effectiveKnoWt - formUsedWt);
+      _knoWt = fThreeDecimal(totWt);
+      _pendingWt = fThreeDecimal(effectiveKnoWt - formUsedWt);
     });
 
     _erpFormKey.currentState?.updateFieldValue('jno', jno);
@@ -439,13 +434,13 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
     final totRateRs = wt > 0 ? totAmtRs / wt : 0.0;
 
     void push(String key, double val) {
-      final s = _f2(val);
+      final s = f2TwoDecimal(val);
       _entryCalc[key] = s;
       _erpFormKey.currentState?.updateFieldValue(key, s);
     }
 
     // ✅ per only stored in _entryCalc — NOT pushed to form (field not in form)
-    final perStr = _f2(per);
+    final perStr = f2TwoDecimal(per);
     _entryCalc['entryPer'] = perStr;
     // No updateFieldValue for entryPer — field doesn't exist in entry form
 
@@ -489,8 +484,8 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
     final effectiveKnoWt = totWt - alreadySavedWt;
 
     setState(() {
-      _knoWt = _f3(effectiveKnoWt);
-      _pendingWt = _f3(effectiveKnoWt - formUsedWt);
+      _knoWt = fThreeDecimal(effectiveKnoWt);
+      _pendingWt = fThreeDecimal(effectiveKnoWt - formUsedWt);
     });
   }
 
@@ -513,6 +508,13 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
     final entryWt = double.tryParse(wt) ?? 0;
     final knoWt = double.tryParse(_knoWt) ?? 0;
 
+    if (entryWt <= 0) {
+      _showSnack('Weight must be greater than 0');
+
+      _erpFormKey.currentState?.focusField('entryWt');
+
+      return;
+    }
     // Edit mode mein: current row ka purana wt hatao, baaki wt = pending
     final currentRowOldWt = _editingDetIndex != null
         ? (_detRows[_editingDetIndex!].wt ?? 0)
@@ -584,12 +586,12 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
       theme: _theme,
       title: 'Weight Limit Exceeded',
       message:
-      'Entry weight (${_f3(entryWt)}) exceeds the pending weight '
-          '(${_f3(pendingWt)}).\n\n'
-          'KNO Total : ${_f3(knoWt)}\n'
-          'Pending   : ${_f3(pendingWt)}\n'
-          'Entered   : ${_f3(entryWt)}\n\n'
-          'Please reduce the weight to ${_f3(pendingWt)} or less.',
+      'Entry weight (${fThreeDecimal(entryWt)}) exceeds the pending weight '
+          '(${fThreeDecimal(pendingWt)}).\n\n'
+          'KNO Total : ${fThreeDecimal(knoWt)}\n'
+          'Pending   : ${fThreeDecimal(pendingWt)}\n'
+          'Entered   : ${fThreeDecimal(entryWt)}\n\n'
+          'Please reduce the weight to ${fThreeDecimal(pendingWt)} or less.',
     );
     // Refocus WT field after dialog closes
     _erpFormKey.currentState?.focusField('entryWt');
@@ -606,21 +608,21 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
 
     set('purityCode', r.purityCode?.toString());
     set('entryPc', r.pc?.toString());
-    set('entryWt', _f3(r.wt));
-    set('entryPer', _f2(r.per));
-    set('entryExRate', _f2(r.exRate));
-    set('entryRateDollar', _f2(r.rateDollar));
-    set('entryAmtDollar', _f2(r.amtDollar));
-    set('entryLabRateD', _f2(r.labRateD));
-    set('entryLabAmtD', _f2(r.labAmtD));
-    set('entryRateRs', _f2(r.rateRs));
-    set('entryAmtRs', _f2(r.amtRs));
-    set('entryLabRateRs', _f2(r.labRateRs));
-    set('entryLabAmtRs', _f2(r.labAmtRs));
-    set('entryTotRateD', _f2(r.totRateD));
-    set('entryTotAmtD', _f2(r.totAmtD));
-    set('entryTotRateRs', _f2(r.totRateRs));
-    set('entryTotAmtRs', _f2(r.totAmtRs));
+    set('entryWt', fThreeDecimal(r.wt));
+    set('entryPer', f2TwoDecimal(r.per));
+    set('entryExRate', f2TwoDecimal(r.exRate));
+    set('entryRateDollar', f2TwoDecimal(r.rateDollar));
+    set('entryAmtDollar', f2TwoDecimal(r.amtDollar));
+    set('entryLabRateD', f2TwoDecimal(r.labRateD));
+    set('entryLabAmtD', f2TwoDecimal(r.labAmtD));
+    set('entryRateRs', f2TwoDecimal(r.rateRs));
+    set('entryAmtRs', f2TwoDecimal(r.amtRs));
+    set('entryLabRateRs', f2TwoDecimal(r.labRateRs));
+    set('entryLabAmtRs', f2TwoDecimal(r.labAmtRs));
+    set('entryTotRateD', f2TwoDecimal(r.totRateD));
+    set('entryTotAmtD', f2TwoDecimal(r.totAmtD));
+    set('entryTotRateRs', f2TwoDecimal(r.totRateRs));
+    set('entryTotAmtRs', f2TwoDecimal(r.totAmtRs));
 
     Future.delayed(
       const Duration(milliseconds: 50),
@@ -686,17 +688,17 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
         'srno': r.srno?.toString() ?? '',
         'purityGroup': pgName,
         'pc': r.pc?.toString() ?? '',
-        'wt': _f3(r.wt),
-        'per': _f2(r.per),
-        'exRate': _f2(r.exRate),
-        'rateDollar': _f2(r.rateDollar),
-        'amtDollar': _f2(r.amtDollar),
-        'rateRs': _f2(r.rateRs),
-        'amtRs': _f2(r.amtRs),
-        'labRateD': _f2(r.labRateD),
-        'labAmtD': _f2(r.labAmtD),
-        'labRateRs': _f2(r.labRateRs),
-        'labAmtRs': _f2(r.labAmtRs),
+        'wt': fThreeDecimal(r.wt),
+        'per': f2TwoDecimal(r.per),
+        'exRate': f2TwoDecimal(r.exRate),
+        'rateDollar': f2TwoDecimal(r.rateDollar),
+        'amtDollar': f2TwoDecimal(r.amtDollar),
+        'rateRs': f2TwoDecimal(r.rateRs),
+        'amtRs': f2TwoDecimal(r.amtRs),
+        'labRateD': f2TwoDecimal(r.labRateD),
+        'labAmtD': f2TwoDecimal(r.labAmtD),
+        'labRateRs': f2TwoDecimal(r.labRateRs),
+        'labAmtRs': f2TwoDecimal(r.labAmtRs),
       };
     }).toList();
   }
@@ -788,8 +790,8 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
       _isEditMode = true;
       _detRows = details;
       _editingDetIndex = null;
-      _knoWt = _f3(knoWt);
-      _pendingWt = _f3(knoWt - usedWt);
+      _knoWt = fThreeDecimal(knoWt);
+      _pendingWt = fThreeDecimal(knoWt - usedWt);
       _formValues = {
         'roughAssortMstID': raw.roughAssortMstID?.toString() ?? '0',
         'roughAssortDate': toDisplayDate(raw.roughAssortDate),
@@ -1049,7 +1051,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
                   if (_detRows.isNotEmpty) ...[
                     _infoChip(t, 'ROWS', '${_detRows.length}', t.primary),
                     const SizedBox(width: 16),
-                    _infoChip(t, 'TOT WT', _f3(tots['wt']), t.primary),
+                    _infoChip(t, 'TOT WT', fThreeDecimal(tots['wt']), t.primary),
                   ],
                 ],
               ),
@@ -1147,7 +1149,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  val != null ? (isPercent ? '${_f2(val)}%' : _f2(val)) : '-',
+                  val != null ? (isPercent ? '${f2TwoDecimal(val)}%' : f2TwoDecimal(val)) : '-',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
