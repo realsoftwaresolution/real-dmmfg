@@ -106,10 +106,10 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     if (deptCode == null) return '';
     try {
       return context
-          .read<DeptProvider>()
-          .list
-          .firstWhere((d) => d.deptCode == deptCode)
-          .deptName ??
+              .read<DeptProvider>()
+              .list
+              .firstWhere((d) => d.deptCode == deptCode)
+              .deptName ??
           '';
     } catch (_) {
       return '';
@@ -120,10 +120,10 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     if (code == null) return '';
     try {
       return context
-          .read<PurityProvider>()
-          .list
-          .firstWhere((p) => p.purityCode == code)
-          .purityName ??
+              .read<PurityProvider>()
+              .list
+              .firstWhere((p) => p.purityCode == code)
+              .purityName ??
           '';
     } catch (_) {
       return '';
@@ -168,10 +168,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
   void _setDefaultFormValues() {
     final now = DateTime.now();
-    _formValues = {
-      'date': DateFormat('dd/MM/yyyy').format(now),
-      'jno': '0',
-    };
+    _formValues = {'date': DateFormat('dd/MM/yyyy').format(now), 'jno': '0'};
     if (mounted) setState(() {});
   }
 
@@ -181,7 +178,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
   Future<void> _loadFromDisplayFields(int crId) async {
     final counter = context.read<CounterProvider>().list.firstWhereOrNull(
-          (c) => c.crId == crId,
+      (c) => c.crId == crId,
     );
     if (counter == null || counter.counterMstID == null) return;
 
@@ -198,7 +195,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
   Future<void> _loadToDisplayFields(int crId) async {
     final counter = context.read<CounterProvider>().list.firstWhereOrNull(
-          (c) => c.crId == crId,
+      (c) => c.crId == crId,
     );
     if (counter == null || counter.counterMstID == null) return;
 
@@ -221,23 +218,23 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     return rawList
         .where(
           (r) =>
-      r.counterType == counterType &&
-          r.userVisibilityCode != null &&
-          _visProv.list.any(
+              r.counterType == counterType &&
+              r.userVisibilityCode != null &&
+              _visProv.list.any(
                 (v) => v.userVisibilityCode == r.userVisibilityCode,
-          ),
-    )
+              ),
+        )
         .map(
           (r) => _visProv.list.firstWhereOrNull(
             (v) => v.userVisibilityCode == r.userVisibilityCode,
-      ),
-    )
+          ),
+        )
         .where(
           (v) =>
-      v != null &&
-          v!.userVisibilityCode != null &&
-          (v.userVisibilityName ?? '').isNotEmpty,
-    )
+              v != null &&
+              v!.userVisibilityCode != null &&
+              (v.userVisibilityName ?? '').isNotEmpty,
+        )
         .cast<UserVisibilityModel>()
         .toList()
       ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
@@ -253,7 +250,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
     try {
       final counter = context.read<CounterProvider>().list.firstWhere(
-            (c) => c.crId == crId,
+        (c) => c.crId == crId,
       );
       final deptName = _deptNameFor(counter.deptCode);
 
@@ -288,9 +285,9 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     if (_isBCodePending) return;
     _isBCodePending = true;
 
-    final rows = await context
-        .read<FactoryIssueEntryProvider>()
-        .fetchByBCode(bCode: bCode);
+    final rows = await context.read<FactoryIssueEntryProvider>().fetchByBCode(
+      bCode: bCode,
+    );
 
     if (!mounted) return;
 
@@ -306,7 +303,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
     // ✅ Duplicate check
     final exists = _detRows.any(
-          (e) => e.bCode?.toString() == r.bCode?.toString(),
+      (e) => e.bCode?.toString() == r.bCode?.toString(),
     );
 
     if (exists) {
@@ -320,16 +317,18 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
       bCode: r.bCode?.toString() ?? '',
       pktNo: r.pktNo ?? '',
-      PacketMstID:r.PacketMstID,
+      PacketMstID: r.PacketMstID,
       cutNo: r.cutNo ?? '',
+      // ORIGINAL PACKET VALUES
       pc: r.pc ?? 0,
       wt: r.wt ?? 0,
 
-      issPc: r.pc ?? 0,
-      issWt: r.wt ?? 0,
-
       dmWt: r.dmWt ?? 0,
       dmPer: r.dmPer ?? 0,
+
+      // LAST ENTRY RECEIVE VALUES
+      issPc: r.recPc ?? r.pc ?? 0,
+      issWt: r.recWt ?? r.wt ?? 0,
 
       purityCode: r.purityCode,
       colorCode: r.colorCode,
@@ -343,6 +342,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
       entryType: 'B',
       formType: 'FACTORY ISSUE',
+      size: r.size ?? 0.00
     );
     _detRows.add(newRow);
     _syncDetGrid();
@@ -366,25 +366,105 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       _entryVals[k] = v ?? '';
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
+
     set('scanValue', r.bCode);
   }
 
   dynamic _deleteDetRow(int idx) async {
-    final confirm = await ErpDeleteDialog.show(
-      context: context,
-      theme: _theme,
-      title: 'Factory Issue',
-      itemName: 'ID: ${_detRows[idx].spkDeptIssDetID?.toString()}',
-    );
-    if (confirm != true || !mounted) return;
+    if (_isEditMode) {
+      final confirm = await ErpDeleteDialog.show(
+        context: context,
+        theme: _theme,
+        title: 'Factory Issue',
+        itemName: 'ID: ${_detRows[idx].spkDeptIssDetID?.toString()}',
+      );
+      if (confirm != true || !mounted) return;
 
-    final success = await context.read<FactoryIssueEntryProvider>().deleteRow(
-      _detRows[idx].spkDeptIssMstID?.toString(),
-      _detRows[idx].spkDeptIssDetID?.toString(),
-      _detRows[idx].bCode,
-    );
+      final success = await context.read<FactoryIssueEntryProvider>().deleteRow(
+        _detRows[idx].spkDeptIssMstID?.toString(),
+        _detRows[idx].spkDeptIssDetID?.toString(),
+        _detRows[idx].bCode,
+      );
+      if (success && mounted) {
+        setState(() {
+          _detRows.removeAt(idx);
+          // Re-number srno
+          _detRows = _detRows.asMap().entries.map((e) {
+            final v = e.value;
+            return FactoryIssueDetModel(
+              srno: e.key + 1,
+              spkDeptIssMstID: v.spkDeptIssMstID,
+              id: v.id,
+              jno: v.jno,
+              bCode: v.bCode,
+              pktNo: v.pktNo,
+              cutNo: v.cutNo,
+              pc: v.pc,
+              wt: v.wt,
+              issPc: v.issPc,
+              issWt: v.issWt,
+              recPc: v.recPc,
+              recWt: v.recWt,
+              dmPer: v.dmPer,
+              dmWt: v.dmWt,
+              kPc: v.kPc,
+              kWt: v.kWt,
+              brPc: v.brPc,
+              brWt: v.brWt,
+              lossPc: v.lossPc,
+              lossWt: v.lossWt,
+              topsPc: v.topsPc,
+              topsWt: v.topsWt,
+              totalPc: v.totalPc,
+              totalWt: v.totalWt,
+              charniCode: v.charniCode,
+              tensionsCode: v.tensionsCode,
+              employeeCode: v.employeeCode,
+              signerCode: v.signerCode,
+              remarksCode: v.remarksCode,
+              dueDay: v.dueDay,
+              fromCrId: v.fromCrId,
+              toCrId: v.toCrId,
+              fromDeptCode: v.fromDeptCode,
+              toDeptCode: v.toDeptCode,
+              deptProcessCode: v.deptProcessCode,
+              entryType: v.entryType,
+              formType: v.formType,
+              pktType: v.pktType,
+              shapeCode: v.shapeCode,
+              cutCode: v.cutCode,
+              purityCode: v.purityCode,
+              colorCode: v.colorCode,
+              diam: v.diam,
+              kachaRec: v.kachaRec,
+              remarks: v.remarks,
+              ratio: v.ratio,
+              length: v.length,
+              planShape: v.planShape,
+              planPurity: v.planPurity,
+              qrCode: v.qrCode,
+              partName: v.partName,
+              orderMstID: v.orderMstID,
+              amountRs: v.amountRs,
+              diffDmWt: v.diffDmWt,
+              recutEmp: v.recutEmp,
+              plDmWt: v.plDmWt,
+              plDmPer: v.plDmPer,
+              clvCut: v.clvCut,
+              jnoRecPc: v.jnoRecPc,
+            );
+          }).toList();
 
-    if (success && mounted) {
+          _syncDetGrid();
+          if (_editingDetIndex == idx) _editingDetIndex = null;
+        });
+        await ErpResultDialog.showDeleted(
+          context: context,
+          theme: _theme,
+          itemName: '1 row(s) deleted successfully',
+        );
+      }
+    } else {
       setState(() {
         _detRows.removeAt(idx);
         // Re-number srno
@@ -457,11 +537,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         _syncDetGrid();
         if (_editingDetIndex == idx) _editingDetIndex = null;
       });
-      await ErpResultDialog.showDeleted(
-        context: context,
-        theme: _theme,
-        itemName: '1 row(s) deleted successfully',
-      );
     }
   }
 
@@ -472,7 +547,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   void _syncDetGrid() {
     _activeDetColumns = [
       'srno',
-      'cutNo',        // Mfg Cut
+      'cutNo', // Mfg Cut
       'qrCode',
       'bCode',
       'pktNo',
@@ -480,49 +555,53 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       'wt',
       'issPc',
       'issWt',
-      'ghatWt',       // custom (lossWt or calculated)
+      'ghatWt', // custom (lossWt or calculated)
       'purityCode',
       'charniCode',
       'colorCode',
       'dmWt',
       'dmPer',
-      'size',         // optional (if available)
+      'size', // optional (if available)
       'diam',
       'length',
     ];
 
-    _detDisplay = _detRows.map((r) => {
-      'srno': r.srno?.toString() ?? '',
+    _detDisplay = _detRows
+        .map(
+          (r) => {
+            'srno': r.srno?.toString() ?? '',
 
-      'cutNo': r.cutNo ?? '',
+            'cutNo': r.cutNo ?? '',
 
-      'qrCode': '',
+            'qrCode': '',
 
-      'bCode': r.bCode ?? '',
-      'pktNo': r.pktNo ?? '',
+            'bCode': r.bCode ?? '',
+            'pktNo': r.pktNo ?? '',
 
-      'pc': (r.pc ?? 0).toString(),
-      'wt': fThreeDecimal(r.wt ?? 0),
+            'pc': (r.pc ?? 0).toString(),
+            'wt': fThreeDecimal(r.wt ?? 0),
 
-      'issPc': (r.issPc ?? r.pc ?? 0).toString(),
-      'issWt': fThreeDecimal(r.issWt ?? r.wt ?? 0),
+            'issPc': (r.issPc ?? r.pc ?? 0).toString(),
+            'issWt': fThreeDecimal(r.issWt ?? r.wt ?? 0),
 
-      'ghatWt': fThreeDecimal(r.lossWt ?? 0),
+            'ghatWt': fThreeDecimal(r.lossWt ?? 0),
 
-      'purityCode': _purityNameFor(r.purityCode),
+            'purityCode': _purityNameFor(r.purityCode),
 
-      'charniCode': r.charniCode?.toString() ?? '',
+            'charniCode': r.charniCode?.toString() ?? '',
 
-      'colorCode': r.colorCode?.toString() ?? '',
+            'colorCode': r.colorCode?.toString() ?? '',
 
-      'dmWt': fThreeDecimal(r.dmWt ?? 0),
-      'dmPer': (r.dmPer ?? 0).toStringAsFixed(2),
+            'dmWt': fThreeDecimal(r.dmWt ?? 0),
+            'dmPer': (r.dmPer ?? 0).toStringAsFixed(2),
 
-      'size': '',
+            'size': '',
 
-      'diam': (r.diam ?? 0).toString(),
-      'length': (r.length ?? 0).toString(),
-    }).toList();
+            'diam': (r.diam ?? 0).toString(),
+            'length': (r.length ?? 0).toString(),
+          },
+        )
+        .toList();
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -578,67 +657,81 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
     _rebuildForm();
   }
+
   // ─────────────────────────────────────────────────────────────────────────
   //  SAVE
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _onSave(Map<String, dynamic> values) async {
     final prov = context.read<FactoryIssueEntryProvider>();
-    // ✅ MASTER PAYLOAD
-    final payload = {
-      "FactoryIssDate": toUtcIso(_formValues['date']),
-      "SelectType": "SPK",
-      "DueDay": int.tryParse(_formValues['dueDay'] ?? '0') ?? 0,
-      "DueDate": toUtcIso(_formValues['dueDayCount']),
-      "FactoryCode": int.tryParse(_formValues['factory'] ?? '0') ?? 0,
-      "FactoryType": _formValues['type'] ?? '',
-      "EntryType": _formValues['entry'],
-      "Sdate": DateTime.now().toUtc().toIso8601String(),
+   if(_detRows.isNotEmpty){
+     // ✅ MASTER PAYLOAD
+     final payload = {
+       "FactoryIssDate": toUtcIso(_formValues['date']),
+       "SelectType": "SPK",
+       "DueDay": int.tryParse(_formValues['dueDay'] ?? '0') ?? 0,
+       "DueDate": toUtcIso(_formValues['dueDayCount']),
+       "FactoryCode": int.tryParse(_formValues['factory'] ?? '0') ?? 0,
+       "FactoryType": _formValues['type'] ?? '',
+       "EntryType": _formValues['entry'],
+       "Sdate": DateTime.now().toUtc().toIso8601String(),
 
-      // ✅ DETAILS
-      "details": _detRows.map((r) {
-        return {
-          "CutNo": r.cutNo ?? '',
-          "BCode": int.tryParse(r.bCode ?? '0') ?? 0,
-          "PacketMstID": r.PacketMstID ?? 0,
-          "MfgCut": r.cutNo ?? '',
+       // ✅ DETAILS
+       "details": _detRows.map((r) {
+         return {
+           "CutNo": r.cutNo ?? '',
+           "BCode": int.tryParse(r.bCode ?? '0') ?? 0,
+           "PacketMstID": r.PacketMstID ?? 0,
+           "MfgCut": r.cutNo ?? '',
 
-          "OrgPc": r.pc ?? 0,
-          "OrgWt": r.wt ?? 0,
+           "OrgPc": r.pc ?? 0,
+           "OrgWt": r.wt ?? 0.000,
 
-          "IssPc": r.issPc ?? r.pc ?? 0,
-          "IssWt": r.issWt ?? r.wt ?? 0,
+           "IssPc": r.recPc ?? r.issPc ?? r.pc ?? 0,
+           "IssWt": r.recWt ?? r.issWt ?? r.wt ?? 0,
 
-          "GhatWt": r.lossWt ?? 0,
-          "ColorCode": r.colorCode?.toString() ?? '0',
+           "GhatWt": r.lossWt ?? 0.000,
+           "ColorCode": r.colorCode?.toString() ?? '0',
 
-          "DmWt": r.dmWt ?? 0,
-          "DmPer": r.dmPer ?? 0,
+           "DmWt": r.dmWt ?? 0.000,
+           "DmPer": r.dmPer ?? 0,
 
-          "RateID": "R1",
-          "Rateon": "WT",
-          "Rate": 0,
-          "Amount": 0,
+           "RateID": "R1",
+           "Rateon": "WT",
+           "Rate": 0,
+           "Amount": r.amountRs ?? 0.00,
 
-          "Diam": r.diam ?? 0,
-        };
-      }).toList(),
-    };
+           "Diam": r.diam ?? 0,
+         };
+       }).toList(),
+     };
 
-    // 🔍 DEBUG (VERY IMPORTANT)
-    bool success = await prov.create(payload);
-    if (!mounted) return;
-    if (success) {
-      final wasEdit = _isEditMode;
-      _resetForm();
-      await ErpResultDialog.showSuccess(
-        context: context, theme: _theme,
-        title:   wasEdit ? 'Updated' : 'Saved',
-        message: wasEdit ? 'Factory Issue Entry updated.' : 'Factory Issue Entry saved.',
-      );
-      await context.read<FactoryIssueEntryProvider>().load();
-    }
+     // 🔍 DEBUG (VERY IMPORTANT)
+     bool success = await prov.create(payload);
+     if (!mounted) return;
+     if (success) {
+       final wasEdit = _isEditMode;
+       _resetForm();
+       await ErpResultDialog.showSuccess(
+         context: context,
+         theme: _theme,
+         title: wasEdit ? 'Updated' : 'Saved',
+         message: wasEdit
+             ? 'Factory Issue Entry updated.'
+             : 'Factory Issue Entry saved.',
+       );
+       await context.read<FactoryIssueEntryProvider>().load();
+     }
+   }else {
+     await ErpResultDialog.showError(
+       context: context,
+       theme: _theme,
+       title: 'No Entries',
+       message: 'Please add at least one entry.',
+     );
+   }
   }
+
   // ─────────────────────────────────────────────────────────────────────────
   //  DELETE
   // ─────────────────────────────────────────────────────────────────────────
@@ -669,10 +762,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     }
   }
 
-  Future<void> _onDeleteRow() async {
-
-
-  }
+  Future<void> _onDeleteRow() async {}
 
   // ─────────────────────────────────────────────────────────────────────────
   //  RESET
@@ -726,27 +816,27 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
       _formValues['dueDayCount'] = formatted;
 
-      _erpFormKey.currentState?.updateFieldValue(
-        'dueDayCount',
-        formatted,
-      );
+      _erpFormKey.currentState?.updateFieldValue('dueDayCount', formatted);
     } else {
       _formValues['dueDayCount'] = '';
       _erpFormKey.currentState?.updateFieldValue('dueDayCount', '');
     }
   }
+
   List<List<ErpFieldConfig>> _buildFormRows() {
     final factoryProv = context.read<FactoryProvider>();
 
     // factoryDropdown
-    final factoryItems = factoryProv.factories.where((e) => e.active == true).toList();
+    final factoryItems = factoryProv.factories
+        .where((e) => e.active == true)
+        .toList();
     final factoryDropdown = factoryItems
         .map(
           (e) => ErpDropdownItem(
-        label: e.factoryName ?? '',
-        value: e.factoryCode?.toString() ?? '',
-      ),
-    )
+            label: e.factoryName ?? '',
+            value: e.factoryCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     // ── Merged DEPT fields (deduped) ──────────────────────────────────────
@@ -758,7 +848,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       merged[name] = f;
     }
 
-
     // ─────────────────────────────────────────────────────────────────────
     //  MASTER SECTION (sectionIndex 0)
     // ─────────────────────────────────────────────────────────────────────
@@ -769,10 +858,10 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           key: 'entry',
           label: 'ENTRY',
           type: ErpFieldType.dropdown,
-          dropdownItems:  [
-        ErpDropdownItem(label: 'SPK', value: 'SPK'),
-        ErpDropdownItem(label: 'GENERAL', value: 'GENERAL'),
-      ],
+          dropdownItems: [
+            ErpDropdownItem(label: 'SPK', value: 'SPK'),
+            ErpDropdownItem(label: 'GENERAL', value: 'GENERAL'),
+          ],
           sectionIndex: 0,
         ),
         ErpFieldConfig(
@@ -811,7 +900,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           type: ErpFieldType.dropdown,
           dropdownItems: factoryDropdown,
           sectionIndex: 1,
-          width: 500
+          width: 500,
         ),
         ErpFieldConfig(
           key: 'type',
@@ -819,7 +908,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           type: ErpFieldType.text,
           readOnly: true,
           sectionIndex: 1,
-          width: 250
+          width: 250,
         ),
       ],
 
@@ -883,18 +972,8 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   List<ErpColumnConfig> get _tableColumns => [
-    ErpColumnConfig(
-      key: 'jno',
-      label: 'Jno',
-      width: 70,
-      required: true,
-    ),
-    ErpColumnConfig(
-      key: 'date',
-      label: 'DATE',
-      width: 160,
-      isDate: true,
-    ),
+    ErpColumnConfig(key: 'jno', label: 'Jno', width: 70, required: true),
+    ErpColumnConfig(key: 'date', label: 'DATE', width: 160, isDate: true),
     ErpColumnConfig(key: 'time', label: 'TIME', width: 140),
     ErpColumnConfig(key: 'entry', label: 'ENTRY', width: 180),
     ErpColumnConfig(key: 'dueDay', label: 'DUE DAY', width: 180),
@@ -980,14 +1059,14 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         child: Responsive.isMobile(context)
             ? (_showTableOnMobile ? _buildTable(prov) : _buildForm(context))
             : Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!_showTableOnMobile)
-              Expanded(flex: 2, child: _buildForm(context)),
-            if (_showTableOnMobile)
-              Expanded(flex: 2, child: _buildTable(prov)),
-          ],
-        ),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!_showTableOnMobile)
+                    Expanded(flex: 2, child: _buildForm(context)),
+                  if (_showTableOnMobile)
+                    Expanded(flex: 2, child: _buildTable(prov)),
+                ],
+              ),
       ),
     );
   }
@@ -1017,7 +1096,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
             _entryVals[key] = value.toString();
             Future.delayed(
               const Duration(milliseconds: 50),
-                  () => _erpFormKey.currentState?.focusField('dueDay'),
+              () => _erpFormKey.currentState?.focusField('dueDay'),
             );
 
           case 'dueDay':
@@ -1031,7 +1110,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
             final factoryProv = context.read<FactoryProvider>();
 
             final selectedFactory = factoryProv.factories.firstWhereOrNull(
-                  (f) => f.factoryCode.toString() == value.toString(),
+              (f) => f.factoryCode.toString() == value.toString(),
             );
 
             if (selectedFactory != null) {
@@ -1126,9 +1205,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
     final baseWt = totWt > 0 ? totWt : totIssWt;
 
-    final dmPer = baseWt > 0
-        ? (totDmWt / baseWt * 100)
-        : 0;
+    final dmPer = baseWt > 0 ? (totDmWt / baseWt * 100) : 0;
 
     final avgSize = _detRows.isNotEmpty
         ? sumDouble((r) => (r.diam ?? 0)) / _detRows.length
@@ -1146,6 +1223,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       'size': avgSize.toStringAsFixed(2),
     };
   }
+
   // ─────────────────────────────────────────────────────────────────────────
   //  TABLE WIDGET
   // ─────────────────────────────────────────────────────────────────────────
@@ -1159,6 +1237,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       return value;
     }
   }
+
   Widget _buildTable(FactoryIssueEntryProvider prov) {
     final data = prov.list.map((e) {
       return {
@@ -1220,7 +1299,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       data: data,
       showSearch: true,
       dateFilter: true,
-      onClose: (){
+      onClose: () {
         setState(() {
           _showTableOnMobile = false;
         });

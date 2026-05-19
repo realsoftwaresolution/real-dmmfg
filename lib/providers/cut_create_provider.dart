@@ -267,6 +267,59 @@ class CutCreateProvider extends BaseProvider {
     return false;
   }
 
+  Future<double> getPacketCreateUsedWt(
+      String cutNo,
+      ) async {
+
+    final result =
+    await request<double>(
+
+      call: () => api.get(
+        '/packetCreate',
+      ),
+
+      onSuccess: (res) {
+
+        final data = res.data;
+
+        if (data == null || data is! List) {
+          return 0;
+        }
+
+        // MATCH CUT NO
+        final matched =
+        data.where((e) {
+
+          return
+            e['CutNo']
+                ?.toString()
+                .toLowerCase() ==
+                cutNo.toLowerCase();
+
+        }).toList();
+
+        // TOTAL USED WT
+        final usedWt =
+        matched.fold<double>(
+
+          0,
+
+              (sum, e) {
+
+            return sum +
+                ((e['TotalWt'] ?? 0)
+                as num)
+                    .toDouble();
+          },
+        );
+
+        return usedWt;
+      },
+    );
+
+    return result ?? 0;
+  }
+
   // ── LOAD DETAILS (by master ID) ──────────────────────────────────────────────
   /// API: GET /cutCreate/:id  → { mst: {...}, det: [...] }
   /// Details load karke _list mein bhi merge karta hai taaki
@@ -344,145 +397,3 @@ class CutCreateProvider extends BaseProvider {
     );
   }
 }
-// import 'package:rs_dashboard/rs_dashboard.dart';
-// import '../models/cut_create_model.dart';
-//
-// class CutCreateProvider extends BaseProvider {
-//   List<CutCreateModel> _list     = [];
-//   bool                 _isLoaded = false;
-//
-//   bool                        get isLoaded  => _isLoaded;
-//   List<CutCreateModel>        get list      => List.unmodifiable(_list);
-//   List<Map<String, dynamic>>  get tableData =>
-//       _list.map((e) => e.toTableRow()).toList();
-//
-//   // ── LOAD ALL ────────────────────────────────────────────────────────────────
-//   Future<void> load() async {
-//     final result = await request<List<CutCreateModel>>(
-//       call: () => api.get('/cutCreate'),
-//       onSuccess: (res) {
-//         final list = res.data as List;
-//         return list
-//             .map((e) => CutCreateModel.fromJson(e as Map<String, dynamic>))
-//             .toList();
-//       },
-//     );
-//     if (result != null) {
-//       _list     = result;
-//       _isLoaded = true;
-//       notifyListeners();
-//     }
-//   }
-//
-//   // ── CREATE ──────────────────────────────────────────────────────────────────
-//   // API returns { mst: {...}, det: [...] }
-//   Future<bool> create(
-//       Map<String, dynamic>    values,
-//       List<CutCreateDetModel> details,
-//       ) async {
-//     final model  = _buildModel(values);
-//     final result = await request<CutCreateModel>(
-//       call: () => api.post('/cutCreate', data: {
-//         ...model.toJson(),
-//         'details': details.map((e) => e.toJson()).toList(),
-//       }),
-//       onSuccess: (res) => _parseMstResponse(res.data),
-//     );
-//     if (result != null) {
-//       _list.insert(0, result);
-//       notifyListeners();
-//       return true;
-//     }
-//     return false;
-//   }
-//
-//   // ── UPDATE ──────────────────────────────────────────────────────────────────
-//   Future<bool> update(
-//       int                     id,
-//       Map<String, dynamic>    values,
-//       List<CutCreateDetModel> details,
-//       ) async {
-//     final model  = _buildModel(values);
-//     final result = await request<CutCreateModel>(
-//       call: () => api.put('/cutCreate/$id', data: {
-//         ...model.toJson(),
-//         'details': details.map((e) => e.toJson()).toList(),
-//       }),
-//       onSuccess: (res) => _parseMstResponse(res.data),
-//     );
-//     if (result != null) {
-//       final i = _list.indexWhere((e) => e.cutCreateMstID == id);
-//       if (i != -1) _list[i] = result;
-//       notifyListeners();
-//       return true;
-//     }
-//     return false;
-//   }
-//
-//   // ── DELETE ──────────────────────────────────────────────────────────────────
-//   Future<bool> delete(int id) async {
-//     final result = await request<bool>(
-//       call: () => api.delete('/cutCreate/$id'),
-//       onSuccess: (_) => true,
-//     );
-//     if (result == true) {
-//       _list.removeWhere((e) => e.cutCreateMstID == id);
-//       notifyListeners();
-//       return true;
-//     }
-//     return false;
-//   }
-//
-//   // ── LOAD DETAILS (by master ID) ──────────────────────────────────────────────
-//   /// API: GET /cutCreate/:id  → { mst: {...}, det: [...] }
-//   Future<List<CutCreateDetModel>> loadDetails(int mstID) async {
-//     final result = await request<List<CutCreateDetModel>>(
-//       call: () => api.get('/cutCreate/$mstID'),
-//       onSuccess: (res) {
-//         final data = res.data;
-//         // API returns { mst: {}, det: [] }
-//         final rawDet = (data is Map ? data['det'] : data) as List? ?? [];
-//         return rawDet
-//             .map((e) => CutCreateDetModel.fromJson(e as Map<String, dynamic>))
-//             .toList();
-//       },
-//     );
-//     return result ?? [];
-//   }
-//
-//   // ── PARSE { mst, det } response ─────────────────────────────────────────────
-//   CutCreateModel _parseMstResponse(dynamic data) {
-//     if (data is Map) {
-//       // { mst: {}, det: [] } format
-//       if (data.containsKey('mst')) {
-//         final mst = Map<String, dynamic>.from(data['mst'] as Map);
-//         final rawDet = (data['det'] as List? ?? []);
-//         final det = rawDet
-//             .map((e) => CutCreateDetModel.fromJson(e as Map<String, dynamic>))
-//             .toList();
-//         // Pass det as list of maps for fromJson
-//         mst['details'] = rawDet; // raw maps, not objects
-//         return CutCreateModel.fromJson(mst);
-//       }
-//       // Plain mst object
-//       return CutCreateModel.fromJson(Map<String, dynamic>.from(data));
-//     }
-//     throw Exception('Unexpected response format');
-//   }
-//
-//   // ── BUILD MODEL from form values ─────────────────────────────────────────────
-//   CutCreateModel _buildModel(Map<String, dynamic> v) {
-//     int? toI(String? s) => s == null || s.isEmpty ? null : int.tryParse(s);
-//
-//     return CutCreateModel(
-//       cutCreateDate:    v['cutCreateDate'],
-//       jno:              toI(v['jno']),
-//       kapanNo:          v['kapanNo'],
-//       sflag:            v['sflag'],
-//       logID:            toI(v['logID']),
-//       pcID:             v['pcID'],
-//       ever:             toI(v['ever']),
-//       roughAssortDetID: toI(v['roughAssortDetID']),
-//     );
-//   }
-// }

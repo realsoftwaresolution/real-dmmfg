@@ -1791,27 +1791,36 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
           case 'recWt':
             _entryVals[key] = value.toString();
             if (value.toString() == '+') {
-              final data = await context
-                  .read<TrnLaserReceivedProvider>()
-                  .laserSelectData(
-                    bCode: _entryVals['scanValue'] ?? '',
-                    fromCrId: _fromCrId!.toString(),
-                    gridData: _detRows,
-                    spkDeptIssDate: toIso(
-                      _formValues['spkDeptIssDate']?.toString(),
-                    ),
-                    time: DateFormat('hh:mm a').format(DateTime.now()),
+              if(_detRows.isNotEmpty){
+                final data = await context
+                    .read<TrnLaserReceivedProvider>()
+                    .laserSelectData(
+                  bCode: _entryVals['scanValue'] ?? '',
+                  fromCrId: _fromCrId!.toString(),
+                  gridData: _detRows,
+                  spkDeptIssDate: toIso(
+                    _formValues['spkDeptIssDate']?.toString(),
+                  ),
+                  time: DateFormat('hh:mm a').format(DateTime.now()),
+                );
+                if (data.isNotEmpty) {
+                  final wasEdit = _isEditMode;
+                  _resetForm();
+                  await ErpResultDialog.showSuccess(
+                    context: context,
+                    theme: _theme,
+                    title: wasEdit ? 'Updated' : 'Saved',
+                    message: wasEdit ? 'Laser Rec updated.' : 'Laser Rec saved.',
                   );
-              if (data.isNotEmpty) {
-                final wasEdit = _isEditMode;
-                _resetForm();
-                await ErpResultDialog.showSuccess(
+                  await context.read<TrnLaserReceivedProvider>().load();
+                }
+              }else {
+                await ErpResultDialog.showError(
                   context: context,
                   theme: _theme,
-                  title: wasEdit ? 'Updated' : 'Saved',
-                  message: wasEdit ? 'Laser Rec updated.' : 'Laser Rec saved.',
+                  title: 'No Entries',
+                  message: 'Please add at least one entry.',
                 );
-                await context.read<TrnLaserReceivedProvider>().load();
               }
             } else {
               _calcDmWt();

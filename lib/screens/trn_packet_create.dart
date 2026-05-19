@@ -11,6 +11,7 @@ import 'package:diam_mfg/providers/pkt_type_provider.dart';
 import 'package:diam_mfg/providers/purity_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
 import 'package:diam_mfg/utils/app_images.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/helper_functions.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
@@ -22,8 +23,6 @@ import 'package:rs_dashboard/rs_dashboard.dart';
 
 import '../bootstrap.dart';
 
-// ── helpers ───────────────────────────────────────────────────────────────────
-String fThreeDecimal(double? v) => v == null ? '0.00' : v.toStringAsFixed(2);
 
 // ── Lot group size ─────────────────────────────────────────────────────────────
 const int _kLotSize = 20;

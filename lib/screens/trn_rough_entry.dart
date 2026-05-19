@@ -6,6 +6,8 @@ import 'package:diam_mfg/providers/party_provider.dart';
 import 'package:diam_mfg/providers/rough_provider.dart';
 import 'package:diam_mfg/providers/rough_type_provider.dart';
 import 'package:diam_mfg/providers/stock_type_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/helper_functions.dart';
 import 'package:erp_data_table/erp_data_table.dart';
@@ -73,26 +75,10 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
     ErpColumnConfig(key: 'jno', label: 'JNO', width: 130),
     ErpColumnConfig(key: 'kapanNo', label: 'KNO', width: 130), // ✅ ADD
     ErpColumnConfig(key: 'partyCode', label: 'PARTY', width: 160),
-    ErpColumnConfig(
-      key: 'amtDollar',
-      label: 'AMT \$',
-      width: 160,
-    ),
-    ErpColumnConfig(
-      key: 'amtRs',
-      label: 'AMT RS',
-      width: 180,
-    ),
-    ErpColumnConfig(
-      key: 'totPc',
-      label: 'TOT PC',
-      width: 160,
-    ), // ✅ ADD
-    ErpColumnConfig(
-      key: 'totWt',
-      label: 'TOT WT',
-      width: 160,
-    ), // ✅ ADD
+    ErpColumnConfig(key: 'amtDollar', label: 'AMT \$', width: 160),
+    ErpColumnConfig(key: 'amtRs', label: 'AMT RS', width: 180),
+    ErpColumnConfig(key: 'totPc', label: 'TOT PC', width: 160), // ✅ ADD
+    ErpColumnConfig(key: 'totWt', label: 'TOT WT', width: 160), // ✅ ADD
   ];
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -132,18 +118,37 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
         type: ErpFieldType.number,
         flex: 1,
         sectionIndex: 0,
+        readOnly: _isEditMode,
+        onDuplicateCheck: (value, allValues) async {
+          return await _checkDuplicate(
+            fields: {'Jno': num.parse(value.toString())},
+          );
+        },
       ),
     ],
     [
-      ErpFieldConfig(key: 'kapanNo', label: 'KNO', flex: 1, sectionIndex: 0,inputFormatters: [
-        UpperCaseTextFormatter(),
-      ],),
-      ErpFieldConfig(key: 'site', label: 'SITE', flex: 1, sectionIndex: 0,inputFormatters: [
-  UpperCaseTextFormatter(),
-  ],),
-      ErpFieldConfig(key: 'inv', label: 'INV', flex: 1, sectionIndex: 0,inputFormatters: [
-  UpperCaseTextFormatter(),
-  ],),
+      ErpFieldConfig(
+        key: 'kapanNo',
+        label: 'KNO',
+        flex: 1,
+        sectionIndex: 0,
+        readOnly: _isEditMode,
+        inputFormatters: [UpperCaseTextFormatter()],
+      ),
+      ErpFieldConfig(
+        key: 'site',
+        label: 'SITE',
+        flex: 1,
+        sectionIndex: 0,
+        inputFormatters: [UpperCaseTextFormatter()],
+      ),
+      ErpFieldConfig(
+        key: 'inv',
+        label: 'INV',
+        flex: 1,
+        sectionIndex: 0,
+        inputFormatters: [UpperCaseTextFormatter()],
+      ),
       ErpFieldConfig(
         key: 'partyCode',
         label: 'PARTY',
@@ -310,9 +315,7 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
         flex: 2,
         sectionTitle: 'OTHER',
         sectionIndex: 3,
-        inputFormatters: [
-          UpperCaseTextFormatter(),
-        ],
+        inputFormatters: [UpperCaseTextFormatter()],
       ),
       ErpFieldConfig(
         key: 'dueDay',
@@ -338,9 +341,7 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
         maxLines: 2,
         flex: 1,
         sectionIndex: 3,
-        inputFormatters: [
-          UpperCaseTextFormatter(),
-        ],
+        inputFormatters: [UpperCaseTextFormatter()],
       ),
     ],
 
@@ -423,6 +424,29 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
     ],
   ];
 
+  Future<bool> _checkDuplicate({required Map<dynamic, dynamic> fields}) async {
+    /// ── SKIP SAME VALUE IN EDIT ───────────────
+    final skip = shouldSkipDuplicateCheck(
+      isEditMode: _isEditMode,
+      selectedRow: _selectedRow,
+      allowRowData: true,
+      newFields: Map<String, dynamic>.from(fields),
+      fieldMapping: {'Jno': 'Jno'},
+    );
+
+    if (skip) {
+      return false;
+    }
+
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'Rough',
+      fields: fields,
+    );
+  }
+
   // ══════════════════════════════════════════════════════════════════════════
   //  INIT
   // ══════════════════════════════════════════════════════════════════════════
@@ -464,7 +488,6 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
       });
     }
   }
-
 
   // ══════════════════════════════════════════════════════════════════════════
   //  CALCULATIONS
@@ -617,11 +640,11 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
     _erpFormKey.currentState?.updateFieldValue('charniPc', row.pc?.toString());
     _erpFormKey.currentState?.updateFieldValue(
       'charniWt',
-      row.wt?.toStringAsFixed(2),
+      fThreeDecimal(row.wt),
     );
     _formValues['charniCode'] = row.charniCode?.toString() ?? '';
     _formValues['charniPc'] = row.pc?.toString() ?? '';
-    _formValues['charniWt'] = row.wt?.toStringAsFixed(2) ?? '';
+    _formValues['charniWt'] = fThreeDecimal(row.wt);
     Future.delayed(
       const Duration(milliseconds: 50),
       () => _erpFormKey.currentState?.focusField('charniCode'),
@@ -660,26 +683,39 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
   void _addProcessDaysEntry() {
     if ((_formValues['stockTypeCode'] ?? '').trim().isEmpty) {
       _showSnack('Stock Type required');
+
       _erpFormKey.currentState?.focusField('stockTypeCode');
       return;
     }
 
     final code = _formValues['stockTypeCode'] ?? '';
     final name = _stockTypeName(code);
+
     final days = double.tryParse(_formValues['entryDays'] ?? '');
+
+    // ✅ NEW VALIDATION
+    if (days == null || days <= 0) {
+      _showSnack('Days must be greater than 0');
+
+      _erpFormKey.currentState?.focusField('entryDays');
+      return;
+    }
 
     setState(() {
       if (_editingProcessDaysIndex != null) {
         final idx = _editingProcessDaysIndex!;
+
         _processDaysRows[idx] = RoughProcessDaysModel(
           srno: idx + 1,
           stockTypeCode: int.tryParse(code),
           stockTypeName: name,
           days: days,
         );
+
         _editingProcessDaysIndex = null;
       } else {
         final srno = _processDaysRows.length + 1;
+
         _processDaysRows.add(
           RoughProcessDaysModel(
             srno: srno,
@@ -689,8 +725,10 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
           ),
         );
       }
+
       _syncProcessDaysGrid();
     });
+
     _clearFields(['stockTypeCode', 'entryDays'], focusFirst: 'stockTypeCode');
   }
 
@@ -742,7 +780,7 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
             'charniCode': r.charniCode?.toString() ?? '',
             'charniName': r.charniName ?? _charniName(r.charniCode?.toString()),
             'charniPc': r.pc?.toString() ?? '',
-            'charniWt': r.wt?.toStringAsFixed(2) ?? '',
+            'charniWt': fThreeDecimal(r.wt),
             'per': r.per?.toStringAsFixed(2) ?? '',
           },
         )
@@ -830,7 +868,7 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
         'lsPer': raw.lsPer?.toStringAsFixed(2) ?? '',
         'mainCutNo': raw.mainCutNo ?? '',
         'dueDay': raw.dueDay?.toString() ?? '',
-        'dueDate': raw.dueDate ?? '',
+        'dueDate': toDisplayDate(raw.dueDate),
         'remarks': raw.remarks ?? '',
       };
 
@@ -844,6 +882,10 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
   //  SAVE
   // ══════════════════════════════════════════════════════════════════════════
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final exists = await _checkDuplicate(
+      fields: {'Jno': num.parse(values['jno'].toString())},
+    );
+    if (exists) return;
     final provider = context.read<RoughProvider>();
 
     String toIso(String? v) {
@@ -896,6 +938,46 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
             'Please complete the Charni entry first.',
       );
     } else {
+      // ─────────────────────────────
+// ROUGH ASSORT WT VALIDATION
+// ─────────────────────────────
+
+      if (_isEditMode &&
+          _selectedRough != null) {
+
+        final usedWt =
+        await provider.getUsedAssortWt(
+          _selectedRough!.kapanNo ?? '',
+        );
+
+        final currentWt = _totalWt;
+
+        if (currentWt < usedWt) {
+
+          if (!mounted) return;
+
+          await ErpResultDialog.showError(
+
+            context: context,
+
+            theme: _theme,
+
+            title: 'Invalid Weight',
+
+            message:
+            'Rough Assort ma '
+                '${usedWt.toStringAsFixed(3)} WT '
+                'entry thai gayelu che.\n\n'
+                'Etle Total WT '
+                '${usedWt.toStringAsFixed(3)} '
+                'thi ochhu save kari shakai nahi.',
+          );
+
+          return;
+        }
+      }
+
+
       bool success;
       if (_isEditMode && _selectedRough != null) {
         success = await provider.updateRough(
@@ -973,6 +1055,7 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
       _editingProcessDaysIndex = null;
       _formValues = {'roughDate': today, 'dueDate': today, 'roughMstID': '0'};
     });
+    _setDefaultFormValues();
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1020,9 +1103,9 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
             child: ErpEntryGrid(
               data: _charniEntryData,
               columns: _charniEntryKeys,
-              title: 'CHARNI  |  Total Wt: ${_totalWt.toStringAsFixed(2)}',
+              title: 'CHARNI  |  Total Wt: ${fThreeDecimal(_totalWt)}',
               theme: theme,
-              onDeleteRow: _deleteCharniRow,
+              onDeleteRow: _isEditMode ? null : _deleteCharniRow,
               onEditRow: _editCharniRow,
               editingIndex: _editingCharniIndex,
             ),

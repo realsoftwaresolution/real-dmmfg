@@ -489,12 +489,12 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   void _calcLoss() {
     final issWt = double.tryParse(_entryVals['issWt'] ?? '') ?? 0;
     final recWt = double.tryParse(_entryVals['recWt'] ?? '') ?? 0;
-    final kWt   = double.tryParse(_entryVals['kwt'] ?? '') ?? 0;
+    final kWt   = double.tryParse(_entryVals['kWt'] ?? '') ?? 0;
     final brWt  = double.tryParse(_entryVals['brWt'] ?? '') ?? 0;
 
     final issPc = int.tryParse(_entryVals['issPc'] ?? '') ?? 0;
     final recPc = int.tryParse(_entryVals['recPc'] ?? '') ?? 0;
-    final kPc   = int.tryParse(_entryVals['kpc'] ?? '') ?? 0;
+    final kPc   = int.tryParse(_entryVals['kPc'] ?? '') ?? 0;
     final brPc  = int.tryParse(_entryVals['brPc'] ?? '') ?? 0;
 
     // ✅ LOSS WT
@@ -516,40 +516,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   // ─────────────────────────────────────────────────────────────────────────
   //  ADD / EDIT ENTRY
   // ─────────────────────────────────────────────────────────────────────────
-  Map<String, dynamic> _buildUpdateDetailPayload() {
-    return {
-      "FactoryRecMstID": int.tryParse(_formValues['factoryRecMstID'] ?? '0'),
-
-      "FactoryRecDetID": _editingDetIndex != null
-          ? _detRows[_editingDetIndex!].FactoryRecDetID
-          : null,
-
-      "BCode": int.tryParse(_entryVals['scanValue'] ?? '0'),
-
-      "RecPc": int.tryParse(_entryVals['recPc'] ?? '0'),
-      "RecWt": double.tryParse(_entryVals['recWt'] ?? '0'),
-
-      "KPc": int.tryParse(_entryVals['kpc'] ?? '0'),
-      "KWt": double.tryParse(_entryVals['kwt'] ?? '0'),
-
-      "BrPc": int.tryParse(_entryVals['brPc'] ?? '0'),
-      "BrWt": double.tryParse(_entryVals['brWt'] ?? '0'),
-
-      "LossPc": int.tryParse(_entryVals['lossPc'] ?? '0'),
-      "LossWt": double.tryParse(_entryVals['lossWt'] ?? '0'),
-
-      "PurityCode": int.tryParse(_entryVals['purity'] ?? '0'),
-      "CharniCode": int.tryParse(_entryVals['charni'] ?? '0'),
-      "ColorCode": int.tryParse(_entryVals['color'] ?? '0'),
-      "ShapeCode": int.tryParse(_entryVals['shape'] ?? '0'),
-      "CutCode": int.tryParse(_entryVals['cutCode'] ?? '0'),
-
-      "DmWt": double.tryParse(_entryVals['dmWt'] ?? '0'),
-      "DmPer": double.tryParse(_entryVals['dmPer'] ?? '0'),
-
-      "Size": double.tryParse(_entryVals['size'] ?? '0'),
-    };
-  }
   Future<void> _addEntry() async {
     // 🔒 Scan required
     if (_scannedDet == null && (_entryVals['scanValue'] ?? '').isEmpty) {
@@ -565,8 +531,8 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     final recPc = int.tryParse(_entryVals['recPc'] ?? '') ?? 0;
     final recWt = double.tryParse(_entryVals['recWt'] ?? '') ?? 0;
 
-    final kPc   = int.tryParse(_entryVals['kpc'] ?? '') ?? 0;
-    final kWt   = double.tryParse(_entryVals['kwt'] ?? '') ?? 0;
+    final kPc   = int.tryParse(_entryVals['kPc'] ?? '') ?? 0;
+    final kWt   = double.tryParse(_entryVals['kWt'] ?? '') ?? 0;
 
     final brPc  = int.tryParse(_entryVals['brPc'] ?? '') ?? 0;
     final brWt  = double.tryParse(_entryVals['brWt'] ?? '') ?? 0;
@@ -584,7 +550,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
     if (kWt > issWt) {
       _showSnack('K WT cannot be greater than Iss WT');
-      _erpFormKey.currentState?.focusField('kwt');
+      _erpFormKey.currentState?.focusField('kWt');
       return;
     }
 
@@ -612,7 +578,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     // ─────────────────────────────
     final issPc = int.tryParse(_entryVals['issPc'] ?? '') ?? 0;
 
-    final lossWt = issWt - (recWt + kWt + brWt);
+    final lossWt = issWt - (recWt + kWt + brWt + dmWt);
     final lossPc = issPc - (recPc + kPc + brPc);
 
     final safeLossWt = lossWt < 0 ? 0.0 : lossWt;
@@ -644,7 +610,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         "RecWt": recWt,
 
         "KPc": kPc,
-        "KWt": kWt,
+        "KWt": kWt ?? 0.000,
 
         "BrPc": brPc,
         "BrWt": brWt,
@@ -781,8 +747,8 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       totalWt: recWt,
       dmWt: double.tryParse(_entryVals['dmWt'] ?? ''),
       dmPer: double.tryParse(_entryVals['dmPer'] ?? ''),
-      kPc: int.tryParse(_entryVals['kpc'] ?? ''),
-      kWt: double.tryParse(_entryVals['kwt'] ?? ''),
+      kPc: int.tryParse(_entryVals['kPc'] ?? ''),
+      kWt: double.tryParse(_entryVals['kWt'] ?? ''),
       brPc: int.tryParse(_entryVals['brPc'] ?? ''),
       brWt: double.tryParse(_entryVals['brWt'] ?? ''),
       lossPc: int.tryParse(_entryVals['lossPc'] ?? ''),
@@ -797,7 +763,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
       diffDmWt: double.tryParse(_entryVals['diffDmWt'] ?? ''),
       recutEmp: double.tryParse(_entryVals['recutEmp'] ?? '0.000'),
-      length: int.tryParse(_entryVals['Length'].toString()),
+      length: int.tryParse(_entryVals['length'] ?? '0'),
       ratio: double.tryParse(_entryVals['ratio'] ?? ''),
       planShape: _entryVals['shape'] ?? '',
       planPurity: _entryVals['planPurity'] ?? '',
@@ -854,8 +820,8 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       totalWt: recWt,
       dmWt: double.tryParse(_entryVals['dmWt'] ?? ''),
       dmPer: double.tryParse(_entryVals['dmPer'] ?? ''),
-      kPc: int.tryParse(_entryVals['kpc'] ?? ''),
-      kWt: double.tryParse(_entryVals['kwt'] ?? ''),
+      kPc: int.tryParse(_entryVals['kPc'] ?? ''),
+      kWt: double.tryParse(_entryVals['kWt'] ?? ''),
       brPc: int.tryParse(_entryVals['brPc'] ?? ''),
       brWt: double.tryParse(_entryVals['brWt'] ?? ''),
       lossPc: int.tryParse(_entryVals['lossPc'] ?? ''),
@@ -873,7 +839,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       plDmWt: double.tryParse(_entryVals['dmWt'] ?? '0.000'),
       plDmPer: double.tryParse(_entryVals['dmPer'] ?? '0.00'),
       recutEmp: double.tryParse(_entryVals['recutEmp'] ?? '0.000'),
-      length: int.tryParse(_entryVals['Length'].toString()),
+      length: int.tryParse(_entryVals['length'] ?? '0'),
       ratio: double.tryParse(_entryVals['ratio'] ?? ''),
       planShape: _entryVals['shape'] ?? '',
       planPurity: _entryVals['planPurity'] ?? '',
@@ -908,7 +874,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     set('dmPer', r.dmPer?.toStringAsFixed(2));
     set('dmWt', fThreeDecimal(r.dmWt));
     set('kpc', r.kPc?.toString());
-    set('kwt', fThreeDecimal(r.kWt));
+    set('kWt', fThreeDecimal(r.kWt));
     set('brPc', r.brPc?.toString());
     set('brWt', fThreeDecimal(r.brWt));
     set('lossPc', r.lossPc?.toString());
@@ -1043,6 +1009,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
   void _clearEntryFields() {
     const keys = [
+      'factoryRecMstID',
       'orgPc',
       'orgWt',
       'issPc',
@@ -1075,6 +1042,11 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     _scannedDet = null;
     _isBCodePending = false;
     _entryVals['scanValue'] = '';
+    _entryVals['factoryRecMstID'] = '0';
+    Future.delayed(
+      const Duration(milliseconds: 100),
+          () => _erpFormKey.currentState?.focusField('scanValue'),
+    );
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1295,31 +1267,40 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   }
 
   Future<void> _onSave(Map<String, dynamic> values) async {
-    final prov = context.read<FactoryReceivedEntryProvider>();
-    final payload = {
-      "FactoryRecDate": toUtcIso(values['factoryRecDate']),   // already yyyy-MM-dd
-      "FactoryCode": int.tryParse(values['factory'] ?? '0') ?? 0,
-      "Sdate": DateTime.now().toUtc().toIso8601String(),
-      "Stime": DateTime.now().toUtc().toIso8601String(),
-      "EntryType": _formValues['type'] ?? '',
-      "details": _detRows.map(_mapToApiDetail).toList(),
-    };
+    if(_detRows.isNotEmpty){
+      final prov = context.read<FactoryReceivedEntryProvider>();
+      final payload = {
+        "FactoryRecDate": toUtcIso(values['factoryRecDate']),   // already yyyy-MM-dd
+        "FactoryCode": int.tryParse(values['factory'] ?? '0') ?? 0,
+        "Sdate": DateTime.now().toUtc().toIso8601String(),
+        "Stime": DateTime.now().toUtc().toIso8601String(),
+        "EntryType": _formValues['type'] ?? '',
+        "details": _detRows.map(_mapToApiDetail).toList(),
+      };
 
-    final success = await prov.create(payload);
+      final success = await prov.create(payload);
 
-    if (!mounted) return;
-    if (success) {
-      final wasEdit = _isEditMode;
-      _resetForm();
-      await ErpResultDialog.showSuccess(
+      if (!mounted) return;
+      if (success) {
+        final wasEdit = _isEditMode;
+        _resetForm();
+        await ErpResultDialog.showSuccess(
+          context: context,
+          theme: _theme,
+          title: wasEdit ? 'Updated' : 'Saved',
+          message: wasEdit
+              ? 'Factory Receive Entry Updated.'
+              : 'Factory Receive Entry Saved.',
+        );
+        context.read<FactoryReceivedEntryProvider>().load();
+      }
+    }else {
+      await ErpResultDialog.showError(
         context: context,
         theme: _theme,
-        title: wasEdit ? 'Updated' : 'Saved',
-        message: wasEdit
-            ? 'Factory Receive Entry Updated.'
-            : 'Factory Receive Entry Saved.',
+        title: 'No Entries',
+        message: 'Please add at least one entry.',
       );
-      context.read<FactoryReceivedEntryProvider>().load();
     }
   }
 
@@ -2090,7 +2071,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         // 🔥 MAIN CALC TRIGGERS (VERY IMPORTANT)
         // ─────────────────────────────
           case 'recWt':
-          case 'kwt':
+          case 'kWt':
           case 'brWt':
           case 'recPc':
           case 'kpc':
@@ -2116,6 +2097,21 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
               );
             }
             break;
+
+          case 'shape':
+
+            if (key == 'shape') {
+              // VALIDATION
+              if (value == null || value.toString().isEmpty) {
+                return;
+              }
+
+              // ADD ENTRY
+              _addEntry();
+
+              return;
+            }
+
 
           default:
             break;

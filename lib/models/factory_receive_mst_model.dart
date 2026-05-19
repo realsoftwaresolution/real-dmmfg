@@ -416,7 +416,7 @@ class FactoryReceiveDetModel {
   factory FactoryReceiveDetModel.fromJson(Map<String, dynamic> json) =>
       FactoryReceiveDetModel(
         factoryIssDetID: json['FactoryIssDetID'],
-        factoryRecMstID:  json['FactoryRecMstID'],
+        factoryRecMstID:  json['FactoryRecMstID'] ?? 0,
         FactoryRecDetID:  json['FactoryRecDetID'],
         srno:             json['Srno'],
         id:               json['ID'],

@@ -475,16 +475,16 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
 
-    set('orgPc', r.pc?.toString() );
-    set('orgWt', fThreeDecimal(r.wt));
     set('recWt', fThreeDecimal(r.recWt));
-    set('recPc', r.recPc.toString());
+    set('recPc', r.recPc?.toString());
     set('issPc', r.issPc?.toString());
     set('issWt', fThreeDecimal(r.issWt));
     set('jnoRecPc', r.jnoRecPc?.toString());
     set('shapeCode', r.shapeCode?.toString());
     set('purityCode', r.purityCode?.toString());
     set('diam', r.diam?.toString());
+    set('length', r.length?.toString());
+    set('height', r.height?.toString());
 
     setState(() => _scannedDet = r);
   }
@@ -601,11 +601,18 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       } else {
         _detRows.add(newRow);
       }
+
+      if (_editingDetIndex == null) {
+        _clearEntryFields();
+      } else {
+        _editingDetIndex = null;
+
+        _clearEntryFields();
+      }
+
       _lockMasterFields = true;
       _syncDetGrid();
     });
-
-    _clearEntryFields();
 
     _erpFormKey.currentState?.setFieldReadOnly('fromCrId', true);
     _erpFormKey.currentState?.setFieldReadOnly('toCrId', true);
@@ -613,7 +620,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
 
     Future.delayed(
       const Duration(milliseconds: 50),
-          () => _erpFormKey.currentState?.focusField('scanValue'),
+      () => _erpFormKey.currentState?.focusField('scanValue'),
     );
   }
 
@@ -651,8 +658,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       deptCode: _toDeptCodeVal,
       deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
       // User-entered fields
-      pc: int.tryParse(_entryVals['orgPc'] ?? '') ?? existing.pc,
-      wt: double.tryParse(_entryVals['orgWt'] ?? '') ?? existing.wt,
+      pc: existing.pc,
+      wt: existing.wt,
       issPc: int.tryParse(issPcStr),
       issWt: double.tryParse(issWtStr),
       recPc: recPc,
@@ -660,7 +667,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       totalPc: recPc,
       totalWt: recWt,
       dmWt: double.tryParse(_entryVals['dmWt'] ?? ''),
-      dmPer: double.tryParse(_entryVals['dmPer'] ?? ''),
+      dmPer: existing.dmPer,
       kPc: int.tryParse(_entryVals['kpc'] ?? ''),
       kWt: double.tryParse(_entryVals['kwt'] ?? ''),
       brPc: int.tryParse(_entryVals['brPc'] ?? ''),
@@ -743,8 +750,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       deptCode: _toDeptCodeVal,
       deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
       charniCode: int.tryParse(_entryVals['charniCode'] ?? ''),
-      pc: int.tryParse(_entryVals['orgPc'] ?? ''),
-      wt: double.tryParse(_entryVals['orgWt'] ?? ''),
+      pc: _scannedDet?.pc  ?? 0,
+      wt: _scannedDet?.wt  ?? 0.000,
       issPc: int.tryParse(issPcStr),
       issWt: double.tryParse(issWtStr),
       recPc: recPc,
@@ -752,7 +759,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       totalPc: recPc,
       totalWt: recWt,
       dmWt: double.tryParse(_entryVals['dmWt'] ?? ''),
-      dmPer: double.tryParse(_entryVals['dmPer'] ?? ''),
+      dmPer: _scannedDet?.dmPer ?? 0,
       kPc: int.tryParse(_entryVals['kpc'] ?? ''),
       kWt: double.tryParse(_entryVals['kwt'] ?? ''),
       brPc: int.tryParse(_entryVals['brPc'] ?? ''),
@@ -816,7 +823,11 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
 
   void _editDetRow(int idx) {
     final r = _detRows[idx];
-    setState(() => _editingDetIndex = idx);
+    setState(() {
+      _editingDetIndex = idx;
+      // IMPORTANT
+      _scannedDet = r;
+    });
 
     void set(String k, String? v) {
       _entryVals[k] = v ?? '';
@@ -859,6 +870,13 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     set('length', r.length?.toString());
     set('diam', r.diam?.toString());
     set('height', r.height?.toString());
+    set('scanValue', r.bCode?.toString());
+
+    Future.delayed(
+      const Duration(milliseconds: 100),
+
+      () => _erpFormKey.currentState?.focusField('dmWt'),
+    );
   }
 
   void _deleteDetRow(int idx) {
@@ -945,9 +963,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _clearEntryFields() {
-
     const keys = [
-
       // SCAN
       'scanValue',
 
@@ -988,21 +1004,12 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       'symmetryCode',
       'fluo',
       'tensionCode',
-
-      'remarks',
-      'qrCode',
     ];
 
     for (final k in keys) {
       _entryVals.remove(k);
-      _erpFormKey.currentState
-          ?.updateFieldValue(
-        k,
-        '',
-      );
+      _erpFormKey.currentState?.updateFieldValue(k, '');
     }
-    // CLEAR SCANNED MODEL
-    _scannedDet = null;
   }
 
   /// Returns true if the field name exists in the merged DEPT visibility map.
@@ -1324,38 +1331,31 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     final toItems = _fromCrId == null
         ? <ErpDropdownItem>[]
         : mgDetProv.list
-        .where(
-          (m) =>
-      m.crId == _fromCrId &&
-          m.allowCrId != null,
-    )
-        .map((m) => m.allowCrId!)
-        .toSet()
-        .map((allowId) {
-      try {
-        final c = counterProv.list.firstWhere(
-              (c) =>
-          c.crId == allowId &&
-              c.active == true,
-        );
+              .where((m) => m.crId == _fromCrId && m.allowCrId != null)
+              .map((m) => m.allowCrId!)
+              .toSet()
+              .map((allowId) {
+                try {
+                  final c = counterProv.list.firstWhere(
+                    (c) => c.crId == allowId && c.active == true,
+                  );
 
-        // OPTIONAL:
-        // avoid same FROM manager in TO
-        if (c.crId == _fromCrId) {
-          return null;
-        }
+                  // OPTIONAL:
+                  // avoid same FROM manager in TO
+                  if (c.crId == _fromCrId) {
+                    return null;
+                  }
 
-        return ErpDropdownItem(
-          label:
-          '${c.crName ?? ''} | ${_deptNameFor(c.deptCode)}',
-          value: c.crId?.toString() ?? '',
-        );
-      } catch (_) {
-        return null;
-      }
-    })
-        .whereType<ErpDropdownItem>()
-        .toList();
+                  return ErpDropdownItem(
+                    label: '${c.crName ?? ''} | ${_deptNameFor(c.deptCode)}',
+                    value: c.crId?.toString() ?? '',
+                  );
+                } catch (_) {
+                  return null;
+                }
+              })
+              .whereType<ErpDropdownItem>()
+              .toList();
 
     // ── PROCESS dropdown — intersection of FROM-issue ∩ TO-receive codes ──
     final processItems = (_fromCrId == null || _toCrId == null)
@@ -2028,91 +2028,65 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         }
       },
 
-        onFieldSubmitted: (key, value) async {
+      onFieldSubmitted: (key, value) async {
+        // ─────────────────────────────
+        // HEIGHT SUBMIT
+        // ─────────────────────────────
 
-          // ─────────────────────────────
-          // HEIGHT SUBMIT
-          // ─────────────────────────────
+        if (key == 'height') {
+          // VALIDATION
+          final height = double.tryParse(value.toString()) ?? 0;
 
-          if (key == 'height') {
-
-            // VALIDATION
-            final height =
-                double.tryParse(
-                  value.toString(),
-                ) ?? 0;
-
-            if (height <= 0) {
-
-              _showSnack(
-                'Height must be greater than 0',
-              );
-
-              return;
-            }
-
-            // ADD ENTRY
-            _addEntry();
+          if (height <= 0) {
+            _showSnack('Height must be greater than 0');
 
             return;
           }
 
-          // ─────────────────────────────
-          // SCAN VALUE
-          // ─────────────────────────────
+          // ADD ENTRY
+          _addEntry();
 
-          if (key != 'scanValue') return;
+          return;
+        }
 
-          final scanVal =
-          value.toString().trim();
+        // ─────────────────────────────
+        // SCAN VALUE
+        // ─────────────────────────────
 
-          if (scanVal.isEmpty) return;
+        if (key != 'scanValue') return;
 
-          // DUPLICATE CHECK
-          if (_editingDetIndex == null) {
+        final scanVal = value.toString().trim();
 
-            final isDuplicate =
-            _detRows.any(
-                  (r) =>
-              r.bCode?.toString() ==
-                  scanVal,
+        if (scanVal.isEmpty) return;
+
+        // DUPLICATE CHECK
+        if (_editingDetIndex == null) {
+          final isDuplicate = _detRows.any(
+            (r) => r.bCode?.toString() == scanVal,
+          );
+
+          if (isDuplicate) {
+            _showSnack('This BCode already added');
+
+            _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+
+            _entryVals['scanValue'] = '';
+
+            Future.delayed(
+              const Duration(milliseconds: 100),
+
+              () => _erpFormKey.currentState?.focusField('scanValue'),
             );
 
-            if (isDuplicate) {
-
-              _showSnack(
-                'This BCode already added',
-              );
-
-              _erpFormKey.currentState
-                  ?.updateFieldValue(
-                'scanValue',
-                '',
-              );
-
-              _entryVals['scanValue'] = '';
-
-              Future.delayed(
-
-                const Duration(
-                  milliseconds: 100,
-                ),
-
-                    () => _erpFormKey.currentState
-                    ?.focusField(
-                  'scanValue',
-                ),
-              );
-
-              return;
-            }
+            return;
           }
+        }
 
-          // MAIN API CALL
-          _isBCodePending = true;
+        // MAIN API CALL
+        _isBCodePending = true;
 
-          _onBCodeScanned(scanVal);
-        },
+        _onBCodeScanned(scanVal);
+      },
 
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
       onSave: _detRows.isNotEmpty ? _onSave : null,

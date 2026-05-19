@@ -130,6 +130,64 @@ class RoughProvider extends BaseProvider {
     return result ?? [];
   }
 
+
+  Future<double> getUsedAssortWt(
+      String kapanNo,
+      ) async {
+
+    final result =
+    await request<double>(
+
+      call: () => api.get(
+        '/roughAssort',
+      ),
+
+      onSuccess: (res) {
+
+        final data = res.data;
+
+        if (data == null || data is! List) {
+          return 0;
+        }
+
+        // MATCH KAPAN
+        final matched =
+        data.where((e) {
+
+          return
+            e['KapanNo']
+                ?.toString()
+                .toLowerCase() ==
+                kapanNo.toLowerCase();
+
+        }).toList();
+
+        double usedWt = 0;
+
+        for (final mst in matched) {
+
+          final details =
+          mst['details'];
+
+          if (details is List) {
+
+            for (final d in details) {
+
+              usedWt +=
+                  ((d['Wt'] ?? 0)
+                  as num)
+                      .toDouble();
+            }
+          }
+        }
+
+        return usedWt;
+      },
+    );
+
+    return result ?? 0;
+  }
+
   RoughModel _buildModel(Map<String, dynamic> v) {
     double? toD(String? s) => s == null || s.isEmpty ? null : double.tryParse(s);
     int? toI(String? s) => s == null || s.isEmpty ? null : int.tryParse(s);

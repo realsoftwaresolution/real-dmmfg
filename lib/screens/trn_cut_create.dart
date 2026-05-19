@@ -415,6 +415,51 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
     }
 
     final entryWt = double.tryParse(wtStr) ?? 0;
+
+
+    // CHECK WT
+    if (_editingDetIndex != null) {
+
+      final editingRow =
+      _detRows[_editingDetIndex!];
+
+      final usedWt =
+      await context
+          .read<CutCreateProvider>()
+          .getPacketCreateUsedWt(
+        editingRow.cutNo ?? '',
+      );
+
+      if (entryWt < usedWt) {
+
+        if (!mounted) return;
+
+        await ErpResultDialog.showError(
+
+          context: context,
+
+          theme: _theme,
+
+          title: 'Invalid Weight',
+
+          message:
+          'Aa Cut nu '
+              '${fThreeDecimal(usedWt)} WT '
+              'Packet Create ma use thai gayu che.\n\n'
+              'Etle WT '
+              '${fThreeDecimal(usedWt)} '
+              'thi ochhu muki shakai nahi.',
+        );
+
+        _erpFormKey.currentState
+            ?.focusField('entryWt');
+
+        return;
+      }
+    }
+
+
+
     final oldWt = _editingDetIndex != null
         ? (_detRows[_editingDetIndex!].wt ?? 0)
         : 0.0;
@@ -839,7 +884,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
                 columns: _detGridColumns,
                 title: 'CUT CREATE DETAILS',
                 theme: t,
-                onDeleteRow: _deleteDetRow,
+                onDeleteRow: _isEditMode ?null:_deleteDetRow,
                 onEditRow: _editDetRow,
                 editingIndex: _editingDetIndex,
                 columnLabels: const {

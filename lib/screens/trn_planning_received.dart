@@ -919,6 +919,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
 
   List<ErpColumnConfig> get _tableColumnsByBarCode => [
     ErpColumnConfig(label: 'Sarin ID', key: 'sarinPolID'),
+    ErpColumnConfig(label: 'BCode', key: 'bCode'),
     ErpColumnConfig(label: 'Stone ID', key: 'stoneID'),
     ErpColumnConfig(label: 'Polish Wt', key: 'polishWT'),
     ErpColumnConfig(label: 'Polish %', key: 'polishPer'),
@@ -1238,37 +1239,46 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
           });
         }).toList();
 
-        final success = await prov.savePlanningDetails(
-          merged,
-          rows,
-          scannedDetList,
-        );
+       if(rows.isNotEmpty && scannedDetList.isNotEmpty){
+         final success = await prov.savePlanningDetails(
+           merged,
+           rows,
+           scannedDetList,
+         );
 
-        if (rows.isEmpty) {
-          ErpResultDialog.showError(
-            context: context,
-            theme: _theme,
-            title: 'Planning',
-            message: 'No planning rows found',
-          );
+         if (rows.isEmpty) {
+           ErpResultDialog.showError(
+             context: context,
+             theme: _theme,
+             title: 'Planning',
+             message: 'No planning rows found',
+           );
 
-          return;
-        }
+           return;
+         }
 
-        if (!mounted) return;
+         if (!mounted) return;
 
-        if (success) {
-          ErpResultDialog.showSuccess(
-            context: context,
-            theme: _theme,
-            title: 'Planning',
-            message: 'Planning saved successfully',
-          );
+         if (success) {
+           ErpResultDialog.showSuccess(
+             context: context,
+             theme: _theme,
+             title: 'Planning',
+             message: 'Planning saved successfully',
+           );
 
-          prov.clearScannedDetList();
-        }
+           prov.clearScannedDetList();
+         }
 
-        await prov.load();
+         await prov.load();
+       }else {
+         await ErpResultDialog.showError(
+           context: context,
+           theme: _theme,
+           title: 'No Entries',
+           message: 'Please add at least one entry.',
+         );
+       }
       },
       onDelete: _isEditMode ? _onDelete : null,
       onSearch: () => setState(() => _showTableOnMobile = true),
@@ -1518,6 +1528,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
     return {
       // ── Sarin fields ────────────────────────────────────────────────────
       'sarinPolID': sarin?['SarinPolID']?.toString() ?? '',
+      'bCode': sarin?['BCode']?.toString() ?? '',
       'stoneID': sarin?['StoneID']?.toString() ?? '',
       'polishWT': sarin?['PolishWT']?.toString() ?? '',
       'polishPer': sarin?['PolishPer']?.toString() ?? '',
@@ -1536,7 +1547,6 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
       'tHmm': sarin?['THmm']?.toString() ?? '',
       'disc': sarin?['DISC']?.toString() ?? '',
       'rec': sarin?['Rec']?.toString() ?? '',
-      'bCode': sarin?['BCode']?.toString() ?? '',
     };
   }
 }

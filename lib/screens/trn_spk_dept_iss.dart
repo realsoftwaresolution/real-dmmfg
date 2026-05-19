@@ -1120,30 +1120,39 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             .deptCode;
       } catch (_) {}
     }
-    final merged = Map<String, dynamic>.from(values)
-      ..['Stime'] = DateFormat('hh:mm a').format(DateTime.now())
-      ..['Sdate'] = DateFormat('yyyy-MM-dd').format(DateTime.now())
-      ..['spkDeptIssDate'] = toIso(values['spkDeptIssDate']?.toString())
-      ..['fromCrID'] = _fromCrId?.toString() ?? ''
-      ..['toCrID'] = _toCrId?.toString() ?? ''
-      ..['deptCode'] = toDeptCode?.toString() ?? '';
+   if(_detRows.isNotEmpty){
+     final merged = Map<String, dynamic>.from(values)
+       ..['Stime'] = DateFormat('hh:mm a').format(DateTime.now())
+       ..['Sdate'] = DateFormat('yyyy-MM-dd').format(DateTime.now())
+       ..['spkDeptIssDate'] = toIso(values['spkDeptIssDate']?.toString())
+       ..['fromCrID'] = _fromCrId?.toString() ?? ''
+       ..['toCrID'] = _toCrId?.toString() ?? ''
+       ..['deptCode'] = toDeptCode?.toString() ?? '';
 
-    final success = _isEditMode && _selectedMst != null
-        ? await prov.update(_selectedMst!.spkDeptIssMstID!, merged, _detRows)
-        : await prov.create(merged, _detRows);
+     final success = _isEditMode && _selectedMst != null
+         ? await prov.update(_selectedMst!.spkDeptIssMstID!, merged, _detRows)
+         : await prov.create(merged, _detRows);
 
-    if (!mounted) return;
-    if (success) {
-      final wasEdit = _isEditMode;
-      _resetForm();
-      await ErpResultDialog.showSuccess(
-        context: context,
-        theme: _theme,
-        title: wasEdit ? 'Updated' : 'Saved',
-        message: wasEdit ? 'Dept Issue updated.' : 'Dept Issue saved.',
-      );
-      await context.read<SpkDeptIssProvider>().load();
-    }
+     if (!mounted) return;
+     if (success) {
+       final wasEdit = _isEditMode;
+       _resetForm();
+       await ErpResultDialog.showSuccess(
+         context: context,
+         theme: _theme,
+         title: wasEdit ? 'Updated' : 'Saved',
+         message: wasEdit ? 'Dept Issue updated.' : 'Dept Issue saved.',
+       );
+       await context.read<SpkDeptIssProvider>().load();
+     }
+   }else {
+     await ErpResultDialog.showError(
+       context: context,
+       theme: _theme,
+       title: 'No Entries',
+       message: 'Please add at least one entry.',
+     );
+   }
   }
 
   // ─────────────────────────────────────────────────────────────────────────

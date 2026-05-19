@@ -89,38 +89,38 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
   //  FORM ROWS
   // ══════════════════════════════════════════════════════════════════════════
   List<List<ErpFieldConfig>> _formRows(
-      RoughProvider rp,
-      RoughAssortProvider assortProv,
-      ) {
+    RoughProvider rp,
+    RoughAssortProvider assortProv,
+  ) {
     final kapanItems = rp.roughs
         .where((e) => e.kapanNo != null && e.kapanNo!.isNotEmpty)
         .where(
           (e) => !_fullyUsedKapans.contains(e.kapanNo),
-    ) // ✅ fully used hide
+        ) // ✅ fully used hide
         .map(
           (e) => ErpDropdownItem(
-        label:
-        'Kapan No: ${e.kapanNo!}  Jno: ${e.jno ?? ''}  Wt: ${e.totWt ?? ""}',
-        value: e.kapanNo!,
-      ),
-    )
+            label:
+                'Kapan No: ${e.kapanNo!}  Jno: ${e.jno ?? ''}  Wt: ${e.totWt ?? ""}',
+            value: e.kapanNo!,
+          ),
+        )
         .fold<List<ErpDropdownItem>>([], (acc, item) {
-      if (!acc.any((x) => x.value == item.value)) acc.add(item);
-      return acc;
-    });
+          if (!acc.any((x) => x.value == item.value)) acc.add(item);
+          return acc;
+        });
     return [
       // ── SECTION 0: MASTER ─────────────────────────────────────────────────
       [
         ErpFieldConfig(
-            key: 'kapanNo',
-            label: 'KAPAN NO',
-            type: ErpFieldType.dropdown,
-            dropdownItems: kapanItems,
-            required: true,
-            flex: 2,
-            sectionTitle: 'ROUGH ASSORT ENTRY',
-            sectionIndex: 0,
-            readOnly: _isEditMode
+          key: 'kapanNo',
+          label: 'KAPAN NO',
+          type: ErpFieldType.dropdown,
+          dropdownItems: kapanItems,
+          required: true,
+          flex: 2,
+          sectionTitle: 'ROUGH ASSORT ENTRY',
+          sectionIndex: 0,
+          readOnly: _isEditMode,
         ),
         ErpFieldConfig(
           key: 'jno',
@@ -154,9 +154,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
           maxLines: 1,
           flex: 3,
           sectionIndex: 0,
-          inputFormatters: [
-            UpperCaseTextFormatter(),
-          ],
+          inputFormatters: [UpperCaseTextFormatter()],
         ),
       ],
 
@@ -383,7 +381,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
     final assortProv = context.read<RoughAssortProvider>();
 
     final match = rp.roughs.firstWhere(
-          (e) => e.kapanNo == kapanNo,
+      (e) => e.kapanNo == kapanNo,
       orElse: () => RoughModel(),
     );
 
@@ -412,6 +410,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
     _erpFormKey.currentState?.updateFieldValue('jno', jno);
     _recalcEntry();
   }
+
   void _recalcEntry() {
     final wt = _d(_entryVals['entryWt']);
     final exRate = _d(_entryVals['entryExRate']);
@@ -467,7 +466,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
     if (kapanNo.isEmpty) return;
 
     final match = rp.roughs.firstWhere(
-          (e) => e.kapanNo == kapanNo,
+      (e) => e.kapanNo == kapanNo,
       orElse: () => RoughModel(),
     );
     final totWt = match.totWt ?? 0;
@@ -533,7 +532,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
       return;
     }
     final pg = context.read<PurityGroupProvider>().list.firstWhere(
-          (e) => e.purityGroupCode?.toString() == pCode,
+      (e) => e.purityGroupCode?.toString() == pCode,
       orElse: () => PurityGroupModel(),
     );
 
@@ -586,7 +585,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
       theme: _theme,
       title: 'Weight Limit Exceeded',
       message:
-      'Entry weight (${fThreeDecimal(entryWt)}) exceeds the pending weight '
+          'Entry weight (${fThreeDecimal(entryWt)}) exceeds the pending weight '
           '(${fThreeDecimal(pendingWt)}).\n\n'
           'KNO Total : ${fThreeDecimal(knoWt)}\n'
           'Pending   : ${fThreeDecimal(pendingWt)}\n'
@@ -626,7 +625,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
 
     Future.delayed(
       const Duration(milliseconds: 50),
-          () => _erpFormKey.currentState?.focusField('purityCode'),
+      () => _erpFormKey.currentState?.focusField('purityCode'),
     );
   }
 
@@ -638,28 +637,28 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
           .entries
           .map(
             (e) => RoughAssortDetModel(
-          srno: e.key + 1,
-          roughAssortMstID: e.value.roughAssortMstID,
-          purityCode: e.value.purityCode,
-          purityGroupCode: e.value.purityGroupCode,
-          pc: e.value.pc,
-          wt: e.value.wt,
-          per: e.value.per,
-          exRate: e.value.exRate,
-          rateDollar: e.value.rateDollar,
-          amtDollar: e.value.amtDollar,
-          labRateD: e.value.labRateD,
-          labAmtD: e.value.labAmtD,
-          rateRs: e.value.rateRs,
-          amtRs: e.value.amtRs,
-          labRateRs: e.value.labRateRs,
-          labAmtRs: e.value.labAmtRs,
-          totRateD: e.value.totRateD,
-          totAmtD: e.value.totAmtD,
-          totRateRs: e.value.totRateRs,
-          totAmtRs: e.value.totAmtRs,
-        ),
-      )
+              srno: e.key + 1,
+              roughAssortMstID: e.value.roughAssortMstID,
+              purityCode: e.value.purityCode,
+              purityGroupCode: e.value.purityGroupCode,
+              pc: e.value.pc,
+              wt: e.value.wt,
+              per: e.value.per,
+              exRate: e.value.exRate,
+              rateDollar: e.value.rateDollar,
+              amtDollar: e.value.amtDollar,
+              labRateD: e.value.labRateD,
+              labAmtD: e.value.labAmtD,
+              rateRs: e.value.rateRs,
+              amtRs: e.value.amtRs,
+              labRateRs: e.value.labRateRs,
+              labAmtRs: e.value.labAmtRs,
+              totRateD: e.value.totRateD,
+              totAmtD: e.value.totAmtD,
+              totRateRs: e.value.totRateRs,
+              totAmtRs: e.value.totAmtRs,
+            ),
+          )
           .toList();
       _syncDetGrid();
       if (_editingDetIndex == idx) _editingDetIndex = null;
@@ -678,10 +677,10 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
           pg.list
               .firstWhere(
                 (e) => e.purityCode == r.purityCode,
-            orElse: () => PurityModel(),
-          )
+                orElse: () => PurityModel(),
+              )
               .purityName ??
-              '';
+          '';
 
       // Sr No|Purity|Pc|Wt|%|Ex Rate|Rate$|Amt$|Rate Rs|Amt Rs|Lab Rate$|Lab Amt$|Lab Rate Rs|Lab Amt Rs
       return {
@@ -760,7 +759,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
     }
     Future.delayed(
       const Duration(milliseconds: 50),
-          () => _erpFormKey.currentState?.focusField('purityCode'),
+      () => _erpFormKey.currentState?.focusField('purityCode'),
     );
   }
 
@@ -778,7 +777,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
 
     final rp = context.read<RoughProvider>();
     final match = rp.roughs.firstWhere(
-          (e) => e.kapanNo == raw.kapanNo,
+      (e) => e.kapanNo == raw.kapanNo,
       orElse: () => RoughModel(),
     );
     final knoWt = match.totWt ?? 0;
@@ -816,7 +815,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
         theme: _theme,
         title: 'Purity Required',
         message:
-        'Purity entry is required to proceed.\n'
+            'Purity entry is required to proceed.\n'
             'Please enter purity before continuing.',
       );
     } else {
@@ -918,16 +917,16 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
         padding: const EdgeInsets.all(8),
         child: Responsive.isMobile(context)
             ? _showTableOnMobile
-            ? _buildTable(prov)
-            : _buildForm(context)
+                  ? _buildTable(prov)
+                  : _buildForm(context)
             : Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(flex: 3, child: _buildForm(context)),
-            const SizedBox(width: 12),
-            Expanded(flex: 2, child: _buildTable(prov)),
-          ],
-        ),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 3, child: _buildForm(context)),
+                  const SizedBox(width: 12),
+                  Expanded(flex: 2, child: _buildTable(prov)),
+                ],
+              ),
       ),
     );
   }
@@ -941,10 +940,10 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
         .where((e) => e.active == true && [2, 5, 8].contains(e.purityGroupCode))
         .map(
           (e) => ErpDropdownItem(
-        label: e.purityName ?? '',
-        value: e.purityCode?.toString() ?? '',
-      ),
-    )
+            label: e.purityName ?? '',
+            value: e.purityCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     final rows = _formRows(rp, ra);
@@ -1004,6 +1003,23 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
           }
         });
       },
+      onFieldSubmitted: (key, value) {
+        if (key == 'entryLabRateD') {
+          // VALIDATION
+          final entryLabRateD = double.tryParse(value.toString()) ?? 0;
+
+          if (entryLabRateD <= 0) {
+            _showSnack('Entry lab rate must be greater than 0');
+
+            return;
+          }
+
+          // ADD ENTRY
+          _addDetEntry();
+
+          return;
+        }
+      },
 
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
       onSave: _onSave,
@@ -1041,7 +1057,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
                     'PENDING WT',
                     _pendingWt,
                     double.tryParse(_pendingWt) != null &&
-                        double.parse(_pendingWt) < 0
+                            double.parse(_pendingWt) < 0
                         ? Colors.red
                         : t.primary,
                   ),
@@ -1051,7 +1067,12 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
                   if (_detRows.isNotEmpty) ...[
                     _infoChip(t, 'ROWS', '${_detRows.length}', t.primary),
                     const SizedBox(width: 16),
-                    _infoChip(t, 'TOT WT', fThreeDecimal(tots['wt']), t.primary),
+                    _infoChip(
+                      t,
+                      'TOT WT',
+                      fThreeDecimal(tots['wt']),
+                      t.primary,
+                    ),
                   ],
                 ],
               ),
@@ -1064,7 +1085,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
                 columns: _detGridColumns,
                 title: 'PURITY GROUP: ROUGH ASSORT',
                 theme: theme,
-                onDeleteRow: _deleteDetRow,
+                onDeleteRow:_isEditMode ?null: _deleteDetRow,
                 onEditRow: _editDetRow,
                 editingIndex: _editingDetIndex,
                 // ✅ Custom column header labels matching image exactly
@@ -1149,7 +1170,11 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  val != null ? (isPercent ? '${f2TwoDecimal(val)}%' : f2TwoDecimal(val)) : '-',
+                  val != null
+                      ? (isPercent
+                            ? '${f2TwoDecimal(val)}%'
+                            : f2TwoDecimal(val))
+                      : '-',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
