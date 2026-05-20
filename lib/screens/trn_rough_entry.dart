@@ -921,9 +921,6 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
             'Kapan No "${values['kapanNo']}" already exists in Rough entry.\n'
             'Please enter a different Kapan No.',
       );
-      // ✅ Field clear karo
-      _formValues.remove('kapanNo');
-      _erpFormKey.currentState?.updateFieldValue('kapanNo', '');
       Future.delayed(
         const Duration(milliseconds: 50),
         () => _erpFormKey.currentState?.focusField('kapanNo'),
@@ -965,12 +962,10 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
             title: 'Invalid Weight',
 
             message:
-            'Rough Assort ma '
-                '${usedWt.toStringAsFixed(3)} WT '
-                'entry thai gayelu che.\n\n'
-                'Etle Total WT '
-                '${usedWt.toStringAsFixed(3)} '
-                'thi ochhu save kari shakai nahi.',
+            '${usedWt.toStringAsFixed(3)} WT '
+                'has already been entered in Rough Assort.\n\n'
+                'Therefore, Total WT cannot be saved less than '
+                '${usedWt.toStringAsFixed(3)}.',
           );
 
           return;
@@ -1023,6 +1018,7 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
     if (confirm != true || !mounted) return;
     final success = await context.read<RoughProvider>().deleteRough(
       _selectedRough!.roughMstID!,
+      context
     );
     if (success && mounted) {
       final jno = _selectedRough?.jno;

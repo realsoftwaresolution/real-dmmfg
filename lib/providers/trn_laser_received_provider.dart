@@ -3,29 +3,32 @@ import 'package:flutter/foundation.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
 class TrnLaserReceivedProvider extends BaseProvider {
-  List<LaserMstModel> _list     = [];
-  bool                     _isLoaded = false;
+  List<LaserMstModel> _list = [];
+  bool _isLoaded = false;
 
-  bool                         get isLoaded => _isLoaded;
-  List<LaserMstModel>     get list     => List.unmodifiable(_list);
-  List<Map<String, dynamic>>   get tableData =>
+  bool get isLoaded => _isLoaded;
+
+  List<LaserMstModel> get list => List.unmodifiable(_list);
+
+  List<Map<String, dynamic>> get tableData =>
       _list.map((e) => e.toTableRow()).toList();
-// Provider mein ye map maintain karo
-// detMap declare karo (class level)
+
+  // Provider mein ye map maintain karo
+  // detMap declare karo (class level)
   Map<int, List<LaserDetModel>> detMap = {};
 
   void clearForReset() {
-    detMap.clear();            // clear details map (important)
-    _list.clear();            // clear details map (important)
+    detMap.clear(); // clear details map (important)
+    _list.clear(); // clear details map (important)
     notifyListeners();
   }
 
-// SIRF EK loadDetails rakho — dono merge karo:
+  // SIRF EK loadDetails rakho — dono merge karo:
   Future<List<LaserDetModel>> loadDetails(int mstID) async {
     final result = await request<List<LaserDetModel>>(
       call: () => api.get('/spkDeptIss/$mstID'),
       onSuccess: (res) {
-        final data   = res.data;
+        final data = res.data;
         final rawDet = (data is Map ? data['det'] : data) as List? ?? [];
         return rawDet
             .map((e) => LaserDetModel.fromJson(e as Map<String, dynamic>))
@@ -33,10 +36,11 @@ class TrnLaserReceivedProvider extends BaseProvider {
       },
     );
     final dets = result ?? [];
-    detMap[mstID] = dets;   // ← detMap update
+    detMap[mstID] = dets; // ← detMap update
     notifyListeners();
     return dets;
   }
+
   // ── LOAD ALL ──────────────────────────────────────────────────────────────
   Future<void> load() async {
     final result = await request<List<LaserMstModel>>(
@@ -49,12 +53,11 @@ class TrnLaserReceivedProvider extends BaseProvider {
       },
     );
     if (result != null) {
-      _list     = result;
+      _list = result;
       _isLoaded = true;
       notifyListeners();
     }
   }
-
 
   void clearScannedDetList() {
     notifyListeners();
@@ -87,24 +90,28 @@ class TrnLaserReceivedProvider extends BaseProvider {
     return result ?? [];
   }
 
-
   Future<List<LaserDetModel>> laserSelectData({
     required String bCode,
     required String fromCrId,
     required dynamic gridData,
     required dynamic time,
     required dynamic spkDeptIssDate,
+    required dynamic SPKDeptIssMstID,
+    required dynamic isSame,
   }) async {
     final result = await request<List<LaserDetModel>>(
       showLoader: false,
       call: () => api.post(
         '/spkDeptIss/laser-data-list-select',
         data: {
+          'SPKDeptIssMstID': SPKDeptIssMstID == 0 ? 0 : SPKDeptIssMstID,
           'bCode': bCode,
           'lastCrId': fromCrId.toString(),
           'screenName': 'LASER_RECEIVED',
           'gridData': gridData,
           'FormType': 'LASERREC',
+          if(isSame)
+          'isSame': isSame,
         },
       ),
       onSuccess: (res) {
@@ -115,11 +122,7 @@ class TrnLaserReceivedProvider extends BaseProvider {
         }
 
         return (responseData as List)
-            .map(
-              (e) => LaserDetModel.fromJson(
-            Map<String, dynamic>.from(e),
-          ),
-        )
+            .map((e) => LaserDetModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
       },
     );
@@ -129,18 +132,20 @@ class TrnLaserReceivedProvider extends BaseProvider {
     return result ?? [];
   }
 
-
   // ── CREATE ────────────────────────────────────────────────────────────────
   Future<bool> create(
-      Map<String, dynamic>       values,
-      List<LaserDetModel>   details,
-      ) async {
-    final model  = _buildModel(values);
+    Map<String, dynamic> values,
+    List<LaserDetModel> details,
+  ) async {
+    final model = _buildModel(values);
     final result = await request<LaserMstModel>(
-      call: () => api.post('/spkDeptIss', data: {
-        ...model.toJson(),
-        'details': details.map((e) => e.toJson()).toList(),
-      }),
+      call: () => api.post(
+        '/spkDeptIss',
+        data: {
+          ...model.toJson(),
+          'details': details.map((e) => e.toJson()).toList(),
+        },
+      ),
       onSuccess: (res) => _parseMstResponse(res.data),
     );
     if (result != null) {
@@ -153,16 +158,19 @@ class TrnLaserReceivedProvider extends BaseProvider {
 
   // ── UPDATE ────────────────────────────────────────────────────────────────
   Future<bool> update(
-      int                        id,
-      Map<String, dynamic>       values,
-      List<LaserDetModel>   details,
-      ) async {
-    final model  = _buildModel(values);
+    int id,
+    Map<String, dynamic> values,
+    List<LaserDetModel> details,
+  ) async {
+    final model = _buildModel(values);
     final result = await request<LaserMstModel>(
-      call: () => api.put('/spkDeptIss/$id', data: {
-        ...model.toJson(),
-        'details': details.map((e) => e.toJson()).toList(),
-      }),
+      call: () => api.put(
+        '/spkDeptIss/$id',
+        data: {
+          ...model.toJson(),
+          'details': details.map((e) => e.toJson()).toList(),
+        },
+      ),
       onSuccess: (res) => _parseMstResponse(res.data),
     );
     if (result != null) {
@@ -225,10 +233,14 @@ class TrnLaserReceivedProvider extends BaseProvider {
         mstJson['details'] = rawDet;
         // Det se totals calculate karo (create/update ke baad)
         mstJson['TotPkt'] = rawDet.length;
-        mstJson['TotalPc'] = rawDet.fold<int>(0, (s, d) =>
-        s + ((d['TotalPc'] ?? 0) as num).toInt());
-        mstJson['TotalWt'] = rawDet.fold<double>(0.0, (s, d) =>
-        s + ((d['TotalWt'] ?? 0) as num).toDouble());
+        mstJson['TotalPc'] = rawDet.fold<int>(
+          0,
+          (s, d) => s + ((d['TotalPc'] ?? 0) as num).toInt(),
+        );
+        mstJson['TotalWt'] = rawDet.fold<double>(
+          0.0,
+          (s, d) => s + ((d['TotalWt'] ?? 0) as num).toDouble(),
+        );
         mstJson['Jno'] = rawDet.isNotEmpty ? rawDet.first['Jno'] : null;
       } else {
         mstJson = Map<String, dynamic>.from(data);
@@ -237,29 +249,32 @@ class TrnLaserReceivedProvider extends BaseProvider {
     }
     throw Exception('Unexpected response format');
   }
+
   // ── BUILD MODEL from form values ──────────────────────────────────────────
   LaserMstModel _buildModel(Map<String, dynamic> v) {
     int? toI(String? s) => s == null || s.isEmpty ? null : int.tryParse(s);
 
     return LaserMstModel(
-      spkDeptIssDate:  v['spkDeptIssDate'],
-      fromCrID:        toI(v['fromCrID']?.toString()),
-      toCrID:          toI(v['toCrID']?.toString()),
+      spkDeptIssDate: v['spkDeptIssDate'],
+      fromCrID: toI(v['fromCrID']?.toString()),
+      toCrID: toI(v['toCrID']?.toString()),
       deptProcessCode: toI(v['deptProcessCode']?.toString()),
-      deptCode:        toI(v['deptCode']?.toString()),
-      sflag:           v['sflag'],
-      stime:           v['Stime'],    // ← ADD
-      sdate:           v['Sdate'],    // ← ADD
-      logID:           toI(v['logID']?.toString()),
-      pcID:            v['pcID'],
-      ever:            toI(v['ever']?.toString()),
-      entryType:       v['entryType'] ?? 'B',
-      repairing:       v['repairing'] ?? 'N',
-      formType:        v['formType'] ?? 'LASERREC',
-      proType:         v['proType'] ?? 'SPK',
-      formType1:       v['formType1'],
-      nukCrId:         toI(v['nukCrId']?.toString()),
-      planType:        v['planType'],
+      deptCode: toI(v['deptCode']?.toString()),
+      sflag: v['sflag'],
+      stime: v['Stime'],
+      // ← ADD
+      sdate: v['Sdate'],
+      // ← ADD
+      logID: toI(v['logID']?.toString()),
+      pcID: v['pcID'],
+      ever: toI(v['ever']?.toString()),
+      entryType: v['entryType'] ?? 'B',
+      repairing: v['repairing'] ?? 'N',
+      formType: v['formType'] ?? 'LASERREC',
+      proType: v['proType'] ?? 'SPK',
+      formType1: v['formType1'],
+      nukCrId: toI(v['nukCrId']?.toString()),
+      planType: v['planType'],
     );
   }
 }

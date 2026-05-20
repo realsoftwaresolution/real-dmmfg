@@ -118,6 +118,7 @@
 // lib/providers/cut_create_provider.dart
 // lib/providers/cut_create_provider.dart
 
+import 'package:flutter/material.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../models/cut_create_model.dart';
 
@@ -254,17 +255,68 @@ class CutCreateProvider extends BaseProvider {
   }
 
   // ── DELETE ──────────────────────────────────────────────────────────────────
-  Future<bool> delete(int id) async {
-    final result = await request<bool>(
-      call: () => api.delete('/cutCreate/$id'),
-      onSuccess: (_) => true,
-    );
-    if (result == true) {
-      _list.removeWhere((e) => e.cutCreateMstID == id);
-      notifyListeners();
-      return true;
+  Future<bool> delete(
+      int id,
+      BuildContext context,
+      ) async {
+
+    void showSnack(String msg) {
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(msg),
+          ),
+        );
     }
-    return false;
+
+    try {
+
+      final res = await api.delete(
+        '/cutCreate/$id',
+      );
+
+      final data = res.data;
+
+      /// SUCCESS
+      _list.removeWhere(
+            (e) => e.cutCreateMstID == id,
+      );
+
+      notifyListeners();
+
+      showSnack(
+        'Record deleted successfully',
+      );
+
+      return true;
+
+    } catch (e) {
+
+      print('DELETE ERROR => $e');
+
+      String msg = 'Delete failed';
+
+      /// 🔥 ACTUAL API MESSAGE
+      try {
+
+        final errData =
+            (e as dynamic).response?.data;
+
+        msg =
+            errData?['message']
+                ?.toString() ??
+                msg;
+
+      } catch (_) {}
+
+      showSnack(msg);
+
+      return false;
+    }
   }
 
   Future<double> getPacketCreateUsedWt(

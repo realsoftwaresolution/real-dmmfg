@@ -410,15 +410,6 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
 
       prov.clearTempScanData();
 
-      await ErpResultDialog.showError(
-        context: context,
-
-        theme: _theme,
-
-        title: 'Sarin Validation',
-
-        message: e.toString().replaceAll('Exception: ', ''),
-      );
 
       _entryVals['scanValue'] = '';
 

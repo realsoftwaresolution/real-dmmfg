@@ -366,16 +366,43 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
 
   // ── RECALC PENDING ─────────────────────────────────────────────────────────
   void _recalcPending() {
-    final formUsedPc = _detRows.fold(0, (s, r) => s + (r.pc ?? 0));
-    final formUsedWt = _detRows.fold(0.0, (s, r) => s + (r.wt ?? 0));
+
+    final formUsedPc =
+    _detRows.fold(0, (s, r) => s + (r.pc ?? 0));
+
+    final formUsedWt =
+    _detRows.fold(0.0, (s, r) => s + (r.wt ?? 0));
+
+    final newPendPc =
+        _totalAssortPc - formUsedPc;
+
+    final newPendWt =
+        _totalAssortWt - formUsedWt;
+
     setState(() {
-      _pendingPc = '${_totalAssortPc - formUsedPc}';
-      _pendingWt = fThreeDecimal(_totalAssortWt - formUsedWt);
+
+      _pendingPc = '$newPendPc';
+
+      _pendingWt =
+          fThreeDecimal(newPendWt);
+
     });
+
+    debugPrint(
+      'Pending WT => $_pendingWt',
+    );
   }
 
   // ── ADD DET ENTRY ──────────────────────────────────────────────────────────
   Future<void> _addDetEntry() async {
+
+    final exists = await _checkDuplicate(
+      fields: {
+        'CutNo': _entryVals['entryCutNo'].toString(),
+      },
+    );
+    if (exists) return;
+
     final cutType = _entryVals['entryCutType'] ?? '';
     final cutNo = _entryVals['entryCutNo'] ?? '';
     final wtStr = _entryVals['entryWt'] ?? '';
@@ -443,12 +470,11 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
           title: 'Invalid Weight',
 
           message:
-          'Aa Cut nu '
+          'This Cut\'s '
               '${fThreeDecimal(usedWt)} WT '
-              'Packet Create ma use thai gayu che.\n\n'
-              'Etle WT '
-              '${fThreeDecimal(usedWt)} '
-              'thi ochhu muki shakai nahi.',
+              'has already been used in Packet Create.\n\n'
+              'Therefore, WT cannot be entered less than '
+              '${fThreeDecimal(usedWt)}.',
         );
 
         _erpFormKey.currentState
@@ -666,13 +692,6 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
 
   // ── SAVE ───────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
-    final exists = await _checkDuplicate(
-      fields: {
-        'CutNo': values['entryCutNo'].toString(),
-      },
-    );
-    if (exists) return;
-
     if (_detDisplay.isNotEmpty) {
       final prov = context.read<CutCreateProvider>();
       final merged = Map<String, dynamic>.from(values);
@@ -726,6 +745,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
     if (confirm != true || !mounted) return;
     final success = await context.read<CutCreateProvider>().delete(
       _selectedMst!.cutCreateMstID!,
+      context
     );
     if (success && mounted) {
       final kno = _selectedMst?.kapanNo;
@@ -826,7 +846,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
       detailBuilder: (ctx) {
         final t = ctx.erpTheme;
         final tots = _footerTotals;
-
+        debugPrint('UI PEND WT => $_pendingWt');
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -878,29 +898,29 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
               ),
             ),
 
-            if (_detDisplay.isNotEmpty) ...[
-              ErpEntryGrid(
-                data: _detDisplay,
-                columns: _detGridColumns,
-                title: 'CUT CREATE DETAILS',
-                theme: t,
-                onDeleteRow: _isEditMode ?null:_deleteDetRow,
-                onEditRow: _editDetRow,
-                editingIndex: _editingDetIndex,
-                columnLabels: const {
-                  'srno': 'SR NO',
-                  'cutType': 'TYPE',
-                  'cutNo': 'CUT NO',
-                  'pc': 'PC',
-                  'wt': 'WT',
-                  'comparisionCode': 'COMPARISION CODE',
-                  'assortNo': 'ASSORT NO',
-                  'purityType': 'PURITY TYPE',
-                },
-              ),
-              const SizedBox(height: 4),
-              _buildFooterRow(t, tots),
-            ],
+            ErpEntryGrid(
+              data: _detDisplay,
+              columns: _detGridColumns,
+              title: 'CUT CREATE DETAILS',
+              theme: t,
+              onDeleteRow: _isEditMode ?null:_deleteDetRow,
+              onEditRow: _editDetRow,
+              editingIndex: _editingDetIndex,
+              columnLabels: const {
+                'srno': 'SR NO',
+                'cutType': 'TYPE',
+                'cutNo': 'CUT NO',
+                'pc': 'PC',
+                'wt': 'WT',
+                'comparisionCode': 'COMPARISION CODE',
+                'assortNo': 'ASSORT NO',
+                'purityType': 'PURITY TYPE',
+              },
+            ),
+        if (_detDisplay.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          _buildFooterRow(t, tots),
+        ]
           ],
         );
       },

@@ -649,6 +649,14 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
 
     final entryWt = double.tryParse(wtStr) ?? 0;
 
+    if (entryWt <= 0) {
+      _showSnack('Weight must be greater than 0');
+
+      _erpFormKey.currentState?.focusField('entryWt');
+
+      return;
+    }
+
     /// ── SR NO ───────────────────────────────────
 
     final srno = _editingDetIndex != null

@@ -515,11 +515,27 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       _entryVals[k] = v ?? '';
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
+    final orgPc = r.pc ?? 0;
+    final orgWt = r.wt ?? 0;
 
-    set('orgPc', r.pc?.toString());
-    set('orgWt', fThreeDecimal(r.wt));
-    set('issPc', r.issPc?.toString());
-    set('issWt', fThreeDecimal(r.issWt));
+    final issPc = (r.issPc == null || r.issPc == 0) ?orgPc : r.issPc;
+    final issWt = (r.issWt == null || r.issWt == 0)
+        ? orgWt
+        : r.issWt!;
+
+    final recPc = (r.recPc == null || r.recPc == 0) ?orgPc : r.recPc;
+    final recWt = (r.recWt == null || r.recWt == 0)
+        ? issWt
+        : r.recWt!;
+
+    set('orgPc', orgPc.toString());
+    set('orgWt', fThreeDecimal(orgWt));
+
+    set('issPc', issPc.toString());
+    set('issWt', fThreeDecimal(issWt));
+
+    set('recpc', recPc.toString());
+    set('recwt', fThreeDecimal(recWt));
     set('jnoRecPc', r.jnoRecPc?.toString());
     set('shapeCode', r.shapeCode?.toString());
     set('purityCode', r.purityCode?.toString());

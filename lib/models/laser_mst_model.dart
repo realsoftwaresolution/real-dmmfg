@@ -141,10 +141,12 @@ class LaserDetModel {
   final int? id;
   final int? jno;
   final String? bCode;
+  final String? MainBCode;
   final String? pktNo;
   final int? fromDeptCode; // ← ADD
   final int? toDeptCode;
   final int? deptCode;
+  final int? length;
   final String? cutNo;
   final String? clvCut;
   final int? pc;
@@ -281,8 +283,10 @@ class LaserDetModel {
     this.id,
     this.jno,
     this.bCode,
+    this.MainBCode,
     this.pktNo,
     this.cutNo,
+    this.length,
     this.clvCut,
     this.fromDeptCode,
     this.toDeptCode,
@@ -425,8 +429,10 @@ class LaserDetModel {
     deptCode: json['DeptCode'],
     jno: json['Jno'],
     bCode: json['BCode']?.toString(),
+    MainBCode: json['MainBCode']?.toString(),
     pktNo: json['PktNo'],
     cutNo: json['CutNo'],
+    length: json['Length'],
     clvCut: json['ClvCut'],
     fromCrId: json['FromCrID'],
     toCrId: json['ToCrID'],
@@ -563,8 +569,10 @@ class LaserDetModel {
     'Jno': jno ?? 0,
 
     'BCode': bCode ?? '',
+    'MainBCode': MainBCode ?? '',
     'PktNo': pktNo ?? '',
     'CutNo': cutNo ?? '',
+    'Length': length ?? 0,
     'ClvCut': clvCut ?? '',
 
     'Pc': pc ?? 0,
@@ -767,7 +775,6 @@ class LaserDetModel {
     'LsAmount': lsAmount ?? 0,
 
     'OrderMstID': orderMstID ?? 0,
-    "Length": 0,
     "Height": 0,
     "PolishCode": 0,
     "SymmetryCode": 0,

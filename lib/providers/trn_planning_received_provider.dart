@@ -279,14 +279,14 @@ class TrnPlanningReceivedProvider extends BaseProvider {
   // ─────────────────────────────────────────────
   // fetchByBCode
   // ─────────────────────────────────────────────
-
   Future<List<PlanningReceivedDetModel>> fetchByBCode({
     required String bCode,
-
     required String fromCrId,
     required BuildContext context,
   }) async {
+
     final result = await request<List<PlanningReceivedDetModel>>(
+
       call: () => api.get(
         '/spkDeptIss/scan-bcode',
         query: {
@@ -297,66 +297,46 @@ class TrnPlanningReceivedProvider extends BaseProvider {
       ),
 
       onSuccess: (res) {
+
         final data = res.data;
 
         print('fetchByBCode data => $data');
+print('ashdajkdasdhak ${data['data']['success']}');
+        /// API ERROR
+        if (data['data']['success'] == false) {
 
-        // ─────────────────────────────
-        // API VALIDATION ERROR
-        // ─────────────────────────────
-
-        final apiData = data['data'];
-
-        if (apiData != null && apiData['success'] == false) {
           final errors =
-              (apiData['errors'] as List?)?.join('\n') ??
-              'Sarin data not found';
+              (data['data']['errors'] as List?)
+                  ?.join('\n') ??
+                  'Sarin data not found';
+
           ErpResultDialog.showError(
             context: context,
             theme: _theme,
             message: errors,
             title: 'Error',
           );
-        }
 
-        // ─────────────────────────────
-        // NORMAL DATA
-        // ─────────────────────────────
-
-        final responseData = data['data'];
-
-        if (responseData == null) {
           return <PlanningReceivedDetModel>[];
         }
 
-        final List<dynamic> list = responseData is List
-            ? responseData
-            : [responseData];
+        /// NORMAL DATA
+        final responseData = data['data'];
 
-        final grouped = <String, List<Map<String, dynamic>>>{};
+        if (responseData == null ||
+            responseData is! List) {
 
-        for (final item in list) {
-          final map = Map<String, dynamic>.from(item);
-
-          final bcode = map['BCode'].toString();
-
-          grouped.putIfAbsent(bcode, () => []);
-
-          grouped[bcode]!.add(map);
+          return <PlanningReceivedDetModel>[];
         }
 
-        final parsed = grouped.entries.map((entry) {
-          final first = entry.value.first;
+        final List<dynamic> list = responseData;
 
-          return PlanningReceivedDetModel(
-            bCode: entry.key,
+        final parsed = list.map((e) {
 
-            pktNo: first['PktNo']?.toString(),
-
-            cutNo: first['CutNo']?.toString(),
-
-            sarinData: entry.value,
+          return PlanningReceivedDetModel.fromJson(
+            Map<String, dynamic>.from(e),
           );
+
         }).toList();
 
         _tempScannedDetList = parsed;

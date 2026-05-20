@@ -1,3 +1,5 @@
+import 'package:diam_mfg/utils/msg_dialogue.dart';
+import 'package:flutter/material.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../models/rough_model.dart';
 import '../utils/constants.dart';
@@ -89,17 +91,70 @@ class RoughProvider extends BaseProvider {
     return false;
   }
 
-  Future<bool> deleteRough(int id) async {
-    final result = await request<bool>(
-      call: () => api.delete('/rough/$id'),
-      onSuccess: (_) => true,
-    );
-    if (result == true) {
-      _roughs.removeWhere((e) => e.roughMstID == id);
-      notifyListeners();
-      return true;
+
+
+  Future<bool> deleteRough(
+      int id,
+      BuildContext context,
+      ) async {
+
+    void showSnack(String msg) {
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(msg),
+          ),
+        );
     }
-    return false;
+
+    try {
+
+      final res = await api.delete(
+        '/rough/$id',
+      );
+
+      final data = res.data;
+
+      /// SUCCESS
+      _roughs.removeWhere(
+            (e) => e.roughMstID == id,
+      );
+
+      notifyListeners();
+
+      showSnack(
+        'Record deleted successfully',
+      );
+
+      return true;
+
+    } catch (e) {
+
+      print('DELETE ERROR => $e');
+
+      String msg = 'Delete failed';
+
+      /// 🔥 ACTUAL API MESSAGE
+      try {
+
+        final errData =
+            (e as dynamic).response?.data;
+
+        msg =
+            errData?['message']
+                ?.toString() ??
+                msg;
+
+      } catch (_) {}
+
+      showSnack(msg);
+
+      return false;
+    }
   }
 
   Future<List<RoughDetModel>> loadDetails(int roughMstID) async {

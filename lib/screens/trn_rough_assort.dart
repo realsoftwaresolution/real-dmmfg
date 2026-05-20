@@ -501,16 +501,35 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
     }
     if (wt.isEmpty) {
       _showSnack('Weight required');
-      _erpFormKey.currentState?.focusField('entryWt');
+      Future.delayed(
+        const Duration(milliseconds: 200),
+            () {
+
+          if (!mounted) return;
+
+          _erpFormKey.currentState?.focusField('entryWt');
+
+        },
+      );
       return;
     }
     final entryWt = double.tryParse(wt) ?? 0;
     final knoWt = double.tryParse(_knoWt) ?? 0;
 
     if (entryWt <= 0) {
+
       _showSnack('Weight must be greater than 0');
 
-      _erpFormKey.currentState?.focusField('entryWt');
+      Future.delayed(
+        const Duration(milliseconds: 200),
+            () {
+
+          if (!mounted) return;
+
+          _erpFormKey.currentState?.focusField('entryWt');
+
+        },
+      );
 
       return;
     }

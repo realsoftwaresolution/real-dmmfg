@@ -56,7 +56,7 @@ class DuplicateCheckService {
           context: context,
           theme: theme,
           title: 'Duplicate Found',
-          message: data['message'] ?? 'Record already exists',
+          message: '${data['message'] ?? 'Record already exists' } ${fields.keys}' ,
         );
         return true;
       }

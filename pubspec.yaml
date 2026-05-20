@@ -45,7 +45,7 @@ dependencies:
     path: ../erp_data_table
   collection:
   pdf:
-  printing:
+#  printing:
   excel:
   path_provider:
   intl:
