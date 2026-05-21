@@ -403,13 +403,12 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
         bCode: bCode,
 
         fromCrId: _fromCrId!.toString(),
-        context:context,
+        context: context,
       );
     } catch (e) {
       if (!mounted) return;
 
       prov.clearTempScanData();
-
 
       _entryVals['scanValue'] = '';
 
@@ -1127,10 +1126,10 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
             tensionsCode: int.tryParse(_formValues['tensionsCode'] ?? ''),
             pc: e.pc,
             wt: e.wt,
-            issPc: e.issPc,
-            issWt: e.issWt,
-            recPc: e.recPc,
-            recWt: e.recWt,
+            issPc: (e.issPc == null || e.issPc == 0) ? e.pc : e.issPc,
+            issWt: (e.issWt == null || e.issWt == 0) ? e.wt : e.issWt,
+            recPc: (e.recPc == null || e.recPc == 0) ? e.pc : e.recPc,
+            recWt: (e.recWt == null || e.recWt == 0) ? e.wt : e.recWt,
             totalPc: e.recPc,
             totalWt: e.recWt,
             dmWt: e.dmWt,
@@ -1230,46 +1229,46 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
           });
         }).toList();
 
-       if(rows.isNotEmpty && scannedDetList.isNotEmpty){
-         final success = await prov.savePlanningDetails(
-           merged,
-           rows,
-           scannedDetList,
-         );
+        if (rows.isNotEmpty && scannedDetList.isNotEmpty) {
+          final success = await prov.savePlanningDetails(
+            merged,
+            rows,
+            scannedDetList,
+          );
 
-         if (rows.isEmpty) {
-           ErpResultDialog.showError(
-             context: context,
-             theme: _theme,
-             title: 'Planning',
-             message: 'No planning rows found',
-           );
+          if (rows.isEmpty) {
+            ErpResultDialog.showError(
+              context: context,
+              theme: _theme,
+              title: 'Planning',
+              message: 'No planning rows found',
+            );
 
-           return;
-         }
+            return;
+          }
 
-         if (!mounted) return;
+          if (!mounted) return;
 
-         if (success) {
-           ErpResultDialog.showSuccess(
-             context: context,
-             theme: _theme,
-             title: 'Planning',
-             message: 'Planning saved successfully',
-           );
+          if (success) {
+            ErpResultDialog.showSuccess(
+              context: context,
+              theme: _theme,
+              title: 'Planning',
+              message: 'Planning saved successfully',
+            );
 
-           prov.clearScannedDetList();
-         }
+            prov.clearScannedDetList();
+          }
 
-         await prov.load();
-       }else {
-         await ErpResultDialog.showError(
-           context: context,
-           theme: _theme,
-           title: 'No Entries',
-           message: 'Please add at least one entry.',
-         );
-       }
+          await prov.load();
+        } else {
+          await ErpResultDialog.showError(
+            context: context,
+            theme: _theme,
+            title: 'No Entries',
+            message: 'Please add at least one entry.',
+          );
+        }
       },
       onDelete: _isEditMode ? _onDelete : null,
       onSearch: () => setState(() => _showTableOnMobile = true),

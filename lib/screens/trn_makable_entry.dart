@@ -475,16 +475,34 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
 
-    set('recWt', fThreeDecimal(r.recWt));
-    set('recPc', r.recPc?.toString());
-    set('issPc', r.issPc?.toString());
-    set('issWt', fThreeDecimal(r.issWt));
+    final orgPc = r.pc ?? 0;
+    final orgWt = r.wt ?? 0;
+
+    final issPc = (r.issPc == null || r.issPc == 0) ?orgPc : r.issPc;
+    final issWt = (r.issWt == null || r.issWt == 0)
+        ? orgWt
+        : r.issWt!;
+
+    final recPc = (r.recPc == null || r.recPc == 0) ? orgPc : r.recPc;
+    final recWt = (r.recWt == null || r.recWt == 0)
+        ? issWt
+        : r.recWt!;
+
+    set('issPc', issPc.toString());
+    set('issWt', fThreeDecimal(issWt));
+
+    set('recPc', recPc.toString());
+    set('recWt', fThreeDecimal(recWt));
     set('jnoRecPc', r.jnoRecPc?.toString());
     set('shapeCode', r.shapeCode?.toString());
     set('purityCode', r.purityCode?.toString());
     set('diam', r.diam?.toString());
     set('length', r.length?.toString());
     set('height', r.height?.toString());
+    setState(() => _scannedDet = r);
+
+
+
 
     setState(() => _scannedDet = r);
   }
@@ -510,7 +528,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     final dmWt = double.tryParse(_entryVals['dmWt'] ?? '') ?? 0;
 
     if (recWt > 0) {
-      final dmPer = (dmWt / recWt) * 100;
+      final dmPer = (dmWt * 100) / recWt;
+
       _entryVals['dmPer'] = dmPer.toStringAsFixed(2);
 
       _erpFormKey.currentState?.updateFieldValue(
@@ -519,7 +538,11 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       );
     } else {
       _entryVals['dmPer'] = '0';
-      _erpFormKey.currentState?.updateFieldValue('dmPer', '0');
+
+      _erpFormKey.currentState?.updateFieldValue(
+        'dmPer',
+        '0',
+      );
     }
   }
 

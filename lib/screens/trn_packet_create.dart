@@ -15,6 +15,7 @@ import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/helper_functions.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
+import 'package:diam_mfg/utils/process_constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -22,7 +23,6 @@ import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
 import '../bootstrap.dart';
-
 
 // ── Lot group size ─────────────────────────────────────────────────────────────
 const int _kLotSize = 20;
@@ -122,7 +122,8 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
           final pendingWt = _getPendingWtForCut(cc);
           return ErpDropdownItem(
             // ✅ Edit mode mein current cut ka label
-            label: 'Cut: ${spkDet.cutNo ?? ''}  Pending WT: ${fThreeDecimal(pendingWt)}',
+            label:
+                'Cut: ${spkDet.cutNo ?? ''}  Pending WT: ${fThreeDecimal(pendingWt)}',
             value: spkDet.cutNo ?? '',
           );
         })
@@ -207,7 +208,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
           type: ErpFieldType.dropdown,
           dropdownItems: cutNoItems,
           required: true,
-          readOnly:  _detDisplay.isNotEmpty || _isEditMode,
+          readOnly: _detDisplay.isNotEmpty || _isEditMode,
           flex: 2,
           sectionIndex: 0,
         ),
@@ -461,6 +462,14 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     _pendingWt = totalWt - usedWt;
     _pendingPc = totalPc - usedPc;
 
+    // ADD HERE
+    _formValues['jno'] = found.jno?.toString() ?? '';
+
+    _erpFormKey.currentState?.updateFieldValue(
+      'jno',
+      found.jno?.toString() ?? '',
+    );
+
     // plusWt = pendWt * 0.15 / 100
     final plusWt = pendWt * 0.15 / 100;
 
@@ -474,7 +483,10 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     _entryVals['entryPc'] = '1';
     _entryVals['entryPlusWt'] = fThreeDecimal(plusWt);
     _erpFormKey.currentState?.updateFieldValue('entryPc', '1');
-    _erpFormKey.currentState?.updateFieldValue('entryPlusWt', fThreeDecimal(plusWt));
+    _erpFormKey.currentState?.updateFieldValue(
+      'entryPlusWt',
+      fThreeDecimal(plusWt),
+    );
 
     // Auto lotNo for this cutNo
     final lastLot = _lotNoMap[cutNo] ?? 0;
@@ -505,7 +517,10 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     // Update plusWt based on new pendWt
     final plusWt = pendWt * 0.15 / 100;
     _entryVals['entryPlusWt'] = fThreeDecimal(plusWt);
-    _erpFormKey.currentState?.updateFieldValue('entryPlusWt', fThreeDecimal(plusWt));
+    _erpFormKey.currentState?.updateFieldValue(
+      'entryPlusWt',
+      fThreeDecimal(plusWt),
+    );
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -738,7 +753,10 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     final pendWt = _pendingWt - formUsedWt;
     final plusWt = pendWt * 0.15 / 100;
     _entryVals['entryPlusWt'] = fThreeDecimal(plusWt);
-    _erpFormKey.currentState?.updateFieldValue('entryPlusWt', fThreeDecimal(plusWt));
+    _erpFormKey.currentState?.updateFieldValue(
+      'entryPlusWt',
+      fThreeDecimal(plusWt),
+    );
 
     Future.delayed(
       const Duration(milliseconds: 50),
@@ -823,7 +841,6 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
       };
     }).toList();
   }
-
 
   List<String> get _detGridColumns => [
     'bCode',
@@ -947,7 +964,15 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
 
     bool success;
     if (_isEditMode && _selectedMst != null) {
-      success = await prov.update(_selectedMst!.packetMstID!, merged, _detRows);
+      success = await prov.update(
+        _selectedMst!.packetMstID!,
+        merged,
+        _detRows,
+        bCodeArray: _detRows.map((r) => r.bCode).toList(),
+        expectedProcess: ProcessConstants.packetCreate,
+        theme: _theme,
+        context: context,
+      );
     } else {
       success = await prov.create(merged, _detRows);
     }
@@ -978,6 +1003,10 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     if (confirm != true || !mounted) return;
     final success = await context.read<PacketProvider>().delete(
       _selectedMst!.packetMstID!,
+      bCodeArray: _detRows.map((r) => r.bCode).toList(),
+      expectedProcess: ProcessConstants.packetCreate,
+      theme: _theme,
+      context: context,
     );
     if (success && mounted) {
       final cn = _selectedMst?.cutNo;
@@ -1353,7 +1382,9 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
                 ),
                 Expanded(
                   child: Text(
-                    fThreeDecimal(groups.fold(0.0, (s, g) => s! + (g['wt'] as double))),
+                    fThreeDecimal(
+                      groups.fold(0.0, (s, g) => s! + (g['wt'] as double)),
+                    ),
                     textAlign: TextAlign.right,
                     style: TextStyle(
                       fontSize: 11,

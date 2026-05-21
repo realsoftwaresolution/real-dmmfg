@@ -1,14 +1,17 @@
 // lib/providers/packet_provider.dart
 
+import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../models/packet_model.dart';
 
 class PacketProvider extends BaseProvider {
-  List<PacketMstModel> _list     = [];
-  bool                 _isLoaded = false;
+  List<PacketMstModel> _list = [];
+  bool _isLoaded = false;
 
-  bool                       get isLoaded  => _isLoaded;
-  List<PacketMstModel>       get list      => List.unmodifiable(_list);
+  bool get isLoaded => _isLoaded;
+
+  List<PacketMstModel> get list => List.unmodifiable(_list);
+
   List<Map<String, dynamic>> get tableData =>
       _list.map((e) => e.toTableRow()).toList();
 
@@ -24,12 +27,13 @@ class PacketProvider extends BaseProvider {
       },
     );
     if (result != null) {
-      _list     = result;
+      _list = result;
       _isLoaded = true;
       notifyListeners();
     }
   }
-// PacketProvider mein method add karo:
+
+  // PacketProvider mein method add karo:
   Future<int> getNextLotNo(String cutNo) async {
     final result = await request<int>(
       showLoader: false,
@@ -38,18 +42,22 @@ class PacketProvider extends BaseProvider {
     );
     return result ?? 1;
   }
+
   // ── CREATE ────────────────────────────────────────────────────────────────
   // API returns { mst: {}, det: [] }
   Future<bool> create(
-      Map<String, dynamic>  values,
-      List<PacketDetModel>  details,
-      ) async {
-    final model  = _buildModel(values);
+    Map<String, dynamic> values,
+    List<PacketDetModel> details,
+  ) async {
+    final model = _buildModel(values);
     final result = await request<PacketMstModel>(
-      call: () => api.post('/packetCreate', data: {
-        ...model.toJson(),
-        'details': details.map((e) => e.toJson()).toList(),
-      }),
+      call: () => api.post(
+        '/packetCreate',
+        data: {
+          ...model.toJson(),
+          'details': details.map((e) => e.toJson()).toList(),
+        },
+      ),
       onSuccess: (res) => _parseMstResponse(res.data),
     );
     if (result != null) {
@@ -62,17 +70,39 @@ class PacketProvider extends BaseProvider {
 
   // ── UPDATE ────────────────────────────────────────────────────────────────
   Future<bool> update(
-      int                   id,
-      Map<String, dynamic>  values,
-      List<PacketDetModel>  details,
-      ) async {
-    final model  = _buildModel(values);
+    int id,
+    Map<String, dynamic> values,
+    List<PacketDetModel> details,
+      {
+        expectedProcess,
+        bCodeArray,
+        theme,
+        context,
+      }
+  ) async {
+    final model = _buildModel(values);
     final result = await request<PacketMstModel>(
-      call: () => api.put('/packetCreate/$id', data: {
-        ...model.toJson(),
-        'details': details.map((e) => e.toJson()).toList(),
-      }),
-      onSuccess: (res) => _parseMstResponse(res.data),
+      call: () => api.put(
+        '/packetCreate/$id',
+        data: {
+          ...model.toJson(),
+          'details': details.map((e) => e.toJson()).toList(),
+          'bCodeArray': bCodeArray, 'expectedProcess': expectedProcess,
+        },
+      ),
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+          return data;
+        }
+        return _parseMstResponse(data);
+      },
     );
     if (result != null) {
       final i = _list.indexWhere((e) => e.packetMstID == id);
@@ -84,10 +114,30 @@ class PacketProvider extends BaseProvider {
   }
 
   // ── DELETE ────────────────────────────────────────────────────────────────
-  Future<bool> delete(int id) async {
+  Future<bool> delete(
+    int id, {
+    expectedProcess,
+    bCodeArray,
+    theme,
+    context,
+  }) async {
     final result = await request<bool>(
-      call: () => api.delete('/packetCreate/$id'),
-      onSuccess: (_) => true,
+      call: () => api.delete(
+        '/packetCreate/$id',
+        data: {'bCodeArray': bCodeArray, 'expectedProcess': expectedProcess},
+      ),
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+        }
+        return data;
+      },
     );
     if (result == true) {
       _list.removeWhere((e) => e.packetMstID == id);
@@ -103,7 +153,7 @@ class PacketProvider extends BaseProvider {
     final result = await request<List<PacketDetModel>>(
       call: () => api.get('/packetCreate/$mstID'),
       onSuccess: (res) {
-        final data   = res.data;
+        final data = res.data;
         final rawDet = (data is Map ? data['det'] : data) as List? ?? [];
         return rawDet
             .map((e) => PacketDetModel.fromJson(e as Map<String, dynamic>))
@@ -117,7 +167,7 @@ class PacketProvider extends BaseProvider {
   PacketMstModel _parseMstResponse(dynamic data) {
     if (data is Map) {
       if (data.containsKey('mst')) {
-        final mst    = Map<String, dynamic>.from(data['mst'] as Map);
+        final mst = Map<String, dynamic>.from(data['mst'] as Map);
         final rawDet = data['det'] as List? ?? [];
         mst['details'] = rawDet; // raw maps for fromJson
         return PacketMstModel.fromJson(mst);
@@ -133,16 +183,16 @@ class PacketProvider extends BaseProvider {
 
     return PacketMstModel(
       packetDate: v['packetDate'],
-      cutNo:      v['cutNo'],
-      clvCut:     v['clvCut'],
-      sflag:      v['sflag'],
-      sdate:      v['sdate'],
-      logID:      toI(v['logID']),
-      pcID:       v['pcID'],
-      ever:       toI(v['ever']),
-      packetRec:  v['packetRec'],
-      entryType:  v['entryType'],
-      slType:     v['slType'],
+      cutNo: v['cutNo'],
+      clvCut: v['clvCut'],
+      sflag: v['sflag'],
+      sdate: v['sdate'],
+      logID: toI(v['logID']),
+      pcID: v['pcID'],
+      ever: toI(v['ever']),
+      packetRec: v['packetRec'],
+      entryType: v['entryType'],
+      slType: v['slType'],
     );
   }
 }

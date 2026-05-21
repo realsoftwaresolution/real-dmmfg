@@ -110,8 +110,8 @@ class TrnLaserReceivedProvider extends BaseProvider {
           'screenName': 'LASER_RECEIVED',
           'gridData': gridData,
           'FormType': 'LASERREC',
-          if(isSame)
-          'isSame': isSame,
+          'EntryType': 'B',
+          'SPKDeptIssDate': spkDeptIssDate,
         },
       ),
       onSuccess: (res) {
@@ -132,149 +132,55 @@ class TrnLaserReceivedProvider extends BaseProvider {
     return result ?? [];
   }
 
-  // ── CREATE ────────────────────────────────────────────────────────────────
-  Future<bool> create(
-    Map<String, dynamic> values,
-    List<LaserDetModel> details,
-  ) async {
-    final model = _buildModel(values);
-    final result = await request<LaserMstModel>(
-      call: () => api.post(
-        '/spkDeptIss',
-        data: {
-          ...model.toJson(),
-          'details': details.map((e) => e.toJson()).toList(),
-        },
-      ),
-      onSuccess: (res) => _parseMstResponse(res.data),
-    );
-    if (result != null) {
-      _list.insert(0, result);
-      notifyListeners();
-      return true;
-    }
-    return false;
-  }
+// ── BULK DELETE ───────────────────────────────────────────────────────────
+  Future<bool> delete({
+    required int spkDeptIssMstID,
+    required List<dynamic> bCodeArray,
+  }) async {
+    final body = {
+      "spkDeptIssMstID": spkDeptIssMstID,
+      "bCodeArray": bCodeArray,
+    };
 
-  // ── UPDATE ────────────────────────────────────────────────────────────────
-  Future<bool> update(
-    int id,
-    Map<String, dynamic> values,
-    List<LaserDetModel> details,
-  ) async {
-    final model = _buildModel(values);
-    final result = await request<LaserMstModel>(
-      call: () => api.put(
-        '/spkDeptIss/$id',
-        data: {
-          ...model.toJson(),
-          'details': details.map((e) => e.toJson()).toList(),
-        },
-      ),
-      onSuccess: (res) => _parseMstResponse(res.data),
-    );
-    if (result != null) {
-      final i = _list.indexWhere((e) => e.spkDeptIssMstID == id);
-      if (i != -1) _list[i] = result;
-      notifyListeners();
-      return true;
-    }
-    return false;
-  }
-
-  // ── DELETE ────────────────────────────────────────────────────────────────
-  Future<bool> delete(int id) async {
     final result = await request<bool>(
-      call: () => api.delete('/spkDeptIss/$id'),
+      call: () => api.post(
+        '/spkDeptIss/bulk-clear',
+        data: body,
+      ),
       onSuccess: (_) => true,
     );
+
     if (result == true) {
-      _list.removeWhere((e) => e.spkDeptIssMstID == id);
       notifyListeners();
       return true;
     }
+
     return false;
   }
 
-  // ── LOAD DETAILS ──────────────────────────────────────────────────────────
-  // Future<List<LaserDetModel>> loadDetails(int mstID) async {
-  //   final result = await request<List<LaserDetModel>>(
-  //     call: () => api.get('/spkDeptIss/$mstID'),
-  //     onSuccess: (res) {
-  //       final data   = res.data;
-  //       final rawDet = (data is Map ? data['det'] : data) as List? ?? [];
-  //       return rawDet
-  //           .map((e) => LaserDetModel.fromJson(e as Map<String, dynamic>))
-  //           .toList();
-  //     },
-  //   );
-  //   return result ?? [];
-  // }
+// ── SINGLE DELETE ────────────────────────────────────────────────────────
+  Future<bool> singleDelete({
+    required int spkDeptIssMstID,
+    required dynamic bCode,
+  }) async {
+    final body = {
+      "spkDeptIssMstID": spkDeptIssMstID,
+      "bCode": bCode,
+    };
 
-  // ── PARSE { mst, det } response ───────────────────────────────────────────
-  // LaserMstModel _parseMstResponse(dynamic data) {
-  //   if (data is Map) {
-  //     if (data.containsKey('mst')) {
-  //       final mst    = Map<String, dynamic>.from(data['mst'] as Map);
-  //       final rawDet = data['det'] as List? ?? [];
-  //       mst['details'] = rawDet;
-  //       return LaserMstModel.fromJson(mst);
-  //     }
-  //     return LaserMstModel.fromJson(Map<String, dynamic>.from(data));
-  //   }
-  //   throw Exception('Unexpected response format');
-  // }
-  LaserMstModel _parseMstResponse(dynamic data) {
-    if (data is Map) {
-      Map<String, dynamic> mstJson;
-      if (data.containsKey('mst')) {
-        mstJson = Map<String, dynamic>.from(data['mst'] as Map);
-        final rawDet = data['det'] as List? ?? [];
-        mstJson['details'] = rawDet;
-        // Det se totals calculate karo (create/update ke baad)
-        mstJson['TotPkt'] = rawDet.length;
-        mstJson['TotalPc'] = rawDet.fold<int>(
-          0,
-          (s, d) => s + ((d['TotalPc'] ?? 0) as num).toInt(),
-        );
-        mstJson['TotalWt'] = rawDet.fold<double>(
-          0.0,
-          (s, d) => s + ((d['TotalWt'] ?? 0) as num).toDouble(),
-        );
-        mstJson['Jno'] = rawDet.isNotEmpty ? rawDet.first['Jno'] : null;
-      } else {
-        mstJson = Map<String, dynamic>.from(data);
-      }
-      return LaserMstModel.fromJson(mstJson);
-    }
-    throw Exception('Unexpected response format');
-  }
-
-  // ── BUILD MODEL from form values ──────────────────────────────────────────
-  LaserMstModel _buildModel(Map<String, dynamic> v) {
-    int? toI(String? s) => s == null || s.isEmpty ? null : int.tryParse(s);
-
-    return LaserMstModel(
-      spkDeptIssDate: v['spkDeptIssDate'],
-      fromCrID: toI(v['fromCrID']?.toString()),
-      toCrID: toI(v['toCrID']?.toString()),
-      deptProcessCode: toI(v['deptProcessCode']?.toString()),
-      deptCode: toI(v['deptCode']?.toString()),
-      sflag: v['sflag'],
-      stime: v['Stime'],
-      // ← ADD
-      sdate: v['Sdate'],
-      // ← ADD
-      logID: toI(v['logID']?.toString()),
-      pcID: v['pcID'],
-      ever: toI(v['ever']?.toString()),
-      entryType: v['entryType'] ?? 'B',
-      repairing: v['repairing'] ?? 'N',
-      formType: v['formType'] ?? 'LASERREC',
-      proType: v['proType'] ?? 'SPK',
-      formType1: v['formType1'],
-      nukCrId: toI(v['nukCrId']?.toString()),
-      planType: v['planType'],
+    final result = await request<bool>(
+      call: () => api.post(
+        '/spkDeptIss/single-clear',
+        data: body,
+      ),
+      onSuccess: (_) => true,
     );
+
+    if (result == true) {
+      notifyListeners();
+      return true;
+    }
+
+    return false;
   }
 }

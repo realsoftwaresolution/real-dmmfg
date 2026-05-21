@@ -17,6 +17,7 @@ import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/helper_functions.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
+import 'package:diam_mfg/utils/process_constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -1146,7 +1147,13 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
        ..['deptCode'] = toDeptCode?.toString() ?? '';
 
      final success = _isEditMode && _selectedMst != null
-         ? await prov.update(_selectedMst!.spkDeptIssMstID!, merged, _detRows)
+         ? await prov.update(_selectedMst!.spkDeptIssMstID!,
+         merged, _detRows,
+         bCodeArray: _detRows.map((r) => num.parse(r.bCode.toString())).toList(),
+         expectedProcess: ProcessConstants.deptIssue,
+         theme: _theme,
+         context: context,
+     )
          : await prov.create(merged, _detRows);
 
      if (!mounted) return;
@@ -1188,6 +1195,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
     final success = await context.read<SpkDeptIssProvider>().delete(
       _selectedMst!.spkDeptIssMstID!,
+      bCodeArray: _detRows.map((r) => r.bCode).toList(),
+      expectedProcess: ProcessConstants.deptIssue,
+      theme: _theme,
+      context: context,
     );
 
     if (success && mounted) {
@@ -2170,7 +2181,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   Widget _buildTable(SpkDeptIssProvider prov) {
     final counterProv = context.read<CounterProvider>();
     final procProv = context.read<DeptProcessProvider>();
-    final data = prov.list.where((e) => e.formType == 'SPK').map((e) {
+    final data = prov.list.where((e) => e.formType == 'DEPTISS').map((e) {
       String fromName = '', toName = '', processName = '';
       String fromDeptName = '', toDeptName = '';
 

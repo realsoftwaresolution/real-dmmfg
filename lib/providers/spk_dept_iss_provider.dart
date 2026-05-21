@@ -1,5 +1,6 @@
 // lib/providers/spk_dept_iss_provider.dart
 
+import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../models/spkDeptIss_mst_model.dart';
 
@@ -116,6 +117,12 @@ class SpkDeptIssProvider extends BaseProvider {
       int                        id,
       Map<String, dynamic>       values,
       List<SpkDeptIssDetModel>   details,
+       {
+      expectedProcess,
+      bCodeArray,
+      theme,
+      context,
+      }
       ) async {
     final model  = _buildModel(values);
     // ✅ Convert model → map and remove BCode
@@ -139,8 +146,21 @@ class SpkDeptIssProvider extends BaseProvider {
             ..remove('LastDmPer');
           return map;
         }).toList(),
+        'bCodeArray': bCodeArray, 'expectedProcess': expectedProcess,
       }),
-      onSuccess: (res) => _parseMstResponse(res.data),
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+          return data;
+        }
+        return _parseMstResponse(data);
+      },
     );
     if (result != null) {
       final i = _list.indexWhere((e) => e.spkDeptIssMstID == id);
@@ -151,11 +171,32 @@ class SpkDeptIssProvider extends BaseProvider {
     return false;
   }
 
+
   // ── DELETE ────────────────────────────────────────────────────────────────
-  Future<bool> delete(int id) async {
+  Future<bool> delete(
+      int id, {
+        expectedProcess,
+        bCodeArray,
+        theme,
+        context,
+      }) async {
     final result = await request<bool>(
-      call: () => api.delete('/spkDeptIss/$id'),
-      onSuccess: (_) => true,
+      call: () => api.delete(
+        '/spkDeptIss/$id',
+        data: {'bCodeArray': bCodeArray, 'expectedProcess': expectedProcess},
+      ),
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+        }
+        return data;
+      },
     );
     if (result == true) {
       _list.removeWhere((e) => e.spkDeptIssMstID == id);
@@ -202,9 +243,9 @@ class SpkDeptIssProvider extends BaseProvider {
       logID:           toI(v['logID']?.toString()),
       pcID:            v['pcID'],
       ever:            toI(v['ever']?.toString()),
-      entryType:       v['entryType'] ?? 'DEPTISS',
+      entryType:       v['entryType'] ?? 'B',
       repairing:       v['repairing'] ?? 'N',
-      formType:        v['formType'] ?? 'SPK',
+      formType:        v['formType'] ?? 'DEPTISS',
       proType:         v['proType'] ?? 'SPK',
       formType1:       v['formType1'],
       nukCrId:         toI(v['nukCrId']?.toString()),

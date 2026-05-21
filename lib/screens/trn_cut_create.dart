@@ -247,7 +247,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
     final skip = shouldSkipDuplicateCheck(
       isEditMode: _isEditMode,
       selectedRow: _selectedRow,
-      allowRowData: true,
+      allowRowData: false,
       newFields: Map<String, dynamic>.from(fields),
       fieldMapping: {'CutNo': 'CutNo'},
     );

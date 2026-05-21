@@ -642,9 +642,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       };
 
       final success = await prov.update(payload);
-
       if (!mounted) return;
-
       if (success) {
         final updatedRow = _buildEditedRow(
           srno: _detRows[_editingDetIndex!].srno,
