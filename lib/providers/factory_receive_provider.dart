@@ -1,19 +1,24 @@
 import 'package:diam_mfg/models/factory_receive_mst_model.dart';
+import 'package:diam_mfg/utils/msg_dialogue.dart';
+import 'package:diam_mfg/utils/process_constants.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
 class FactoryReceivedEntryProvider extends BaseProvider {
-  List<FactoryReceiveMstModel> _list     = [];
-  bool                     _isLoaded = false;
+  List<FactoryReceiveMstModel> _list = [];
+  bool _isLoaded = false;
 
-  bool                         get isLoaded => _isLoaded;
-  List<FactoryReceiveMstModel>     get list     => List.unmodifiable(_list);
-  List<Map<String, dynamic>>   get tableData =>
+  bool get isLoaded => _isLoaded;
+
+  List<FactoryReceiveMstModel> get list => List.unmodifiable(_list);
+
+  List<Map<String, dynamic>> get tableData =>
       _list.map((e) => e.toTableRow()).toList();
-// Provider mein ye map maintain karo
-// detMap declare karo (class level)
+
+  // Provider mein ye map maintain karo
+  // detMap declare karo (class level)
   Map<int, List<FactoryReceiveDetModel>> detMap = {};
 
-// SIRF EK loadDetails rakho — dono merge karo:
+  // SIRF EK loadDetails rakho — dono merge karo:
   Future<List<FactoryReceiveDetModel>> loadDetails(int mstID) async {
     final result = await request<List<FactoryReceiveDetModel>>(
       call: () => api.get('/factoryRec/$mstID'),
@@ -21,12 +26,14 @@ class FactoryReceivedEntryProvider extends BaseProvider {
         final json = res.data as Map<String, dynamic>;
         final data = json['data'] as List;
         return data
-            .map((e) => FactoryReceiveDetModel.fromJson(e as Map<String, dynamic>))
+            .map(
+              (e) => FactoryReceiveDetModel.fromJson(e as Map<String, dynamic>),
+            )
             .toList();
       },
     );
     final dets = result ?? [];
-    detMap[mstID] = dets;   // ← detMap update
+    detMap[mstID] = dets; // ← detMap update
     notifyListeners();
     return dets;
   }
@@ -38,12 +45,14 @@ class FactoryReceivedEntryProvider extends BaseProvider {
       onSuccess: (res) {
         final list = res.data['data'] as List;
         return list
-            .map((e) => FactoryReceiveMstModel.fromJson(e as Map<String, dynamic>))
+            .map(
+              (e) => FactoryReceiveMstModel.fromJson(e as Map<String, dynamic>),
+            )
             .toList();
       },
     );
     if (result != null) {
-      _list     = result;
+      _list = result;
       _isLoaded = true;
       notifyListeners();
     }
@@ -61,7 +70,9 @@ class FactoryReceivedEntryProvider extends BaseProvider {
         final data = res.data['data'];
         final list = data is List ? data : [data];
         return list
-            .map((e) => FactoryReceiveDetModel.fromJson(e as Map<String, dynamic>))
+            .map(
+              (e) => FactoryReceiveDetModel.fromJson(e as Map<String, dynamic>),
+            )
             .toList();
       },
     );
@@ -84,9 +95,7 @@ class FactoryReceivedEntryProvider extends BaseProvider {
   }
 
   // ── UPDATE ────────────────────────────────────────────────────────────────
-  Future<bool> update(
-      Map<String, dynamic>       values,
-      ) async {
+  Future<bool> update(Map<String, dynamic> values) async {
     final result = await request<FactoryReceiveMstModel>(
       call: () => api.put('/factoryRec', data: values),
       onSuccess: (res) => _parseMstResponse(res.data),
@@ -100,9 +109,15 @@ class FactoryReceivedEntryProvider extends BaseProvider {
 
   // ── DELETE ────────────────────────────────────────────────────────────────
 
-  Future<bool> delete( id) async {
+  Future<bool> delete(id, theme, context, bCodeArray) async {
     final result = await request<bool>(
-      call: () => api.delete('/factoryRec/all/$id'),
+      call: () => api.delete(
+        '/factoryRec/all/$id',
+        data: {
+          'expectedProcess': ProcessConstants.factoryIss,
+          'bCodeArray': bCodeArray,
+        },
+      ),
       onSuccess: (_) => true,
     );
     if (result == true) {
@@ -113,10 +128,31 @@ class FactoryReceivedEntryProvider extends BaseProvider {
     return false;
   }
 
-  Future<bool> deleteRow( factoryIssMstID, factoryIssDetID, bCode) async {
+  Future<bool> deleteRow(
+    factoryIssMstID,
+    factoryIssDetID,
+    bCode,
+    theme,
+    context,
+  ) async {
     final result = await request<bool>(
-      call: () => api.delete('/factoryRec/$factoryIssMstID/$factoryIssDetID/$bCode'),
-      onSuccess: (_) => true,
+      call: () => api.delete(
+        '/factoryRec/$factoryIssMstID/$factoryIssDetID/$bCode',
+        data: {'expectedProcess': ProcessConstants.factoryRec},
+      ),
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+          return false;
+        }
+        return true;
+      },
     );
     if (result == true) {
       notifyListeners();
@@ -134,10 +170,14 @@ class FactoryReceivedEntryProvider extends BaseProvider {
         mstJson['details'] = rawDet;
         // Det se totals calculate karo (create/update ke baad)
         mstJson['TotPkt'] = rawDet.length;
-        mstJson['TotalPc'] = rawDet.fold<int>(0, (s, d) =>
-        s + ((d['TotalPc'] ?? 0) as num).toInt());
-        mstJson['TotalWt'] = rawDet.fold<double>(0.0, (s, d) =>
-        s + ((d['TotalWt'] ?? 0) as num).toDouble());
+        mstJson['TotalPc'] = rawDet.fold<int>(
+          0,
+          (s, d) => s + ((d['TotalPc'] ?? 0) as num).toInt(),
+        );
+        mstJson['TotalWt'] = rawDet.fold<double>(
+          0.0,
+          (s, d) => s + ((d['TotalWt'] ?? 0) as num).toDouble(),
+        );
         mstJson['Jno'] = rawDet.isNotEmpty ? rawDet.first['Jno'] : null;
       } else {
         mstJson = Map<String, dynamic>.from(data);
@@ -146,5 +186,4 @@ class FactoryReceivedEntryProvider extends BaseProvider {
     }
     throw Exception('Unexpected response format');
   }
-
 }

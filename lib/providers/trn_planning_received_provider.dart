@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:diam_mfg/models/planning_received_model.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
+import 'package:diam_mfg/utils/process_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
@@ -212,6 +213,7 @@ class TrnPlanningReceivedProvider extends BaseProvider {
 
   void clearScannedDetList() {
     _scannedDetList = [];
+    _planningDetList = [];
     notifyListeners();
   }
 
@@ -222,9 +224,32 @@ class TrnPlanningReceivedProvider extends BaseProvider {
   }
 
   void commitTempScanData() {
-    _planningDetList.addAll(_tempPlanningDetList);
 
-    _scannedDetList.addAll(_tempScannedDetList);
+    for (final item in _tempPlanningDetList) {
+
+      final alreadyExists = _planningDetList.any(
+            (e) =>
+        e.bCode?.toString() ==
+            item.bCode?.toString(),
+      );
+
+      if (!alreadyExists) {
+        _planningDetList.add(item);
+      }
+    }
+
+    for (final item in _tempScannedDetList) {
+
+      final alreadyExists = _scannedDetList.any(
+            (e) =>
+        e.bCode?.toString() ==
+            item.bCode?.toString(),
+      );
+
+      if (!alreadyExists) {
+        _scannedDetList.add(item);
+      }
+    }
 
     notifyListeners();
   }
@@ -284,9 +309,7 @@ class TrnPlanningReceivedProvider extends BaseProvider {
     required String fromCrId,
     required BuildContext context,
   }) async {
-
     final result = await request<List<PlanningReceivedDetModel>>(
-
       call: () => api.get(
         '/spkDeptIss/scan-bcode',
         query: {
@@ -297,50 +320,38 @@ class TrnPlanningReceivedProvider extends BaseProvider {
       ),
 
       onSuccess: (res) {
-
         final data = res.data;
-
-        print('fetchByBCode data => $data');
-print('ashdajkdasdhak ${data['data']['success']}');
         /// API ERROR
-        if (data['data']['success'] == false) {
+       if(data['success'] == false){
+         final errors =
+             (data['data'] as List?)?.join('\n') ??
+                 'Sarin data not found';
 
-          final errors =
-              (data['data']['errors'] as List?)
-                  ?.join('\n') ??
-                  'Sarin data not found';
+         ErpResultDialog.showError(
+           context: context,
+           theme: _theme,
+           message: errors,
+           title: 'Error',
+         );
 
-          ErpResultDialog.showError(
-            context: context,
-            theme: _theme,
-            message: errors,
-            title: 'Error',
-          );
-
-          return <PlanningReceivedDetModel>[];
-        }
+         return <PlanningReceivedDetModel>[];
+       }
 
         /// NORMAL DATA
         final responseData = data['data'];
 
-        if (responseData == null ||
-            responseData is! List) {
-
+        if (responseData == null || responseData is! List) {
           return <PlanningReceivedDetModel>[];
         }
-
+        print('fetchByBCode data => $responseData');
         final List<dynamic> list = responseData;
 
         final parsed = list.map((e) {
-
           return PlanningReceivedDetModel.fromJson(
             Map<String, dynamic>.from(e),
           );
-
         }).toList();
-
         _tempScannedDetList = parsed;
-
         return parsed;
       },
     );
@@ -390,30 +401,66 @@ print('ashdajkdasdhak ${data['data']['success']}');
   }
 
   // ── DELETE ────────────────────────────────────────────────────────────────
-  Future<bool> delete({required int spkDeptIssMstId, bcode}) async {
+  Future<bool> delete({
+    required int spkDeptIssMstId,
+    bcode,
+    theme,
+    context,
+  }) async {
     final result = await request<bool>(
-      call: () => api.post(
+      call: () => api.delete(
         '/spkPlanning/planning/single-delete',
-        data: {'bcode': bcode, 'spkDeptIssMstId': spkDeptIssMstId},
+        data: {
+          'bcode': bcode,
+          'spkDeptIssMstId': spkDeptIssMstId,
+          'expectedProcess': ProcessConstants.planningReceived,
+        },
       ),
-      onSuccess: (_) => true,
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+          return false;
+        }
+        return true;
+      },
     );
     if (result == true) {
-      _list.removeWhere((e) => e.spkDeptIssMstID == spkDeptIssMstId);
       notifyListeners();
       return true;
     }
     return false;
   }
 
-  Future<bool> deleteBulk(data) async {
+  Future<bool> deleteBulk(data, theme, context) async {
     final result = await request<bool>(
-      call: () =>
-          api.post('/spkPlanning/planning/bulk-delete', data: {'items': data}),
-      onSuccess: (_) => true,
+      call: () => api.delete(
+        '/spkPlanning/planning/bulk-delete',
+        data: {
+          'items': data,
+          'expectedProcess': ProcessConstants.planningReceived,
+        },
+      ),
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+          return false;
+        }
+        return true;
+      },
     );
     if (result == true) {
-      _list.clear();
       notifyListeners();
       return true;
     }

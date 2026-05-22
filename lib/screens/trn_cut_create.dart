@@ -188,11 +188,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
           isEntryField: true,
           isEntryRequired: true,
           onDuplicateCheck: (value, allValues) async {
-            return await _checkDuplicate(
-              fields: {
-                'CutNo': value,
-              },
-            );
+            return await _checkDuplicate(fields: {'CutNo': value});
           },
         ),
         ErpFieldConfig(
@@ -243,26 +239,17 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
   }
 
   Future<bool> _checkDuplicate({required Map<dynamic, dynamic> fields}) async {
-    /// ── SKIP SAME VALUE IN EDIT ───────────────
-    final skip = shouldSkipDuplicateCheck(
-      isEditMode: _isEditMode,
-      selectedRow: _selectedRow,
-      allowRowData: false,
-      newFields: Map<String, dynamic>.from(fields),
-      fieldMapping: {'CutNo': 'CutNo'},
-    );
-
-    if (skip) {
+    if (!_isEditMode) {
+      /// ── API CHECK ─────────────────────────────
+      return await checkDuplicateRecord(
+        context: context,
+        theme: _theme,
+        formName: 'CutCreate',
+        fields: fields,
+      );
+    }else{
       return false;
     }
-
-    /// ── API CHECK ─────────────────────────────
-    return await checkDuplicateRecord(
-      context: context,
-      theme: _theme,
-      formName: 'CutCreate',
-      fields: fields,
-    );
   }
 
   // ── INIT ───────────────────────────────────────────────────────────────────
@@ -366,40 +353,27 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
 
   // ── RECALC PENDING ─────────────────────────────────────────────────────────
   void _recalcPending() {
+    final formUsedPc = _detRows.fold(0, (s, r) => s + (r.pc ?? 0));
 
-    final formUsedPc =
-    _detRows.fold(0, (s, r) => s + (r.pc ?? 0));
+    final formUsedWt = _detRows.fold(0.0, (s, r) => s + (r.wt ?? 0));
 
-    final formUsedWt =
-    _detRows.fold(0.0, (s, r) => s + (r.wt ?? 0));
+    final newPendPc = _totalAssortPc - formUsedPc;
 
-    final newPendPc =
-        _totalAssortPc - formUsedPc;
-
-    final newPendWt =
-        _totalAssortWt - formUsedWt;
+    final newPendWt = _totalAssortWt - formUsedWt;
 
     setState(() {
-
       _pendingPc = '$newPendPc';
 
-      _pendingWt =
-          fThreeDecimal(newPendWt);
-
+      _pendingWt = fThreeDecimal(newPendWt);
     });
 
-    debugPrint(
-      'Pending WT => $_pendingWt',
-    );
+    debugPrint('Pending WT => $_pendingWt');
   }
 
   // ── ADD DET ENTRY ──────────────────────────────────────────────────────────
   Future<void> _addDetEntry() async {
-
     final exists = await _checkDuplicate(
-      fields: {
-        'CutNo': _entryVals['entryCutNo'].toString(),
-      },
+      fields: {'CutNo': _entryVals['entryCutNo'].toString()},
     );
     if (exists) return;
 
@@ -443,26 +417,18 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
 
     final entryWt = double.tryParse(wtStr) ?? 0;
 
-
     // CHECK WT
     if (_editingDetIndex != null) {
+      final editingRow = _detRows[_editingDetIndex!];
 
-      final editingRow =
-      _detRows[_editingDetIndex!];
-
-      final usedWt =
-      await context
+      final usedWt = await context
           .read<CutCreateProvider>()
-          .getPacketCreateUsedWt(
-        editingRow.cutNo ?? '',
-      );
+          .getPacketCreateUsedWt(editingRow.cutNo ?? '');
 
       if (entryWt < usedWt) {
-
         if (!mounted) return;
 
         await ErpResultDialog.showError(
-
           context: context,
 
           theme: _theme,
@@ -470,21 +436,18 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
           title: 'Invalid Weight',
 
           message:
-          'This Cut\'s '
+              'This Cut\'s '
               '${fThreeDecimal(usedWt)} WT '
               'has already been used in Packet Create.\n\n'
               'Therefore, WT cannot be entered less than '
               '${fThreeDecimal(usedWt)}.',
         );
 
-        _erpFormKey.currentState
-            ?.focusField('entryWt');
+        _erpFormKey.currentState?.focusField('entryWt');
 
         return;
       }
     }
-
-
 
     final oldWt = _editingDetIndex != null
         ? (_detRows[_editingDetIndex!].wt ?? 0)
@@ -521,9 +484,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
       cutType: cutType,
       cutNo: cutNo,
       pc: int.tryParse(_entryVals['entryPc'] ?? ''),
-      wt: double.parse(
-        (double.tryParse(wtStr) ?? 0).toStringAsFixed(3),
-      ),
+      wt: double.parse((double.tryParse(wtStr) ?? 0).toStringAsFixed(3)),
       comparisionCode: double.tryParse(
         _entryVals['entryComparisionCode'] ?? '',
       ),
@@ -721,13 +682,13 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
               : 'Cut Create Entry saved.',
         );
       }
-    }else {
+    } else {
       await ErpResultDialog.showError(
         context: context,
         theme: _theme,
         title: 'Entry Required',
         message:
-        'Entry is required to proceed.\n'
+            'Entry is required to proceed.\n'
             'Please enter entry before continuing.',
       );
     }
@@ -745,7 +706,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
     if (confirm != true || !mounted) return;
     final success = await context.read<CutCreateProvider>().delete(
       _selectedMst!.cutCreateMstID!,
-      context
+      context,
     );
     if (success && mounted) {
       final kno = _selectedMst?.kapanNo;
@@ -903,7 +864,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
               columns: _detGridColumns,
               title: 'CUT CREATE DETAILS',
               theme: t,
-              onDeleteRow: _isEditMode ?null:_deleteDetRow,
+              onDeleteRow: _deleteDetRow,
               onEditRow: _editDetRow,
               editingIndex: _editingDetIndex,
               columnLabels: const {
@@ -917,10 +878,10 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
                 'purityType': 'PURITY TYPE',
               },
             ),
-        if (_detDisplay.isNotEmpty) ...[
-          const SizedBox(height: 4),
-          _buildFooterRow(t, tots),
-        ]
+            if (_detDisplay.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              _buildFooterRow(t, tots),
+            ],
           ],
         );
       },

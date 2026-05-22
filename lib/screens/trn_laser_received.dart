@@ -12,11 +12,13 @@ import 'package:diam_mfg/providers/employee_provider.dart';
 import 'package:diam_mfg/providers/remarks_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
 import 'package:diam_mfg/providers/trn_laser_received_provider.dart';
+import 'package:diam_mfg/services/pdf.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/helper_functions.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
+import 'package:diam_mfg/utils/process_constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -849,7 +851,8 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
 
   Future<void> _deleteDetRow(int idx) async {
     if (_detRows.isEmpty) return;
-    if(_detRows[idx].spkDeptIssMstID == null || _detRows[idx].spkDeptIssMstID == 0){
+    if (_detRows[idx].spkDeptIssMstID == null ||
+        _detRows[idx].spkDeptIssMstID == 0) {
       setState(() {
         _detRows.removeAt(idx);
       });
@@ -881,6 +884,12 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       success = await context.read<TrnLaserReceivedProvider>().delete(
         spkDeptIssMstID: mstId,
         bCodeArray: [mainBCode],
+        deleteBCodeArray: _detRows.where((r) => r.bCode != null && r.bCode != '0')
+            .map((r) => num.parse(r.bCode.toString()))
+            .toList(),
+        expectedProcess: ProcessConstants.laserEntry,
+        context: context,
+        theme: _theme,
       );
       print(success);
       if (success) {
@@ -908,6 +917,9 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       success = await context.read<TrnLaserReceivedProvider>().singleDelete(
         spkDeptIssMstID: mstId,
         bCode: row.bCode,
+        expectedProcess: ProcessConstants.laserEntry,
+        context: context,
+        theme: _theme,
       );
 
       if (success) {
@@ -1129,7 +1141,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         'deptProcessCode': details.first.deptProcessCode.toString(),
         'deptName': _toDeptName ?? '',
         'remark': details.first.remarksCode.toString(),
-        'mackable': details.first.fType.toString() == 'MACKABLE' ? 'Y' : 'N',
       };
       _entryVals['scanValue'] = details.first.bCode.toString();
       // _syncDetGrid();
@@ -1178,6 +1189,10 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     final success = await context.read<TrnLaserReceivedProvider>().delete(
       spkDeptIssMstID: mstId,
       bCodeArray: bCodeArray,
+      deleteBCodeArray: _laserApiRows
+          .where((r) => r.bCode != null && r.bCode != '0')
+          .map((r) => num.parse(r.bCode.toString()))
+          .toList(),
     );
 
     if (success && mounted) {
@@ -1432,12 +1447,11 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
           readOnly: _isEditMode || _detRows.isNotEmpty,
         ),
         ErpFieldConfig(
-          key: 'mackable',
-          label: _isMackable ? 'MACKABLE' : 'SUBPACKET',
+          key: 'print',
+          label: 'PRINT',
           type: ErpFieldType.checkbox,
           width: 200,
           sectionIndex: 3,
-          readOnly: _isEditMode || _detRows.isNotEmpty,
         ),
         ErpFieldConfig(
           key: 'scanValue',
@@ -1759,6 +1773,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     }
     return true;
   }
+  List<dynamic> selectedRows = [];
 
   Widget _buildForm(BuildContext context) {
     return ErpForm(
@@ -1775,7 +1790,12 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       rows: _buildFormRows(),
       initialValues: _formValues,
       isEditMode: _isEditMode,
-
+      isShowPrintButton: true,
+      printOnPress: () async {
+        if (_entryVals['print'] == 'true' && selectedRows.isNotEmpty) {
+          await  openPdf(bCodeArray: selectedRows, token: token!,apiName: 'spkDeptIss');
+        }
+      },
       onEntryAdd: (sectionIndex) {
         if (sectionIndex != 3) return;
         if (!_validateEntry()) return; // ✅ ADD THIS
@@ -1805,7 +1825,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
               const Duration(milliseconds: 100),
               () => _erpFormKey.currentState?.focusField('remark'),
             );
-          case 'mackable':
+          case 'print':
             final isChecked = value == true || value.toString() == 'true';
 
             setState(() {
@@ -1847,6 +1867,13 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
                           ? _laserApiRows.first.spkDeptIssMstID
                           : (_isEditMode ? _detRows.first.spkDeptIssMstID : 0),
                       isSame: _isEditMode ? false : _laserApiRows.isNotEmpty,
+                      bCodeArray: _detRows
+                          .where((r) => r.bCode != null && r.bCode != '0')
+                          .map((r) => num.parse(r.bCode.toString()))
+                          .toList(),
+                      expectedProcess: ProcessConstants.deptIssue,
+                      theme: _theme,
+                      context: context,
                     );
                 if (data.isNotEmpty) {
                   setState(() {
@@ -2174,6 +2201,34 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
                       set('lossWt', fThreeDecimal(first.lossWt));
                       // print(mainBCode);
                       // print(matchedRows.length);
+                    },
+                    allowCheckBoxOnTable: true,
+                    selectedRowKeys: selectedRows,
+                    rowKey: (row) => row['BCode'],
+                    onRowSelect: (selected, row) {
+                      setState(() {
+                        final key = row['BCode'].toString();
+                        if (selected) {
+                          if (!selectedRows
+                              .map((e) => e.toString())
+                              .contains(key)) {
+                            selectedRows.add(key);
+                          }
+                        } else {
+                          selectedRows.removeWhere((e) => e.toString() == key);
+                        }
+                      });
+                    },
+                    onSelectAll: (value) {
+                      setState(() {
+                        if (value == true) {
+                          selectedRows = _laserApiRows
+                              .map((e) => e.bCode.toString())
+                              .toList();
+                        } else {
+                          selectedRows.clear();
+                        }
+                      });
                     },
                   ),
                 ),

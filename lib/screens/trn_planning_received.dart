@@ -603,7 +603,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
       return;
     }
 
-    final success = await prov.deleteBulk(data);
+    final success = await prov.deleteBulk(data, _theme, context);
 
     if (!mounted) return;
 
@@ -1360,6 +1360,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
         'Srno': '${index + 1}',
 
         'BCode': r.bCode?.toString() ?? '',
+        'SPKDeptIssMstId': r.spkDeptIssMstID?.toString() ?? '',
 
         'PktNo': r.pktNo?.toString() ?? '',
 
@@ -1404,7 +1405,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
       final rowIndex = prov.planningDetList.indexWhere(
         (e) => e.bCode == row['BCode'],
       );
-      await _showDeletePopup(context, rowIndex);
+      await _showDeletePopup(context, rowIndex, row);
     }
 
     return ErpDataTable(
@@ -1428,7 +1429,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
     );
   }
 
-  Future<void> _showDeletePopup(BuildContext context, int rowIndex) async {
+  Future<void> _showDeletePopup(BuildContext context, int rowIndex, row) async {
     final isYes = await showDialog<bool>(
       context: context,
       builder: (_) {
@@ -1456,18 +1457,45 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
     if (isYes != true) return;
 
     /// API CALL
-    final success = await context.read<TrnPlanningReceivedProvider>().delete(
-      spkDeptIssMstId: _selectedMst!.spkDeptIssMstID!,
-      bcode: _highlightedBCode,
-    );
-    if (success && mounted) {
-      final id = _selectedMst?.spkDeptIssMstID;
-      _resetForm();
-      await ErpResultDialog.showDeleted(
-        context: context,
+    if (_isEditMode) {
+      final success = await context.read<TrnPlanningReceivedProvider>().delete(
+        spkDeptIssMstId: _selectedMst!.spkDeptIssMstID!,
+        bcode: _highlightedBCode,
         theme: _theme,
-        itemName: 'Dept Issue $id',
+        context: context,
       );
+      if (success && mounted) {
+        final id = _selectedMst?.spkDeptIssMstID;
+        context.read<TrnPlanningReceivedProvider>()
+          ..planningDetList.removeWhere(
+                (e) => e.bCode?.toString() == _highlightedBCode?.toString(),
+          )
+          ..scannedDetList.removeWhere(
+                (e) => e.bCode?.toString() == _highlightedBCode?.toString(),
+          );
+
+        setState(() {
+          _highlightedBCode = null;
+        });
+        await ErpResultDialog.showDeleted(
+          context: context,
+          theme: _theme,
+          itemName: 'Dept Issue $id',
+        );
+      }
+    } else {
+      /// LOCAL DELETE
+      context.read<TrnPlanningReceivedProvider>()
+        ..planningDetList.removeWhere(
+          (e) => e.bCode?.toString() == _highlightedBCode?.toString(),
+        )
+        ..scannedDetList.removeWhere(
+          (e) => e.bCode?.toString() == _highlightedBCode?.toString(),
+        );
+
+      setState(() {
+        _highlightedBCode = null;
+      });
     }
     if (!mounted) return;
   }

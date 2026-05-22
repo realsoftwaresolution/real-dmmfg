@@ -35,7 +35,7 @@ class DuplicateCheckService {
       dynamic token = AppStorage.getString("token");
 
       final response = await dio.post(
-        '$baseUrl/api/utility/check-exists',
+        '$baseUrl/utility/check-exists',
         data: {
           "formName": formName,
           "fields": fields,

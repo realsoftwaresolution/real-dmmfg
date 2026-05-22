@@ -117,11 +117,11 @@ class SpkDeptIssProvider extends BaseProvider {
       int                        id,
       Map<String, dynamic>       values,
       List<SpkDeptIssDetModel>   details,
-       {
-      expectedProcess,
-      bCodeArray,
-      theme,
-      context,
+      {
+        expectedProcess,
+        bCodeArray,
+        theme,
+        context,
       }
       ) async {
     final model  = _buildModel(values);

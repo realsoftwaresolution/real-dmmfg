@@ -78,17 +78,15 @@ import '../providers/menu_provider.dart';
 import 'providers/Packet_History_provider.dart';
 import 'providers/factory_man_group_provider.dart';
 
-String baseUrl = 'http://50.62.183.116:5000';
-
+String baseUrl = 'http://50.62.183.116:5000/api';
 Future<void> bootstrap({required FutureOr<Widget> Function() fn}) async {
   return runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
       await AppStorage.init();
-      RSApiConfig.init(url: "http://50.62.183.116:5000/api");
+      RSApiConfig.init(url: baseUrl);
       ApiClient.reset(); // ✅ force re-create BEFORE any provider touches it
       await RSAuthSession.restore();
-
       final app = await fn();
 
       runApp(

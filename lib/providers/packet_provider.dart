@@ -4,6 +4,7 @@ import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../models/packet_model.dart';
 
+
 class PacketProvider extends BaseProvider {
   List<PacketMstModel> _list = [];
   bool _isLoaded = false;
@@ -72,14 +73,12 @@ class PacketProvider extends BaseProvider {
   Future<bool> update(
     int id,
     Map<String, dynamic> values,
-    List<PacketDetModel> details,
-      {
-        expectedProcess,
-        bCodeArray,
-        theme,
-        context,
-      }
-  ) async {
+    List<PacketDetModel> details, {
+    expectedProcess,
+    bCodeArray,
+    theme,
+    context,
+  }) async {
     final model = _buildModel(values);
     final result = await request<PacketMstModel>(
       call: () => api.put(
@@ -87,7 +86,8 @@ class PacketProvider extends BaseProvider {
         data: {
           ...model.toJson(),
           'details': details.map((e) => e.toJson()).toList(),
-          'bCodeArray': bCodeArray, 'expectedProcess': expectedProcess,
+          'bCodeArray': bCodeArray,
+          'expectedProcess': expectedProcess,
         },
       ),
       onSuccess: (res) {

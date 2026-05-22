@@ -1,3 +1,4 @@
+import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../models/spkDeptIss_mst_model.dart';
 
@@ -98,14 +99,33 @@ class MakableEntryProvider extends BaseProvider {
       int                        id,
       Map<String, dynamic>       values,
       List<SpkDeptIssDetModel>   details,
+      {
+        expectedProcess,
+        bCodeArray,
+        theme,
+        context,
+      }
       ) async {
     final model  = _buildModel(values);
     final result = await request<SpkDeptIssMstModel>(
       call: () => api.put('/spkDeptIss/makable/$id', data: {
         ...model.toJson(),
         'details': details.map((e) => e.toJson()).toList(),
+        'bCodeArray': bCodeArray, 'expectedProcess': expectedProcess,
       }),
-      onSuccess: (res) => _parseMstResponse(res.data),
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+          return data;
+        }
+        return _parseMstResponse(data);
+      },
     );
     if (result != null) {
       final i = _list.indexWhere((e) => e.spkDeptIssMstID == id);
@@ -116,11 +136,32 @@ class MakableEntryProvider extends BaseProvider {
     return false;
   }
 
+
   // ── DELETE ────────────────────────────────────────────────────────────────
-  Future<bool> delete(int id) async {
+  Future<bool> delete(
+      int id, {
+        expectedProcess,
+        bCodeArray,
+        theme,
+        context,
+      }) async {
     final result = await request<bool>(
-      call: () => api.delete('/spkDeptIss/$id'),
-      onSuccess: (_) => true,
+      call: () => api.delete(
+        '/spkDeptIss/$id',
+        data: {'bCodeArray': bCodeArray, 'expectedProcess': expectedProcess},
+      ),
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+        }
+        return data;
+      },
     );
     if (result == true) {
       _list.removeWhere((e) => e.spkDeptIssMstID == id);
@@ -129,6 +170,7 @@ class MakableEntryProvider extends BaseProvider {
     }
     return false;
   }
+
 
   SpkDeptIssMstModel _parseMstResponse(dynamic data) {
     if (data is Map) {

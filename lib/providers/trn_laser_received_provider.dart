@@ -1,4 +1,5 @@
 import 'package:diam_mfg/models/laser_mst_model.dart';
+import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
@@ -98,6 +99,10 @@ class TrnLaserReceivedProvider extends BaseProvider {
     required dynamic spkDeptIssDate,
     required dynamic SPKDeptIssMstID,
     required dynamic isSame,
+    expectedProcess,
+    bCodeArray,
+    theme,
+    context,
   }) async {
     final result = await request<List<LaserDetModel>>(
       showLoader: false,
@@ -112,11 +117,20 @@ class TrnLaserReceivedProvider extends BaseProvider {
           'FormType': 'LASERREC',
           'EntryType': 'B',
           'SPKDeptIssDate': spkDeptIssDate,
+          'bCodeArray': bCodeArray, 'expectedProcess': expectedProcess,
+            'isSame': isSame,
         },
       ),
       onSuccess: (res) {
         final responseData = res.data['data'];
-
+        if (res.data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: res.data['message'],
+          );
+          return res.data;
+        }
         if (responseData == null) {
           return <LaserDetModel>[];
         }
@@ -136,10 +150,16 @@ class TrnLaserReceivedProvider extends BaseProvider {
   Future<bool> delete({
     required int spkDeptIssMstID,
     required List<dynamic> bCodeArray,
+    required List<dynamic> deleteBCodeArray,
+    expectedProcess,
+    theme,
+    context,
   }) async {
     final body = {
       "spkDeptIssMstID": spkDeptIssMstID,
       "bCodeArray": bCodeArray,
+      "deleteBCodeArray": deleteBCodeArray,
+      'expectedProcess': expectedProcess,
     };
 
     final result = await request<bool>(
@@ -147,7 +167,19 @@ class TrnLaserReceivedProvider extends BaseProvider {
         '/spkDeptIss/bulk-clear',
         data: body,
       ),
-      onSuccess: (_) => true,
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+          return false;
+        }
+        return true;
+      },
     );
 
     if (result == true) {
@@ -162,10 +194,14 @@ class TrnLaserReceivedProvider extends BaseProvider {
   Future<bool> singleDelete({
     required int spkDeptIssMstID,
     required dynamic bCode,
+    expectedProcess,
+    theme,
+    context,
   }) async {
     final body = {
       "spkDeptIssMstID": spkDeptIssMstID,
       "bCode": bCode,
+      'expectedProcess': expectedProcess,
     };
 
     final result = await request<bool>(
@@ -173,7 +209,19 @@ class TrnLaserReceivedProvider extends BaseProvider {
         '/spkDeptIss/single-clear',
         data: body,
       ),
-      onSuccess: (_) => true,
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+          return false;
+        }
+        return true;
+      },
     );
 
     if (result == true) {

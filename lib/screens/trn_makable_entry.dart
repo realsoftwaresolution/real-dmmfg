@@ -20,6 +20,7 @@ import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/helper_functions.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
+import 'package:diam_mfg/utils/process_constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -857,12 +858,23 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
 
-    set('orgPc', r.pc?.toString());
-    set('orgWt', fThreeDecimal(r.wt));
-    set('issPc', r.issPc?.toString());
-    set('issWt', fThreeDecimal(r.issWt));
-    set('recPc', r.recPc?.toString());
-    set('recWt', fThreeDecimal(r.recWt));
+    final orgPc = r.pc ?? 0;
+    final orgWt = r.wt ?? 0;
+
+    final issPc = (r.issPc == null || r.issPc == 0) ? orgPc : r.issPc;
+    final issWt = (r.issWt == null || r.issWt == 0) ? orgWt : r.issWt!;
+
+    final recPc = (r.recPc == null || r.recPc == 0) ? orgPc : r.recPc;
+    final recWt = (r.recWt == null || r.recWt == 0) ? issWt : r.recWt!;
+
+    set('orgPc', orgPc.toString());
+    set('orgWt', fThreeDecimal(orgWt));
+
+    set('issPc', issPc.toString());
+    set('issWt', fThreeDecimal(issWt));
+
+    set('recPc', recPc.toString());
+    set('recPc', fThreeDecimal(recWt));
     set('dmPer', r.dmPer?.toStringAsFixed(2));
     set('dmWt', fThreeDecimal(r.dmWt));
     set('kpc', r.kPc?.toString());
@@ -1228,7 +1240,12 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       ..['deptCode'] = toDeptCode?.toString() ?? '';
 
     final success = _isEditMode && _selectedMst != null
-        ? await prov.update(_selectedMst!.spkDeptIssMstID!, merged, _detRows)
+        ? await prov.update(_selectedMst!.spkDeptIssMstID!, merged, _detRows,bCodeArray: _detRows
+        .map((r) => num.parse(r.bCode.toString()))
+        .toList(),
+      expectedProcess: ProcessConstants.makableEntry,
+      theme: _theme,
+      context: context,)
         : await prov.create(merged, _detRows);
 
     if (!mounted) return;
@@ -1262,7 +1279,12 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
 
     final success = await context.read<MakableEntryProvider>().delete(
       _selectedMst!.spkDeptIssMstID!,
+      bCodeArray: _detRows.map((r) => r.bCode).toList(),
+      expectedProcess: ProcessConstants.makableEntry,
+      theme: _theme,
+      context: context,
     );
+
 
     if (success && mounted) {
       final id = _selectedMst?.spkDeptIssMstID;

@@ -384,6 +384,8 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         _detRows[idx].spkDeptIssMstID?.toString(),
         _detRows[idx].spkDeptIssDetID?.toString(),
         _detRows[idx].bCode,
+          _theme,
+          context
       );
       if (success && mounted) {
         setState(() {
@@ -749,6 +751,11 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
     final success = await context.read<FactoryIssueEntryProvider>().delete(
       _formValues['factoryIssMstID'].toString(),
+      _theme,
+      context,
+      _detRows.where((r) => r.bCode != null && r.bCode != '0')
+          .map((r) => num.parse(r.bCode.toString()))
+          .toList(),
     );
 
     if (success && mounted) {
@@ -1156,7 +1163,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
                 title: 'ISSUE DETAILS',
                 theme: t,
                 onDeleteRow: _deleteDetRow,
-                onEditRow: _editDetRow,
                 editingIndex: _editingDetIndex,
                 columnLabels: {
                   for (final c in _activeDetColumns) c: _colLabel(c),

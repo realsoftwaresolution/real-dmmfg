@@ -516,18 +516,15 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       _entryVals[k] = v ?? '';
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
+
     final orgPc = r.pc ?? 0;
     final orgWt = r.wt ?? 0;
 
-    final issPc = (r.issPc == null || r.issPc == 0) ?orgPc : r.issPc;
-    final issWt = (r.issWt == null || r.issWt == 0)
-        ? orgWt
-        : r.issWt!;
+    final issPc = (r.issPc == null || r.issPc == 0) ? orgPc : r.issPc;
+    final issWt = (r.issWt == null || r.issWt == 0) ? orgWt : r.issWt!;
 
-    final recPc = (r.recPc == null || r.recPc == 0) ?orgPc : r.recPc;
-    final recWt = (r.recWt == null || r.recWt == 0)
-        ? issWt
-        : r.recWt!;
+    final recPc = (r.recPc == null || r.recPc == 0) ? orgPc : r.recPc;
+    final recWt = (r.recWt == null || r.recWt == 0) ? issWt : r.recWt!;
 
     set('orgPc', orgPc.toString());
     set('orgWt', fThreeDecimal(orgWt));
@@ -1137,45 +1134,49 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             .deptCode;
       } catch (_) {}
     }
-   if(_detRows.isNotEmpty){
-     final merged = Map<String, dynamic>.from(values)
-       ..['Stime'] = DateFormat('hh:mm a').format(DateTime.now())
-       ..['Sdate'] = DateFormat('yyyy-MM-dd').format(DateTime.now())
-       ..['spkDeptIssDate'] = toIso(values['spkDeptIssDate']?.toString())
-       ..['fromCrID'] = _fromCrId?.toString() ?? ''
-       ..['toCrID'] = _toCrId?.toString() ?? ''
-       ..['deptCode'] = toDeptCode?.toString() ?? '';
+    if (_detRows.isNotEmpty) {
+      final merged = Map<String, dynamic>.from(values)
+        ..['Stime'] = DateFormat('hh:mm a').format(DateTime.now())
+        ..['Sdate'] = DateFormat('yyyy-MM-dd').format(DateTime.now())
+        ..['spkDeptIssDate'] = toIso(values['spkDeptIssDate']?.toString())
+        ..['fromCrID'] = _fromCrId?.toString() ?? ''
+        ..['toCrID'] = _toCrId?.toString() ?? ''
+        ..['deptCode'] = toDeptCode?.toString() ?? '';
 
-     final success = _isEditMode && _selectedMst != null
-         ? await prov.update(_selectedMst!.spkDeptIssMstID!,
-         merged, _detRows,
-         bCodeArray: _detRows.map((r) => num.parse(r.bCode.toString())).toList(),
-         expectedProcess: ProcessConstants.deptIssue,
-         theme: _theme,
-         context: context,
-     )
-         : await prov.create(merged, _detRows);
+      final success = _isEditMode && _selectedMst != null
+          ? await prov.update(
+              _selectedMst!.spkDeptIssMstID!,
+              merged,
+              _detRows,
+              bCodeArray: _detRows.where((r) => r.spkDeptIssDetID != null || r.spkDeptIssDetID != 0)
+                  .map((r) => num.parse(r.bCode.toString()))
+                  .toList(),
+              expectedProcess: ProcessConstants.deptIssue,
+              theme: _theme,
+              context: context,
+            )
+          : await prov.create(merged, _detRows);
 
-     if (!mounted) return;
-     if (success) {
-       final wasEdit = _isEditMode;
-       _resetForm();
-       await ErpResultDialog.showSuccess(
-         context: context,
-         theme: _theme,
-         title: wasEdit ? 'Updated' : 'Saved',
-         message: wasEdit ? 'Dept Issue updated.' : 'Dept Issue saved.',
-       );
-       await context.read<SpkDeptIssProvider>().load();
-     }
-   }else {
-     await ErpResultDialog.showError(
-       context: context,
-       theme: _theme,
-       title: 'No Entries',
-       message: 'Please add at least one entry.',
-     );
-   }
+      if (!mounted) return;
+      if (success) {
+        final wasEdit = _isEditMode;
+        _resetForm();
+        await ErpResultDialog.showSuccess(
+          context: context,
+          theme: _theme,
+          title: wasEdit ? 'Updated' : 'Saved',
+          message: wasEdit ? 'Dept Issue updated.' : 'Dept Issue saved.',
+        );
+        await context.read<SpkDeptIssProvider>().load();
+      }
+    } else {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'No Entries',
+        message: 'Please add at least one entry.',
+      );
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────

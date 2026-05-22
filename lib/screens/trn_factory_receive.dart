@@ -19,6 +19,7 @@ import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/helper_functions.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
+import 'package:diam_mfg/utils/process_constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -639,6 +640,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
         "Size":
         double.tryParse(_entryVals['size'] ?? '0') ?? 0,
+        'expectedProcess': ProcessConstants.factoryRec
       };
 
       final success = await prov.update(payload);
@@ -918,6 +920,8 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         _detRows[idx].factoryRecMstID?.toString(),
         _detRows[idx].FactoryRecDetID?.toString(),
         _detRows[idx].bCode,
+         _theme,
+         context,
       );
       await ErpResultDialog.showDeleted(
         context: context,
@@ -1316,10 +1320,16 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       title: 'Factory Received',
       itemName: 'ID: ${_formValues['factoryRecMstID'].toString()}',
     );
+
     if (confirm != true || !mounted) return;
 
     final success = await context.read<FactoryReceivedEntryProvider>().delete(
       _formValues['factoryRecMstID'].toString(),
+      _theme,
+      context,
+      _detRows.where((r) => r.bCode != null && r.bCode != '0')
+          .map((r) => num.parse(r.bCode.toString()))
+          .toList(),
     );
 
     if (success && mounted) {
@@ -2145,6 +2155,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       },
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
       onSave: _isEditMode ?null:_onSave,
+      isShowSaveButton: !_isEditMode,
       onCancel: _resetForm,
       onDelete: _isEditMode ? _onDelete : null,
       onSearch: () => setState(() => _showTableOnMobile = true),

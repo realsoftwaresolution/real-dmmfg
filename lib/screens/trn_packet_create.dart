@@ -10,6 +10,7 @@ import 'package:diam_mfg/providers/packet_provider.dart';
 import 'package:diam_mfg/providers/pkt_type_provider.dart';
 import 'package:diam_mfg/providers/purity_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
+import 'package:diam_mfg/services/pdf.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
@@ -1072,6 +1073,8 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     );
   }
 
+  List<dynamic> selectedRows = [];
+
   // ── ErpForm ────────────────────────────────────────────────────────────────
   Widget _buildForm(BuildContext context) {
     return ErpForm(
@@ -1086,6 +1089,12 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
       rows: _buildFormRows(),
       initialValues: _formValues,
       isEditMode: _isEditMode,
+      printOnPress: () async {
+        if (selectedRows.isNotEmpty) {
+          await  openPdf(bCodeArray: selectedRows, token: token!,apiName: 'packetCreate');
+        }
+      },
+      isShowPrintButton: true,
       onEntryAdd: (sectionIndex) {
         if (sectionIndex == 1) _addEntry();
       },
@@ -1141,6 +1150,36 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
                   'tensions': 'TENSIONS',
                   'fluo': 'FLUO',
                   // 'pdmPer':   'PDm %',
+                },
+                allowCheckBoxOnTable: true,
+                selectedRowKeys: selectedRows,
+                rowKey: (row) => row['bCode'],
+
+                onRowSelect: (selected, row) {
+                  setState(() {
+                    final key = row['bCode'].toString();
+
+                    if (selected) {
+                      if (!selectedRows
+                          .map((e) => e.toString())
+                          .contains(key)) {
+                        selectedRows.add(key);
+                      }
+                    } else {
+                      selectedRows.removeWhere((e) => e.toString() == key);
+                    }
+                  });
+                },
+                onSelectAll: (value) {
+                  setState(() {
+                    if (value == true) {
+                      selectedRows = _detRows
+                          .map((e) => e.bCode.toString())
+                          .toList();
+                    } else {
+                      selectedRows.clear();
+                    }
+                  });
                 },
               ),
 
