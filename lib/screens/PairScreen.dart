@@ -521,9 +521,6 @@ class _PairScreenState extends State<PairScreen> {
 
   Widget _buildTable() {
     final prov = context.watch<PairProvider>();
-    if (prov.tableSearchListData.isEmpty) {
-      return const SizedBox.shrink();
-    }
     return ErpDataTable(
       isReportRow: false,
       token: token ?? '',

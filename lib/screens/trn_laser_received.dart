@@ -884,7 +884,8 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       success = await context.read<TrnLaserReceivedProvider>().delete(
         spkDeptIssMstID: mstId,
         bCodeArray: [mainBCode],
-        deleteBCodeArray: _detRows.where((r) => r.bCode != null && r.bCode != '0')
+        deleteBCodeArray: _detRows
+            .where((r) => r.bCode != null && r.bCode != '0')
             .map((r) => num.parse(r.bCode.toString()))
             .toList(),
         expectedProcess: ProcessConstants.laserEntry,
@@ -1193,6 +1194,9 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
           .where((r) => r.bCode != null && r.bCode != '0')
           .map((r) => num.parse(r.bCode.toString()))
           .toList(),
+      expectedProcess: ProcessConstants.laserEntry,
+      context: context,
+      theme: _theme,
     );
 
     if (success && mounted) {
@@ -1773,6 +1777,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     }
     return true;
   }
+
   List<dynamic> selectedRows = [];
 
   Widget _buildForm(BuildContext context) {
@@ -1792,8 +1797,19 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       isEditMode: _isEditMode,
       isShowPrintButton: true,
       printOnPress: () async {
-        if (_entryVals['print'] == 'true' && selectedRows.isNotEmpty) {
-          await  openPdf(bCodeArray: selectedRows, token: token!,apiName: 'spkDeptIss');
+        if (selectedRows.isNotEmpty && _selectedMst != null) {
+          final bCodeArray = selectedRows.map((e) {
+            return {
+              'SPKDeptIssMstID': _selectedMst!.spkDeptIssMstID,
+              'BCode': int.tryParse(e.toString()) ?? 0,
+            };
+          }).toList();
+
+          await openPdf(
+            bCodeArray: bCodeArray,
+            token: token!,
+            apiName: 'spkDeptIss',
+          );
         }
       },
       onEntryAdd: (sectionIndex) {
@@ -1876,6 +1892,27 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
                       context: context,
                     );
                 if (data.isNotEmpty) {
+                  if (_entryVals['print'] == 'true' && token != null) {
+                    final mstId = data.first.spkDeptIssMstID;
+
+                    final bCodeArray = data
+                        .where((e) => e.bCode != null && e.bCode != '0')
+                        .map(
+                          (e) => {
+                            'SPKDeptIssMstID': mstId,
+                            'BCode': num.parse(e.bCode.toString()),
+                          },
+                        )
+                        .toList();
+
+                    if (bCodeArray.isNotEmpty) {
+                      await openPdf(
+                        bCodeArray: bCodeArray,
+                        token: token!,
+                        apiName: 'spkDeptIss',
+                      );
+                    }
+                  }
                   setState(() {
                     _laserApiRows.clear();
                     _laserApiRows.addAll(data);
@@ -1884,15 +1921,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
                     _detRows.clear();
                   });
                   _clearEntryFields();
-
-                  // await ErpResultDialog.showSuccess(
-                  //   context: context,
-                  //   theme: _theme,
-                  //   title: wasEdit ? 'Updated' : 'Saved',
-                  //   message: wasEdit
-                  //       ? 'Laser Rec updated.'
-                  //       : 'Laser Rec saved.',
-                  // );
 
                   await context.read<TrnLaserReceivedProvider>().load();
 

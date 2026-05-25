@@ -78,7 +78,8 @@ import '../providers/menu_provider.dart';
 import 'providers/Packet_History_provider.dart';
 import 'providers/factory_man_group_provider.dart';
 
-String baseUrl = 'http://50.62.183.116:5000/api';
+// String baseUrl = 'http://50.62.183.116:5000/api';
+String baseUrl = 'https://sitting-bin-larger-geography.trycloudflare.com/api';
 Future<void> bootstrap({required FutureOr<Widget> Function() fn}) async {
   return runZonedGuarded(
     () async {

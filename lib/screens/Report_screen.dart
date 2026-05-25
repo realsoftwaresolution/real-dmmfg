@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:collection/collection.dart';
 import 'package:diam_mfg/models/user_visibility_model.dart';
 import 'package:diam_mfg/providers/ReportProvider.dart';
@@ -532,23 +534,27 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
         )
         .toList();
-
+print('cutProv.list ${jsonEncode(cutProv.list)}');
     final cutItems = cutProv.list
+        .where((cc) => cc.details.isNotEmpty)
         .map((cc) {
-          final spkDet = cc.details.firstWhere(
+      final spkDet = cc.details.firstWhere(
             (d) => d.cutType == 'SPK',
-            orElse: () => cc.details.first,
-          );
-          return ErpDropdownItem(
-            // ✅ Edit mode mein current cut ka label
-            label: spkDet.cutNo ?? '',
-            value: spkDet.cutNo ?? '',
-          );
-        })
+        orElse: () => cc.details.first,
+      );
+
+      return ErpDropdownItem(
+        label: spkDet.cutNo ?? '',
+        value: spkDet.cutNo ?? '',
+      );
+    })
+        .where((e) => e.value.isNotEmpty)
         .fold<List<ErpDropdownItem>>([], (acc, item) {
-          if (!acc.any((x) => x.value == item.value)) acc.add(item);
-          return acc;
-        });
+      if (!acc.any((x) => x.value == item.value)) {
+        acc.add(item);
+      }
+      return acc;
+    });
 
     final roughItems = roughProv.roughs
         .map(

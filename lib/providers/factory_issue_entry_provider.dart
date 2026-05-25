@@ -101,11 +101,14 @@ class FactoryIssueEntryProvider extends BaseProvider {
   }
 
   // ── DELETE ────────────────────────────────────────────────────────────────
-  Future<bool> delete(id, theme, context,bCodeArray) async {
+  Future<bool> delete(id, theme, context, bCodeArray) async {
     final result = await request<bool>(
       call: () => api.delete(
         '/factoryIss/all/$id',
-        data: {'expectedProcess': ProcessConstants.factoryIss,'bCodeArray': bCodeArray},
+        data: {
+          'expectedProcess': ProcessConstants.factoryIss,
+          'bCodeArray': bCodeArray,
+        },
       ),
       onSuccess: (res) {
         final data = res.data;
@@ -122,8 +125,14 @@ class FactoryIssueEntryProvider extends BaseProvider {
       },
     );
     if (result == true) {
-      _list.removeWhere((e) => e.factoryIssMstID == id);
+      final mstId = int.tryParse(id.toString()) ?? 0;
+
+      _list.removeWhere((e) => e.factoryIssMstID == mstId);
+
+      detMap.remove(mstId);
+
       notifyListeners();
+
       return true;
     }
     return false;

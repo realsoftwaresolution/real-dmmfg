@@ -194,8 +194,9 @@ class SpkDeptIssProvider extends BaseProvider {
             theme: theme,
             message: data['message'],
           );
+          return false;
         }
-        return data;
+        return true;
       },
     );
     if (result == true) {

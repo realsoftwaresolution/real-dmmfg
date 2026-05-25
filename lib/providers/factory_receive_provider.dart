@@ -114,15 +114,33 @@ class FactoryReceivedEntryProvider extends BaseProvider {
       call: () => api.delete(
         '/factoryRec/all/$id',
         data: {
-          'expectedProcess': ProcessConstants.factoryIss,
+          'expectedProcess': ProcessConstants.factoryRec,
           'bCodeArray': bCodeArray,
         },
       ),
-      onSuccess: (_) => true,
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+          return false;
+        }
+        return true;
+      },
     );
     if (result == true) {
-      _list.removeWhere((e) => e.factoryRecMstID == id);
+      final mstId = int.tryParse(id.toString()) ?? 0;
+
+      _list.removeWhere((e) => e.factoryRecMstID == mstId);
+
+      detMap.remove(mstId);
+
       notifyListeners();
+
       return true;
     }
     return false;

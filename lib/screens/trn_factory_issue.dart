@@ -319,6 +319,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       pktNo: r.pktNo ?? '',
       PacketMstID: r.PacketMstID,
       cutNo: r.cutNo ?? '',
+
       // ORIGINAL PACKET VALUES
       pc: r.pc ?? 0,
       wt: r.wt ?? 0,
@@ -358,17 +359,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   //  EDIT / DELETE DET ROW
   // ─────────────────────────────────────────────────────────────────────────
 
-  void _editDetRow(int idx) {
-    final r = _detRows[idx];
-    setState(() => _editingDetIndex = idx);
-
-    void set(String k, String? v) {
-      _entryVals[k] = v ?? '';
-      _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
-    }
-
-    set('scanValue', r.bCode);
-  }
 
   dynamic _deleteDetRow(int idx) async {
     if (_isEditMode) {

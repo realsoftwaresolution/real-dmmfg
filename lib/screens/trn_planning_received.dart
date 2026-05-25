@@ -1071,7 +1071,10 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
       },
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
       onCancel: _resetForm,
+      isShowSaveButton: !_isEditMode,
       onSave: (val) async {
+        if(_isEditMode) return;
+
         final prov = context.read<TrnPlanningReceivedProvider>();
 
         String toIso(String? v) {
@@ -1170,14 +1173,13 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
 
               clvCut: e.clvCut ?? '',
 
-              shapeCode: e.shapeCode ?? 0,
+              shapeCode:((sarin['ShapeCode'] ?? 0) as num).toInt(),
 
-              cutCode: e.cutCode ?? 0,
+              cutCode: ((sarin['CutCode'] ?? 0) as num).toInt(),
 
-              purityCode: e.purityCode ?? 0,
+              purityCode: ((sarin['PurityCode'] ?? 0) as num).toInt(),
 
-              colorCode: e.colorCode ?? 0,
-
+              colorCode: ((sarin['ColorCode'] ?? 0) as num).toInt(),
               // SARIN RECORD
               rgWt: ((sarin['RoughWt'] ?? 0) as num).toDouble(),
 

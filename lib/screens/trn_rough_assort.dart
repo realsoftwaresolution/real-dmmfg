@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:diam_mfg/models/rough_assort_model.dart';
 import 'package:diam_mfg/providers/purity_group_provider.dart';
 import 'package:diam_mfg/providers/purity_provider.dart';
@@ -501,35 +503,24 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
     }
     if (wt.isEmpty) {
       _showSnack('Weight required');
-      Future.delayed(
-        const Duration(milliseconds: 200),
-            () {
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (!mounted) return;
 
-          if (!mounted) return;
-
-          _erpFormKey.currentState?.focusField('entryWt');
-
-        },
-      );
+        _erpFormKey.currentState?.focusField('entryWt');
+      });
       return;
     }
     final entryWt = double.tryParse(wt) ?? 0;
     final knoWt = double.tryParse(_knoWt) ?? 0;
 
     if (entryWt <= 0) {
-
       _showSnack('Weight must be greater than 0');
 
-      Future.delayed(
-        const Duration(milliseconds: 200),
-            () {
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (!mounted) return;
 
-          if (!mounted) return;
-
-          _erpFormKey.currentState?.focusField('entryWt');
-
-        },
-      );
+        _erpFormKey.currentState?.focusField('entryWt');
+      });
 
       return;
     }
@@ -550,25 +541,29 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
       );
       return;
     }
-    final pg = context.read<PurityGroupProvider>().list.firstWhere(
-      (e) => e.purityGroupCode?.toString() == pCode,
-      orElse: () => PurityGroupModel(),
+    final purity = context.read<PurityProvider>().list.firstWhere(
+      (e) => e.purityCode?.toString() == pCode,
+      orElse: () => PurityModel(),
     );
 
+    final purityGroupCode = purity.purityGroupCode;
+
+    print('PurityCode: $pCode -> PurityGroupCode: $purityGroupCode');
+    //
     final newRow = RoughAssortDetModel(
       srno: _editingDetIndex != null
           ? _detRows[_editingDetIndex!].srno
           : _detRows.length + 1,
       purityCode: int.tryParse(pCode),
-      purityGroupCode: pg.purityGroupCode,
-      pc: int.tryParse(_entryVals['entryPc'] ?? ''),
-      wt: double.tryParse(_entryVals['entryWt'] ?? ''),
+      purityGroupCode: purityGroupCode,
+      pc: int.tryParse(_entryVals['entryPc'] ?? '0'),
+      wt: double.tryParse(_entryVals['entryWt'] ?? '0.000'),
       // ✅ FIX 1: per from _entryCalc (auto calculated)
-      per: double.tryParse(_entryCalc['entryPer'] ?? ''),
-      exRate: double.tryParse(_entryVals['entryExRate'] ?? ''),
-      rateDollar: double.tryParse(_entryVals['entryRateDollar'] ?? ''),
-      amtDollar: double.tryParse(_entryCalc['entryAmtDollar'] ?? ''),
-      labRateD: double.tryParse(_entryVals['entryLabRateD'] ?? ''),
+      per: double.tryParse(_entryCalc['entryPer'] ?? '0.00'),
+      exRate: double.tryParse(_entryVals['entryExRate'] ?? '0.00'),
+      rateDollar: double.tryParse(_entryVals['entryRateDollar'] ?? '0.00'),
+      amtDollar: double.tryParse(_entryCalc['entryAmtDollar'] ?? '0.00'),
+      labRateD: double.tryParse(_entryVals['entryLabRateD'] ?? '0.00'),
       labAmtD: double.tryParse(_entryCalc['entryLabAmtD'] ?? ''),
       rateRs: double.tryParse(_entryCalc['entryRateRs'] ?? ''),
       amtRs: double.tryParse(_entryCalc['entryAmtRs'] ?? ''),
@@ -1002,6 +997,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
       },
 
       onFieldChanged: (key, value) {
+        print(value);
         setState(() {
           _formValues[key] = value.toString();
           _entryVals[key] = value.toString();
@@ -1024,18 +1020,8 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
       },
       onFieldSubmitted: (key, value) {
         if (key == 'entryLabRateD') {
-          // VALIDATION
-          final entryLabRateD = double.tryParse(value.toString()) ?? 0;
-
-          if (entryLabRateD <= 0) {
-            _showSnack('Entry lab rate must be greater than 0');
-
-            return;
-          }
-
           // ADD ENTRY
           _addDetEntry();
-
           return;
         }
       },
@@ -1104,7 +1090,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
                 columns: _detGridColumns,
                 title: 'PURITY GROUP: ROUGH ASSORT',
                 theme: theme,
-                onDeleteRow:_isEditMode ?null: _deleteDetRow,
+                onDeleteRow: _isEditMode ? null : _deleteDetRow,
                 onEditRow: _editDetRow,
                 editingIndex: _editingDetIndex,
                 // ✅ Custom column header labels matching image exactly

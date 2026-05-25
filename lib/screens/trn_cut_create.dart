@@ -96,7 +96,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
     final kapanItems = rap.list
         .where((assort) {
           if (assort.kapanNo == null || assort.kapanNo!.isEmpty) return false;
-          if (!assort.details.any((d) => d.purityCode == 2)) return false;
+          if (!assort.details.any((d) => d.purityGroupCode == 5)) return false;
 
           // Assort total wt for this kapan
           final assortWt = assort.details.fold(0.0, (s, d) => s + (d.wt ?? 0));
@@ -115,7 +115,7 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
         })
         .map((e) {
           final makable = e.details.firstWhere(
-            (d) => d.purityCode == 2,
+            (d) => d.purityGroupCode == 5,
             orElse: () => e.details.first,
           );
           return ErpDropdownItem(

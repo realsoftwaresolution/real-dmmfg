@@ -18,9 +18,7 @@ Future<void> openPdf({
 
       '${baseUrl}/${apiName}/generate-bcode',
 
-      data: {
-        "bcodes": bCodeArray,
-      },
+      data: bCodeArray,
 
       options: Options(
 

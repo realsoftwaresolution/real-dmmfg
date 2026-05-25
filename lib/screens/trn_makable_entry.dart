@@ -667,9 +667,12 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       pktNo: existing.pktNo,
       cutNo: existing.cutNo,
       clvCut: existing.clvCut,
-      shapeCode: existing.shapeCode,
-      purityCode: existing.purityCode,
-      colorCode: existing.colorCode,
+      shapeCode: _isFieldVisible('SHAPE')
+          ?existing.shapeCode:0,
+      purityCode: _isFieldVisible('PURITY')
+          ?existing.purityCode:0,
+      colorCode: _isFieldVisible('COLOR')
+          ?existing.colorCode:0,
       kachaRec: existing.kachaRec,
       qrCode: existing.qrCode,
       entryType: existing.entryType,
@@ -690,7 +693,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       recWt: recWt,
       totalPc: recPc,
       totalWt: recWt,
-      dmWt: double.tryParse(_entryVals['dmWt'] ?? ''),
+      dmWt: _isFieldVisible('DM WT')
+          ?double.tryParse(_entryVals['dmWt'] ?? ''):0,
       dmPer: existing.dmPer,
       kPc: int.tryParse(_entryVals['kpc'] ?? ''),
       kWt: double.tryParse(_entryVals['kwt'] ?? ''),
@@ -708,37 +712,39 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       diffDmWt: double.tryParse(_entryVals['diffDmWt'] ?? ''),
       recutEmp: double.tryParse(_entryVals['recutEmp'] ?? '0.000'),
       ratio: double.tryParse(_entryVals['ratio'] ?? ''),
-      planShape: _entryVals['shape'] ?? '',
+      planShape: _isFieldVisible('SHAPE')
+          ?_entryVals['shape'] ?? '':0,
       planPurity: _entryVals['planPurity'] ?? '',
       partName: int.tryParse(_entryVals['partName'].toString()),
       orderMstID: int.tryParse(_entryVals['orderMstId'] ?? ''),
       amountRs: double.tryParse(_entryVals['amount'] ?? '0.000'),
       amount: double.tryParse(_entryVals['amount'] ?? '0.000'),
       remarks: _entryVals['remarks'] ?? '',
-      cutCode: int.tryParse(_entryVals['cutCode'] ?? ''),
+      cutCode:_isFieldVisible('CUT')
+          ? int.tryParse(_entryVals['cutCode'] ?? ''):0,
       plDmWt: double.tryParse(_entryVals['dmWt'] ?? '0.000'),
       plDmPer: double.tryParse(_entryVals['dmPer'] ?? '0.00'),
       fluo: _isFieldVisible('FLUO')
           ? int.tryParse(_formValues['fluo'] ?? '')
-          : null,
+          : 0,
       symmetryCode: _isFieldVisible('SYMMETRY')
           ? int.tryParse(_formValues['symmetryCode'] ?? '')
-          : null,
+          : 0,
       polishCode: _isFieldVisible('POLISH')
           ? int.tryParse(_formValues['polishCode'] ?? '')
-          : null,
+          : 0,
       tensionsCode: _isFieldVisible('TENSIONS')
           ? int.tryParse(_formValues['tensionCode'] ?? '')
-          : null,
+          : 0,
       length: _isFieldVisible('LENGTH')
           ? int.tryParse(_entryVals['length'].toString())
-          : null,
+          : 0,
       diam: _isFieldVisible('DIAM')
           ? double.tryParse(_entryVals['diam'].toString())
-          : null,
+          : 0,
       height: _isFieldVisible('HEIGHT')
           ? double.tryParse(_entryVals['height'].toString())
-          : null,
+          : 0,
       formType: 'SPK',
       confRec: _autoRec,
       clvRec: 'S',
@@ -763,9 +769,12 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       pktNo: _scannedDet?.pktNo,
       cutNo: _scannedDet?.cutNo,
       clvCut: _scannedDet?.clvCut,
-      shapeCode: int.tryParse(_entryVals['shape'] ?? ''),
-      purityCode: _scannedDet?.purityCode,
-      colorCode: int.tryParse(_entryVals['color'] ?? ''),
+      shapeCode: _isFieldVisible('SHAPE')
+          ? int.tryParse(_entryVals['shape'] ?? ''):0,
+      purityCode: _isFieldVisible('PURITY')
+          ? _scannedDet?.purityCode:0,
+      colorCode: _isFieldVisible('COLOR')
+          ? int.tryParse(_entryVals['color'] ?? ''):0,
       kachaRec: _scannedDet?.kachaRec ?? 'Y',
       fromDeptCode: _fromDeptCode,
       toDeptCode: _toDeptCodeVal,
@@ -782,7 +791,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       recWt: recWt,
       totalPc: recPc,
       totalWt: recWt,
-      dmWt: double.tryParse(_entryVals['dmWt'] ?? ''),
+      dmWt: _isFieldVisible('DM WT')
+          ? double.tryParse(_entryVals['dmWt'] ?? ''):0.000,
       dmPer: _scannedDet?.dmPer ?? 0,
       kPc: int.tryParse(_entryVals['kpc'] ?? ''),
       kWt: double.tryParse(_entryVals['kwt'] ?? ''),
@@ -804,7 +814,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       plDmPer: double.tryParse(_entryVals['dmPer'] ?? '0.00'),
       recutEmp: double.tryParse(_entryVals['recutEmp'] ?? '0.000'),
       ratio: double.tryParse(_entryVals['ratio'] ?? ''),
-      planShape: _entryVals['shape'] ?? '',
+      planShape: _isFieldVisible('SHAPE')
+          ? _entryVals['shape'] ?? '':0,
       planPurity: _entryVals['planPurity'] ?? '',
       qrCode: _entryVals['qrCode'] ?? '',
       partName: int.tryParse(_entryVals['partName'].toString()),
@@ -812,28 +823,29 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       amountRs: double.tryParse(_entryVals['amount'] ?? '0.000'),
       amount: double.tryParse(_entryVals['amount'] ?? '0.000'),
       remarks: _entryVals['remarks'] ?? '',
-      cutCode: int.tryParse(_entryVals['cutCode'] ?? ''),
+      cutCode: _isFieldVisible('CUT')
+          ? int.tryParse(_entryVals['cutCode'] ?? ''):0,
       fluo: _isFieldVisible('FLUO')
           ? int.tryParse(_formValues['fluo'] ?? '')
-          : null,
+          : 0,
       symmetryCode: _isFieldVisible('SYMMETRY')
           ? int.tryParse(_formValues['symmetryCode'] ?? '')
-          : null,
+          : 0,
       polishCode: _isFieldVisible('POLISH')
           ? int.tryParse(_formValues['polishCode'] ?? '')
-          : null,
+          : 0,
       tensionsCode: _isFieldVisible('TENSIONS')
           ? int.tryParse(_formValues['tensionCode'] ?? '')
-          : null,
+          : 0,
       length: _isFieldVisible('LENGTH')
           ? int.tryParse(_entryVals['length'].toString())
-          : null,
+          : 0,
       diam: _isFieldVisible('DIAM')
           ? double.tryParse(_entryVals['diam'].toString())
-          : null,
+          : 0,
       height: _isFieldVisible('HEIGHT')
           ? double.tryParse(_entryVals['height'].toString())
-          : null,
+          : 0,
       formType: 'SPK',
       confRec: _autoRec,
       clvRec: 'S',
@@ -1072,7 +1084,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       'issWt',
       'recPc',
       'recWt',
-      'dmWt',
+      if (_isFieldVisible('DM WT')) 'dmWt',
       'dmPer',
       'plDmWt',
       'plDmPer',
@@ -1080,11 +1092,11 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       'recutEmp',
       'remarks',
       'ratio',
-      'shapeCode',
-      'cutCode',
-      'planShape',
-      'colorCode',
-      'purityCode',
+      if (_isFieldVisible('SHAPE'))'shapeCode',
+      if (_isFieldVisible('CUT'))'cutCode',
+     'planShape',
+      if (_isFieldVisible('COLOR'))'colorCode',
+      if (_isFieldVisible('PURITY'))'purityCode',
       'planPurity',
       'charniCode',
       'amount',
@@ -1683,6 +1695,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       ),
 
       // DM
+      if (_isFieldVisible('DM WT'))
       ErpFieldConfig(
         key: 'dmWt',
         label: 'DM WT',
@@ -1690,6 +1703,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         sectionIndex: 3,
         flex: 1,
       ),
+      if (_isFieldVisible('SHAPE'))
       ErpFieldConfig(
         key: 'shape',
         label: 'SHAPE',
@@ -1697,6 +1711,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         dropdownItems: shapeDropdown,
         sectionIndex: 3,
       ),
+      if (_isFieldVisible('COLOR'))
       ErpFieldConfig(
         key: 'color',
         label: 'COLOR',
@@ -1704,6 +1719,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         dropdownItems: colorDropdown,
         sectionIndex: 3,
       ),
+      if (_isFieldVisible('PURITY'))
       ErpFieldConfig(
         key: 'purity',
         label: 'PURITY',
@@ -1711,6 +1727,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         dropdownItems: purityDropdown,
         sectionIndex: 3,
       ),
+      if (_isFieldVisible('CUT'))
       ErpFieldConfig(
         key: 'cutCode',
         label: 'CUT',

@@ -567,10 +567,11 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       return;
     }
 
-    final totalWt = recWt + kWt + brWt + dmWt;
-
+    final totalWt = recWt + kWt + brWt;
+print(totalWt);
+print(issWt);
     if (totalWt > issWt) {
-      _showSnack('Total WT (Rec + K + Br + DM) cannot exceed Iss WT');
+      _showSnack('Total WT (Rec + K + Br) cannot exceed Iss WT');
       return;
     }
 
@@ -579,7 +580,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     // ─────────────────────────────
     final issPc = int.tryParse(_entryVals['issPc'] ?? '') ?? 0;
 
-    final lossWt = issWt - (recWt + kWt + brWt + dmWt);
+    final lossWt = issWt - (recWt + kWt + brWt);
     final lossPc = issPc - (recPc + kPc + brPc);
 
     final safeLossWt = lossWt < 0 ? 0.0 : lossWt;
@@ -1481,15 +1482,29 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         )
         .toList();
 
-    // ── Merged DEPT fields (deduped) ──────────────────────────────────────
-    final Map<String, UserVisibilityModel> merged = {};
-    for (final f in [..._fromDisplayFields, ..._toDisplayFields]) {
-      final name = (f.userVisibilityName ?? '').toUpperCase();
-      if (f.entryType != 'DEPT') continue;
-      if (['ALL'].contains(name)) continue;
-      merged[name] = f;
-    }
+    /// Returns true if the field name exists in the merged DEPT visibility map.
+    bool _isFieldVisible(String fieldName) {
+      // final name = fieldName.toUpperCase();
+      //
+      // for (final f in [
+      //   ..._fromDisplayFields,
+      //   ..._toDisplayFields,
+      // ]) {
+      //
+      //   if (f.entryType != 'MAKABLE') continue;
+      //
+      //   final n =
+      //   (f.userVisibilityName ?? '')
+      //       .trim()
+      //       .toUpperCase();
+      //
+      //   if (n == name) {
+      //     return true;
+      //   }
+      // }
 
+      return true;
+    }
     // ─────────────────────────────────────────────────────────────────────
     //  MASTER SECTION (sectionIndex 0)
     // ─────────────────────────────────────────────────────────────────────
@@ -1511,6 +1526,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           sectionIndex: 0,
           width: 350,
           required: true,
+          readOnly: _isEditMode || _detRows.isNotEmpty
         ),
         ErpFieldConfig(
           key: 'polishChecker',
@@ -1519,7 +1535,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           dropdownItems: fromItems,
           sectionIndex: 0,
           width: 350,
-          // required: true,
+            readOnly: _isEditMode || _detRows.isNotEmpty
         ),
         ErpFieldConfig(
           key: 'factoryRecMstID',
@@ -1611,6 +1627,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         ),
 
         // REC
+        if (_isFieldVisible('REC PC'))
         ErpFieldConfig(
           key: 'recPc',
           label: 'REC PC',
@@ -1618,6 +1635,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           sectionIndex: 2,
           flex: 1,
         ),
+        if (_isFieldVisible('REC WT'))
         ErpFieldConfig(
           key: 'recWt',
           label: 'REC WT',
@@ -1625,6 +1643,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           sectionIndex: 2,
           flex: 1,
         ),
+        if (_isFieldVisible('K PC'))
         ErpFieldConfig(
           key: 'kPc',
           label: 'K PC',
@@ -1632,6 +1651,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           sectionIndex: 2,
           flex: 1,
         ),
+        if (_isFieldVisible('K PC'))
         ErpFieldConfig(
           key: 'kWt',
           label: 'K WT',
@@ -1639,6 +1659,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           sectionIndex: 2,
           flex: 1,
         ),
+        if (_isFieldVisible('BR PC'))
         ErpFieldConfig(
           key: 'brPc',
           label: 'BR PC',
@@ -1696,7 +1717,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           sectionIndex: 2,
           flex: 1,
         ),
-
+        if (_isFieldVisible('PURITY'))
         ErpFieldConfig(
           key: 'purity',
           label: 'PURITY',
@@ -1705,6 +1726,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           sectionIndex: 2,
           flex: 1,
         ),
+        if (_isFieldVisible('CHARNI'))
         ErpFieldConfig(
           key: 'charni',
           label: 'CHARNI',
@@ -1713,7 +1735,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           sectionIndex: 2,
           flex: 1,
         ),
-
+        if (_isFieldVisible('COLOR'))
         ErpFieldConfig(
           key: 'color',
           label: 'COLOR',
@@ -1722,6 +1744,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           sectionIndex: 2,
           flex: 1,
         ),
+        if (_isFieldVisible('CUT'))
         ErpFieldConfig(
           key: 'cutCode',
           label: 'CUT',
@@ -1730,6 +1753,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           sectionIndex: 2,
           flex: 1,
         ),
+        if (_isFieldVisible('SHAPE'))
         ErpFieldConfig(
           key: 'shape',
           label: 'SHAPE',
@@ -1795,7 +1819,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
     ErpColumnConfig(key: 'time', label: 'Time', width: 120),
 
-    ErpColumnConfig(key: 'factory', label: 'Factory', width: 180),
+    ErpColumnConfig(key: 'factoryName', label: 'Factory', width: 180),
 
     ErpColumnConfig(
       key: 'totPkt',
@@ -2330,6 +2354,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         'time': e.time ?? '',
 
         'factory': e.factoryCode ?? '',
+        'factoryName': e.factoryName ?? '',
         'type': e.EntryType ?? '',
 
         'totPkt': (e.pkt ?? 0).toString(),

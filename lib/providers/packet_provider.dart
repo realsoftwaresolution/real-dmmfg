@@ -1,9 +1,9 @@
 // lib/providers/packet_provider.dart
 
+import 'package:diam_mfg/services/pdf.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../models/packet_model.dart';
-
 
 class PacketProvider extends BaseProvider {
   List<PacketMstModel> _list = [];
@@ -44,6 +44,8 @@ class PacketProvider extends BaseProvider {
     return result ?? 1;
   }
 
+  final String? token = AppStorage.getString('token');
+
   // ── CREATE ────────────────────────────────────────────────────────────────
   // API returns { mst: {}, det: [] }
   Future<bool> create(
@@ -59,7 +61,32 @@ class PacketProvider extends BaseProvider {
           'details': details.map((e) => e.toJson()).toList(),
         },
       ),
-      onSuccess: (res) => _parseMstResponse(res.data),
+      onSuccess: (res) {
+        final data = res.data;
+
+        print(data);
+
+        final det = (data['det'] as List?) ?? [];
+        final bCodeArray = det
+            .where((e) => e['BCode'] != null)
+            .map(
+              (e) => {
+            'PacketMstID': e['PacketMstID'],
+            'BCode': e['BCode'],
+          },
+        )
+            .toList();
+
+        if (bCodeArray.isNotEmpty && token != null) {
+          openPdf(
+            bCodeArray: bCodeArray,
+            token: token!,
+            apiName: 'packetCreate',
+          );
+        }
+
+        return _parseMstResponse(data);
+      },
     );
     if (result != null) {
       _list.insert(0, result);
@@ -135,8 +162,9 @@ class PacketProvider extends BaseProvider {
             theme: theme,
             message: data['message'],
           );
+          return false;
         }
-        return data;
+        return true;
       },
     );
     if (result == true) {
