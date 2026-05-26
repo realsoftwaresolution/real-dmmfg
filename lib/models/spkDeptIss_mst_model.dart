@@ -635,7 +635,7 @@ class SpkDeptIssDetModel {
     'ConfPcID': confPcID ?? '',
     'ConfEver': confEver ?? 0,
     'ConfCrID': confCrID ?? 0,
-    'ConfRec': confRec ?? '',
+    'ConfRec': confRec ?? 'Y',
     'RecDate': recDate ?? '',
     'RecTime': recTime ?? '',
     'LastDetID': lastDetID ?? 0,

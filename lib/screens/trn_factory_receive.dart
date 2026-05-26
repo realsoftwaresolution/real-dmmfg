@@ -12,7 +12,10 @@ import 'package:diam_mfg/providers/dept_group_provider.dart';
 import 'package:diam_mfg/providers/dept_process_provider.dart';
 import 'package:diam_mfg/providers/employee_provider.dart';
 import 'package:diam_mfg/providers/factory_receive_provider.dart';
+import 'package:diam_mfg/providers/fluo_provider.dart';
+import 'package:diam_mfg/providers/polish_provider.dart';
 import 'package:diam_mfg/providers/remarks_provider.dart';
+import 'package:diam_mfg/providers/symmetry_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/constants.dart';
@@ -233,6 +236,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         context.read<ColorProvider>().load(),
         context.read<FactoryProvider>().loadFactories(),
         context.read<CutProvider>().loadCuts(),
+        context.read<FluoProvider>().load(),
+        context.read<SymmetryProvider>().loadSymmetry(),
+        context.read<PolishProvider>().loadPolish(),
       ]);
       if (!mounted) return;
       _setDefaultFormValues();
@@ -432,7 +438,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   Future<void> _onBCodeScanned(String bCode, String fCode) async {
     final rows = await context
         .read<FactoryReceivedEntryProvider>()
-        .fetchByBCode(bCode: bCode,fCode: fCode);
+        .fetchByBCode(bCode: bCode, fCode: fCode);
 
     if (!mounted) return;
     _isBCodePending = false;
@@ -490,13 +496,13 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   void _calcLoss() {
     final issWt = double.tryParse(_entryVals['issWt'] ?? '') ?? 0;
     final recWt = double.tryParse(_entryVals['recWt'] ?? '') ?? 0;
-    final kWt   = double.tryParse(_entryVals['kWt'] ?? '') ?? 0;
-    final brWt  = double.tryParse(_entryVals['brWt'] ?? '') ?? 0;
+    final kWt = double.tryParse(_entryVals['kWt'] ?? '') ?? 0;
+    final brWt = double.tryParse(_entryVals['brWt'] ?? '') ?? 0;
 
     final issPc = int.tryParse(_entryVals['issPc'] ?? '') ?? 0;
     final recPc = int.tryParse(_entryVals['recPc'] ?? '') ?? 0;
-    final kPc   = int.tryParse(_entryVals['kPc'] ?? '') ?? 0;
-    final brPc  = int.tryParse(_entryVals['brPc'] ?? '') ?? 0;
+    final kPc = int.tryParse(_entryVals['kPc'] ?? '') ?? 0;
+    final brPc = int.tryParse(_entryVals['brPc'] ?? '') ?? 0;
 
     // ✅ LOSS WT
     final lossWt = issWt - (recWt + kWt + brWt);
@@ -511,9 +517,37 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     _entryVals['lossWt'] = fThreeDecimal(safeLossWt);
     _entryVals['lossPc'] = '$safeLossPc';
 
-    _erpFormKey.currentState?.updateFieldValue('lossWt', fThreeDecimal(safeLossWt));
+    _erpFormKey.currentState?.updateFieldValue(
+      'lossWt',
+      fThreeDecimal(safeLossWt),
+    );
     _erpFormKey.currentState?.updateFieldValue('lossPc', '$safeLossPc');
   }
+
+  /// Returns true if the field name exists in the merged DEPT visibility map.
+  bool _isFieldVisible(String fieldName) {
+    // final name = fieldName.toUpperCase();
+    //
+    // for (final f in [
+    //   ..._fromDisplayFields,
+    //   ..._toDisplayFields,
+    // ]) {
+    //
+    //   if (f.entryType != 'MAKABLE') continue;
+    //
+    //   final n =
+    //   (f.userVisibilityName ?? '')
+    //       .trim()
+    //       .toUpperCase();
+    //
+    //   if (n == name) {
+    //     return true;
+    //   }
+    // }
+
+    return true;
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   //  ADD / EDIT ENTRY
   // ─────────────────────────────────────────────────────────────────────────
@@ -532,13 +566,13 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     final recPc = int.tryParse(_entryVals['recPc'] ?? '') ?? 0;
     final recWt = double.tryParse(_entryVals['recWt'] ?? '') ?? 0;
 
-    final kPc   = int.tryParse(_entryVals['kPc'] ?? '') ?? 0;
-    final kWt   = double.tryParse(_entryVals['kWt'] ?? '') ?? 0;
+    final kPc = int.tryParse(_entryVals['kPc'] ?? '') ?? 0;
+    final kWt = double.tryParse(_entryVals['kWt'] ?? '') ?? 0;
 
-    final brPc  = int.tryParse(_entryVals['brPc'] ?? '') ?? 0;
-    final brWt  = double.tryParse(_entryVals['brWt'] ?? '') ?? 0;
+    final brPc = int.tryParse(_entryVals['brPc'] ?? '') ?? 0;
+    final brWt = double.tryParse(_entryVals['brWt'] ?? '') ?? 0;
 
-    final dmWt  = double.tryParse(_entryVals['dmWt'] ?? '') ?? 0;
+    final dmWt = double.tryParse(_entryVals['dmWt'] ?? '') ?? 0;
 
     // ─────────────────────────────
     // ✅ VALIDATIONS
@@ -568,8 +602,8 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     }
 
     final totalWt = recWt + kWt + brWt;
-print(totalWt);
-print(issWt);
+    print(totalWt);
+    print(issWt);
     if (totalWt > issWt) {
       _showSnack('Total WT (Rec + K + Br) cannot exceed Iss WT');
       return;
@@ -589,7 +623,10 @@ print(issWt);
     _entryVals['lossWt'] = fThreeDecimal(safeLossWt);
     _entryVals['lossPc'] = '$safeLossPc';
 
-    _erpFormKey.currentState?.updateFieldValue('lossWt', fThreeDecimal(safeLossWt));
+    _erpFormKey.currentState?.updateFieldValue(
+      'lossWt',
+      fThreeDecimal(safeLossWt),
+    );
     _erpFormKey.currentState?.updateFieldValue('lossPc', '$safeLossPc');
 
     // ─────────────────────────────
@@ -620,28 +657,67 @@ print(issWt);
         "LossPc": safeLossPc,
         "LossWt": safeLossWt.toStringAsFixed(3),
 
-        "PurityCode":
-        int.tryParse(_entryVals['purity'] ?? '0') ?? 0,
+        if (_isFieldVisible('PURITY'))
+          "PurityCode":
+          int.tryParse(_entryVals['purity'] ?? '0') ?? 0,
 
-        "CharniCode":
-        int.tryParse(_entryVals['charni'] ?? '0') ?? 0,
+        if (_isFieldVisible('CHARNI'))
+          "CharniCode":
+          int.tryParse(_entryVals['charni'] ?? '0') ?? 0,
 
-        "ColorCode":
-        int.tryParse(_entryVals['color'] ?? '0') ?? 0,
+        if (_isFieldVisible('COLOR'))
+          "ColorCode":
+          int.tryParse(_entryVals['color'] ?? '0') ?? 0,
 
-        "ShapeCode":
-        int.tryParse(_entryVals['shape'] ?? '0') ?? 0,
+        if (_isFieldVisible('SHAPE'))
+          "ShapeCode":
+          int.tryParse(_entryVals['shape'] ?? '0') ?? 0,
 
-        "CutCode":
-        int.tryParse(_entryVals['cutCode'] ?? '0') ?? 0,
+        if (_isFieldVisible('CUT'))
+          "CutCode":
+          int.tryParse(_entryVals['cutCode'] ?? '0') ?? 0,
 
         "DmWt": dmWt,
+
         "DmPer":
         double.tryParse(_entryVals['dmPer'] ?? '0') ?? 0,
 
         "Size":
         double.tryParse(_entryVals['size'] ?? '0') ?? 0,
-        'expectedProcess': ProcessConstants.factoryRec
+
+        // ── NEW CONDITIONAL FIELDS ─────────────────────
+
+          "PairNo": _entryVals['pairNo'] ?? '',
+
+        if (_isFieldVisible('POLISH'))
+          "PolishCode":
+          int.tryParse(_entryVals['polishCode'] ?? '0') ?? 0,
+
+        if (_isFieldVisible('SYMMETRY'))
+          "SymmetryCode":
+          int.tryParse(_entryVals['symmetryCode'] ?? '0') ?? 0,
+
+        if (_isFieldVisible('FLUO'))
+          "FluoCode":
+          int.tryParse(_entryVals['fluo'] ?? '0') ?? 0,
+
+        if (_isFieldVisible('TENSIONS'))
+          "TensionsCode":
+          int.tryParse(_entryVals['tensionCode'] ?? '0') ?? 0,
+
+        if (_isFieldVisible('LENGTH'))
+          "Length":
+          double.tryParse(_entryVals['length'] ?? '0') ?? 0,
+
+        if (_isFieldVisible('DIAM'))
+          "Diam":
+          double.tryParse(_entryVals['diam'] ?? '0') ?? 0,
+
+        if (_isFieldVisible('HEIGHT'))
+          "Height":
+          double.tryParse(_entryVals['height'] ?? '0') ?? 0,
+
+        'expectedProcess': ProcessConstants.factoryRec,
       };
 
       final success = await prov.update(payload);
@@ -663,7 +739,12 @@ print(issWt);
         });
 
         _clearEntryFields();
-        _showSnack("Updated successfully");
+        await ErpResultDialog.showSuccess(
+          context: context,
+          theme: _theme,
+          title: 'Updated',
+          message: 'Factory Receive Entry Updated.',
+        );
         context.read<FactoryReceivedEntryProvider>().load();
       }
 
@@ -726,7 +807,6 @@ print(issWt);
       shapeCode: existing.shapeCode,
       purityCode: existing.purityCode,
       colorCode: existing.colorCode,
-      diam: existing.diam,
       kachaRec: existing.kachaRec,
       qrCode: existing.qrCode,
       entryType: existing.entryType,
@@ -757,14 +837,12 @@ print(issWt);
       topsPc: int.tryParse(_entryVals['topsPc'] ?? ''),
       topsWt: double.tryParse(_entryVals['topsWt'] ?? ''),
       charniCode: existing.charniCode,
-      tensionsCode: int.tryParse(_formValues['tensionsCode'] ?? ''),
       employeeCode: int.tryParse(_entryVals['employee'] ?? ''),
       signerCode: int.tryParse(_entryVals['signer'] ?? ''),
       remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
       dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
       diffDmWt: double.tryParse(_entryVals['diffDmWt'] ?? ''),
       recutEmp: double.tryParse(_entryVals['recutEmp'] ?? '0.000'),
-      length: int.tryParse(_entryVals['length'] ?? '0'),
       ratio: double.tryParse(_entryVals['ratio'] ?? ''),
       planShape: _entryVals['shape'] ?? '',
       planPurity: _entryVals['planPurity'] ?? '',
@@ -776,6 +854,35 @@ print(issWt);
       cutCode: int.tryParse(_entryVals['cutCode'] ?? ''),
       plDmWt: double.tryParse(_entryVals['dmWt'] ?? '0.000'),
       plDmPer: double.tryParse(_entryVals['dmPer'] ?? '0.00'),
+      fluo: _isFieldVisible('FLUO')
+          ? int.tryParse(_entryVals['fluo'] ?? '')
+          : 0,
+
+      symmetryCode: _isFieldVisible('SYMMETRY')
+          ? int.tryParse(_entryVals['symmetryCode'] ?? '')
+          : 0,
+
+      polishCode: _isFieldVisible('POLISH')
+          ? int.tryParse(_entryVals['polishCode'] ?? '')
+          : 0,
+
+      tensionsCode: _isFieldVisible('TENSIONS')
+          ? int.tryParse(_entryVals['tensionCode'] ?? '')
+          : 0,
+
+      length: _isFieldVisible('LENGTH')
+          ? int.tryParse(_entryVals['length'] ?? '')
+          : 0,
+
+      diam: _isFieldVisible('DIAM')
+          ? double.tryParse(_entryVals['diam'] ?? '')
+          : 0,
+
+      height: _isFieldVisible('HEIGHT')
+          ? double.tryParse(_entryVals['height'] ?? '')
+          : 0,
+
+      pairNo: _entryVals['pairNo'],
     );
   }
 
@@ -802,7 +909,6 @@ print(issWt);
       shapeCode: int.tryParse(_entryVals['shape'] ?? ''),
       purityCode: _scannedDet?.purityCode,
       colorCode: int.tryParse(_entryVals['color'] ?? ''),
-      diam: _scannedDet?.diam,
       kachaRec: _scannedDet?.kachaRec ?? 'Y',
       fromDeptCode: _fromDeptCode,
       toDeptCode: _toDeptCodeVal,
@@ -810,7 +916,6 @@ print(issWt);
       toCrId: int.tryParse(_formValues['polishChecker'] ?? ''),
       deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
       charniCode: int.tryParse(_entryVals['charni'] ?? ''),
-      tensionsCode: int.tryParse(_formValues['tensionsCode'] ?? ''),
       pc: int.tryParse(_entryVals['orgPc'] ?? ''),
       wt: double.tryParse(_entryVals['orgWt'] ?? ''),
       issPc: int.tryParse(issPcStr),
@@ -840,7 +945,6 @@ print(issWt);
       plDmWt: double.tryParse(_entryVals['dmWt'] ?? '0.000'),
       plDmPer: double.tryParse(_entryVals['dmPer'] ?? '0.00'),
       recutEmp: double.tryParse(_entryVals['recutEmp'] ?? '0.000'),
-      length: int.tryParse(_entryVals['length'] ?? '0'),
       ratio: double.tryParse(_entryVals['ratio'] ?? ''),
       planShape: _entryVals['shape'] ?? '',
       planPurity: _entryVals['planPurity'] ?? '',
@@ -850,7 +954,31 @@ print(issWt);
       amountRs: double.tryParse(_entryVals['amount'] ?? '0.000'),
       amount: double.tryParse(_entryVals['amount'] ?? '0.000'),
       remarks: _entryVals['remarks'] ?? '',
-      cutCode: int.tryParse(_entryVals['cutCode'] ?? ''),
+      cutCode: _isFieldVisible('CUT')
+          ? int.tryParse(_entryVals['cutCode'] ?? '')
+          : 0,
+      fluo: _isFieldVisible('FLUO')
+          ? int.tryParse(_entryVals['fluo'] ?? '')
+          : 0,
+      symmetryCode: _isFieldVisible('SYMMETRY')
+          ? int.tryParse(_entryVals['symmetryCode'] ?? '')
+          : 0,
+      polishCode: _isFieldVisible('POLISH')
+          ? int.tryParse(_entryVals['polishCode'] ?? '')
+          : 0,
+      tensionsCode: _isFieldVisible('TENSIONS')
+          ? int.tryParse(_entryVals['tensionCode'] ?? '')
+          : 0,
+      length: _isFieldVisible('LENGTH')
+          ? int.tryParse(_entryVals['length'].toString())
+          : 0,
+      diam: _isFieldVisible('DIAM')
+          ? double.tryParse(_entryVals['diam'].toString())
+          : 0,
+      height: _isFieldVisible('HEIGHT')
+          ? double.tryParse(_entryVals['height'].toString())
+          : 0,
+      pairNo: _entryVals['pairNo'].toString(),
     );
   }
 
@@ -866,6 +994,7 @@ print(issWt);
       _entryVals[k] = v ?? '';
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
+
     set('orgPc', r.pc?.toString());
     set('orgWt', fThreeDecimal(r.wt));
     set('issPc', r.issPc?.toString());
@@ -874,7 +1003,7 @@ print(issWt);
     set('recWt', fThreeDecimal(r.recWt));
     set('dmPer', r.dmPer?.toStringAsFixed(2));
     set('dmWt', fThreeDecimal(r.dmWt));
-    set('kpc', r.kPc?.toString());
+    set('kPc', r.kPc?.toString());
     set('kWt', fThreeDecimal(r.kWt));
     set('brPc', r.brPc?.toString());
     set('brWt', fThreeDecimal(r.brWt));
@@ -904,11 +1033,20 @@ print(issWt);
     set('mfgCut', r.MfgCut.toString());
     set('lotNo', r.pktNo.toString());
     set('factoryRecMstID', r.factoryRecMstID.toString());
+    set('pairNo', r.pairNo?.toString());
+    set('polishCode', r.polishCode?.toString());
+    set('symmetryCode', r.symmetryCode?.toString());
+    set('fluo', r.fluo?.toString());
+    set('tensionCode', r.tensionsCode?.toString());
+    set('length', r.length?.toString());
+    set('diam', r.diam?.toString());
+    set('height', r.height?.toString());
   }
 
   dynamic _deleteDetRow(int idx) async {
     dynamic success = false;
-    if(_detRows[idx].FactoryRecDetID?.toString() != null && _detRows[idx].FactoryRecDetID != 0){
+    if (_detRows[idx].FactoryRecDetID?.toString() != null &&
+        _detRows[idx].FactoryRecDetID != 0) {
       final confirm = await ErpDeleteDialog.show(
         context: context,
         theme: _theme,
@@ -917,12 +1055,12 @@ print(issWt);
       );
       if (confirm != true || !mounted) return;
 
-       success = await context.read<FactoryReceivedEntryProvider>().deleteRow(
+      success = await context.read<FactoryReceivedEntryProvider>().deleteRow(
         _detRows[idx].factoryRecMstID?.toString(),
         _detRows[idx].FactoryRecDetID?.toString(),
         _detRows[idx].bCode,
-         _theme,
-         context,
+        _theme,
+        context,
       );
       await ErpResultDialog.showDeleted(
         context: context,
@@ -1037,6 +1175,14 @@ print(issWt);
       'jno',
       'mfgCut',
       'lotNo',
+      'pairNo',
+      'polishCode',
+      'symmetryCode',
+      'fluo',
+      'tensionCode',
+      'length',
+      'diam',
+      'height',
     ];
     for (final k in keys) {
       _entryVals.remove(k);
@@ -1048,7 +1194,7 @@ print(issWt);
     _entryVals['factoryRecMstID'] = '0';
     Future.delayed(
       const Duration(milliseconds: 100),
-          () => _erpFormKey.currentState?.focusField('scanValue'),
+      () => _erpFormKey.currentState?.focusField('scanValue'),
     );
   }
 
@@ -1089,6 +1235,11 @@ print(issWt);
       'diffPer',
       'diffWt',
       'size',
+      'pairNo',
+      'polishCode',
+      'symmetryCode',
+      'fluo',
+      'height',
     ];
 
     _detDisplay = _detRows.map((r) {
@@ -1137,9 +1288,13 @@ print(issWt);
 
         'size': r.size ?? '',
         'factoryIssDetID': r.factoryIssDetID ?? '',
+        'pairNo': r.pairNo ?? '' ,
+        'polishCode': r.polishCode ?? 0,
+        'symmetryCode': r.symmetryCode ?? 0,
+        'fluo': r.fluo ?? 0,
+        'height': r.height ?? 0,
       };
     }).toList();
-
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1189,17 +1344,6 @@ print(issWt);
     _rebuildForm();
   }
 
-  /// Format an ISO time string to "hh:mm a".
-  String _formatTime(String? raw) {
-    if (raw == null || raw.isEmpty) {
-      return DateFormat('hh:mm a').format(DateTime.now());
-    }
-    try {
-      return DateFormat('hh:mm a').format(DateTime.parse(raw));
-    } catch (_) {
-      return raw;
-    }
-  }
 
   // ─────────────────────────────────────────────────────────────────────────
   //  SAVE
@@ -1235,11 +1379,11 @@ print(issWt);
       "LossWt": r.lossWt?.toStringAsFixed(3) ?? 0,
 
       // ✅ ONLY send if valid
-        "PurityCode": r.purityCode ?? 0,
+      "PurityCode": r.purityCode ?? 0,
 
-        "CharniCode": r.charniCode ?? 0,
+      "CharniCode": r.charniCode ?? 0,
 
-        "ColorCode": r.colorCode ?? 0,
+      "ColorCode": r.colorCode ?? 0,
 
       "ShapeCode": r.shapeCode ?? 0,
       "CutCode": r.cutCode ?? 0,
@@ -1266,14 +1410,21 @@ print(issWt);
       "QRCode": r.qrCode ?? '',
 
       "OrderMstID": r.orderMstID,
+      "Height": r.height ?? 0,
+      "PairNo": r.pairNo ?? 0,
+      "PolishCode": r.polishCode ?? 0,
+      "SymmetryCode": r.symmetryCode ?? 0,
+      "FluoCode": r.fluo ?? 0,
+      "TensionsCode": r.tensionsCode ?? 0,
     };
   }
 
   Future<void> _onSave(Map<String, dynamic> values) async {
-    if(_detRows.isNotEmpty){
+    if (_detRows.isNotEmpty) {
       final prov = context.read<FactoryReceivedEntryProvider>();
       final payload = {
-        "FactoryRecDate": toUtcIso(values['factoryRecDate']),   // already yyyy-MM-dd
+        "FactoryRecDate": toUtcIso(values['factoryRecDate']),
+        // already yyyy-MM-dd
         "FactoryCode": int.tryParse(values['factory'] ?? '0') ?? 0,
         "Sdate": DateTime.now().toUtc().toIso8601String(),
         "Stime": DateTime.now().toUtc().toIso8601String(),
@@ -1297,7 +1448,7 @@ print(issWt);
         );
         context.read<FactoryReceivedEntryProvider>().load();
       }
-    }else {
+    } else {
       await ErpResultDialog.showError(
         context: context,
         theme: _theme,
@@ -1310,7 +1461,6 @@ print(issWt);
   // ─────────────────────────────────────────────────────────────────────────
   //  DELETE
   // ─────────────────────────────────────────────────────────────────────────
-
 
   Future<void> _onDelete() async {
     if (_formValues['factoryRecMstID'] == null) return;
@@ -1328,7 +1478,8 @@ print(issWt);
       _formValues['factoryRecMstID'].toString(),
       _theme,
       context,
-      _detRows.where((r) => r.bCode != null && r.bCode != '0')
+      _detRows
+          .where((r) => r.bCode != null && r.bCode != '0')
           .map((r) => num.parse(r.bCode.toString()))
           .toList(),
     );
@@ -1387,7 +1538,6 @@ print(issWt);
   // ─────────────────────────────────────────────────────────────────────────
   //  BUILD FORM ROWS
   // ─────────────────────────────────────────────────────────────────────────
-
   List<List<ErpFieldConfig>> _buildFormRows() {
     final colorProv = context.read<ColorProvider>();
     final purityProv = context.read<PurityProvider>();
@@ -1396,17 +1546,23 @@ print(issWt);
     final charniProv = context.read<CharniProvider>();
     final factoryProv = context.read<FactoryProvider>();
     final counterProv = context.read<CounterProvider>();
+    final polishProv = context.read<PolishProvider>();
+    final symmetryProv = context.read<SymmetryProvider>();
+    final fluoProv = context.read<FluoProvider>();
+    final tensionProv = context.read<TensionsProvider>();
 
     // ── FROM dropdown ────────────────────────────────────────────────────────
     final fromItems = counterProv.list
         .where((c) {
-      final grp = _deptGroupNameFor(c.deptGroupCode).toUpperCase();
-      return grp.contains('CLEAVING');
-    })
-        .map((c) => ErpDropdownItem(
-      label: '${c.crName ?? ''}  |  ${_deptNameFor(c.deptCode)}',
-      value: c.crId?.toString() ?? '',
-    ))
+          final grp = _deptGroupNameFor(c.deptGroupCode).toUpperCase();
+          return grp.contains('CLEAVING');
+        })
+        .map(
+          (c) => ErpDropdownItem(
+            label: '${c.crName ?? ''}  |  ${_deptNameFor(c.deptCode)}',
+            value: c.crId?.toString() ?? '',
+          ),
+        )
         .toList();
 
     // factoryDropdown
@@ -1421,7 +1577,6 @@ print(issWt);
           ),
         )
         .toList();
-
 
     //COLOR
     final colorItems = colorProv.list.where((e) => e.active == true).toList()
@@ -1482,29 +1637,55 @@ print(issWt);
         )
         .toList();
 
-    /// Returns true if the field name exists in the merged DEPT visibility map.
-    bool _isFieldVisible(String fieldName) {
-      // final name = fieldName.toUpperCase();
-      //
-      // for (final f in [
-      //   ..._fromDisplayFields,
-      //   ..._toDisplayFields,
-      // ]) {
-      //
-      //   if (f.entryType != 'MAKABLE') continue;
-      //
-      //   final n =
-      //   (f.userVisibilityName ?? '')
-      //       .trim()
-      //       .toUpperCase();
-      //
-      //   if (n == name) {
-      //     return true;
-      //   }
-      // }
+    //POLISH
+    final polishItems =
+        polishProv.polishs.where((e) => e.active == true).toList()
+          ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+    final polishDropdown = polishItems
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.polishName ?? '',
+            value: e.polishCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+    //SYMMETRY
+    final symmetryItems =
+        symmetryProv.symmetrys.where((e) => e.active == true).toList()
+          ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+    final symmetryDropdown = symmetryItems
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.symmetryName ?? '',
+            value: e.symmetryCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+    //FLUO
+    final fluoItems = fluoProv.list.where((e) => e.active == true).toList()
+      ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+    final fluoDropdown = fluoItems
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.fluoName ?? '',
+            value: e.fluoCode?.toString() ?? '',
+          ),
+        )
+        .toList();
 
-      return true;
-    }
+    //TENSIONS
+    final tensionItems =
+        tensionProv.list.where((e) => e.active == true).toList()
+          ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+    final tensionDropdown = tensionItems
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.tensionsName ?? '',
+            value: e.tensionsCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+
     // ─────────────────────────────────────────────────────────────────────
     //  MASTER SECTION (sectionIndex 0)
     // ─────────────────────────────────────────────────────────────────────
@@ -1526,7 +1707,7 @@ print(issWt);
           sectionIndex: 0,
           width: 350,
           required: true,
-          readOnly: _isEditMode || _detRows.isNotEmpty
+          readOnly: _isEditMode || _detRows.isNotEmpty,
         ),
         ErpFieldConfig(
           key: 'polishChecker',
@@ -1535,7 +1716,7 @@ print(issWt);
           dropdownItems: fromItems,
           sectionIndex: 0,
           width: 350,
-            readOnly: _isEditMode || _detRows.isNotEmpty
+          readOnly: _isEditMode || _detRows.isNotEmpty,
         ),
         ErpFieldConfig(
           key: 'factoryRecMstID',
@@ -1545,7 +1726,6 @@ print(issWt);
           sectionIndex: 0,
         ),
       ],
-
       [
         ErpFieldConfig(
           key: 'scanValue',
@@ -1628,45 +1808,45 @@ print(issWt);
 
         // REC
         if (_isFieldVisible('REC PC'))
-        ErpFieldConfig(
-          key: 'recPc',
-          label: 'REC PC',
-          type: ErpFieldType.number,
-          sectionIndex: 2,
-          flex: 1,
-        ),
+          ErpFieldConfig(
+            key: 'recPc',
+            label: 'REC PC',
+            type: ErpFieldType.number,
+            sectionIndex: 2,
+            flex: 1,
+          ),
         if (_isFieldVisible('REC WT'))
-        ErpFieldConfig(
-          key: 'recWt',
-          label: 'REC WT',
-          type: ErpFieldType.amount,
-          sectionIndex: 2,
-          flex: 1,
-        ),
+          ErpFieldConfig(
+            key: 'recWt',
+            label: 'REC WT',
+            type: ErpFieldType.amount,
+            sectionIndex: 2,
+            flex: 1,
+          ),
         if (_isFieldVisible('K PC'))
-        ErpFieldConfig(
-          key: 'kPc',
-          label: 'K PC',
-          type: ErpFieldType.number,
-          sectionIndex: 2,
-          flex: 1,
-        ),
+          ErpFieldConfig(
+            key: 'kPc',
+            label: 'K PC',
+            type: ErpFieldType.number,
+            sectionIndex: 2,
+            flex: 1,
+          ),
         if (_isFieldVisible('K PC'))
-        ErpFieldConfig(
-          key: 'kWt',
-          label: 'K WT',
-          type: ErpFieldType.amount,
-          sectionIndex: 2,
-          flex: 1,
-        ),
+          ErpFieldConfig(
+            key: 'kWt',
+            label: 'K WT',
+            type: ErpFieldType.amount,
+            sectionIndex: 2,
+            flex: 1,
+          ),
         if (_isFieldVisible('BR PC'))
-        ErpFieldConfig(
-          key: 'brPc',
-          label: 'BR PC',
-          type: ErpFieldType.number,
-          sectionIndex: 2,
-          flex: 1,
-        ),
+          ErpFieldConfig(
+            key: 'brPc',
+            label: 'BR PC',
+            type: ErpFieldType.number,
+            sectionIndex: 2,
+            flex: 1,
+          ),
         ErpFieldConfig(
           key: 'brWt',
           label: 'BR WT',
@@ -1718,49 +1898,117 @@ print(issWt);
           flex: 1,
         ),
         if (_isFieldVisible('PURITY'))
-        ErpFieldConfig(
-          key: 'purity',
-          label: 'PURITY',
-          type: ErpFieldType.dropdown,
-          dropdownItems: purityDropdown,
-          sectionIndex: 2,
-          flex: 1,
-        ),
+          ErpFieldConfig(
+            key: 'purity',
+            label: 'PURITY',
+            type: ErpFieldType.dropdown,
+            dropdownItems: purityDropdown,
+            sectionIndex: 2,
+            flex: 1,
+          ),
         if (_isFieldVisible('CHARNI'))
-        ErpFieldConfig(
-          key: 'charni',
-          label: 'CHARNI',
-          type: ErpFieldType.dropdown,
-          dropdownItems: charniDropdown,
-          sectionIndex: 2,
-          flex: 1,
-        ),
+          ErpFieldConfig(
+            key: 'charni',
+            label: 'CHARNI',
+            type: ErpFieldType.dropdown,
+            dropdownItems: charniDropdown,
+            sectionIndex: 2,
+            flex: 1,
+          ),
         if (_isFieldVisible('COLOR'))
-        ErpFieldConfig(
-          key: 'color',
-          label: 'COLOR',
-          type: ErpFieldType.dropdown,
-          dropdownItems: colorDropdown,
-          sectionIndex: 2,
-          flex: 1,
-        ),
+          ErpFieldConfig(
+            key: 'color',
+            label: 'COLOR',
+            type: ErpFieldType.dropdown,
+            dropdownItems: colorDropdown,
+            sectionIndex: 2,
+            flex: 1,
+          ),
         if (_isFieldVisible('CUT'))
-        ErpFieldConfig(
-          key: 'cutCode',
-          label: 'CUT',
-          type: ErpFieldType.dropdown,
-          dropdownItems: cutDropdown,
-          sectionIndex: 2,
-          flex: 1,
-        ),
+          ErpFieldConfig(
+            key: 'cutCode',
+            label: 'CUT',
+            type: ErpFieldType.dropdown,
+            dropdownItems: cutDropdown,
+            sectionIndex: 2,
+            flex: 1,
+          ),
         if (_isFieldVisible('SHAPE'))
+          ErpFieldConfig(
+            key: 'shape',
+            label: 'SHAPE',
+            type: ErpFieldType.dropdown,
+            dropdownItems: shapeDropdown,
+            sectionIndex: 2,
+            flex: 1,
+          ),
+      ],
+      [
+        if (_isFieldVisible('POLISH'))
+          ErpFieldConfig(
+            key: 'polishCode',
+            label: 'POLISH',
+            type: ErpFieldType.dropdown,
+            dropdownItems: polishDropdown,
+            sectionIndex: 3,
+          ),
+
+        if (_isFieldVisible('SYMMETRY'))
+          ErpFieldConfig(
+            key: 'symmetryCode',
+            label: 'SYMMETRY',
+            type: ErpFieldType.dropdown,
+            dropdownItems: symmetryDropdown,
+            sectionIndex: 3,
+          ),
+        if (_isFieldVisible('FLUO'))
+          ErpFieldConfig(
+            key: 'fluo',
+            label: 'FLUO',
+            type: ErpFieldType.dropdown,
+            dropdownItems: fluoDropdown,
+            sectionIndex: 3,
+          ),
+        if (_isFieldVisible('TENSIONS'))
+          ErpFieldConfig(
+            key: 'tensionCode',
+            label: 'TENSIONS',
+            type: ErpFieldType.dropdown,
+            dropdownItems: tensionDropdown,
+            sectionIndex: 3,
+          ),
+        if (_isFieldVisible('LENGTH'))
+          ErpFieldConfig(
+            key: 'length',
+            label: 'LENGTH',
+            type: ErpFieldType.number,
+            sectionIndex: 3,
+            flex: 1,
+          ),
+        if (_isFieldVisible('DIAM'))
+          ErpFieldConfig(
+            key: 'diam',
+            label: 'DIAM',
+            type: ErpFieldType.amount,
+            sectionIndex: 3,
+            flex: 1,
+          ),
+        if (_isFieldVisible('HEIGHT'))
+          ErpFieldConfig(
+            key: 'height',
+            label: 'HEIGHT',
+            type: ErpFieldType.amount,
+            sectionIndex: 3,
+            flex: 1,
+          ),
+
         ErpFieldConfig(
-          key: 'shape',
-          label: 'SHAPE',
-          type: ErpFieldType.dropdown,
-          dropdownItems: shapeDropdown,
+          key: 'pairNo',
+          label: 'PAIR NO',
+          type: ErpFieldType.number,
+          sectionIndex: 3,
           showAddButton: true,
-          sectionIndex: 2,
+          isEntryField: true,
           flex: 1,
         ),
       ],
@@ -1807,15 +2055,9 @@ print(issWt);
   // ─────────────────────────────────────────────────────────────────────────
 
   List<ErpColumnConfig> get _tableColumns => [
-
     ErpColumnConfig(key: 'id', label: 'ID', width: 100),
 
-    ErpColumnConfig(
-      key: 'date',
-      label: 'Date',
-      width: 120,
-      isDate: true,
-    ),
+    ErpColumnConfig(key: 'date', label: 'Date', width: 120, isDate: true),
 
     ErpColumnConfig(key: 'time', label: 'Time', width: 120),
 
@@ -1927,7 +2169,6 @@ print(issWt);
     ),
   ];
 
-
   // ─────────────────────────────────────────────────────────────────────────
   //  COL LABEL
   // ─────────────────────────────────────────────────────────────────────────
@@ -2013,7 +2254,7 @@ print(issWt);
       key: _erpFormKey,
       isShowSearch: true,
       autoStartAdding: _isAdding,
-      addButtonSections: const {2},
+      addButtonSections: const {3},
       logo: AppImages.logo,
       title: 'FACTORY RECEIVE ENTRY',
       tabBarBackgroundColor: const Color(0xfff2f0ef),
@@ -2022,12 +2263,10 @@ print(issWt);
       rows: _buildFormRows(),
       initialValues: _formValues,
       isEditMode: _isEditMode,
-
       onEntryAdd: (sectionIndex) {
-        if (sectionIndex != 2) return;
+        if (sectionIndex != 3) return;
         _addEntry();
       },
-
       onFieldChanged: (key, value) {
         final val = value.toString();
         _formValues[key] = val;
@@ -2036,15 +2275,14 @@ print(issWt);
         _entryVals[key] = val;
 
         switch (key) {
-
-        // ─────────────────────────────
-        // MASTER FIELDS
-        // ─────────────────────────────
+          // ─────────────────────────────
+          // MASTER FIELDS
+          // ─────────────────────────────
           case 'fromCrId':
             _onFromSelected(val);
             Future.delayed(
               const Duration(milliseconds: 50),
-                  () => _erpFormKey.currentState?.focusField('toCrId'),
+              () => _erpFormKey.currentState?.focusField('toCrId'),
             );
             break;
 
@@ -2052,7 +2290,7 @@ print(issWt);
             _onToSelected(val);
             Future.delayed(
               const Duration(milliseconds: 50),
-                  () => _erpFormKey.currentState?.focusField('deptProcessCode'),
+              () => _erpFormKey.currentState?.focusField('deptProcessCode'),
             );
             break;
 
@@ -2060,7 +2298,7 @@ print(issWt);
             _onProcessSelected(val);
             Future.delayed(
               const Duration(milliseconds: 100),
-                  () => _erpFormKey.currentState?.focusField('scanValue'),
+              () => _erpFormKey.currentState?.focusField('scanValue'),
             );
             break;
           case 'factory':
@@ -2069,7 +2307,7 @@ print(issWt);
             final factoryProv = context.read<FactoryProvider>();
 
             final selectedFactory = factoryProv.factories.firstWhereOrNull(
-                  (f) => f.factoryCode.toString() == value.toString(),
+              (f) => f.factoryCode.toString() == value.toString(),
             );
 
             if (selectedFactory != null) {
@@ -2081,16 +2319,16 @@ print(issWt);
             }
 
             break;
-        // ─────────────────────────────
-        // SCAN FIELD
-        // ─────────────────────────────
+          // ─────────────────────────────
+          // SCAN FIELD
+          // ─────────────────────────────
           case 'scanValue':
-          // handled in onFieldSubmitted
+            // handled in onFieldSubmitted
             break;
 
-        // ─────────────────────────────
-        // DM VALIDATION
-        // ─────────────────────────────
+          // ─────────────────────────────
+          // DM VALIDATION
+          // ─────────────────────────────
           case 'dmPer':
             final dmPerVal = double.tryParse(val) ?? 0;
             if (dmPerVal > 100) {
@@ -2099,26 +2337,25 @@ print(issWt);
             }
             break;
 
-        // ─────────────────────────────
-        // 🔥 MAIN CALC TRIGGERS (VERY IMPORTANT)
-        // ─────────────────────────────
+          // ─────────────────────────────
+          // 🔥 MAIN CALC TRIGGERS (VERY IMPORTANT)
+          // ─────────────────────────────
           case 'recWt':
           case 'kWt':
           case 'brWt':
           case 'recPc':
           case 'kpc':
           case 'brPc':
-
             _calcLoss(); // ✅ auto calc lossPc + lossWt
 
             break;
 
-        // ─────────────────────────────
-        // OPTIONAL: DM WT change → recalc %
-        // ─────────────────────────────
+          // ─────────────────────────────
+          // OPTIONAL: DM WT change → recalc %
+          // ─────────────────────────────
           case 'dmWt':
             final recWt = double.tryParse(_entryVals['recWt'] ?? '') ?? 0;
-            final dmWt  = double.tryParse(val) ?? 0;
+            final dmWt = double.tryParse(val) ?? 0;
 
             if (recWt > 0) {
               final per = (dmWt / recWt) * 100;
@@ -2129,27 +2366,23 @@ print(issWt);
               );
             }
             break;
-
-          case 'shape':
-
-            if (key == 'shape') {
-              // VALIDATION
-              if (value == null || value.toString().isEmpty) {
-                return;
-              }
-
-              // ADD ENTRY
-              _addEntry();
-
-              return;
-            }
-
-
           default:
             break;
         }
       },
       onFieldSubmitted: (key, value) {
+        if (key == 'pairNo') {
+          // VALIDATION
+          if (value == null || value.toString().isEmpty) {
+            return;
+          }
+
+          // ADD ENTRY
+          _addEntry();
+
+          return;
+        }
+
         if (key != 'scanValue') return;
         final scanVal = value.toString().trim();
         if (scanVal.isEmpty) return;
@@ -2175,10 +2408,10 @@ print(issWt);
 
         // 🚀 MAIN API CALL
         _isBCodePending = true;
-        _onBCodeScanned(scanVal,_formValues['factory']!);
+        _onBCodeScanned(scanVal, _formValues['factory']!);
       },
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
-      onSave: _isEditMode ?null:_onSave,
+      onSave: _isEditMode ? null : _onSave,
       isShowSaveButton: !_isEditMode,
       onCancel: _resetForm,
       onDelete: _isEditMode ? _onDelete : null,
@@ -2345,6 +2578,7 @@ print(issWt);
       return value;
     }
   }
+
   Widget _buildTable(FactoryReceivedEntryProvider prov) {
     final data = prov.list.map((e) {
       return {
@@ -2391,7 +2625,7 @@ print(issWt);
       data: data,
       showSearch: true,
       dateFilter: true,
-      onClose: (){
+      onClose: () {
         setState(() {
           _showTableOnMobile = false;
         });

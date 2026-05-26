@@ -261,8 +261,18 @@ class FactoryReceiveDetModel {
   final dynamic orderMstId;
   final dynamic CrID;
   final dynamic LastCrID;
+  final dynamic pairNo;
+  final int? polishCode;
+  final int? symmetryCode;
+  final int? fluo;
+  final double? height;
 
   const FactoryReceiveDetModel({
+    this.pairNo,
+    this.polishCode,
+    this.symmetryCode,
+    this.fluo,
+    this.height,
     this.factoryIssDetID,
     this.factoryRecMstID,
     this.FactoryRecDetID,
@@ -560,6 +570,11 @@ class FactoryReceiveDetModel {
         recutEmp:       json['RecutEmp'],
         planShape:       json['PlanShape'],
         planPurity:       json['PlanPurity'],
+        pairNo: json['PairNo'],
+        polishCode: json['PolishCode'],
+        symmetryCode: json['SymmetryCode'],
+        fluo: json['FluoCode'] ?? 0,
+        height: _d(json['Height']),
         length:       json['Length'],
         sarinData: (json['sarinData'] as List?)
             ?.map((e) => Map<String, dynamic>.from(e as Map))
@@ -588,6 +603,11 @@ class FactoryReceiveDetModel {
     'RecPc':            recPc,
     'MfgCut':            MfgCut,
     'sarinData':            sarinData,
+    if (pairNo != null) 'PairNo': pairNo,
+    if (polishCode != null) 'PolishCode': polishCode,
+    if (symmetryCode != null) 'SymmetryCode': symmetryCode,
+    if (fluo != null) 'FluoCode': fluo,
+    if (height != null) 'Height': height,
     if (fromDeptCode != null) 'FromDeptCode': fromDeptCode,
     if (toDeptCode   != null) 'ToDeptCode':   toDeptCode,
     'RecWt':            recWt,

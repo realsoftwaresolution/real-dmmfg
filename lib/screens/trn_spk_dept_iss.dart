@@ -3,7 +3,9 @@
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
+import 'package:diam_mfg/models/company_model.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
+import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/counter_manager_det_provider.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
 import 'package:diam_mfg/providers/dept_provider.dart';
@@ -13,6 +15,7 @@ import 'package:diam_mfg/providers/employee_provider.dart';
 import 'package:diam_mfg/providers/remarks_provider.dart';
 import 'package:diam_mfg/providers/spk_dept_iss_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
+import 'package:diam_mfg/services/generateJobWorkPdf.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/helper_functions.dart';
@@ -21,6 +24,7 @@ import 'package:diam_mfg/utils/process_constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
@@ -85,6 +89,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   String? _toDeptName;
   int? _toDeptCodeVal;
   String _autoRec = 'N';
+  CompanyModel? _selectedCompany;
 
   // ── Detail rows ────────────────────────────────────────────────────────────
   List<SpkDeptIssDetModel> _detRows = [];
@@ -277,9 +282,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         context.read<RemarksProvider>().load(),
         context.read<ShapeProvider>().load(),
         context.read<PurityProvider>().load(),
+        context.read<CompanyProvider>().loadCompanies(),
       ]);
       if (!mounted) return;
       _setDefaultFormValues();
+      final companies = context.read<CompanyProvider>().companies;
 
       // Auto-fill FROM from logged-in user
       final loggedUser = context.read<AuthProvider>().user;
@@ -423,6 +430,12 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         _autoRec = (counter.autoRec ?? 'N').toString();
         _formValues['toCrId'] = crIdStr;
         _formValues['toDept'] = deptName;
+        final companies = context.read<CompanyProvider>().companies;
+
+        final company = companies.firstWhereOrNull(
+          (e) => e.companyCode == counter.companyCode,
+        );
+        _selectedCompany = company;
       });
 
       _erpFormKey.currentState?.updateFieldValue('toDept', deptName);
@@ -1148,7 +1161,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
               _selectedMst!.spkDeptIssMstID!,
               merged,
               _detRows,
-              bCodeArray: _detRows.where((r) => r.spkDeptIssDetID != null || r.spkDeptIssDetID != 0)
+              bCodeArray: _detRows
+                  .where(
+                    (r) => r.spkDeptIssDetID != null || r.spkDeptIssDetID != 0,
+                  )
                   .map((r) => num.parse(r.bCode.toString()))
                   .toList(),
               expectedProcess: ProcessConstants.deptIssue,
@@ -1927,7 +1943,42 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       rows: _buildFormRows(),
       initialValues: _formValues,
       isEditMode: _isEditMode,
+      isShowPrintButton: true,
+      printOnPress: () async {
+        final toCounter = context.read<CounterProvider>().list.firstWhereOrNull(
+          (e) => e.crId.toString() == _formValues['toCrId'],
+        );
+print(_detRows.length);
+        final pdfData = JobWorkPdfModel(
+          conpanyInfo: _selectedCompany,
 
+          partyName: toCounter?.crName ?? '',
+
+          partyType: _toDeptName ?? '',
+
+          jobNo: _formValues['spkDeptIssMstID'] ?? '',
+
+          date: _formValues['spkDeptIssDate'] ?? '',
+
+          items: _detRows.map((e) {
+            return JobWorkItem(
+              kapan: e.cutNo ?? '',
+
+              bCode: e.bCode ?? '',
+
+              type: _shapeNameFor(e.shapeCode),
+
+              pcs: (e.recPc ?? 0).toString(),
+
+              cts: (e.recWt ?? 0).toStringAsFixed(3),
+            );
+          }).toList(),
+        );
+
+        final pdf = await generateJobWorkPdf(pdfData);
+
+        await Printing.layoutPdf(onLayout: (_) async => pdf);
+      },
       onEntryAdd: (sectionIndex) {
         if (sectionIndex != 3) return;
 
@@ -1950,7 +2001,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         }
         _addEntry();
       },
-
       onFieldChanged: (key, value) {
         _formValues[key] = value.toString();
         switch (key) {
@@ -2004,7 +2054,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             _entryVals[key] = value.toString();
         }
       },
-
       onFieldSubmitted: (key, value) {
         if (key != 'scanValue') return;
 
@@ -2083,13 +2132,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
           }
         }
       },
-
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
       onSave: _onSave,
       onCancel: _resetForm,
       onDelete: _isEditMode ? _onDelete : null,
       onSearch: () => setState(() => _showTableOnMobile = true),
-
       detailBuilder: (ctx) {
         final t = ctx.erpTheme;
         return Column(
