@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:diam_mfg/models/factory_issue_entry_model.dart';
+import 'package:diam_mfg/models/factory_model.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
 import 'package:diam_mfg/providers/counter_manager_det_provider.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
@@ -12,6 +13,7 @@ import 'package:diam_mfg/providers/employee_provider.dart';
 import 'package:diam_mfg/providers/factory_provider.dart';
 import 'package:diam_mfg/providers/remarks_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
+import 'package:diam_mfg/services/generateJobWorkPdf.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
@@ -19,6 +21,7 @@ import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../models/user_visibility_model.dart';
@@ -77,6 +80,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   int? _toCrId;
   String? _toDeptName;
   int? _toDeptCodeVal;
+  FactoryModel? _selectedFactory;
 
   // ── Detail rows ────────────────────────────────────────────────────────────
   List<FactoryIssueDetModel> _detRows = [];
@@ -193,23 +197,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     });
   }
 
-  Future<void> _loadToDisplayFields(int crId) async {
-    final counter = context.read<CounterProvider>().list.firstWhereOrNull(
-      (c) => c.crId == crId,
-    );
-    if (counter == null || counter.counterMstID == null) return;
-
-    await _displayProv.loadByCounter(counter.counterMstID!);
-    if (!mounted) return;
-
-    setState(() {
-      _toDisplayFields = _buildVisibilityList(
-        rawList: _displayProv.counterList,
-        counterType: 'TO',
-      );
-    });
-  }
-
   /// Shared logic for building a sorted, validated UserVisibilityModel list.
   List<UserVisibilityModel> _buildVisibilityList({
     required List<dynamic> rawList,
@@ -319,7 +306,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       pktNo: r.pktNo ?? '',
       PacketMstID: r.PacketMstID,
       cutNo: r.cutNo ?? '',
-
+      ArticalName: r.ArticalName,
       // ORIGINAL PACKET VALUES
       pc: r.pc ?? 0,
       wt: r.wt ?? 0,
@@ -343,7 +330,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
       entryType: 'B',
       formType: 'FACTORY ISSUE',
-      size: r.size ?? 0.00
+      size: r.size ?? 0.00,
     );
     _detRows.add(newRow);
     _syncDetGrid();
@@ -359,7 +346,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   //  EDIT / DELETE DET ROW
   // ─────────────────────────────────────────────────────────────────────────
 
-
   dynamic _deleteDetRow(int idx) async {
     if (_isEditMode) {
       final confirm = await ErpDeleteDialog.show(
@@ -374,8 +360,8 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         _detRows[idx].spkDeptIssMstID?.toString(),
         _detRows[idx].spkDeptIssDetID?.toString(),
         _detRows[idx].bCode,
-          _theme,
-          context
+        _theme,
+        context,
       );
       if (success && mounted) {
         setState(() {
@@ -617,6 +603,18 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     final id = int.tryParse(row['factoryIssMstID'].toString()) ?? 0;
 
     final details = await prov.loadDetails(id);
+
+    /// ADD HERE
+    final factoryCode = row['factoryCode']?.toString();
+
+    if (factoryCode != null) {
+      final factoryProv = context.read<FactoryProvider>();
+
+      _selectedFactory = factoryProv.factories.firstWhereOrNull(
+        (f) => f.factoryCode.toString() == factoryCode,
+      );
+    }
+
     if (!mounted) return;
 
     setState(() {
@@ -656,72 +654,73 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
   Future<void> _onSave(Map<String, dynamic> values) async {
     final prov = context.read<FactoryIssueEntryProvider>();
-   if(_detRows.isNotEmpty){
-     // ✅ MASTER PAYLOAD
-     final payload = {
-       "FactoryIssDate": toUtcIso(_formValues['date']),
-       "SelectType": "SPK",
-       "DueDay": int.tryParse(_formValues['dueDay'] ?? '0') ?? 0,
-       "DueDate": toUtcIso(_formValues['dueDayCount']),
-       "FactoryCode": int.tryParse(_formValues['factory'] ?? '0') ?? 0,
-       "FactoryType": _formValues['type'] ?? '',
-       "EntryType": _formValues['entry'],
-       "Sdate": DateTime.now().toUtc().toIso8601String(),
+    if (_detRows.isNotEmpty) {
+      // ✅ MASTER PAYLOAD
+      final payload = {
+        "FactoryIssDate": toUtcIso(_formValues['date']),
+        "SelectType": "SPK",
+        "DueDay": int.tryParse(_formValues['dueDay'] ?? '0') ?? 0,
+        "DueDate": toUtcIso(_formValues['dueDayCount']),
+        "FactoryCode": int.tryParse(_formValues['factory'] ?? '0') ?? 0,
+        "FactoryType": _formValues['type'] ?? '',
+        "EntryType": _formValues['entry'],
+        "Sdate": DateTime.now().toUtc().toIso8601String(),
 
-       // ✅ DETAILS
-       "details": _detRows.map((r) {
-         return {
-           "CutNo": r.cutNo ?? '',
-           "BCode": int.tryParse(r.bCode ?? '0') ?? 0,
-           "PacketMstID": r.PacketMstID ?? 0,
-           "MfgCut": r.cutNo ?? '',
+        // ✅ DETAILS
+        "details": _detRows.map((r) {
+          return {
+            "CutNo": r.cutNo ?? '',
+            "BCode": int.tryParse(r.bCode ?? '0') ?? 0,
+            "PacketMstID": r.PacketMstID ?? 0,
+            "MfgCut": r.cutNo ?? '',
 
-           "OrgPc": r.pc ?? 0,
-           "OrgWt": r.wt ?? 0.000,
+            "OrgPc": r.pc ?? 0,
+            "OrgWt": r.wt ?? 0.000,
 
-           "IssPc": r.recPc ?? r.issPc ?? r.pc ?? 0,
-           "IssWt": r.recWt ?? r.issWt ?? r.wt ?? 0,
+            "IssPc": r.recPc ?? r.issPc ?? r.pc ?? 0,
+            "IssWt": r.recWt ?? r.issWt ?? r.wt ?? 0,
 
-           "GhatWt": r.lossWt ?? 0.000,
-           "ColorCode": r.colorCode?.toString() ?? '0',
+            "GhatWt": r.lossWt ?? 0.000,
+            "ColorCode": r.colorCode?.toString() ?? '0',
 
-           "DmWt": r.dmWt ?? 0.000,
-           "DmPer": r.dmPer ?? 0,
+            "DmWt": r.dmWt ?? 0.000,
+            "DmPer": r.dmPer ?? 0,
 
-           "RateID": "R1",
-           "Rateon": "WT",
-           "Rate": 0,
-           "Amount": r.amountRs ?? 0.00,
+            "RateID": "R1",
+            "Rateon": "WT",
+            "Rate": 0,
+            "Amount": r.amountRs ?? 0.00,
 
-           "Diam": r.diam ?? 0,
-         };
-       }).toList(),
-     };
+            "Diam": r.diam ?? 0,
+          };
+        }).toList(),
+      };
 
-     // 🔍 DEBUG (VERY IMPORTANT)
-     bool success = await prov.create(payload);
-     if (!mounted) return;
-     if (success) {
-       final wasEdit = _isEditMode;
-       _resetForm();
-       await ErpResultDialog.showSuccess(
-         context: context,
-         theme: _theme,
-         title: wasEdit ? 'Updated' : 'Saved',
-         message: wasEdit
-             ? 'Factory Issue Entry updated.'
-             : 'Factory Issue Entry saved.',
-       );
-       await context.read<FactoryIssueEntryProvider>().load();
-     }
-   }else {
-     await ErpResultDialog.showError(
-       context: context,
-       theme: _theme,
-       title: 'No Entries',
-       message: 'Please add at least one entry.',
-     );
-   }
+      // 🔍 DEBUG (VERY IMPORTANT)
+      bool success = await prov.create(payload);
+      if (!mounted) return;
+      if (success) {
+        final wasEdit = _isEditMode;
+        printJobWorkPdf();
+        await ErpResultDialog.showSuccess(
+          context: context,
+          theme: _theme,
+          title: wasEdit ? 'Updated' : 'Saved',
+          message: wasEdit
+              ? 'Factory Issue Entry updated.'
+              : 'Factory Issue Entry saved.',
+        );
+        _resetForm();
+        await context.read<FactoryIssueEntryProvider>().load();
+      }
+    } else {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'No Entries',
+        message: 'Please add at least one entry.',
+      );
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -743,7 +742,8 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       _formValues['factoryIssMstID'].toString(),
       _theme,
       context,
-      _detRows.where((r) => r.bCode != null && r.bCode != '0')
+      _detRows
+          .where((r) => r.bCode != null && r.bCode != '0')
           .map((r) => num.parse(r.bCode.toString()))
           .toList(),
     );
@@ -758,8 +758,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       );
     }
   }
-
-  Future<void> _onDeleteRow() async {}
 
   // ─────────────────────────────────────────────────────────────────────────
   //  RESET
@@ -925,6 +923,19 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           sectionIndex: 2,
           width: 200,
         ),
+        ErpFieldConfig(
+          key: 'report',
+          label: '',
+          type: ErpFieldType.radio,
+          radioDirection: Axis.horizontal,
+          isRadioRow: true,
+          radioItems: [
+            ErpRadioOption(label: 'Report', value: 'REPORT'),
+            ErpRadioOption(label: 'Summary', value: 'SUMMARY'),
+          ],
+          width: 250,
+          sectionIndex: 3,
+        ),
       ],
     ];
 
@@ -1068,6 +1079,121 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     );
   }
 
+  // CREATE PDF
+
+  Future<void> printJobWorkPdf() async {
+
+    if (_detRows.isEmpty) {
+      return;
+    }
+    final prov = context.read<FactoryIssueEntryProvider>();
+
+    final pdfData = JobWorkPdfModel(
+      headerInfo: _selectedFactory,
+      partyName: _selectedFactory?.contactPerson ?? '',
+      partyType: _selectedFactory?.factoryType ?? '',
+
+      jobNo:
+          (_detRows.first.spkDeptIssMstID ??
+                  prov.list.first.factoryIssMstID ??
+                  0)
+              .toString(),
+
+      date: _formValues['date']?.toString() ?? '',
+
+      items: _detRows.map((e) {
+        return JobWorkItem(
+          kapan: e.cutNo ?? '',
+
+          bCode: e.bCode ?? '',
+          pktNo: e.pktNo ?? '',
+
+          type: e.ArticalName ?? '',
+
+          pcs: (e.issPc ?? 0).toString(),
+
+          cts: (e.issWt ?? 0).toStringAsFixed(3),
+        );
+      }).toList(),
+    );
+
+    /// DETAIL REPORT
+    if (_entryVals['report'] == 'REPORT') {
+      final pdf = await generateJobWorkPdf(pdfData);
+
+      await Printing.layoutPdf(onLayout: (_) async => pdf);
+    }
+    /// SUMMARY REPORT
+    else if (_entryVals['report'] == 'SUMMARY') {
+      /// GROUP CUTNO WISE
+      final Map<String, Map<String, dynamic>> grouped = {};
+
+      for (final e in _detRows) {
+        final cutNo = e.cutNo ?? '';
+
+        if (!grouped.containsKey(cutNo)) {
+          grouped[cutNo] = {
+            'cutNo': cutNo,
+
+            /// UNIQUE PKTNO
+            'pktNos': <String>{},
+
+            'pcs': 0,
+
+            'wt': 0.0,
+          };
+        }
+
+        /// PKTNO COUNT
+        grouped[cutNo]!['pktNos'].add(e.pktNo?.toString() ?? '');
+
+        /// PCS SUM
+        grouped[cutNo]!['pcs'] += (e.issPc ?? 0);
+
+        /// WT SUM
+        grouped[cutNo]!['wt'] += (e.issPc ?? 0.0);
+      }
+
+      /// CONVERT SUMMARY ITEMS
+      final summaryItems = grouped.values.map((g) {
+        return JobWorkItem(
+          kapan: g['cutNo'],
+
+          /// PKT COUNT
+          bCode: (g['pktNos'] as Set).length.toString(),
+
+          type: g['cutNo'],
+          pktNo: '',
+
+          pcs: g['pcs'].toString(),
+
+          cts: (g['wt'] as double).toStringAsFixed(3),
+        );
+      }).toList();
+
+      final summaryPdfData = JobWorkPdfModel(
+        headerInfo: _selectedFactory,
+
+        partyName: _selectedFactory?.contactPerson ?? '',
+        partyType: _selectedFactory?.factoryType ?? '',
+
+        jobNo:
+            (_detRows.first.spkDeptIssMstID ??
+                    prov.list.first.factoryIssMstID ??
+                    0)
+                .toString(),
+
+        date: _formValues['date']?.toString() ?? '',
+
+        items: summaryItems,
+      );
+
+      final pdf = await generateJobWorkPdfSummary(summaryPdfData);
+
+      await Printing.layoutPdf(onLayout: (_) async => pdf);
+    }
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   //  FORM WIDGET
   // ─────────────────────────────────────────────────────────────────────────
@@ -1111,6 +1237,8 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
             );
 
             if (selectedFactory != null) {
+              _selectedFactory = selectedFactory;
+              setState(() {});
               final type = selectedFactory.factoryType ?? '';
 
               _formValues['type'] = type;
@@ -1133,7 +1261,8 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
         _onBCodeScanned(scanVal);
       },
-
+      printOnPress: printJobWorkPdf,
+      isShowPrintButton: true,
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
       onSave: _onSave,
       isShowSaveButton: !_isEditMode,

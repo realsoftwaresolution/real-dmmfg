@@ -275,6 +275,7 @@ class LaserDetModel {
   final double? optAmount;
   final double? lsAmount;
   final int? orderMstID;
+  final dynamic ArticalName;
 
   const LaserDetModel({
     this.spkDeptIssDetID,
@@ -416,7 +417,7 @@ class LaserDetModel {
     this.optAmount,
     this.lsAmount,
     this.orderMstID,
-    this.deptCode,
+    this.deptCode, this.ArticalName,
   });
 
   factory LaserDetModel.fromJson(Map<String, dynamic> json) => LaserDetModel(
@@ -560,6 +561,7 @@ class LaserDetModel {
     optAmount: _d(json['OptAmount']),
     lsAmount: _d(json['LsAmount']),
     orderMstID: json['OrderMstID'],
+    ArticalName: json['ArticalName'],
   );
 
   Map<String, dynamic> toJson() => {
@@ -630,7 +632,7 @@ class LaserDetModel {
     'ConfEver': confEver ?? 0,
     'ConfCrID': confCrID ?? 0,
 
-    'ConfRec': confRec ?? '',
+    'ConfRec': confRec ?? 'Y',
 
     'RecDate': recDate ?? '',
     'RecTime': recTime ?? '',
@@ -779,6 +781,7 @@ class LaserDetModel {
     "PolishCode": 0,
     "SymmetryCode": 0,
     "FluoCode": 0,
+    "ArticalName": ArticalName ?? '',
   };
 
   static double? _d(dynamic v) {

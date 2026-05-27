@@ -97,10 +97,10 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
         .where((assort) {
           if (assort.kapanNo == null || assort.kapanNo!.isEmpty) return false;
           if (!assort.details.any((d) => d.purityGroupCode == 5)) return false;
-
+          print(assort.details.map((d) => 'PurityCode: ${d.purityGroupCode}, Wt: ${d.wt}').join(' | '));
           // Assort total wt for this kapan
           final assortWt = assort.details.fold(0.0, (s, d) => s + (d.wt ?? 0));
-
+print(assortWt);
           // Already used wt in existing CutCreate records (excluding current edit)
           final usedWt = cutProv.list
               .where(
@@ -109,8 +109,9 @@ class _TrnCutCreateEntryState extends State<TrnCutCreateEntry> {
                     cc.cutCreateMstID != _selectedMst?.cutCreateMstID,
               )
               .fold(0.0, (s, cc) => s + cc.totalWt);
-
+          print(usedWt);
           final pendingWt = assortWt - usedWt;
+          print('pendingWt $pendingWt');
           return pendingWt > 0.0001; // sirf positive pending wale dikhao
         })
         .map((e) {

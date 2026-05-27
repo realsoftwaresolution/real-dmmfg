@@ -1,8 +1,10 @@
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
+import 'package:diam_mfg/models/company_model.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
 import 'package:diam_mfg/providers/color_provider.dart';
+import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/counter_manager_det_provider.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
 import 'package:diam_mfg/providers/cut_provider.dart';
@@ -16,6 +18,7 @@ import 'package:diam_mfg/providers/polish_provider.dart';
 import 'package:diam_mfg/providers/remarks_provider.dart';
 import 'package:diam_mfg/providers/symmetry_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
+import 'package:diam_mfg/services/generateJobWorkPdf.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/helper_functions.dart';
@@ -24,6 +27,7 @@ import 'package:diam_mfg/utils/process_constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../bootstrap.dart';
@@ -85,6 +89,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
 
   int? _toCrId;
   String _autoRec = 'N';
+  CompanyModel? _selectedCompany;
 
   String? _toDeptName;
   int? _toDeptCodeVal;
@@ -241,6 +246,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         context.read<SymmetryProvider>().loadSymmetry(),
         context.read<FluoProvider>().load(),
         context.read<TensionsProvider>().load(),
+        context.read<CompanyProvider>().loadCompanies(),
       ]);
       if (!mounted) return;
       _setDefaultFormValues();
@@ -667,6 +673,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       pktNo: existing.pktNo,
       cutNo: existing.cutNo,
       clvCut: existing.clvCut,
+      ArticalName: existing.ArticalName,
       shapeCode: _isFieldVisible('SHAPE')
           ?existing.shapeCode:0,
       purityCode: _isFieldVisible('PURITY')
@@ -769,6 +776,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       pktNo: _scannedDet?.pktNo,
       cutNo: _scannedDet?.cutNo,
       clvCut: _scannedDet?.clvCut,
+      ArticalName: _scannedDet?.ArticalName,
       shapeCode: _isFieldVisible('SHAPE')
           ? int.tryParse(_entryVals['shape'] ?? ''):0,
       purityCode: _isFieldVisible('PURITY')
@@ -997,6 +1005,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           fluo: v.fluo,
           symmetryCode: v.symmetryCode,
           polishCode: v.polishCode,
+          confRec: v.confRec,
         );
       }).toList();
 
@@ -1263,13 +1272,14 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     if (!mounted) return;
     if (success) {
       final wasEdit = _isEditMode;
-      _resetForm();
+      printJobWorkPdf();
       await ErpResultDialog.showSuccess(
         context: context,
         theme: _theme,
         title: wasEdit ? 'Updated' : 'Saved',
         message: wasEdit ? 'Makable Entry Updated.' : 'Makable Entry Saved.',
       );
+      _resetForm();
       context.read<MakableEntryProvider>().load();
     }
   }
@@ -1654,6 +1664,19 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           sectionIndex: 2,
           width: 200,
         ),
+        ErpFieldConfig(
+          key: 'report',
+          label: '',
+          type: ErpFieldType.radio,
+          radioDirection: Axis.horizontal,
+          isRadioRow: true,
+          radioItems: [
+            ErpRadioOption(label: 'Report', value: 'REPORT'),
+            ErpRadioOption(label: 'Summary', value: 'SUMMARY'),
+          ],
+          width: 250,
+          sectionIndex: 3,
+        ),
       ],
     ];
 
@@ -1979,6 +2002,136 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
   //  BUILD
   // ─────────────────────────────────────────────────────────────────────────
 
+  // CREATE PDF
+
+  Future<void> printJobWorkPdf() async {
+    final companies = context.read<CompanyProvider>().companies;
+    final selectedCompany = context.read<CompanyProvider>().selectedCompanyCode;
+    print(selectedCompany);
+    final company = companies.firstWhereOrNull(
+          (e) => e.companyCode.toString() == selectedCompany.toString(),
+    );
+    print(jsonEncode(company));
+    _selectedCompany = company;
+    setState(() {
+
+    });
+    if (_detRows.isEmpty) {
+      return;
+    }
+    final prov = context.read<MakableEntryProvider>();
+    final toCounter = context.read<CounterProvider>().list.firstWhereOrNull(
+          (e) => e.crId.toString() == _formValues['toCrId'],
+    );
+
+    final pdfData = JobWorkPdfModel(
+      headerInfo: _selectedCompany,
+      partyName: toCounter?.crName ?? '',
+      partyType: _toDeptName ?? '',
+
+      jobNo:
+      (_detRows.first.spkDeptIssMstID ??
+          prov.list.first.spkDeptIssMstID ??
+          0)
+          .toString(),
+
+      date: _formValues['spkDeptIssDate']?.toString() ?? '',
+
+      items: _detRows.map((e) {
+        return JobWorkItem(
+          kapan: e.cutNo ?? '',
+
+          bCode: e.bCode ?? '',
+          pktNo: e.pktNo ?? '',
+
+          type: e.ArticalName ?? '',
+
+          pcs: (e.recPc ?? 0).toString(),
+
+          cts: (e.recWt ?? 0).toStringAsFixed(3),
+        );
+      }).toList(),
+    );
+
+    /// DETAIL REPORT
+    if (_entryVals['report'] == 'REPORT') {
+      final pdf = await generateJobWorkPdf(pdfData);
+
+      await Printing.layoutPdf(onLayout: (_) async => pdf);
+    }
+    /// SUMMARY REPORT
+    else if (_entryVals['report'] == 'SUMMARY') {
+      /// GROUP CUTNO WISE
+      final Map<String, Map<String, dynamic>> grouped = {};
+
+      for (final e in _detRows) {
+        final cutNo = e.cutNo ?? '';
+
+        if (!grouped.containsKey(cutNo)) {
+          grouped[cutNo] = {
+            'cutNo': cutNo,
+
+            /// UNIQUE PKTNO
+            'pktNos': <String>{},
+
+            'pcs': 0,
+
+            'wt': 0.0,
+          };
+        }
+
+        /// PKTNO COUNT
+        grouped[cutNo]!['pktNos'].add(e.pktNo?.toString() ?? '');
+
+        /// PCS SUM
+        grouped[cutNo]!['pcs'] += (e.recPc ?? 0);
+
+        /// WT SUM
+        grouped[cutNo]!['wt'] += (e.recWt ?? 0.0);
+      }
+
+      /// CONVERT SUMMARY ITEMS
+      final summaryItems = grouped.values.map((g) {
+        return JobWorkItem(
+          kapan: g['cutNo'],
+
+          /// PKT COUNT
+          bCode: (g['pktNos'] as Set).length.toString(),
+
+          type: g['cutNo'],
+          pktNo: '',
+
+          pcs: g['pcs'].toString(),
+
+          cts: (g['wt'] as double).toStringAsFixed(3),
+        );
+      }).toList();
+
+      final summaryPdfData = JobWorkPdfModel(
+        headerInfo: _selectedCompany,
+
+        partyName: toCounter?.crName ?? '',
+
+        partyType: _toDeptName ?? '',
+
+        jobNo:
+        (_detRows.first.spkDeptIssMstID ??
+            prov.list.first.spkDeptIssMstID ??
+            0)
+            .toString(),
+
+        date: _formValues['spkDeptIssDate']?.toString() ?? '',
+
+        items: summaryItems,
+      );
+
+      final pdf = await generateJobWorkPdfSummary(summaryPdfData);
+
+      await Printing.layoutPdf(onLayout: (_) async => pdf);
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Consumer<MakableEntryProvider>(
@@ -2017,7 +2170,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       rows: _buildFormRows(),
       initialValues: _formValues,
       isEditMode: _isEditMode,
-
+      isShowPrintButton: true,
+      printOnPress: printJobWorkPdf,
       onEntryAdd: (sectionIndex) {
         if (sectionIndex != 3) return;
         _addEntry();

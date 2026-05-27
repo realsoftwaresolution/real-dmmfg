@@ -22,19 +22,13 @@ class MyApp extends StatelessWidget {
         }
 
         return MaterialApp(
-          title: 'RS Dashboard Demo',
+          title: 'RS Dashboard',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
             fontFamily: 'Roboto',
             useMaterial3: true,
           ),
-          //
-          // home: DashboardLayout(
-          //   menu: menuProvider.menus,
-          //   router: AppRouter.router,
-          // ),
           home: const SplashScreenV7(), // 🎨 Design 1 (Dark Orbs)
-
         );
       },
     );

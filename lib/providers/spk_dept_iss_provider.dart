@@ -96,13 +96,17 @@ class SpkDeptIssProvider extends BaseProvider {
             ..remove('sarinData')
             ..remove('LastDmWt')
             ..remove('LastDmPer')
-          ..remove('LastDmWt')
+          ..remove('ArticalName')
           ..remove('LastDmPer');
 
           return map;
         }).toList(),
       }),
-      onSuccess: (res) => _parseMstResponse(res.data),
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        return _parseMstResponse(data);
+      },
     );
     if (result != null) {
       _list.insert(0, result);
@@ -142,7 +146,7 @@ class SpkDeptIssProvider extends BaseProvider {
             ..remove('sarinData')
             ..remove('LastDmWt')
             ..remove('LastDmPer')
-            ..remove('LastDmWt')
+            ..remove('ArticalName')
             ..remove('LastDmPer');
           return map;
         }).toList(),
@@ -196,6 +200,7 @@ class SpkDeptIssProvider extends BaseProvider {
           );
           return false;
         }
+
         return true;
       },
     );

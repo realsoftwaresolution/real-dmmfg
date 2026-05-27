@@ -288,6 +288,7 @@ class PlanningReceivedDetModel {
   final dynamic fluo;
   final dynamic symmetryCode;
   final dynamic polishCode;
+  final dynamic ArticalName;
   final List<Map<String, dynamic>>? sarinData;
 
   const PlanningReceivedDetModel({
@@ -441,7 +442,7 @@ class PlanningReceivedDetModel {
     this.fluo,
     this.symmetryCode,
     this.polishCode,
-    this.sarinData,
+    this.sarinData, this.ArticalName,
   });
 
   factory PlanningReceivedDetModel.fromJson(Map<String, dynamic> json) =>
@@ -595,6 +596,7 @@ class PlanningReceivedDetModel {
         planShape: json['PlanShape'],
         planPurity: json['PlanPurity'],
         length: json['Length'],
+        ArticalName: json['ArticalName'],
         sarinData: (json['sarinData'] as List?)
             ?.map(
               (e) => Map<String, dynamic>.from(
@@ -655,7 +657,7 @@ class PlanningReceivedDetModel {
     'ConfPcID': confPcID ?? '',
     'ConfEver': confEver ?? 0,
     'ConfCrID': confCrID ?? 0,
-    'ConfRec': confRec ?? '',
+    'ConfRec': confRec ?? 'Y',
     'RecDate': recDate ?? '',
     'RecTime': recTime ?? '',
     'LastDetID': lastDetID ?? 0,
@@ -751,6 +753,7 @@ class PlanningReceivedDetModel {
     'LsAmount': lsAmount ?? 0,
     'OrderMstID': orderMstID ?? 0,
     'sarinData': sarinData,
+    'ArticalName': ArticalName,
 
     if (planPurity != null) 'PlanPurity': planPurity,
     if (recutEmp != null) 'RecutEmp': recutEmp,

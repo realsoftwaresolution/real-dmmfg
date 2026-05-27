@@ -514,7 +514,6 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     // IMPORTANT
     // form should store actual cutNo
 
-
     _formValues['jno'] = found.jno?.toString() ?? '';
 
     _erpFormKey.currentState?.updateFieldValue(
@@ -771,8 +770,6 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     if (!isValid) return;
 
     /// ── VALUES ──────────────────────────────────
-
-    final typeVal = _entryVals['entryType'] ?? '';
 
     final colorVal = _entryVals['entryColor'] ?? '';
 
@@ -1122,6 +1119,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         ),
 
         'pendPc': '${_pendingPc - totalDetPc}',
+        'jno': details.first.jno?.toString() ?? '',
       };
 
       _syncDetGrid();

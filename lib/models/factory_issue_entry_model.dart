@@ -225,6 +225,7 @@ class FactoryIssueDetModel {
   final dynamic planPurity;
   final dynamic planShape;
   final dynamic orderMstId;
+  final dynamic ArticalName;
 
   const FactoryIssueDetModel({
     this.spkDeptIssDetID,
@@ -372,6 +373,7 @@ class FactoryIssueDetModel {
     this.planPurity,
     this.planShape,
     this.recutEmp,
+    this.ArticalName,
   });
 
   factory FactoryIssueDetModel.fromJson(Map<String, dynamic> json) =>
@@ -409,6 +411,7 @@ class FactoryIssueDetModel {
         size: _d(json['Size']),
         diam: _d(json['Diam']),
         length: json['Length'],
+        ArticalName: json['ArticalName'],
       );
 
   Map<String, dynamic> toJson() => {
@@ -634,6 +637,7 @@ class FactoryIssueDetModel {
     'PlanPurity': planPurity ?? '',
     'RecutEmp': recutEmp ?? '',
     'PlanShape': planShape ?? '',
+    'ArticalName': ArticalName ?? '',
   };
 
   static double? _d(dynamic v) {

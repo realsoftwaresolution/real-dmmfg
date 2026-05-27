@@ -280,6 +280,7 @@ class SpkDeptIssDetModel {
   final dynamic fluo;
   final dynamic symmetryCode;
   final dynamic polishCode;
+  final dynamic ArticalName;
 
   const SpkDeptIssDetModel({
     this.deptCode,
@@ -428,6 +429,7 @@ class SpkDeptIssDetModel {
     this.planShape,
     this.LastDmWt,
     this.LastDmPer,
+    this.ArticalName,
     this.recutEmp,  this.fluo, this.symmetryCode, this.polishCode,
   });
 
@@ -436,6 +438,7 @@ class SpkDeptIssDetModel {
         fluo:  json['FluoCode'],
         symmetryCode:  json['SymmetryCode'],
         polishCode:  json['PolishCode'],
+        ArticalName:  json['ArticalName'],
         spkDeptIssDetID:  json['SPKDeptIssDetID'],
         spkDeptIssMstID:  json['SPKDeptIssMstID'],
         srno:             json['Srno'],
@@ -593,6 +596,7 @@ class SpkDeptIssDetModel {
     'PktNo': pktNo ?? '',
     'CutNo': cutNo ?? '',
     'ClvCut': clvCut ?? '',
+    'ArticalName': ArticalName ?? '',
     'Pc': pc ?? 0,
     'Wt': wt ?? 0,
     'IssPc': issPc ?? 0,

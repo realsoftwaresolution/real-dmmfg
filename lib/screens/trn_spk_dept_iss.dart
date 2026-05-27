@@ -286,8 +286,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       ]);
       if (!mounted) return;
       _setDefaultFormValues();
-      final companies = context.read<CompanyProvider>().companies;
-
       // Auto-fill FROM from logged-in user
       final loggedUser = context.read<AuthProvider>().user;
       if (loggedUser?.crId != null) {
@@ -430,12 +428,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         _autoRec = (counter.autoRec ?? 'N').toString();
         _formValues['toCrId'] = crIdStr;
         _formValues['toDept'] = deptName;
-        final companies = context.read<CompanyProvider>().companies;
-
-        final company = companies.firstWhereOrNull(
-          (e) => e.companyCode == counter.companyCode,
-        );
-        _selectedCompany = company;
       });
 
       _erpFormKey.currentState?.updateFieldValue('toDept', deptName);
@@ -499,6 +491,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _onBCodeScanned(String bCode) async {
+    /// PREVENT MULTIPLE ENTER PRESS
+    if (_isBCodePending) return;
+
+    _isBCodePending = true;
+
     final rows = await context.read<SpkDeptIssProvider>().fetchByBCode(
       bCode: bCode,
       fromCrId: _fromCrId!.toString(),
@@ -598,6 +595,30 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _addEntry() {
+    final scanBCode = (_scannedDet?.bCode ?? '').trim();
+
+    /// DUPLICATE CHECK
+    final alreadyExists = _detRows.any(
+      (e) => e.bCode.toString().trim() == scanBCode && _editingDetIndex == null,
+    );
+
+    if (alreadyExists) {
+      ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'Duplicate',
+        message: 'This BCode already added.',
+      );
+
+      _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+
+      Future.delayed(
+        const Duration(milliseconds: 100),
+        () => _erpFormKey.currentState?.focusField('scanValue'),
+      );
+
+      return;
+    }
     final merged = _getMergedFields();
     final hasRecPc = merged.containsKey('REC PC');
 
@@ -747,6 +768,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     _erpFormKey.currentState?.setFieldReadOnly('fromCrId', true);
     _erpFormKey.currentState?.setFieldReadOnly('toCrId', true);
     _erpFormKey.currentState?.setFieldReadOnly('deptProcessCode', true);
+    _scannedDet = null;
+
+    _entryVals['scanValue'] = '';
+
+    _erpFormKey.currentState?.updateFieldValue('scanValue', '');
   }
 
   /// Build a detail row for an existing (edit) record.
@@ -769,6 +795,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       bCode: existing.bCode,
       pktNo: existing.pktNo,
       cutNo: existing.cutNo,
+      ArticalName: existing.ArticalName,
       clvCut: existing.clvCut,
       shapeCode: existing.shapeCode,
       purityCode: existing.purityCode,
@@ -832,6 +859,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       jno: _scannedDet?.jno,
       jnoRecPc: _scannedDet?.jnoRecPc,
       bCode: _scannedDet?.bCode ?? _entryVals['scanValue'],
+      ArticalName: _scannedDet?.ArticalName,
       pktNo: _scannedDet?.pktNo,
       cutNo: _scannedDet?.cutNo,
       clvCut: _scannedDet?.clvCut,
@@ -965,6 +993,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
           colorCode: v.colorCode,
           diam: v.diam,
           kachaRec: v.kachaRec,
+          confRec: v.confRec,
         );
       }).toList();
 
@@ -1119,6 +1148,135 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     }
   }
 
+  // CREATE PDF
+
+  Future<void> printJobWorkPdf() async {
+    final companies = context.read<CompanyProvider>().companies;
+    final selectedCompany = context.read<CompanyProvider>().selectedCompanyCode;
+    print(selectedCompany);
+    final company = companies.firstWhereOrNull(
+          (e) => e.companyCode.toString() == selectedCompany.toString(),
+    );
+    print(jsonEncode(company));
+    _selectedCompany = company;
+    setState(() {
+
+    });
+    if (_detRows.isEmpty) {
+      return;
+    }
+    final prov = context.read<SpkDeptIssProvider>();
+    final toCounter = context.read<CounterProvider>().list.firstWhereOrNull(
+      (e) => e.crId.toString() == _formValues['toCrId'],
+    );
+
+    final pdfData = JobWorkPdfModel(
+      headerInfo: _selectedCompany,
+      partyName: toCounter?.crName ?? '',
+      partyType: _toDeptName ?? '',
+
+      jobNo:
+          (_detRows.first.spkDeptIssMstID ??
+                  prov.list.first.spkDeptIssMstID ??
+                  0)
+              .toString(),
+
+      date: _formValues['spkDeptIssDate']?.toString() ?? '',
+
+      items: _detRows.map((e) {
+        return JobWorkItem(
+          kapan: e.cutNo ?? '',
+
+          bCode: e.bCode ?? '',
+          pktNo: e.pktNo ?? '',
+
+          type: e.ArticalName ?? '',
+
+          pcs: (e.recPc ?? 0).toString(),
+
+          cts: (e.recWt ?? 0).toStringAsFixed(3),
+        );
+      }).toList(),
+    );
+
+    /// DETAIL REPORT
+    if (_entryVals['report'] == 'REPORT') {
+      final pdf = await generateJobWorkPdf(pdfData);
+
+      await Printing.layoutPdf(onLayout: (_) async => pdf);
+    }
+    /// SUMMARY REPORT
+    else if (_entryVals['report'] == 'SUMMARY') {
+      /// GROUP CUTNO WISE
+      final Map<String, Map<String, dynamic>> grouped = {};
+
+      for (final e in _detRows) {
+        final cutNo = e.cutNo ?? '';
+
+        if (!grouped.containsKey(cutNo)) {
+          grouped[cutNo] = {
+            'cutNo': cutNo,
+
+            /// UNIQUE PKTNO
+            'pktNos': <String>{},
+
+            'pcs': 0,
+
+            'wt': 0.0,
+          };
+        }
+
+        /// PKTNO COUNT
+        grouped[cutNo]!['pktNos'].add(e.pktNo?.toString() ?? '');
+
+        /// PCS SUM
+        grouped[cutNo]!['pcs'] += (e.recPc ?? 0);
+
+        /// WT SUM
+        grouped[cutNo]!['wt'] += (e.recWt ?? 0.0);
+      }
+
+      /// CONVERT SUMMARY ITEMS
+      final summaryItems = grouped.values.map((g) {
+        return JobWorkItem(
+          kapan: g['cutNo'],
+
+          /// PKT COUNT
+          bCode: (g['pktNos'] as Set).length.toString(),
+
+          type: g['cutNo'],
+          pktNo: '',
+
+          pcs: g['pcs'].toString(),
+
+          cts: (g['wt'] as double).toStringAsFixed(3),
+        );
+      }).toList();
+
+      final summaryPdfData = JobWorkPdfModel(
+        headerInfo: _selectedCompany,
+
+        partyName: toCounter?.crName ?? '',
+
+        partyType: _toDeptName ?? '',
+
+        jobNo:
+            (_detRows.first.spkDeptIssMstID ??
+                    prov.list.first.spkDeptIssMstID ??
+                    0)
+                .toString(),
+
+        date: _formValues['spkDeptIssDate']?.toString() ?? '',
+
+        items: summaryItems,
+      );
+
+      final pdf = await generateJobWorkPdfSummary(summaryPdfData);
+
+      await Printing.layoutPdf(onLayout: (_) async => pdf);
+    }
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   //  SAVE
   // ─────────────────────────────────────────────────────────────────────────
@@ -1176,13 +1334,14 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       if (!mounted) return;
       if (success) {
         final wasEdit = _isEditMode;
-        _resetForm();
+        printJobWorkPdf();
         await ErpResultDialog.showSuccess(
           context: context,
           theme: _theme,
           title: wasEdit ? 'Updated' : 'Saved',
           message: wasEdit ? 'Dept Issue updated.' : 'Dept Issue saved.',
         );
+        _resetForm();
         await context.read<SpkDeptIssProvider>().load();
       }
     } else {
@@ -1551,6 +1710,19 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             sectionIndex: 3,
             width: 200,
           ),
+          ErpFieldConfig(
+            key: 'report',
+            label: '',
+            type: ErpFieldType.radio,
+            radioDirection: Axis.horizontal,
+            isRadioRow: true,
+            radioItems: [
+              ErpRadioOption(label: 'Report', value: 'REPORT'),
+              ErpRadioOption(label: 'Summary', value: 'SUMMARY'),
+            ],
+            width: 250,
+            sectionIndex: 3,
+          ),
         ]);
       }
 
@@ -1856,16 +2028,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   ];
 
   // ─────────────────────────────────────────────────────────────────────────
-  //  FOOTER TOTALS
-  // ─────────────────────────────────────────────────────────────────────────
-
-  Map<String, dynamic> get _footerTotals => {
-    'count': _detRows.length,
-    'issPc': _detRows.fold(0, (s, r) => s + (r.issPc ?? 0)),
-    'issWt': _detRows.fold(0.0, (s, r) => s + (r.issWt ?? 0)),
-  };
-
-  // ─────────────────────────────────────────────────────────────────────────
   //  COL LABEL
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -1944,41 +2106,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       initialValues: _formValues,
       isEditMode: _isEditMode,
       isShowPrintButton: true,
-      printOnPress: () async {
-        final toCounter = context.read<CounterProvider>().list.firstWhereOrNull(
-          (e) => e.crId.toString() == _formValues['toCrId'],
-        );
-print(_detRows.length);
-        final pdfData = JobWorkPdfModel(
-          conpanyInfo: _selectedCompany,
-
-          partyName: toCounter?.crName ?? '',
-
-          partyType: _toDeptName ?? '',
-
-          jobNo: _formValues['spkDeptIssMstID'] ?? '',
-
-          date: _formValues['spkDeptIssDate'] ?? '',
-
-          items: _detRows.map((e) {
-            return JobWorkItem(
-              kapan: e.cutNo ?? '',
-
-              bCode: e.bCode ?? '',
-
-              type: _shapeNameFor(e.shapeCode),
-
-              pcs: (e.recPc ?? 0).toString(),
-
-              cts: (e.recWt ?? 0).toStringAsFixed(3),
-            );
-          }).toList(),
-        );
-
-        final pdf = await generateJobWorkPdf(pdfData);
-
-        await Printing.layoutPdf(onLayout: (_) async => pdf);
-      },
+      printOnPress: printJobWorkPdf,
       onEntryAdd: (sectionIndex) {
         if (sectionIndex != 3) return;
 

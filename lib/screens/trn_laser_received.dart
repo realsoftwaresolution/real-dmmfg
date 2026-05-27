@@ -1,8 +1,10 @@
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
+import 'package:diam_mfg/models/company_model.dart';
 import 'package:diam_mfg/models/laser_mst_model.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
+import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/counter_manager_det_provider.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
 import 'package:diam_mfg/providers/dept_provider.dart';
@@ -12,6 +14,7 @@ import 'package:diam_mfg/providers/employee_provider.dart';
 import 'package:diam_mfg/providers/remarks_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
 import 'package:diam_mfg/providers/trn_laser_received_provider.dart';
+import 'package:diam_mfg/services/generateJobWorkPdf.dart';
 import 'package:diam_mfg/services/pdf.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/constants.dart';
@@ -23,6 +26,7 @@ import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
@@ -60,6 +64,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
   Map<String, String> _formValues = {};
   final Map<String, String> _entryVals = {};
   String _autoRec = 'N';
+  CompanyModel? _selectedCompany;
 
   // ── Auth ───────────────────────────────────────────────────────────────────
   final String? token = AppStorage.getString('token');
@@ -280,6 +285,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         context.read<RemarksProvider>().load(),
         context.read<ShapeProvider>().load(),
         context.read<PurityProvider>().load(),
+        context.read<CompanyProvider>().loadCompanies(),
       ]);
       if (!mounted) return;
       _setDefaultFormValues();
@@ -691,6 +697,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       pktNo: existing.pktNo,
       cutNo: existing.cutNo,
       clvCut: existing.clvCut,
+      ArticalName: existing.ArticalName,
       shapeCode: existing.shapeCode,
       purityCode: existing.purityCode,
       colorCode: existing.colorCode,
@@ -764,7 +771,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       jno: _scannedDet?.jno,
       jnoRecPc: _scannedDet?.jnoRecPc,
       bCode: isFirstRow ? (_scannedDet?.bCode ?? _entryVals['scanValue']) : '0',
-
+      ArticalName: _scannedDet?.ArticalName,
       pktNo: isFirstRow ? _scannedDet?.pktNo : '',
       cutNo: _scannedDet?.cutNo,
       clvCut: _scannedDet?.clvCut,
@@ -1466,6 +1473,19 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
           sectionIndex: 3,
           width: 200,
         ),
+        ErpFieldConfig(
+          key: 'report',
+          label: '',
+          type: ErpFieldType.radio,
+          radioDirection: Axis.horizontal,
+          isRadioRow: true,
+          radioItems: [
+            ErpRadioOption(label: 'Report', value: 'REPORT'),
+            ErpRadioOption(label: 'Summary', value: 'SUMMARY'),
+          ],
+          width: 250,
+          sectionIndex: 3,
+        ),
       ],
     ];
 
@@ -1753,6 +1773,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
   // ─────────────────────────────────────────────────────────────────────────
   //  FORM WIDGET
   // ─────────────────────────────────────────────────────────────────────────
+
   bool _validateEntry() {
     final recWt = double.tryParse(_entryVals['recWt'] ?? '');
     final recPc = int.tryParse(_entryVals['recPc'] ?? '');
@@ -1780,6 +1801,141 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
 
   List<dynamic> selectedRows = [];
 
+  // CREATE PDF
+
+  Future<void> printJobWorkPdf() async {
+    final companies = context.read<CompanyProvider>().companies;
+    final selectedCompany = context.read<CompanyProvider>().selectedCompanyCode;
+    print(selectedCompany);
+    final company = companies.firstWhereOrNull(
+          (e) => e.companyCode.toString() == selectedCompany.toString(),
+    );
+    print(jsonEncode(company));
+    _selectedCompany = company;
+    setState(() {
+
+    });
+    final mainBCode = _entryVals['scanValue'] ?? '';
+    if (mainBCode.isEmpty) return;
+
+    final matchedRows = _laserApiRows
+        .where((e) => e.MainBCode == mainBCode)
+        .toList();
+
+    if (matchedRows.isEmpty) return;
+
+    final prov = context.read<TrnLaserReceivedProvider>();
+    final toCounter = context.read<CounterProvider>().list.firstWhereOrNull(
+      (e) => e.crId.toString() == _formValues['toCrId'],
+    );
+
+    final pdfData = JobWorkPdfModel(
+      headerInfo: _selectedCompany,
+      partyName: toCounter?.crName ?? '',
+      partyType: _toDeptName ?? '',
+
+      jobNo:
+          (matchedRows.first.spkDeptIssMstID ??
+                  prov.list.first.spkDeptIssMstID ??
+                  0)
+              .toString(),
+
+      date: _formValues['spkDeptIssDate']?.toString() ?? '',
+
+      items: matchedRows.map((e) {
+        return JobWorkItem(
+          kapan: e.cutNo ?? '',
+
+          bCode: e.bCode ?? '',
+          pktNo: e.pktNo ?? '',
+
+          type: e.ArticalName ?? '',
+
+          pcs: (e.recPc ?? 0).toString(),
+
+          cts: (e.recWt ?? 0).toStringAsFixed(3),
+        );
+      }).toList(),
+    );
+
+    /// DETAIL REPORT
+    if (_entryVals['report'] == 'REPORT') {
+      final pdf = await generateJobWorkPdf(pdfData);
+
+      await Printing.layoutPdf(onLayout: (_) async => pdf);
+    }
+    /// SUMMARY REPORT
+    else if (_entryVals['report'] == 'SUMMARY') {
+      /// GROUP CUTNO WISE
+      final Map<String, Map<String, dynamic>> grouped = {};
+
+      for (final e in matchedRows) {
+        final cutNo = e.cutNo ?? '';
+
+        if (!grouped.containsKey(cutNo)) {
+          grouped[cutNo] = {
+            'cutNo': cutNo,
+
+            /// UNIQUE PKTNO
+            'pktNos': <String>{},
+
+            'pcs': 0,
+
+            'wt': 0.0,
+          };
+        }
+
+        /// PKTNO COUNT
+        grouped[cutNo]!['pktNos'].add(e.pktNo?.toString() ?? '');
+
+        /// PCS SUM
+        grouped[cutNo]!['pcs'] += (e.recPc ?? 0);
+
+        /// WT SUM
+        grouped[cutNo]!['wt'] += (e.recWt ?? 0.0);
+      }
+
+      /// CONVERT SUMMARY ITEMS
+      final summaryItems = grouped.values.map((g) {
+        return JobWorkItem(
+          kapan: g['cutNo'],
+
+          /// PKT COUNT
+          bCode: (g['pktNos'] as Set).length.toString(),
+
+          type: g['cutNo'],
+          pktNo: '',
+
+          pcs: g['pcs'].toString(),
+
+          cts: (g['wt'] as double).toStringAsFixed(3),
+        );
+      }).toList();
+
+      final summaryPdfData = JobWorkPdfModel(
+        headerInfo: _selectedCompany,
+
+        partyName: toCounter?.crName ?? '',
+
+        partyType: _toDeptName ?? '',
+
+        jobNo:
+            (matchedRows.first.spkDeptIssMstID ??
+                    prov.list.first.spkDeptIssMstID ??
+                    0)
+                .toString(),
+
+        date: _formValues['spkDeptIssDate']?.toString() ?? '',
+
+        items: summaryItems,
+      );
+
+      final pdf = await generateJobWorkPdfSummary(summaryPdfData);
+
+      await Printing.layoutPdf(onLayout: (_) async => pdf);
+    }
+  }
+
   Widget _buildForm(BuildContext context) {
     return ErpForm(
       key: _erpFormKey,
@@ -1797,6 +1953,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       isEditMode: _isEditMode,
       isShowPrintButton: true,
       printOnPress: () async {
+        printJobWorkPdf();
         if (selectedRows.isNotEmpty && _selectedMst != null) {
           final bCodeArray = selectedRows.map((e) {
             return {
@@ -1868,7 +2025,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
             _entryVals[key] = value.toString();
             if (value.toString() == '+') {
               if (_detRows.isNotEmpty) {
-                print('_laserApiRows ${jsonEncode(_laserApiRows)}');
                 final data = await context
                     .read<TrnLaserReceivedProvider>()
                     .laserSelectData(
@@ -1920,6 +2076,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
                     _detDisplay.clear();
                     _detRows.clear();
                   });
+                  await printJobWorkPdf();
                   _clearEntryFields();
 
                   await context.read<TrnLaserReceivedProvider>().load();
