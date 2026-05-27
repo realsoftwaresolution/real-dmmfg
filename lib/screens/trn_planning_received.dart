@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
+import 'package:diam_mfg/models/company_model.dart';
 import 'package:diam_mfg/models/planning_received_model.dart';
 import 'package:diam_mfg/models/spkDeptIss_mst_model.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
+import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/counter_manager_det_provider.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
 import 'package:diam_mfg/providers/dept_provider.dart';
@@ -12,6 +14,7 @@ import 'package:diam_mfg/providers/dept_process_provider.dart';
 import 'package:diam_mfg/providers/employee_provider.dart';
 import 'package:diam_mfg/providers/remarks_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
+import 'package:diam_mfg/services/generateJobWorkPdf.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/helper_functions.dart';
@@ -19,6 +22,7 @@ import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../bootstrap.dart';
@@ -82,6 +86,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
   int? _fromDeptCode;
   String? _filteredBCode; // ← add this with your other state variables
   String _autoRec = 'N';
+  CompanyModel? _selectedCompany;
 
   int? _toCrId;
   String? _toDeptName;
@@ -181,6 +186,8 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
         context.read<DeptProcessProvider>().load(),
         context.read<CounterDisplayDetProvider>().load(),
         context.read<UserVisibilityProvider>().load(),
+        context.read<CompanyProvider>().loadCompanies(),
+
       ]);
       if (!mounted) return;
       _resetForm();
@@ -503,7 +510,6 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
 
     if (raw.fromCrID != null) _onFromSelected(raw.fromCrID.toString());
     if (raw.toCrID != null) _onToSelected(raw.toCrID.toString());
-
     if (raw.deptProcessCode != null && _toCrId != null && _fromCrId != null) {
       await _loadToDisplayFields(_toCrId!);
       await _loadFromDisplayFields(_fromCrId!);
@@ -820,9 +826,150 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
           sectionIndex: 3,
           width: 200,
         ),
+        ErpFieldConfig(
+          key: 'report',
+          label: '',
+          type: ErpFieldType.radio,
+          radioDirection: Axis.horizontal,
+          isRadioRow: true,
+          radioItems: [
+            ErpRadioOption(label: 'Report', value: 'REPORT'),
+            ErpRadioOption(label: 'Summary', value: 'SUMMARY'),
+          ],
+          width: 250,
+          sectionIndex: 3,
+        ),
       ],
     ];
     return _sanitizeRows(rows);
+  }
+
+  // CREATE PDF
+
+  Future<void> printJobWorkPdf() async {
+    final companies = context.read<CompanyProvider>().companies;
+    final selectedCompany = context.read<CompanyProvider>().selectedCompanyCode;
+    print(selectedCompany);
+    final company = companies.firstWhereOrNull(
+          (e) => e.companyCode.toString() == selectedCompany.toString(),
+    );
+    print(jsonEncode(company));
+    _selectedCompany = company;
+    setState(() {
+
+    });
+    final prov = context.read<TrnPlanningReceivedProvider>();
+    if (prov.planningDetList.isEmpty) {
+      return;
+    }
+    final toCounter = context.read<CounterProvider>().list.firstWhereOrNull(
+          (e) => e.crId.toString() == _formValues['toCrId'],
+    );
+    final pdfData = JobWorkPdfModel(
+      headerInfo: _selectedCompany,
+      partyName: toCounter?.crName ?? '',
+      partyType: _toDeptName ?? '',
+
+      jobNo:
+      (prov.planningDetList.first.spkDeptIssMstID ??
+          prov.list.first.spkDeptIssMstID ??
+          0)
+          .toString(),
+
+      date: _formValues['spkDeptIssDate']?.toString() ?? '',
+
+      items: prov.planningDetList.map((e) {
+        return JobWorkItem(
+          kapan: e.cutNo ?? '',
+
+          bCode: e.bCode ?? '',
+          pktNo: e.pktNo ?? '',
+
+          type: e.ArticalName ?? '',
+
+          pcs: (e.recPc ?? 0).toString(),
+
+          cts: (e.recWt ?? 0).toStringAsFixed(3),
+        );
+      }).toList(),
+    );
+
+    /// DETAIL REPORT
+    if (_entryVals['report'] == 'REPORT') {
+      final pdf = await generateJobWorkPdf(pdfData);
+
+      await Printing.layoutPdf(onLayout: (_) async => pdf);
+    }
+    /// SUMMARY REPORT
+    else if (_entryVals['report'] == 'SUMMARY') {
+      /// GROUP CUTNO WISE
+      final Map<String, Map<String, dynamic>> grouped = {};
+
+      for (final e in prov.planningDetList) {
+        final cutNo = e.cutNo ?? '';
+
+        if (!grouped.containsKey(cutNo)) {
+          grouped[cutNo] = {
+            'cutNo': cutNo,
+
+            /// UNIQUE PKTNO
+            'pktNos': <String>{},
+
+            'pcs': 0,
+
+            'wt': 0.0,
+          };
+        }
+
+        /// PKTNO COUNT
+        grouped[cutNo]!['pktNos'].add(e.pktNo?.toString() ?? '');
+
+        /// PCS SUM
+        grouped[cutNo]!['pcs'] += (e.recPc ?? 0);
+
+        /// WT SUM
+        grouped[cutNo]!['wt'] += (e.recWt ?? 0.0);
+      }
+
+      /// CONVERT SUMMARY ITEMS
+      final summaryItems = grouped.values.map((g) {
+        return JobWorkItem(
+          kapan: g['cutNo'],
+
+          /// PKT COUNT
+          bCode: (g['pktNos'] as Set).length.toString(),
+
+          type: g['cutNo'],
+          pktNo: '',
+
+          pcs: g['pcs'].toString(),
+
+          cts: (g['wt'] as double).toStringAsFixed(3),
+        );
+      }).toList();
+
+      final summaryPdfData = JobWorkPdfModel(
+        headerInfo: _selectedCompany,
+
+        partyName: toCounter?.crName ?? '',
+
+        partyType: _toDeptName ?? '',
+
+        jobNo:
+        (prov.planningDetList.first.spkDeptIssMstID ??
+            prov.list.first.spkDeptIssMstID ??
+            0)
+            .toString(),
+
+        date: _formValues['spkDeptIssDate']?.toString() ?? '',
+
+        items: summaryItems,
+      );
+
+      final pdf = await generateJobWorkPdfSummary(summaryPdfData);
+
+      await Printing.layoutPdf(onLayout: (_) async => pdf);
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1016,6 +1163,8 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
       rows: _buildFormRows(),
       initialValues: _formValues,
       isEditMode: _isEditMode,
+      printOnPress: printJobWorkPdf,
+      isShowPrintButton: true,
       onEntryAdd: (sectionIndex) {
         if (sectionIndex != 3) return;
         if (_scannedDet == null && _editingDetIndex == null) {
@@ -1248,17 +1397,15 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
 
             return;
           }
-
           if (!mounted) return;
-
           if (success) {
+            await printJobWorkPdf();
             ErpResultDialog.showSuccess(
               context: context,
               theme: _theme,
               title: 'Planning',
               message: 'Planning saved successfully',
             );
-
             prov.clearScannedDetList();
           }
 
