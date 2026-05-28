@@ -261,7 +261,7 @@ class AdminMenuApiService {
   /// Fetch all menus
   Future<List<AdminMenuModel>> getAllMenus() async {
     try {
-      final response = await _dio.get('/api/menuMst'); // <-- Replace endpoint
+      final response = await _dio.get('/menuMst'); // <-- Replace endpoint
       final List data = response.data as List;
       return data
           .map((e) => AdminMenuModel.fromJson(e as Map<String, dynamic>))
@@ -306,7 +306,7 @@ class AdminMenuApiService {
       }
 
       final response = await _dio.post(
-        '/api/menuMst', // <-- Replace endpoint
+        '/menuMst', // <-- Replace endpoint
         data: formData,
         options: Options(
           headers: {'Content-Type': 'multipart/form-data'},

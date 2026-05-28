@@ -137,6 +137,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   @override
   void initState() {
     super.initState();
+    _resetForm();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.wait([
         context.read<FactoryIssueEntryProvider>().load(),
@@ -172,7 +173,12 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
   void _setDefaultFormValues() {
     final now = DateTime.now();
-    _formValues = {'date': DateFormat('dd/MM/yyyy').format(now), 'jno': '0'};
+    _formValues = {
+      'date': DateFormat('dd/MM/yyyy').format(now),
+      'jno': '0',
+      'report': 'REPORT',
+    };
+    _entryVals['report'] = 'REPORT';
     if (mounted) setState(() {});
   }
 
@@ -640,8 +646,9 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
         'factory': _s(row['factoryCode']),
         'scanValue': _s(_detRows.first.bCode),
+        'report': 'REPORT',
       };
-
+      _entryVals['report'] = 'REPORT';
       _syncDetGrid();
     });
 
@@ -930,7 +937,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           radioDirection: Axis.horizontal,
           isRadioRow: true,
           radioItems: [
-            ErpRadioOption(label: 'Report', value: 'REPORT'),
+            ErpRadioOption(label: 'Details', value: 'REPORT'),
             ErpRadioOption(label: 'Summary', value: 'SUMMARY'),
           ],
           width: 250,
@@ -1082,7 +1089,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   // CREATE PDF
 
   Future<void> printJobWorkPdf() async {
-
     if (_detRows.isEmpty) {
       return;
     }
@@ -1134,6 +1140,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         if (!grouped.containsKey(cutNo)) {
           grouped[cutNo] = {
             'cutNo': cutNo,
+            'articalName': e.ArticalName ?? '',
 
             /// UNIQUE PKTNO
             'pktNos': <String>{},
@@ -1162,7 +1169,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           /// PKT COUNT
           bCode: (g['pktNos'] as Set).length.toString(),
 
-          type: g['cutNo'],
+          type: g['articalName'],
           pktNo: '',
 
           pcs: g['pcs'].toString(),

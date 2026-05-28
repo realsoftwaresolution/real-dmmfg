@@ -16,6 +16,7 @@ import 'package:diam_mfg/screens/mst_firm_factory.dart';
 import 'package:diam_mfg/screens/mst_firm_factory_man_group.dart';
 import 'package:diam_mfg/screens/mst_firm_fluo.dart';
 import 'package:diam_mfg/screens/mst_firm_jangad_charni.dart';
+import 'package:diam_mfg/screens/mst_firm_ls_party_wt_calc_entry.dart';
 import 'package:diam_mfg/screens/mst_firm_party.dart';
 import 'package:diam_mfg/screens/mst_firm_polish.dart';
 import 'package:diam_mfg/screens/mst_firm_purity.dart';
@@ -82,6 +83,8 @@ class AppRouter {
     '/2.27': (context) => const MstEmployee(),
     '/2.28': (context) => const MstPolish(),
     '/2.29': (context) => const MstSymmetry(),
+    '/2.30': (context) => const MstLsPartyWtCalcEntry(),
+    '/2.31': (context) => const MstSymmetry(),
     '/3.01': (context) => const TrnRoughEntry(),
     '/3.02': (context) => const TrnRoughAssortEntry(),
     '/3.03': (context) => const TrnCutCreateEntry(),

@@ -73,6 +73,8 @@ class CounterModel {
   final String? editDeleteTimeExpire;
   final String? orderFinish;
   final bool?   viewAllDeptOrder;
+  final dynamic CVDPartyCode;
+  final dynamic NaturalPartyCode;
 
   CounterModel({
     this.counterMstID,
@@ -144,7 +146,7 @@ class CounterModel {
     this.editDeleteTime,
     this.editDeleteTimeExpire,
     this.orderFinish,
-    this.viewAllDeptOrder,
+    this.viewAllDeptOrder, this.CVDPartyCode, this.NaturalPartyCode,
   });
 
   factory CounterModel.fromJson(Map<String, dynamic> json) => CounterModel(
@@ -217,6 +219,8 @@ class CounterModel {
     editDeleteTime:            json['EditDeleteTime'],
     editDeleteTimeExpire:      json['EditDeleteTimeExpire'],
     orderFinish:               json['OrderFinish'],
+    CVDPartyCode:               json['CVDPartyCode'],
+    NaturalPartyCode:               json['NaturalPartyCode'],
     viewAllDeptOrder:          json['ViewAllDeptOrder'] == true || json['ViewAllDeptOrder'] == 1,
   );
 
@@ -289,6 +293,8 @@ class CounterModel {
     'EditDeleteTimeExpire':     editDeleteTimeExpire,
     'OrderFinish':              orderFinish,
     'ViewAllDeptOrder':         viewAllDeptOrder,
+    'NaturalPartyCode':         NaturalPartyCode,
+    'CVDPartyCode':         CVDPartyCode,
   };
 
   Map<String, dynamic> toTableRow() => {
@@ -367,6 +373,7 @@ class CounterModel {
     getTableRussianData:       v['getTableRussianData'],
     editDeleteTime:            int.tryParse(v['editDeleteTime']?.toString()  ?? ''),
     editDeleteTimeExpire:      v['editDeleteTimeExpire'],
+
     orderFinish:               v['orderFinish'],
     viewAllDeptOrder:          parseBool(v['viewAllDeptOrder']),
   );

@@ -75,11 +75,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../providers/menu_provider.dart';
+import 'providers/Ls_party_wt_calc_entry_provider.dart';
 import 'providers/Packet_History_provider.dart';
 import 'providers/factory_man_group_provider.dart';
 
 // String baseUrl = 'http://50.62.183.116:5000/api';
-String baseUrl = 'https://simple-emma-hearing-share.trycloudflare.com/api';
+String baseUrl = 'https://analysts-merchant-expenditures-carnival.trycloudflare.com/api';
 Future<void> bootstrap({required FutureOr<Widget> Function() fn}) async {
   return runZonedGuarded(
     () async {
@@ -301,6 +302,8 @@ Future<void> bootstrap({required FutureOr<Widget> Function() fn}) async {
             ),
             ChangeNotifierProvider<ProcessIssueEntryProvider>(
               create: (_) => ProcessIssueEntryProvider(),
+            ), ChangeNotifierProvider<MstLsPartyWtCalcEntryProvider>(
+              create: (_) => MstLsPartyWtCalcEntryProvider(),
             ),
           ],
           child: app,

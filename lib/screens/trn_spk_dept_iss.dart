@@ -266,6 +266,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   @override
   void initState() {
     super.initState();
+    _resetForm();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.wait([
         context.read<SpkDeptIssProvider>().load(),
@@ -291,7 +292,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       if (loggedUser?.crId != null) {
         _onFromSelected(loggedUser!.crId!.toString());
       }
-      _resetForm();
     });
   }
 
@@ -305,7 +305,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       'spkDeptIssDate': DateFormat('dd/MM/yyyy').format(now),
       'spkDeptIssMstID': '0',
       'time': DateFormat('hh:mm a').format(now),
+      'report': 'REPORT',
     };
+    /// DEFAULT REPORT
+    _entryVals['report'] = 'REPORT';
+
     if (mounted) setState(() {});
   }
 
@@ -428,6 +432,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         _autoRec = (counter.autoRec ?? 'N').toString();
         _formValues['toCrId'] = crIdStr;
         _formValues['toDept'] = deptName;
+
       });
 
       _erpFormKey.currentState?.updateFieldValue('toDept', deptName);
@@ -1123,13 +1128,14 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         'toDept': _toDeptName ?? '',
         'deptProcessCode': raw.deptProcessCode?.toString() ?? '',
         'deptName': _toDeptName ?? '',
+        'report': 'REPORT',
         if (lastDet?.charniCode != null)
           'charniCode': lastDet!.charniCode!.toString(),
         if (lastDet?.tensionsCode != null)
           'tensionsCode': lastDet!.tensionsCode!.toString(),
         if (_selectedRadioCode != null) 'scanType': _selectedRadioCode!,
       };
-
+      _entryVals['report'] = 'REPORT';
       _syncDetGrid();
     });
 
@@ -1155,13 +1161,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     final selectedCompany = context.read<CompanyProvider>().selectedCompanyCode;
     print(selectedCompany);
     final company = companies.firstWhereOrNull(
-          (e) => e.companyCode.toString() == selectedCompany.toString(),
+      (e) => e.companyCode.toString() == selectedCompany.toString(),
     );
     print(jsonEncode(company));
     _selectedCompany = company;
-    setState(() {
-
-    });
+    setState(() {});
     if (_detRows.isEmpty) {
       return;
     }
@@ -1169,7 +1173,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     final toCounter = context.read<CounterProvider>().list.firstWhereOrNull(
       (e) => e.crId.toString() == _formValues['toCrId'],
     );
-
     final pdfData = JobWorkPdfModel(
       headerInfo: _selectedCompany,
       partyName: toCounter?.crName ?? '',
@@ -1182,7 +1185,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
               .toString(),
 
       date: _formValues['spkDeptIssDate']?.toString() ?? '',
-
+      CVDPartyCode: toCounter?.CVDPartyCode ?? '',
+      NaturalPartyCode: toCounter?.NaturalPartyCode ?? '',
       items: _detRows.map((e) {
         return JobWorkItem(
           kapan: e.cutNo ?? '',
@@ -1217,7 +1221,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
           grouped[cutNo] = {
             'cutNo': cutNo,
 
-            /// UNIQUE PKTNO
+            'articalName': e.ArticalName ?? '',
+
             'pktNos': <String>{},
 
             'pcs': 0,
@@ -1244,7 +1249,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
           /// PKT COUNT
           bCode: (g['pktNos'] as Set).length.toString(),
 
-          type: g['cutNo'],
+          type: g['articalName'],
           pktNo: '',
 
           pcs: g['pcs'].toString(),
@@ -1267,7 +1272,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
                 .toString(),
 
         date: _formValues['spkDeptIssDate']?.toString() ?? '',
-
+        CVDPartyCode: toCounter?.CVDPartyCode ?? '',
+        NaturalPartyCode: toCounter?.NaturalPartyCode ?? '',
         items: summaryItems,
       );
 
@@ -1717,7 +1723,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             radioDirection: Axis.horizontal,
             isRadioRow: true,
             radioItems: [
-              ErpRadioOption(label: 'Report', value: 'REPORT'),
+              ErpRadioOption(label: 'Details', value: 'REPORT'),
               ErpRadioOption(label: 'Summary', value: 'SUMMARY'),
             ],
             width: 250,
@@ -2005,25 +2011,21 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       key: 'jno',
       label: 'JNO',
       width: 140,
-      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'totPkt',
       label: 'TOT PKT',
       width: 170,
-      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'totalPc',
       label: 'TOT PC',
       width: 170,
-      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'totalWt',
       label: 'TOT WT',
       width: 170,
-      align: ColumnAlign.right,
     ),
   ];
 
@@ -2381,8 +2383,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             '';
       } catch (_) {}
 
-      final dets = prov.detMap[e.spkDeptIssMstID] ?? [];
-
       final row = e.toTableRow()
         ..['fromName'] = fromName
         ..['fromDeptName'] = fromDeptName
@@ -2391,11 +2391,18 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         ..['deptName'] = toDeptName
         ..['processName'] = processName
         ..['spkDeptIssTime'] = _formatTime(e.stime)
-        ..['jno'] = dets.isNotEmpty ? (dets.first.jno?.toString() ?? '') : ''
-        ..['totPkt'] = '${dets.length}'
-        ..['totalPc'] = '${dets.fold<int>(0, (s, r) => s + (r.totalPc ?? 0))}'
-        ..['totalWt'] = fThreeDecimal(
-          dets.fold<double>(0.0, (s, r) => s + (r.totalWt ?? 0.0)),
+        ..['jno'] =
+            e.jnoFirst?.toString() ?? ''
+
+        ..['totPkt'] =
+            e.totPkt?.toString() ?? '0'
+
+        ..['totalPc'] =
+            e.totalPc.toString() ?? '0'
+
+        ..['totalWt'] =
+        fThreeDecimal(
+          e.totalWt ?? 0,
         );
 
       return row;

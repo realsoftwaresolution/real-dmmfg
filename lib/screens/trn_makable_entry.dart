@@ -224,6 +224,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
   @override
   void initState() {
     super.initState();
+    _resetForm();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.wait([
         context.read<MakableEntryProvider>().load(),
@@ -269,7 +270,9 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       'spkDeptIssDate': DateFormat('dd/MM/yyyy').format(now),
       'spkDeptIssMstID': '0',
       'time': DateFormat('hh:mm a').format(now),
+      'report': 'REPORT',
     };
+    _entryVals['report'] = 'REPORT';
     if (mounted) setState(() {});
   }
 
@@ -1200,11 +1203,12 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         'fromDept': _fromDeptName ?? '',
         'toCrId': raw.toCrID?.toString() ?? '',
         'toDept': _toDeptName ?? '',
+        'report': 'REPORT',
         'deptProcessCode': raw.deptProcessCode?.toString() ?? '',
         'deptName': _toDeptName ?? '',
         if (_selectedRadioCode != null) 'scanType': _selectedRadioCode!,
       };
-
+      _entryVals['report'] = 'REPORT';
       _syncDetGrid();
     });
 
@@ -1671,7 +1675,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           radioDirection: Axis.horizontal,
           isRadioRow: true,
           radioItems: [
-            ErpRadioOption(label: 'Report', value: 'REPORT'),
+            ErpRadioOption(label: 'Details', value: 'REPORT'),
             ErpRadioOption(label: 'Summary', value: 'SUMMARY'),
           ],
           width: 250,
@@ -1924,25 +1928,21 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       key: 'jno',
       label: 'JNO',
       width: 140,
-      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'totPkt',
       label: 'TOT PKT',
       width: 170,
-      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'totalPc',
       label: 'TOT PC',
       width: 170,
-      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'totalWt',
       label: 'TOT WT',
       width: 170,
-      align: ColumnAlign.right,
     ),
   ];
 
@@ -2036,7 +2036,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           .toString(),
 
       date: _formValues['spkDeptIssDate']?.toString() ?? '',
-
+      CVDPartyCode: toCounter?.CVDPartyCode ?? '',
+      NaturalPartyCode: toCounter?.NaturalPartyCode ?? '',
       items: _detRows.map((e) {
         return JobWorkItem(
           kapan: e.cutNo ?? '',
@@ -2070,7 +2071,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         if (!grouped.containsKey(cutNo)) {
           grouped[cutNo] = {
             'cutNo': cutNo,
-
+            'articalName': e.ArticalName ?? '',
             /// UNIQUE PKTNO
             'pktNos': <String>{},
 
@@ -2098,7 +2099,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           /// PKT COUNT
           bCode: (g['pktNos'] as Set).length.toString(),
 
-          type: g['cutNo'],
+          type: g['articalName'],
           pktNo: '',
 
           pcs: g['pcs'].toString(),
@@ -2121,7 +2122,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
             .toString(),
 
         date: _formValues['spkDeptIssDate']?.toString() ?? '',
-
+        CVDPartyCode: toCounter?.CVDPartyCode ?? '',
+        NaturalPartyCode: toCounter?.NaturalPartyCode ?? '',
         items: summaryItems,
       );
 
@@ -2466,8 +2468,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
             '';
       } catch (_) {}
 
-      final dets = prov.detMap[e.spkDeptIssMstID] ?? [];
-
       final row = e.toTableRow()
         ..['fromName'] = fromName
         ..['fromDeptName'] = fromDeptName
@@ -2476,11 +2476,18 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         ..['deptName'] = toDeptName
         ..['processName'] = processName
         ..['spkDeptIssTime'] = _formatTime(e.stime)
-        ..['jno'] = dets.isNotEmpty ? (dets.first.jno?.toString() ?? '') : ''
-        ..['totPkt'] = '${dets.length}'
-        ..['totalPc'] = '${dets.fold<int>(0, (s, r) => s + (r.totalPc ?? 0))}'
-        ..['totalWt'] = fThreeDecimal(
-          dets.fold<double>(0.0, (s, r) => s + (r.totalWt ?? 0.0)),
+        ..['jno'] =
+            e.jnoFirst?.toString() ?? ''
+
+        ..['totPkt'] =
+            e.totPkt?.toString() ?? '0'
+
+        ..['totalPc'] =
+            e.totalPc.toString() ?? '0'
+
+        ..['totalWt'] =
+        fThreeDecimal(
+          e.totalWt ?? 0,
         );
 
       return row;

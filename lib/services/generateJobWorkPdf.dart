@@ -15,6 +15,8 @@ class JobWorkPdfModel {
   final String partyType;
 
   final dynamic jobNo;
+  final dynamic NaturalPartyCode;
+  final dynamic CVDPartyCode;
   final String date;
 
   final List<JobWorkItem> items;
@@ -25,6 +27,8 @@ class JobWorkPdfModel {
     required this.partyType,
     required this.jobNo,
     required this.date,
+    this.CVDPartyCode,
+    this.NaturalPartyCode,
     required this.items,
   });
 }
@@ -63,12 +67,12 @@ Future<Uint8List> generateJobWorkPdf(JobWorkPdfModel data) async {
         return pw.Row(
           children: [
             /// LEFT COPY
-            pw.Expanded(child: _buildSlip(data)),
+            pw.Expanded(child: _buildSlip(data, 'Original')),
 
             pw.SizedBox(width: 20),
 
             /// RIGHT COPY
-            pw.Expanded(child: _buildSlip(data)),
+            pw.Expanded(child: _buildSlip(data, 'Duplicate')),
           ],
         );
       },
@@ -89,17 +93,16 @@ Future<Uint8List> generateJobWorkPdfSummary(JobWorkPdfModel data) async {
     pw.Page(
       pageFormat: PdfPageFormat.a4.landscape,
       margin: const pw.EdgeInsets.all(20),
-
       build: (context) {
         return pw.Row(
           children: [
             /// LEFT COPY
-            pw.Expanded(child: _buildSummarySlip(data)),
+            pw.Expanded(child: _buildSummarySlip(data, 'Original')),
 
             pw.SizedBox(width: 20),
 
             /// RIGHT COPY
-            pw.Expanded(child: _buildSummarySlip(data)),
+            pw.Expanded(child: _buildSummarySlip(data, 'Duplicate')),
           ],
         );
       },
@@ -113,7 +116,7 @@ Future<Uint8List> generateJobWorkPdfSummary(JobWorkPdfModel data) async {
 /// DETAIL SLIP
 /// ─────────────────────────────────────────────
 
-pw.Widget _buildSlip(JobWorkPdfModel data) {
+pw.Widget _buildSlip(JobWorkPdfModel data, text) {
   final totalPcs = data.items.fold<int>(
     0,
     (sum, e) => sum + (int.tryParse(e.pcs) ?? 0),
@@ -135,6 +138,21 @@ pw.Widget _buildSlip(JobWorkPdfModel data) {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
 
       children: [
+        pw.Align(
+          alignment: pw.Alignment.topRight,
+          child: pw.Text(
+            text,
+
+            textAlign: pw.TextAlign.right,
+
+            style: pw.TextStyle(
+              color: PdfColors.black,
+              fontWeight: pw.FontWeight.normal,
+              fontSize: 8,
+            ),
+          ),
+        ),
+
         /// HEADER
         _buildHeader(data),
 
@@ -215,7 +233,7 @@ pw.Widget _buildSlip(JobWorkPdfModel data) {
 /// SUMMARY SLIP
 /// ─────────────────────────────────────────────
 
-pw.Widget _buildSummarySlip(JobWorkPdfModel data) {
+pw.Widget _buildSummarySlip(JobWorkPdfModel data, text) {
   final totalPcs = data.items.fold<int>(
     0,
     (sum, e) => sum + (int.tryParse(e.pcs) ?? 0),
@@ -237,6 +255,21 @@ pw.Widget _buildSummarySlip(JobWorkPdfModel data) {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
 
       children: [
+        pw.Align(
+          alignment: pw.Alignment.topRight,
+          child: pw.Text(
+            text,
+
+            textAlign: pw.TextAlign.right,
+
+            style: pw.TextStyle(
+              color: PdfColors.black,
+              fontWeight: pw.FontWeight.normal,
+              fontSize: 8,
+            ),
+          ),
+        ),
+
         /// HEADER
         _buildHeader(data, title: 'Job Work Summary'),
 
@@ -252,10 +285,11 @@ pw.Widget _buildSummarySlip(JobWorkPdfModel data) {
             1: const pw.FlexColumnWidth(),
 
             2: const pw.FixedColumnWidth(60),
-
-            3: const pw.FixedColumnWidth(70),
+            3: const pw.FixedColumnWidth(60),
 
             4: const pw.FixedColumnWidth(70),
+
+            5: const pw.FixedColumnWidth(70),
           },
 
           children: [
@@ -267,6 +301,7 @@ pw.Widget _buildSummarySlip(JobWorkPdfModel data) {
                 _tableHeader('SR'),
 
                 _tableHeader('CUT NO'),
+                _tableHeader('ARTICAL'),
 
                 _tableHeader('PKT'),
 
@@ -287,6 +322,7 @@ pw.Widget _buildSummarySlip(JobWorkPdfModel data) {
                   _summaryCell('${index + 1}'),
 
                   /// CUT NO
+                  _summaryCell(item.kapan, align: pw.TextAlign.center),
                   _summaryCell(item.type, align: pw.TextAlign.center),
 
                   /// PKT COUNT
@@ -308,6 +344,7 @@ pw.Widget _buildSummarySlip(JobWorkPdfModel data) {
 
                 _tableBold('TOTAL'),
 
+                _tableBold(''),
                 _tableBold(''),
 
                 _tableBold(totalPcs.toString()),
@@ -358,21 +395,26 @@ pw.Widget _buildHeader(JobWorkPdfModel data, {String title = 'Job Work Out'}) {
   if (info is CompanyModel) {
     // ✅ CompanyModel fields
     companyName = info.companyName ?? '';
-    address     = info.address    ?? '';
-    gstNo       = info.gstNo      ?? '';
+    address = info.address ?? '';
+    gstNo = info.gstNo ?? '';
   } else if (info is FactoryModel) {
     // ✅ FactoryModel fields
     companyName = info.factoryName ?? '';
-    address     = info.address     ?? '';
-    gstNo       = info.gstNo       ?? '';
+    address = info.address ?? '';
+    gstNo = info.gstNo ?? '';
   } else if (info is Map<String, dynamic>) {
     // ✅ Raw map fallback
-    companyName = (info['companyName'] ?? info['CompanyName'] ??
-        info['factoryName'] ?? info['FactoryName'] ?? '').toString();
-    address     = (info['address'] ?? info['Address'] ?? '').toString();
-    gstNo       = (info['gstNo']   ?? info['GstNo']   ?? '').toString();
+    companyName =
+        (info['companyName'] ??
+                info['CompanyName'] ??
+                info['factoryName'] ??
+                info['FactoryName'] ??
+                '')
+            .toString();
+    address = (info['address'] ?? info['Address'] ?? '').toString();
+    gstNo = (info['gstNo'] ?? info['GstNo'] ?? '').toString();
   }
-
+  print('ksdgfhdsfshfsj ${data.NaturalPartyCode}');
   return pw.Column(
     children: [
       pw.Center(
@@ -414,7 +456,20 @@ pw.Widget _buildHeader(JobWorkPdfModel data, {String title = 'Job Work Out'}) {
 
               pw.SizedBox(height: 4),
 
-              pw.Text(data.partyName, style: const pw.TextStyle(fontSize: 9)),
+              pw.Row(
+                children: [
+                  pw.Text(
+                    data.partyName,
+                    style: const pw.TextStyle(fontSize: 9),
+                  ),
+                  if ((data.NaturalPartyCode ?? '').toString().isNotEmpty &&
+                      (data.CVDPartyCode ?? '').toString().isNotEmpty)
+                    pw.Text(
+                      '  [${data.NaturalPartyCode},${data.CVDPartyCode}]',
+                      style: const pw.TextStyle(fontSize: 9),
+                    ),
+                ],
+              ),
 
               pw.Text(data.partyType, style: const pw.TextStyle(fontSize: 9)),
             ],
