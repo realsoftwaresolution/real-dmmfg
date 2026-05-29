@@ -39,12 +39,13 @@ class _MstLsPartyWtCalcEntryState extends State<MstLsPartyWtCalcEntry> {
 
   // ── Table columns ──────────────────────────────────────────────────────────
   static final List<ErpColumnConfig> _tableColumns = [
-    ErpColumnConfig(key: 'purityGroupCode', label: 'CODE', width: 130),
-    ErpColumnConfig(key: 'purityGroupName', label: 'NAME', width: 200),
-    ErpColumnConfig(key: 'PurityTypeName', label: 'PURITY TYPE', width: 180),
-    ErpColumnConfig(key: 'companyCode', label: 'COMPANY', width: 160),
-    ErpColumnConfig(key: 'sortID', label: 'SORT ID', width: 160),
-    ErpColumnConfig(key: 'active', label: 'ACTIVE', width: 140),
+    ErpColumnConfig(key: 'lsPartyWtCalcMstId', label: 'ID', width: 140),
+
+    ErpColumnConfig(key: 'lsPartyWtCalcDate', label: 'DATE', width: 140),
+
+    ErpColumnConfig(key: 'remarksName', label: 'REMARKS', width: 160),
+
+    ErpColumnConfig(key: 'remarkTOPS', label: 'TOPS', width: 160),
   ];
 
   // ── Form rows ──────────────────────────────────────────────────────────────
@@ -56,7 +57,6 @@ class _MstLsPartyWtCalcEntryState extends State<MstLsPartyWtCalcEntry> {
         width: 300,
         type: ErpFieldType.dropdown,
         required: true,
-        initialDropValue: true,
         sectionIndex: 0,
         dropdownItems: rp.list
             .where((e) => e.active == true)
@@ -75,21 +75,21 @@ class _MstLsPartyWtCalcEntryState extends State<MstLsPartyWtCalcEntry> {
   @override
   void initState() {
     super.initState();
+    _resetForm();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await context.read<MstLsPartyWtCalcEntryProvider>().load();
       await context.read<CompanyProvider>().loadCompanies();
+
       if (!mounted) return;
 
+      // ← ab companies available hain, division provider ko pass karo
+      final companies = context.read<CompanyProvider>().companies;
+      context.read<MstLsPartyWtCalcEntryProvider>().setCompanies(companies);
+      final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
+      context.read<MstLsPartyWtCalcEntryProvider>().setSelectedCompany(selectedCode);
+      // ← last mein divisions load karo
+
       context.read<RemarksProvider>().load();
-
-      final companyProv = context.read<CompanyProvider>();
-      final entryProv = context.read<MstLsPartyWtCalcEntryProvider>();
-
-      entryProv
-        ..setCompanies(companyProv.companies)
-        ..setSelectedCompany(companyProv.selectedCompanyCode);
-
-      await entryProv.load();
-      if (mounted) _setDefaultSortId();
     });
   }
 
@@ -106,52 +106,57 @@ class _MstLsPartyWtCalcEntryState extends State<MstLsPartyWtCalcEntry> {
     super.dispose();
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  void _setDefaultSortId() {
-    final list = context.read<MstLsPartyWtCalcEntryProvider>().list;
-    final nextSort = list.isEmpty
-        ? 1
-        : list.map((e) => e.sortID ?? 0).reduce((a, b) => a > b ? a : b) + 1;
-    final value = nextSort.toString();
-
-    setState(() {
-      _formValues['sortID'] = value;
-      _formValues['active'] = 'true';
-    });
-
-    Future.delayed(const Duration(milliseconds: 50), () {
-      _erpFormKey.currentState
-        ?..updateFieldValue('sortID', value)
-        ..updateFieldValue('active', 'true');
-    });
-  }
-
   void _applyFormValues(Map<String, String> values) {
     setState(() => _formValues = values);
   }
 
   // ── Row tap ────────────────────────────────────────────────────────────────
-  void _onRowTap(Map<String, dynamic> row) {
-    final raw = row['_raw'] as MstLsPartyWtCalcEntryModel;
-    final companyCode =
-        context.read<CompanyProvider>().selectedCompanyCode?.toString() ??
-        raw.companyCode?.toString() ??
-        '';
+  void _onRowTap(Map<String, dynamic> row) async {
+
+    final provider =
+    context.read<MstLsPartyWtCalcEntryProvider>();
+
+    final raw =
+    row['_raw'] as MstLsPartyWtCalcEntryModel;
+
+    await provider.loadDetails(
+      raw.lsPartyWtCalcMstId!,
+    );
+
+    /// CLEAR OLD
+    for (final f in _pieFocusNodes) {
+      f.dispose();
+    }
+
+    for (final f in _lsFocusNodes) {
+      f.dispose();
+    }
+
+    _pieFocusNodes.clear();
+    _lsFocusNodes.clear();
+
+    /// LOAD DETAIL ROWS
+    _rows = List.from(provider.detailRows);
+
+    /// CREATE FOCUS NODES
+    for (int i = 0; i < _rows.length; i++) {
+      _pieFocusNodes.add(FocusNode());
+      _lsFocusNodes.add(FocusNode());
+    }
 
     _applyFormValues({
-      'purityGroupCode': raw.purityGroupCode?.toString() ?? '',
-      'purityGroupName': raw.purityGroupName ?? '',
-      'purityTypeCode': raw.purityTypeCode?.toString() ?? '',
-      'companyCode': companyCode,
-      'sortID': raw.sortID?.toString() ?? '',
-      'active': raw.active == true ? 'true' : 'false',
-      'delRights': raw.delRights == 'Y' ? 'true' : 'false',
+      'remarks': raw.remarksCode?.toString() ?? '',
     });
 
     setState(() {
+
       _selectedRow = row;
+
       _isEditMode = true;
-      if (Responsive.isMobile(context)) _showTableOnMobile = false;
+
+      if (Responsive.isMobile(context)) {
+        _showTableOnMobile = false;
+      }
     });
   }
 
@@ -162,10 +167,11 @@ class _MstLsPartyWtCalcEntryState extends State<MstLsPartyWtCalcEntry> {
     final success = _isEditMode && _selectedRow != null
         ? await provider.update(
             (_selectedRow!['_raw'] as MstLsPartyWtCalcEntryModel)
-                .purityGroupCode!,
+                .lsPartyWtCalcMstId!,
             values,
+            _rows,
           )
-        : await provider.create(values);
+        : await provider.create(values, _rows);
 
     if (!mounted || !success) return;
 
@@ -180,23 +186,24 @@ class _MstLsPartyWtCalcEntryState extends State<MstLsPartyWtCalcEntry> {
           ? 'Data updated successfully.'
           : 'Data saved successfully.',
     );
+    await context.read<MstLsPartyWtCalcEntryProvider>().load();
   }
 
   // ── Delete ─────────────────────────────────────────────────────────────────
   Future<void> _onDelete() async {
     final raw = _selectedRow?['_raw'] as MstLsPartyWtCalcEntryModel?;
-    if (raw?.purityGroupCode == null) return;
+    if (raw?.lsPartyWtCalcMstId == null) return;
 
     final confirm = await ErpDeleteDialog.show(
       context: context,
       theme: _theme,
       title: 'Ls Party Wt Calculation Entry',
-      itemName: raw!.purityGroupName ?? '',
+      itemName: raw!.remarksName ?? '',
     );
     if (confirm != true || !mounted) return;
 
     final success = await context.read<MstLsPartyWtCalcEntryProvider>().delete(
-      raw.purityGroupCode!,
+      raw.lsPartyWtCalcMstId!,
     );
 
     if (!success || !mounted) return;
@@ -205,7 +212,7 @@ class _MstLsPartyWtCalcEntryState extends State<MstLsPartyWtCalcEntry> {
     await ErpResultDialog.showDeleted(
       context: context,
       theme: _theme,
-      itemName: raw.purityGroupName ?? '',
+      itemName: raw.remarksName ?? '',
     );
   }
 
@@ -221,18 +228,13 @@ class _MstLsPartyWtCalcEntryState extends State<MstLsPartyWtCalcEntry> {
       _showTableOnMobile = false;
 
       /// CLEAR FORM
-      _formValues = {'active': 'true'};
+      _formValues = {};
 
       /// CLEAR TABLE
       _rows.clear();
     });
 
-    /// RESET ERP FIELDS
-    _erpFormKey.currentState?.updateFieldValue('active', 'true');
-
     _erpFormKey.currentState?.updateFieldValue('remarks', '');
-
-    _setDefaultSortId();
   }
 
   void _loadRowsFromRemarks(dynamic remarksCode) {
@@ -396,19 +398,13 @@ class _MstLsPartyWtCalcEntryState extends State<MstLsPartyWtCalcEntry> {
 
             child: Row(
               children: [
-                _th('SrNo', 60, theme),
-
-                _th('Per', 80, theme),
-
-                _th('Calc Wt', 100, theme),
-
-                _th('Pie Per', 100, theme),
-
-                _th('Pie Calc Wt', 120, theme),
-
-                _th('LS Per', 100, theme),
-
-                _th('LS Calc Wt', 120, theme),
+                _thExpand('SrNo', theme, flex: 1),
+                _thExpand('Per', theme, flex: 2),
+                _thExpand('Calc Wt', theme, flex: 2),
+                _thExpand('Pie Per', theme, flex: 2),
+                _thExpand('Pie Calc Wt', theme, flex: 2),
+                _thExpand('LS Per', theme, flex: 2),
+                _thExpand('LS Calc Wt', theme, flex: 2),
               ],
             ),
           ),
@@ -430,15 +426,13 @@ class _MstLsPartyWtCalcEntryState extends State<MstLsPartyWtCalcEntry> {
 
               child: Row(
                 children: [
-                  _td(row.srNo.toString(), 60),
-
-                  _td(row.per.toString(), 80),
-
-                  _td(row.calcWt.toStringAsFixed(3), 100),
+                  _tdExpand(row.srNo.toString(), flex: 1),
+                  _tdExpand(row.per.toString(), flex: 2),
+                  _tdExpand(row.calcWt.toStringAsFixed(3), flex: 2),
 
                   /// PIE PER EDIT
-                  SizedBox(
-                    width: 100,
+                  Expanded(
+                    flex: 2,
 
                     child: TextFormField(
                       focusNode: _pieFocusNodes[index],
@@ -491,7 +485,7 @@ class _MstLsPartyWtCalcEntryState extends State<MstLsPartyWtCalcEntry> {
                     ),
                   ),
 
-                  _td(row.pieCalcWt.toStringAsFixed(3), 120),
+                  _tdExpand(row.pieCalcWt.toStringAsFixed(3), flex: 2),
 
                   /// LS PER EDIT
                   SizedBox(
@@ -552,7 +546,7 @@ class _MstLsPartyWtCalcEntryState extends State<MstLsPartyWtCalcEntry> {
                     ),
                   ),
 
-                  _td(row.lsCalcWt.toStringAsFixed(3), 120),
+                  _tdExpand(row.lsCalcWt.toStringAsFixed(3), flex: 2),
                 ],
               ),
             );
@@ -595,13 +589,31 @@ class _MstLsPartyWtCalcEntryState extends State<MstLsPartyWtCalcEntry> {
                   ),
 
                   /// CALC WT
-                  _footerCell(_totalCalcWt.toStringAsFixed(4), 100, theme),
+                  Expanded(
+                    child: _footerCell(
+                      _totalCalcWt.toStringAsFixed(4),
+                      100,
+                      theme,
+                    ),
+                  ),
 
                   /// PIE WT
-                  _footerCell(_totalPieCalcWt.toStringAsFixed(4), 320, theme),
+                  Expanded(
+                    child: _footerCell(
+                      _totalPieCalcWt.toStringAsFixed(4),
+                      100,
+                      theme,
+                    ),
+                  ),
 
                   /// LS WT
-                  _footerCell(_totalLsCalcWt.toStringAsFixed(4), 120, theme),
+                  Expanded(
+                    child: _footerCell(
+                      _totalLsCalcWt.toStringAsFixed(4),
+                      100,
+                      theme,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -610,29 +622,24 @@ class _MstLsPartyWtCalcEntryState extends State<MstLsPartyWtCalcEntry> {
     );
   }
 
-  Widget _th(String text, double width, ErpTheme theme) {
-    return SizedBox(
-      width: width,
-
+  Widget _thExpand(String text, ErpTheme theme, {int flex = 1}) {
+    return Expanded(
+      flex: flex,
       child: Text(
         text,
-
         textAlign: TextAlign.center,
-
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w600,
           color: theme.textLight,
-          letterSpacing: 0.5,
         ),
       ),
     );
   }
 
-  Widget _td(String text, double width) {
-    return SizedBox(
-      width: width,
-
+  Widget _tdExpand(String text, {int flex = 1}) {
+    return Expanded(
+      flex: flex,
       child: Text(text, textAlign: TextAlign.center),
     );
   }
@@ -640,13 +647,7 @@ class _MstLsPartyWtCalcEntryState extends State<MstLsPartyWtCalcEntry> {
   Widget _footerCell(String text, double width, ErpTheme theme) {
     return Container(
       width: width,
-
       alignment: Alignment.center,
-
-      //
-      // margin: const EdgeInsets.only(
-      //   right: 12,
-      // ),
       padding: const EdgeInsets.symmetric(vertical: 2),
 
       child: Text(

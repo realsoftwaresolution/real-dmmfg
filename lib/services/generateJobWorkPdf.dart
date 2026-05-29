@@ -55,63 +55,158 @@ class JobWorkItem {
 /// DETAIL PDF
 /// ─────────────────────────────────────────────
 
-Future<Uint8List> generateJobWorkPdf(JobWorkPdfModel data) async {
+Future<Uint8List> generateJobWorkPdf(
+    JobWorkPdfModel data,
+    ) async {
+
   final pdf = pw.Document();
 
-  pdf.addPage(
-    pw.Page(
-      pageFormat: PdfPageFormat.a4.landscape,
-      margin: const pw.EdgeInsets.all(20),
+  const rowsPerPage = 15;
 
-      build: (context) {
-        return pw.Row(
-          children: [
-            /// LEFT COPY
-            pw.Expanded(child: _buildSlip(data, 'Original')),
+  final chunks = <List<JobWorkItem>>[];
 
-            pw.SizedBox(width: 20),
+  for (
+  int i = 0;
+  i < data.items.length;
+  i += rowsPerPage
+  ) {
 
-            /// RIGHT COPY
-            pw.Expanded(child: _buildSlip(data, 'Duplicate')),
-          ],
-        );
-      },
-    ),
-  );
+    chunks.add(
+      data.items.sublist(
+        i,
+        i + rowsPerPage > data.items.length
+            ? data.items.length
+            : i + rowsPerPage,
+      ),
+    );
+  }
+
+  for (final chunk in chunks) {
+
+    final pageData = JobWorkPdfModel(
+      headerInfo: data.headerInfo,
+      partyName: data.partyName,
+      partyType: data.partyType,
+      jobNo: data.jobNo,
+      date: data.date,
+      NaturalPartyCode: data.NaturalPartyCode,
+      CVDPartyCode: data.CVDPartyCode,
+      items: chunk,
+    );
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4.landscape,
+        margin: const pw.EdgeInsets.all(20),
+
+        build: (context) {
+
+          return pw.Row(
+            children: [
+
+              /// ORIGINAL
+              pw.Expanded(
+                child: _buildSlip(
+                  pageData,
+                  'Original',
+                ),
+              ),
+
+              pw.SizedBox(width: 20),
+
+              /// DUPLICATE
+              pw.Expanded(
+                child: _buildSlip(
+                  pageData,
+                  'Duplicate',
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
   return pdf.save();
 }
-
 /// ─────────────────────────────────────────────
 /// SUMMARY PDF
 /// ─────────────────────────────────────────────
 
-Future<Uint8List> generateJobWorkPdfSummary(JobWorkPdfModel data) async {
+Future<Uint8List> generateJobWorkPdfSummary(
+    JobWorkPdfModel data,
+    ) async {
+
   final pdf = pw.Document();
 
-  pdf.addPage(
-    pw.Page(
-      pageFormat: PdfPageFormat.a4.landscape,
-      margin: const pw.EdgeInsets.all(20),
-      build: (context) {
-        return pw.Row(
-          children: [
-            /// LEFT COPY
-            pw.Expanded(child: _buildSummarySlip(data, 'Original')),
+  const rowsPerPage = 25;
 
-            pw.SizedBox(width: 20),
+  final chunks = <List<JobWorkItem>>[];
 
-            /// RIGHT COPY
-            pw.Expanded(child: _buildSummarySlip(data, 'Duplicate')),
-          ],
-        );
-      },
-    ),
-  );
+  for (
+  int i = 0;
+  i < data.items.length;
+  i += rowsPerPage
+  ) {
+
+    chunks.add(
+      data.items.sublist(
+        i,
+        i + rowsPerPage > data.items.length
+            ? data.items.length
+            : i + rowsPerPage,
+      ),
+    );
+  }
+
+  for (final chunk in chunks) {
+
+    final pageData = JobWorkPdfModel(
+      headerInfo: data.headerInfo,
+      partyName: data.partyName,
+      partyType: data.partyType,
+      jobNo: data.jobNo,
+      date: data.date,
+      NaturalPartyCode: data.NaturalPartyCode,
+      CVDPartyCode: data.CVDPartyCode,
+      items: chunk,
+    );
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4.landscape,
+        margin: const pw.EdgeInsets.all(20),
+
+        build: (context) {
+
+          return pw.Row(
+            children: [
+
+              pw.Expanded(
+                child: _buildSummarySlip(
+                  pageData,
+                  'Original',
+                ),
+              ),
+
+              pw.SizedBox(width: 20),
+
+              pw.Expanded(
+                child: _buildSummarySlip(
+                  pageData,
+                  'Duplicate',
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
   return pdf.save();
 }
-
 /// ─────────────────────────────────────────────
 /// DETAIL SLIP
 /// ─────────────────────────────────────────────
@@ -136,6 +231,7 @@ pw.Widget _buildSlip(JobWorkPdfModel data, text) {
 
     child: pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
+      mainAxisSize: pw.MainAxisSize.min,
 
       children: [
         pw.Align(
@@ -253,7 +349,7 @@ pw.Widget _buildSummarySlip(JobWorkPdfModel data, text) {
 
     child: pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
-
+      mainAxisSize: pw.MainAxisSize.min,
       children: [
         pw.Align(
           alignment: pw.Alignment.topRight,
@@ -414,7 +510,27 @@ pw.Widget _buildHeader(JobWorkPdfModel data, {String title = 'Job Work Out'}) {
     address = (info['address'] ?? info['Address'] ?? '').toString();
     gstNo = (info['gstNo'] ?? info['GstNo'] ?? '').toString();
   }
-  print('ksdgfhdsfshfsj ${data.NaturalPartyCode}');
+
+  final article =
+  data.items.isNotEmpty
+      ? data.items.first.type.toUpperCase()
+      : '';
+  String partyCode = '';
+
+  if (article.contains('NATURAL')) {
+
+    partyCode =
+        data.NaturalPartyCode
+            ?.toString() ??
+            '';
+
+  } else if (article.contains('CVD')) {
+
+    partyCode =
+        data.CVDPartyCode
+            ?.toString() ??
+            '';
+  }
   return pw.Column(
     children: [
       pw.Center(
@@ -458,14 +574,16 @@ pw.Widget _buildHeader(JobWorkPdfModel data, {String title = 'Job Work Out'}) {
 
               pw.Row(
                 children: [
+
                   pw.Text(
                     data.partyName,
                     style: const pw.TextStyle(fontSize: 9),
                   ),
-                  if ((data.NaturalPartyCode ?? '').toString().isNotEmpty &&
-                      (data.CVDPartyCode ?? '').toString().isNotEmpty)
+
+                  if (partyCode.isNotEmpty)
+
                     pw.Text(
-                      '  [${data.NaturalPartyCode},${data.CVDPartyCode}]',
+                      ' [$partyCode]',
                       style: const pw.TextStyle(fontSize: 9),
                     ),
                 ],

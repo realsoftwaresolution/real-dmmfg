@@ -1104,7 +1104,6 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
 
   @override
   Widget build(BuildContext context) {
-    print(_isEditMode);
     return Consumer<TrnPlanningReceivedProvider>(
       builder: (ctx, prov, _) => Padding(
         padding: const EdgeInsets.all(8),

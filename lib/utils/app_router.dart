@@ -84,7 +84,7 @@ class AppRouter {
     '/2.28': (context) => const MstPolish(),
     '/2.29': (context) => const MstSymmetry(),
     '/2.30': (context) => const MstLsPartyWtCalcEntry(),
-    '/2.31': (context) => const MstSymmetry(),
+    '/2.31': (context) => const MstLsPartyWtCalcEntry(),
     '/3.01': (context) => const TrnRoughEntry(),
     '/3.02': (context) => const TrnRoughAssortEntry(),
     '/3.03': (context) => const TrnCutCreateEntry(),

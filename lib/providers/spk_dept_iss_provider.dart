@@ -5,23 +5,26 @@ import 'package:rs_dashboard/rs_dashboard.dart';
 import '../models/spkDeptIss_mst_model.dart';
 
 class SpkDeptIssProvider extends BaseProvider {
-  List<SpkDeptIssMstModel> _list     = [];
-  bool                     _isLoaded = false;
+  List<SpkDeptIssMstModel> _list = [];
+  bool _isLoaded = false;
 
-  bool                         get isLoaded => _isLoaded;
-  List<SpkDeptIssMstModel>     get list     => List.unmodifiable(_list);
-  List<Map<String, dynamic>>   get tableData =>
+  bool get isLoaded => _isLoaded;
+
+  List<SpkDeptIssMstModel> get list => List.unmodifiable(_list);
+
+  List<Map<String, dynamic>> get tableData =>
       _list.map((e) => e.toTableRow()).toList();
-// Provider mein ye map maintain karo
-// detMap declare karo (class level)
+
+  // Provider mein ye map maintain karo
+  // detMap declare karo (class level)
   Map<int, List<SpkDeptIssDetModel>> detMap = {};
 
-// SIRF EK loadDetails rakho — dono merge karo:
+  // SIRF EK loadDetails rakho — dono merge karo:
   Future<List<SpkDeptIssDetModel>> loadDetails(int mstID) async {
     final result = await request<List<SpkDeptIssDetModel>>(
       call: () => api.get('/spkDeptIss/$mstID'),
       onSuccess: (res) {
-        final data   = res.data;
+        final data = res.data;
         final rawDet = (data is Map ? data['det'] : data) as List? ?? [];
         return rawDet
             .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
@@ -29,10 +32,11 @@ class SpkDeptIssProvider extends BaseProvider {
       },
     );
     final dets = result ?? [];
-    detMap[mstID] = dets;   // ← detMap update
+    detMap[mstID] = dets; // ← detMap update
     notifyListeners();
     return dets;
   }
+
   // ── LOAD ALL ──────────────────────────────────────────────────────────────
   Future<void> load() async {
     final result = await request<List<SpkDeptIssMstModel>>(
@@ -45,25 +49,23 @@ class SpkDeptIssProvider extends BaseProvider {
       },
     );
     if (result != null) {
-      _list     = result;
+      _list = result;
       _isLoaded = true;
       notifyListeners();
     }
   }
-// BCode scan → PacketDet rows fetch
+
+  // BCode scan → PacketDet rows fetch
   Future<List<SpkDeptIssDetModel>> fetchByBCode({
     required String bCode,
-    required String    fromCrId,
+    required String fromCrId,
   }) async {
     final result = await request<List<SpkDeptIssDetModel>>(
       showLoader: false,
       call: () => api.get(
         '/spkDeptIss/scan-bcode',
 
-        query: {
-          'bCode':     bCode,
-          'lastCrId':  fromCrId.toString(),
-        },
+        query: {'bCode': bCode, 'lastCrId': fromCrId.toString()},
       ),
       onSuccess: (res) {
         final data = res.data['data'];
@@ -75,12 +77,45 @@ class SpkDeptIssProvider extends BaseProvider {
     );
     return result ?? [];
   }
+
+  Future<List<SpkDeptIssDetModel>> fetchByCutLot({
+    required String cutNo,
+    required String lotFrom,
+    required String lotTo,
+    required String fromCrId,
+  }) async {
+    final result = await request<List<SpkDeptIssDetModel>>(
+      showLoader: false,
+
+      call: () => api.get(
+        '/spkDeptIss/scan-bcode',
+        query: {
+          'bCode': null,
+          'cutNo': cutNo,
+          'fromLotNo': lotFrom,
+          'toLotNo': lotTo,
+          'lastCrId': fromCrId,
+        },
+      ),
+
+      onSuccess: (res) {
+        final data = res.data['data'];
+        final list = data is List ? data : [data];
+        return list
+            .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      },
+    );
+
+    return result ?? [];
+  }
+
   // ── CREATE ────────────────────────────────────────────────────────────────
   Future<bool> create(
-      Map<String, dynamic>       values,
-      List<SpkDeptIssDetModel>   details,
-      ) async {
-    final model  = _buildModel(values);
+    Map<String, dynamic> values,
+    List<SpkDeptIssDetModel> details,
+  ) async {
+    final model = _buildModel(values);
     // ✅ Convert model → map and remove BCode
     final modelMap = Map<String, dynamic>.from(model.toJson())
       ..remove('DeptCode')
@@ -89,19 +124,22 @@ class SpkDeptIssProvider extends BaseProvider {
       ..remove('FromCrID');
     // 🔥 REMOVE HERE
     final result = await request<SpkDeptIssMstModel>(
-      call: () => api.post('/spkDeptIss', data: {
-        ...modelMap, // ✅ cleaned
-        'details': details.map((e) {
-          final map = Map<String, dynamic>.from(e.toJson())
-            ..remove('sarinData')
-            ..remove('LastDmWt')
-            ..remove('LastDmPer')
-          ..remove('ArticalName')
-          ..remove('LastDmPer');
+      call: () => api.post(
+        '/spkDeptIss',
+        data: {
+          ...modelMap, // ✅ cleaned
+          'details': details.map((e) {
+            final map = Map<String, dynamic>.from(e.toJson())
+              ..remove('sarinData')
+              ..remove('LastDmWt')
+              ..remove('LastDmPer')
+              ..remove('ArticalName')
+              ..remove('LastDmPer');
 
-          return map;
-        }).toList(),
-      }),
+            return map;
+          }).toList(),
+        },
+      ),
       onSuccess: (res) {
         final data = res.data;
         print(data);
@@ -118,17 +156,15 @@ class SpkDeptIssProvider extends BaseProvider {
 
   // ── UPDATE ────────────────────────────────────────────────────────────────
   Future<bool> update(
-      int                        id,
-      Map<String, dynamic>       values,
-      List<SpkDeptIssDetModel>   details,
-      {
-        expectedProcess,
-        bCodeArray,
-        theme,
-        context,
-      }
-      ) async {
-    final model  = _buildModel(values);
+    int id,
+    Map<String, dynamic> values,
+    List<SpkDeptIssDetModel> details, {
+    expectedProcess,
+    bCodeArray,
+    theme,
+    context,
+  }) async {
+    final model = _buildModel(values);
     // ✅ Convert model → map and remove BCode
     final modelMap = Map<String, dynamic>.from(model.toJson())
       ..remove('BCode')
@@ -139,19 +175,22 @@ class SpkDeptIssProvider extends BaseProvider {
     // 🔥 REMOVE HERE
 
     final result = await request<SpkDeptIssMstModel>(
-      call: () => api.put('/spkDeptIss/$id', data: {
-        ...modelMap, // ✅ cleaned
-        'details': details.map((e) {
-          final map = Map<String, dynamic>.from(e.toJson())
-            ..remove('sarinData')
-            ..remove('LastDmWt')
-            ..remove('LastDmPer')
-            ..remove('ArticalName')
-            ..remove('LastDmPer');
-          return map;
-        }).toList(),
-        'bCodeArray': bCodeArray, 'expectedProcess': expectedProcess,
-      }),
+      call: () => api.put(
+        '/spkDeptIss/$id',
+        data: {
+          ...modelMap, // ✅ cleaned
+          'details': details.map((e) {
+            final map = Map<String, dynamic>.from(e.toJson())
+              ..remove('sarinData')
+              ..remove('LastDmWt')
+              ..remove('LastDmPer')
+              ..remove('ArticalName')
+              ..remove('LastDmPer');
+            return map;
+          }).toList(),
+          'bCodeArray': bCodeArray, 'expectedProcess': expectedProcess,
+        },
+      ),
       onSuccess: (res) {
         final data = res.data;
         print(data);
@@ -175,15 +214,14 @@ class SpkDeptIssProvider extends BaseProvider {
     return false;
   }
 
-
   // ── DELETE ────────────────────────────────────────────────────────────────
   Future<bool> delete(
-      int id, {
-        expectedProcess,
-        bCodeArray,
-        theme,
-        context,
-      }) async {
+    int id, {
+    expectedProcess,
+    bCodeArray,
+    theme,
+    context,
+  }) async {
     final result = await request<bool>(
       call: () => api.delete(
         '/spkDeptIss/$id',
@@ -221,10 +259,14 @@ class SpkDeptIssProvider extends BaseProvider {
         mstJson['details'] = rawDet;
         // Det se totals calculate karo (create/update ke baad)
         mstJson['TotPkt'] = rawDet.length;
-        mstJson['TotalPc'] = rawDet.fold<int>(0, (s, d) =>
-        s + ((d['TotalPc'] ?? 0) as num).toInt());
-        mstJson['TotalWt'] = rawDet.fold<double>(0.0, (s, d) =>
-        s + ((d['TotalWt'] ?? 0) as num).toDouble());
+        mstJson['TotalPc'] = rawDet.fold<int>(
+          0,
+          (s, d) => s + ((d['TotalPc'] ?? 0) as num).toInt(),
+        );
+        mstJson['TotalWt'] = rawDet.fold<double>(
+          0.0,
+          (s, d) => s + ((d['TotalWt'] ?? 0) as num).toDouble(),
+        );
         mstJson['Jno'] = rawDet.isNotEmpty ? rawDet.first['Jno'] : null;
       } else {
         mstJson = Map<String, dynamic>.from(data);
@@ -233,29 +275,32 @@ class SpkDeptIssProvider extends BaseProvider {
     }
     throw Exception('Unexpected response format');
   }
+
   // ── BUILD MODEL from form values ──────────────────────────────────────────
   SpkDeptIssMstModel _buildModel(Map<String, dynamic> v) {
     int? toI(String? s) => s == null || s.isEmpty ? null : int.tryParse(s);
 
     return SpkDeptIssMstModel(
-      spkDeptIssDate:  v['spkDeptIssDate'],
-      fromCrID:        toI(v['fromCrID']?.toString()),
-      toCrID:          toI(v['toCrID']?.toString()),
+      spkDeptIssDate: v['spkDeptIssDate'],
+      fromCrID: toI(v['fromCrID']?.toString()),
+      toCrID: toI(v['toCrID']?.toString()),
       deptProcessCode: toI(v['deptProcessCode']?.toString()),
-      deptCode:        toI(v['deptCode']?.toString()),
-      sflag:           v['sflag'],
-      stime:           v['Stime'],    // ← ADD
-      sdate:           v['Sdate'],    // ← ADD
-      logID:           toI(v['logID']?.toString()),
-      pcID:            v['pcID'],
-      ever:            toI(v['ever']?.toString()),
-      entryType:       v['entryType'] ?? 'B',
-      repairing:       v['repairing'] ?? 'N',
-      formType:        v['formType'] ?? 'DEPTISS',
-      proType:         v['proType'] ?? 'SPK',
-      formType1:       v['formType1'],
-      nukCrId:         toI(v['nukCrId']?.toString()),
-      planType:        v['planType'],
+      deptCode: toI(v['deptCode']?.toString()),
+      sflag: v['sflag'],
+      stime: v['Stime'],
+      // ← ADD
+      sdate: v['Sdate'],
+      // ← ADD
+      logID: toI(v['logID']?.toString()),
+      pcID: v['pcID'],
+      ever: toI(v['ever']?.toString()),
+      entryType: v['entryType'] ?? 'B',
+      repairing: v['repairing'] ?? 'N',
+      formType: v['formType'] ?? 'DEPTISS',
+      proType: v['proType'] ?? 'SPK',
+      formType1: v['formType1'],
+      nukCrId: toI(v['nukCrId']?.toString()),
+      planType: v['planType'],
     );
   }
 }

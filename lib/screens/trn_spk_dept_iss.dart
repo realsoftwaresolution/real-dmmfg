@@ -245,6 +245,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     // FROM first — these are the "scan source" fields
     for (final f in _fromDisplayFields) {
       final name = (f.userVisibilityName ?? '').toUpperCase();
+      print(name);
       if (radioNames.contains(name)) result[name] = f;
     }
 
@@ -255,7 +256,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         result[name] = f;
       }
     }
-
+    print(jsonEncode(result.values.toList()));
     return result;
   }
 
@@ -560,7 +561,143 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       () => _erpFormKey.currentState?.focusField('recpc'),
     );
   }
+// ─── 1. NEW: _onCutLotFetched ──────────────────────────────────────────────
+// Add this method right after _onBCodeScanned
 
+  Future<void> _onCutLotFetched() async {
+    if (_isBCodePending) return;
+
+    final cutNo   = (_entryVals['cutNo']   ?? '').trim();
+    final cutFrom = (_entryVals['cutFrom'] ?? '').trim();
+    final cutTo   = (_entryVals['cutTo']   ?? '').trim();
+
+    if (cutNo.isEmpty) {
+      _showSnack('Please enter Cut No.');
+      Future.delayed(
+        const Duration(milliseconds: 50),
+            () => _erpFormKey.currentState?.focusField('cutNo'),
+      );
+      return;
+    }
+
+    _isBCodePending = true;
+
+    final rows = await context.read<SpkDeptIssProvider>().fetchByCutLot(
+      cutNo:    cutNo,
+      lotFrom:  cutFrom,
+      lotTo:    cutTo,
+      fromCrId: _fromCrId!.toString(),
+    );
+
+    if (!mounted) return;
+    _isBCodePending = false;
+
+    if (rows.isEmpty) {
+      ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'Cut Lot',
+        message: 'No packets found for Cut No "$cutNo"'
+            '${cutFrom.isNotEmpty ? " (From: $cutFrom" : ''}'
+            '${cutTo.isNotEmpty   ? " To: $cutTo)"    : (cutFrom.isNotEmpty ? ')' : '')}.',
+      );
+      return;
+    }
+
+    int added = 0;
+    int skipped = 0;
+
+    for (final r in rows) {
+      final bCode = (r.bCode ?? '').toString().trim();
+
+      // Skip duplicates silently, count them
+      if (_detRows.any((e) => e.bCode.toString().trim() == bCode)) {
+        skipped++;
+        continue;
+      }
+
+      final orgPc = r.pc ?? 0;
+      final orgWt = r.wt ?? 0.0;
+      final issPc = (r.issPc == null || r.issPc == 0) ? orgPc : r.issPc!;
+      final issWt = (r.issWt == null || r.issWt == 0.0) ? orgWt : r.issWt!;
+      final recPc = (r.recPc == null || r.recPc == 0) ? issPc : r.recPc!;
+      final recWt = (r.recWt == null || r.recWt == 0.0) ? issWt : r.recWt!;
+
+      final srno  = _detRows.length + 1;
+
+      final newRow = SpkDeptIssDetModel(
+        srno:            srno,
+        id:              r.id,
+        jno:             r.jno,
+        jnoRecPc:        r.jnoRecPc,
+        bCode:           r.bCode,
+        ArticalName:     r.ArticalName,
+        pktNo:           r.pktNo,
+        cutNo:           r.cutNo,
+        clvCut:          r.clvCut,
+        shapeCode:       r.shapeCode,
+        purityCode:      r.purityCode,
+        colorCode:       r.colorCode,
+        diam:            r.diam,
+        kachaRec:        r.kachaRec ?? 'Y',
+        fromDeptCode:    _fromDeptCode,
+        toDeptCode:      _toDeptCodeVal,
+        fromCrId:        _fromCrId,
+        toCrId:          _toCrId,
+        deptCode:        _toDeptCodeVal,
+        deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
+        charniCode:      int.tryParse(_formValues['charniCode']      ?? ''),
+        tensionsCode:    int.tryParse(_formValues['tensionsCode']    ?? ''),
+        pc:              orgPc,
+        wt:              orgWt,
+        issPc:           issPc,
+        issWt:           issWt,
+        recPc:           recPc,
+        recWt:           recWt,
+        totalPc:         recPc,
+        totalWt:         recWt,
+        dmWt:            r.LastDmWt,
+        dmPer:           r.LastDmPer,
+        kPc:             int.tryParse(_entryVals['kpc']      ?? ''),
+        kWt:             double.tryParse(_entryVals['kwt']   ?? ''),
+        brPc:            int.tryParse(_entryVals['brpc']     ?? ''),
+        brWt:            double.tryParse(_entryVals['brwt']  ?? ''),
+        lossPc:          int.tryParse(_entryVals['losspc']   ?? ''),
+        lossWt:          double.tryParse(_entryVals['losswt']?? ''),
+        topsPc:          int.tryParse(_entryVals['topspc']   ?? ''),
+        topsWt:          double.tryParse(_entryVals['topswt']?? ''),
+        employeeCode:    int.tryParse(_entryVals['employee'] ?? ''),
+        signerCode:      int.tryParse(_entryVals['signer']   ?? ''),
+        remarksCode:     int.tryParse(_entryVals['remarks']  ?? ''),
+        dueDay:          int.tryParse(_entryVals['dueDay']   ?? ''),
+        entryType:       'B',
+        formType:        'SPK',
+        pktType:         'A',
+        confRec:         _autoRec,
+        clvRec:          'S',
+        confCrID:        _toCrId,
+      );
+
+      _detRows.add(newRow);
+      added++;
+    }
+
+    setState(() {
+      _lockMasterFields = _detRows.isNotEmpty;
+      _syncDetGrid();
+    });
+
+    _erpFormKey.currentState?.setFieldReadOnly('fromCrId', true);
+    _erpFormKey.currentState?.setFieldReadOnly('toCrId', true);
+    _erpFormKey.currentState?.setFieldReadOnly('deptProcessCode', true);
+
+    if (added > 0 && skipped > 0) {
+      _showSnack('Added $added packet(s). Skipped $skipped duplicate(s).');
+    } else if (skipped > 0) {
+      _showSnack('All $skipped packet(s) already added.');
+    }
+    // No snack when all clean — grid update is feedback enough.
+  }
   // ─────────────────────────────────────────────────────────────────────────
   //  CALCULATIONS
   // ─────────────────────────────────────────────────────────────────────────
@@ -1587,7 +1724,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
           label: 'FROM',
           type: ErpFieldType.dropdown,
           dropdownItems: fromItems,
-          sectionIndex: 0,
+          sectionIndex: 1,
           readOnly: _lockMasterFields || _isEditMode,
         ),
         ErpFieldConfig(
@@ -1595,7 +1732,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
           label: 'DEPT',
           type: ErpFieldType.text,
           readOnly: true,
-          sectionIndex: 0,
+          sectionIndex: 1,
         ),
         ErpFieldConfig(
           key: 'toCrId',
@@ -1603,14 +1740,14 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
           type: ErpFieldType.dropdown,
           dropdownItems: toItems,
           readOnly: !isFromSelected || _lockMasterFields || _isEditMode,
-          sectionIndex: 0,
+          sectionIndex: 1,
         ),
         ErpFieldConfig(
           key: 'toDept',
           label: 'DEPT',
           type: ErpFieldType.text,
           readOnly: true,
-          sectionIndex: 0,
+          sectionIndex: 1,
         ),
         ErpFieldConfig(
           key: 'deptProcessCode',
@@ -1618,14 +1755,14 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
           type: ErpFieldType.dropdown,
           dropdownItems: processItems,
           readOnly: !isToSelected || _lockMasterFields || _isEditMode,
-          sectionIndex: 0,
+          sectionIndex: 1,
         ),
         ErpFieldConfig(
           key: 'deptName',
           label: 'DEPT',
           type: ErpFieldType.text,
           readOnly: true,
-          sectionIndex: 0,
+          sectionIndex: 1,
         ),
       ],
     ];
@@ -1669,6 +1806,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       // Use _getRadioFields so radio options appear even when only one of
       // _fromDisplayFields or _toDisplayFields contains these field names.
       final radioFieldsMap = _getRadioFields();
+      print(jsonEncode(radioFieldsMap.values.toList()));
 
       final radioItems = radioFieldsMap.values
           .map(
@@ -1681,11 +1819,14 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
       // Resolve currently selected radio name from whichever list has it
       final selectedField = radioFieldsMap.values.firstWhereOrNull(
-        (f) => f.userVisibilityCode.toString() == _selectedRadioCode,
+        (f) => f.userVisibilityCode.toString() == _selectedRadioCode.toString(),
       );
+      print(jsonEncode(radioFieldsMap.values.first.userVisibilityCode));
+      print(jsonEncode(_selectedRadioCode));
+      print(jsonEncode(selectedField));
       final selectedName = (selectedField?.userVisibilityName ?? '')
           .toUpperCase();
-
+print('selectedName $selectedName');
       // Compute radio widget width based on option count
       final radioWidth = switch (radioItems.length) {
         <= 1 => 150.0,
@@ -1741,6 +1882,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             type: ErpFieldType.text,
             isEntryField: true,
             sectionIndex: 3,
+            width: 200,
           ),
           ErpFieldConfig(
             key: 'cutFrom',
@@ -1748,6 +1890,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             type: ErpFieldType.text,
             isEntryField: true,
             sectionIndex: 3,
+            width: 200,
           ),
           ErpFieldConfig(
             key: 'cutTo',
@@ -1755,6 +1898,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             type: ErpFieldType.text,
             isEntryField: true,
             sectionIndex: 3,
+            width: 200,
           ),
         ]);
       }
@@ -2112,27 +2256,45 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       onEntryAdd: (sectionIndex) {
         if (sectionIndex != 3) return;
 
-        // Resolve selected scan-type from radio fields (either list)
         final selectedName = () {
           final f = _getRadioFields().values.firstWhereOrNull(
-            (f) => f.userVisibilityCode.toString() == _selectedRadioCode,
+                (f) => f.userVisibilityCode.toString() == _selectedRadioCode,
           );
           return (f?.userVisibilityName ?? '').toUpperCase();
         }();
 
+        // CUT LOT → batch fetch
+        if (selectedName == 'CUT LOT') {
+          if (_fromCrId == null) return;
+          _onCutLotFetched();
+          return;
+        }
+
+        // BCODE → single scan must precede add
         if (selectedName == 'BCODE' &&
             _scannedDet == null &&
             _editingDetIndex == null) {
           Future.delayed(
             const Duration(milliseconds: 50),
-            () => _erpFormKey.currentState?.focusField('scanValue'),
+                () => _erpFormKey.currentState?.focusField('scanValue'),
           );
           return;
         }
+
         _addEntry();
       },
       onFieldChanged: (key, value) {
         _formValues[key] = value.toString();
+        if (key == 'scanType') {
+
+          setState(() {
+
+            _selectedRadioCode = value.toString();
+
+          });
+
+          _rebuildForm();
+        }
         switch (key) {
           case 'fromCrId':
             _onFromSelected(value.toString());
@@ -2185,81 +2347,90 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         }
       },
       onFieldSubmitted: (key, value) {
-        if (key != 'scanValue') return;
+        // ── scanValue submit ────────────────────────────────────────────────────
+        if (key == 'scanValue') {
+          final scanVal = value.toString().trim();
+          if (scanVal.isEmpty) return;
+          if (_selectedRadioCode == null || _fromCrId == null) return;
 
-        final scanVal = value.toString().trim();
-        if (scanVal.isEmpty) return;
-        if (_selectedRadioCode == null || _fromCrId == null) return;
+          final merged = _getMergedFields();
+          if (merged.isEmpty) return;
 
-        final merged = _getMergedFields();
-        if (merged.isEmpty) return;
-
-        final selectedField = merged.values.firstWhereOrNull(
-          (f) => f.userVisibilityCode.toString() == _selectedRadioCode,
-        );
-        final selectedName = (selectedField?.userVisibilityName ?? '')
-            .toUpperCase();
-
-        if (selectedName == 'BCODE') {
-          // Duplicate check
-          final isDuplicate = _detRows.any(
-            (r) => r.bCode?.toString() == scanVal,
+          final selectedField = _getRadioFields().values.firstWhereOrNull(
+                (f) => f.userVisibilityCode.toString() == _selectedRadioCode,
           );
+          final selectedName =
+          (selectedField?.userVisibilityName ?? '').toUpperCase();
 
-          if (isDuplicate) {
-            ErpResultDialog.showError(
-              context: context,
-              theme: _theme,
-              title: 'Duplicate',
-              message: 'This BCode already added.',
-            );
+          if (selectedName == 'BCODE') {
+            final isDuplicate =
+            _detRows.any((r) => r.bCode?.toString() == scanVal);
+            if (isDuplicate) {
+              ErpResultDialog.showError(
+                context: context,
+                theme: _theme,
+                title: 'Duplicate',
+                message: 'This BCode already added.',
+              );
+              _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+              Future.delayed(
+                const Duration(milliseconds: 50),
+                    () => _erpFormKey.currentState?.focusField('scanValue'),
+              );
+              return;
+            }
 
-            _erpFormKey.currentState?.updateFieldValue('scanValue', '');
-
-            Future.delayed(
-              const Duration(milliseconds: 50),
-              () => _erpFormKey.currentState?.focusField('scanValue'),
-            );
-
+            _onBCodeScanned(scanVal).then((_) {
+              if (_scannedDet != null && !_hasEntryFields()) {
+                _addEntry();
+                _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+                _entryVals['scanValue'] = '';
+                _scannedDet = null;
+                Future.delayed(
+                  const Duration(milliseconds: 50),
+                      () => _erpFormKey.currentState?.focusField('scanValue'),
+                );
+              }
+            });
             return;
           }
 
-          // API Call
-          _onBCodeScanned(scanVal).then((_) {
-            // Record direct add only when no entry fields
-            if (_scannedDet != null && !_hasEntryFields()) {
-              _addEntry();
-
-              // Clear scan field
-              _erpFormKey.currentState?.updateFieldValue('scanValue', '');
-
-              _entryVals['scanValue'] = '';
-
-              _scannedDet = null;
-
-              Future.delayed(
-                const Duration(milliseconds: 50),
-                () => _erpFormKey.currentState?.focusField('scanValue'),
+          // Non-BCODE duplicate check (ID / JNO / QR CODE)
+          if (_editingDetIndex == null) {
+            final isDuplicate = _detRows.any(
+                  (r) => r.id?.toString() == scanVal || r.jno?.toString() == scanVal,
+            );
+            if (isDuplicate) {
+              ErpResultDialog.showError(
+                context: context,
+                theme: _theme,
+                title: 'Duplicate',
+                message: 'This entry already added.',
               );
             }
-          });
-
+          }
           return;
         }
 
-        // Non-BCODE duplicate check
-        if (_editingDetIndex == null) {
-          final isDuplicate = _detRows.any(
-            (r) => r.id?.toString() == scanVal || r.jno?.toString() == scanVal,
+        // ── cutNo / cutFrom / cutTo: Enter key advances focus ──────────────────
+        if (key == 'cutNo') {
+          Future.delayed(
+            const Duration(milliseconds: 50),
+                () => _erpFormKey.currentState?.focusField('cutFrom'),
           );
-          if (isDuplicate) {
-            ErpResultDialog.showError(
-              context: context,
-              theme: _theme,
-              title: 'Duplicate',
-              message: 'This entry already added.',
-            );
-          }
+          return;
+        }
+        if (key == 'cutFrom') {
+          Future.delayed(
+            const Duration(milliseconds: 50),
+                () => _erpFormKey.currentState?.focusField('cutTo'),
+          );
+          return;
+        }
+        // cutTo Enter = trigger the batch fetch directly
+        if (key == 'cutTo') {
+          if (_fromCrId != null) _onCutLotFetched();
+          return;
         }
       },
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
