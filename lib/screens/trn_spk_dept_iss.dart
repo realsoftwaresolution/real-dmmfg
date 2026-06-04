@@ -1093,6 +1093,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         return SpkDeptIssDetModel(
           srno: e.key + 1,
           spkDeptIssMstID: v.spkDeptIssMstID,
+          spkDeptIssDetID: v.spkDeptIssDetID,
           id: v.id,
           jno: v.jno,
           bCode: v.bCode,

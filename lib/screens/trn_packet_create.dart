@@ -273,6 +273,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
           type: ErpFieldType.number,
           flex: 1,
           sectionIndex: 1,
+          readOnly: true,
           isEntryField: true,
         ),
         ErpFieldConfig(
@@ -948,6 +949,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
           entryType: _detRows[i].entryType,
           lastProcess: _detRows[i].lastProcess,
           pktValid: _detRows[i].pktValid,
+          packetDetID: _detRows[i].packetDetID
         );
       }
 
