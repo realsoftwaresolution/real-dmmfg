@@ -554,7 +554,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     setState(() => _scannedDet = r);
 
     Future.delayed(
-      const Duration(milliseconds: 100),
+      const Duration(milliseconds: 300),
       () => _erpFormKey.currentState?.focusField('recWt'),
     );
   }
@@ -1245,6 +1245,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       _laserApiRows = [];
 
       _laserApiDisplay = [];
+      selectedRows.clear();
     });
     _setDefaultFormValues();
   }
@@ -1269,16 +1270,26 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     final procProv = context.read<DeptProcessProvider>();
     final tensProv = context.read<TensionsProvider>();
     final remarkProv = context.read<RemarksProvider>();
-    //CUT
-    final remarkItems = remarkProv.list.where((e) => e.active == true).toList()
+
+
+
+    final selectedProcess = int.tryParse(_formValues['deptProcessCode'] ?? '');
+
+    final remarkItems =
+    remarkProv.list
+        .where(
+          (e) => e.active == true && e.deptProcessCode == selectedProcess,
+    )
+        .toList()
       ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+
     final remarkDropdown = remarkItems
         .map(
           (e) => ErpDropdownItem(
-            label: e.remarksName ?? '',
-            value: e.remarksCode?.toString() ?? '',
-          ),
-        )
+        label: e.remarksName ?? '',
+        value: e.remarksCode?.toString() ?? '',
+      ),
+    )
         .toList();
     final isFromSelected = _fromCrId != null;
     final isToSelected = _toCrId != null;
@@ -1460,7 +1471,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
           dropdownItems: remarkDropdown,
           width: 250,
           sectionIndex: 3,
-          readOnly: _isEditMode || _detRows.isNotEmpty,
+          readOnly: remarkDropdown.isEmpty || _isEditMode || _detRows.isNotEmpty,
         ),
         ErpFieldConfig(
           key: 'print',
@@ -1546,6 +1557,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         type: ErpFieldType.number,
         isEntryField: true,
         sectionIndex: 3,
+        skipFocus: true,
         flex: 1,
       ),
       ErpFieldConfig(
@@ -1608,18 +1620,19 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         sectionIndex: 3,
         readOnly: !isFirstRow,
         flex: 1,
+        showAddButton: true,
       ),
 
       // PART NAME
-      ErpFieldConfig(
-        key: 'partName',
-        label: 'PART NAME',
-        type: ErpFieldType.amount,
-        isEntryField: true,
-        showAddButton: true,
-        sectionIndex: 3,
-        flex: 1,
-      ),
+      // ErpFieldConfig(
+      //   key: 'partName',
+      //   label: 'PART NAME',
+      //   type: ErpFieldType.amount,
+      //   isEntryField: true,
+      //
+      //   sectionIndex: 3,
+      //   flex: 1,
+      // ),
     ];
 
     rows.add(singleRow);
@@ -1684,26 +1697,10 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     ErpColumnConfig(key: 'toDeptName', label: 'TO DEPT', width: 160),
     ErpColumnConfig(key: 'processName', label: 'PROCESS', width: 150),
     ErpColumnConfig(key: 'deptName', label: 'DEPT', width: 140),
-    ErpColumnConfig(
-      key: 'jno',
-      label: 'JNO',
-      width: 140,
-    ),
-    ErpColumnConfig(
-      key: 'totPkt',
-      label: 'TOT PKT',
-      width: 170,
-    ),
-    ErpColumnConfig(
-      key: 'totalPc',
-      label: 'TOT PC',
-      width: 170,
-    ),
-    ErpColumnConfig(
-      key: 'totalWt',
-      label: 'TOT WT',
-      width: 170,
-    ),
+    ErpColumnConfig(key: 'jno', label: 'JNO', width: 140),
+    ErpColumnConfig(key: 'totPkt', label: 'TOT PKT', width: 170),
+    ErpColumnConfig(key: 'totalPc', label: 'TOT PC', width: 170),
+    ErpColumnConfig(key: 'totalWt', label: 'TOT WT', width: 170),
   ];
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1809,13 +1806,11 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     final selectedCompany = context.read<CompanyProvider>().selectedCompanyCode;
     print(selectedCompany);
     final company = companies.firstWhereOrNull(
-          (e) => e.companyCode.toString() == selectedCompany.toString(),
+      (e) => e.companyCode.toString() == selectedCompany.toString(),
     );
     print(jsonEncode(company));
     _selectedCompany = company;
-    setState(() {
-
-    });
+    setState(() {});
     final mainBCode = _entryVals['scanValue'] ?? '';
     if (mainBCode.isEmpty) return;
 
@@ -1878,6 +1873,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
           grouped[cutNo] = {
             'cutNo': cutNo,
             'articalName': e.ArticalName ?? '',
+
             /// UNIQUE PKTNO
             'pktNos': <String>{},
 
@@ -1956,21 +1952,31 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       isEditMode: _isEditMode,
       isShowPrintButton: true,
       printOnPress: () async {
-        printJobWorkPdf();
-        if (selectedRows.isNotEmpty && _selectedMst != null) {
-          final bCodeArray = selectedRows.map((e) {
-            return {
-              'SPKDeptIssMstID': _selectedMst!.spkDeptIssMstID,
-              'BCode': int.tryParse(e.toString()) ?? 0,
-            };
-          }).toList();
+        print(selectedRows);
+        if (selectedRows.isNotEmpty) {
+          final bCodeArray = selectedRows
+              .where((bCode) {
+                final row = _laserApiRows.firstWhere(
+                  (r) => r.bCode.toString() == bCode.toString(),
+                );
 
+                return row.bCode != row.MainBCode;
+              })
+              .map((bCode) {
+                return {
+                  'SPKDeptIssMstID': _laserApiRows.first.spkDeptIssMstID,
+                  'BCode': int.tryParse(bCode.toString()) ?? 0,
+                };
+              })
+              .toList();
+          if (bCodeArray.isEmpty) return;
           await openPdf(
             bCodeArray: bCodeArray,
             token: token!,
             apiName: 'spkDeptIss',
           );
         }
+        // printJobWorkPdf();
       },
       onEntryAdd: (sectionIndex) {
         if (sectionIndex != 3) return;
@@ -2053,9 +2059,19 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
                 if (data.isNotEmpty) {
                   if (_entryVals['print'] == 'true' && token != null) {
                     final mstId = data.first.spkDeptIssMstID;
-
+                    final selectedMainBCode = data
+                        .firstWhere(
+                          (e) =>
+                              e.bCode.toString() ==
+                              _entryVals['scanValue'].toString(),
+                        )
+                        .MainBCode;
                     final bCodeArray = data
-                        .where((e) => e.bCode != null && e.bCode != '0')
+                        .where(
+                          (e) =>
+                              e.MainBCode == selectedMainBCode &&
+                              e.bCode != e.MainBCode,
+                        )
                         .map(
                           (e) => {
                             'SPKDeptIssMstID': mstId,
@@ -2079,7 +2095,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
                     _detDisplay.clear();
                     _detRows.clear();
                   });
-                  await printJobWorkPdf();
                   _clearEntryFields();
 
                   await context.read<TrnLaserReceivedProvider>().load();
@@ -2131,6 +2146,12 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
               });
             });
             return;
+          }
+          final isFirstRow = _detRows.isEmpty || _editingDetIndex == 0;
+
+          if (!isFirstRow) {
+            if (!_validateEntry()) return; // ✅ ADD THIS
+            _addEntry();
           }
         }
 
@@ -2394,16 +2415,23 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
                     selectedRowKeys: selectedRows,
                     rowKey: (row) => row['BCode'],
                     onRowSelect: (selected, row) {
+                      final bCode = row['BCode'];
+                      final mainBCode = row['MainBCode'];
+
+                      // Parent Row Skip
+                      if (bCode.toString() == mainBCode.toString()) {
+                        return;
+                      }
+
                       setState(() {
-                        final key = row['BCode'].toString();
+                        final key = bCode.toString();
+
                         if (selected) {
-                          if (!selectedRows
-                              .map((e) => e.toString())
-                              .contains(key)) {
+                          if (!selectedRows.contains(key)) {
                             selectedRows.add(key);
                           }
                         } else {
-                          selectedRows.removeWhere((e) => e.toString() == key);
+                          selectedRows.remove(key);
                         }
                       });
                     },
@@ -2411,6 +2439,11 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
                       setState(() {
                         if (value == true) {
                           selectedRows = _laserApiRows
+                              .where(
+                                (e) =>
+                                    e.bCode.toString() !=
+                                    e.MainBCode.toString(),
+                              )
                               .map((e) => e.bCode.toString())
                               .toList();
                         } else {
@@ -2536,19 +2569,10 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         ..['deptName'] = toDeptName
         ..['processName'] = processName
         ..['spkDeptIssTime'] = _formatTime(e.stime)
-        ..['jno'] =
-            e.jnoFirst?.toString() ?? ''
-
-        ..['totPkt'] =
-            e.totPkt?.toString() ?? '0'
-
-        ..['totalPc'] =
-            e.totalPc.toString() ?? '0'
-
-        ..['totalWt'] =
-        fThreeDecimal(
-          e.totalWt ?? 0,
-        );
+        ..['jno'] = e.jnoFirst?.toString() ?? ''
+        ..['totPkt'] = e.totPkt?.toString() ?? '0'
+        ..['totalPc'] = e.totalPc.toString() ?? '0'
+        ..['totalWt'] = fThreeDecimal(e.totalWt ?? 0);
 
       return row;
     }).toList();

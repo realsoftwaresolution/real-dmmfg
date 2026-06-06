@@ -316,6 +316,7 @@ class PacketDetModel {
     'LotNo': lotNo ?? 0,
 
     'LotCode': lotCode ?? '',
+    'PktTypeCode': pktTypeCode ?? '',
 
     'Srno': srno ?? 0,
 

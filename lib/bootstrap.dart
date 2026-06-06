@@ -79,8 +79,10 @@ import 'providers/Ls_party_wt_calc_entry_provider.dart';
 import 'providers/Packet_History_provider.dart';
 import 'providers/factory_man_group_provider.dart';
 
-String baseUrl = 'http://50.62.183.116:5000/api';
-// String baseUrl = 'https://copyrighted-two-ready-asked.trycloudflare.com/api';
+// String baseUrl = 'http://50.62.183.116:5000/api';
+String baseUrl = 'https://ampland-prior-girls-feel.trycloudflare.com/api';
+//CU-18,5/6/2026,14:29,0.122,0.045,ROUND,F,MACKABLE,klhkhkhjkkh,L:3.01,W:2.01,1.27,firoz,S.OVAL
+
 Future<void> bootstrap({required FutureOr<Widget> Function() fn}) async {
   return runZonedGuarded(
     () async {

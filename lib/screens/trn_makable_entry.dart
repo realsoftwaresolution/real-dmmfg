@@ -81,6 +81,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
   bool _processSelected = false;
   bool _lockMasterFields = false;
   bool _isBCodePending = false;
+  bool _allowQrCode = false;
 
   // ── From / To counter ─────────────────────────────────────────────────────
   int? _fromCrId;
@@ -154,6 +155,20 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
               .list
               .firstWhere((s) => s.shapeCode == code)
               .shapeName ??
+          '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  String _colorNameFor(int? code) {
+    if (code == null) return '';
+    try {
+      return context
+              .read<ColorProvider>()
+              .list
+              .firstWhere((s) => s.colorCode == code)
+              .colorName ??
           '';
     } catch (_) {
       return '';
@@ -250,8 +265,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         context.read<CompanyProvider>().loadCompanies(),
       ]);
       if (!mounted) return;
-      _setDefaultFormValues();
-
       // Auto-fill FROM from logged-in user
       final loggedUser = context.read<AuthProvider>().user;
       if (loggedUser?.crId != null) {
@@ -407,6 +420,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
   }
 
   Future<void> _onProcessSelected(String procCodeStr) async {
+    print(procCodeStr);
     _formValues['deptProcessCode'] = procCodeStr;
 
     if (procCodeStr.isEmpty || _toCrId == null) {
@@ -473,10 +487,18 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       );
       return;
     } else {
-      Future.delayed(
-        const Duration(milliseconds: 100),
-        () => _erpFormKey.currentState?.focusField('dmWt'),
-      );
+      if (_allowQrCode) {
+        Future.delayed(
+          const Duration(milliseconds: 100),
+
+          () => _erpFormKey.currentState?.focusField('qrCode'),
+        );
+      } else {
+        Future.delayed(
+          const Duration(milliseconds: 100),
+          () => _erpFormKey.currentState?.focusField('dmWt'),
+        );
+      }
     }
     final r = rows.first;
 
@@ -488,15 +510,11 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     final orgPc = r.pc ?? 0;
     final orgWt = r.wt ?? 0;
 
-    final issPc = (r.issPc == null || r.issPc == 0) ?orgPc : r.issPc;
-    final issWt = (r.issWt == null || r.issWt == 0)
-        ? orgWt
-        : r.issWt!;
+    final issPc = (r.issPc == null || r.issPc == 0) ? orgPc : r.issPc;
+    final issWt = (r.issWt == null || r.issWt == 0) ? orgWt : r.issWt!;
 
     final recPc = (r.recPc == null || r.recPc == 0) ? orgPc : r.recPc;
-    final recWt = (r.recWt == null || r.recWt == 0)
-        ? issWt
-        : r.recWt!;
+    final recWt = (r.recWt == null || r.recWt == 0) ? issWt : r.recWt!;
 
     set('issPc', issPc.toString());
     set('issWt', fThreeDecimal(issWt));
@@ -510,9 +528,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     set('length', r.length?.toString());
     set('height', r.height?.toString());
     setState(() => _scannedDet = r);
-
-
-
 
     setState(() => _scannedDet = r);
   }
@@ -549,10 +564,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     } else {
       _entryVals['dmPer'] = '0';
 
-      _erpFormKey.currentState?.updateFieldValue(
-        'dmPer',
-        '0',
-      );
+      _erpFormKey.currentState?.updateFieldValue('dmPer', '0');
     }
   }
 
@@ -657,6 +669,103 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     );
   }
 
+  void _processQrCode(String qrText) {
+    final scanValue = (_entryVals['scanValue'] ?? '').trim();
+
+    if (scanValue.isEmpty) {
+      return;
+    }
+
+    if (scanValue.isEmpty) {
+      _entryVals['qrCode'] = '';
+      _erpFormKey.currentState?.updateFieldValue('qrCode', '');
+
+      Future.delayed(
+        const Duration(milliseconds: 50),
+        () => _erpFormKey.currentState?.focusField('scanValue'),
+      );
+      return;
+    }
+
+    final parts = qrText.split(',');
+
+    void set(String key, String value) {
+      _entryVals[key] = value;
+      _erpFormKey.currentState?.updateFieldValue(key, value);
+    }
+
+    final shapeName = parts[5].trim();
+    final colorName = parts[6].trim();
+    final purityName = parts[7].trim();
+    final cutName = parts[8].trim();
+    final colorProv = context.read<ColorProvider>();
+    final purityProv = context.read<PurityProvider>();
+    final shapeProv = context.read<ShapeProvider>();
+    final cutProv = context.read<CutProvider>();
+    final shapeRow = shapeProv.list.firstWhereOrNull(
+      (e) =>
+          (e.shapeName ?? '').trim().toUpperCase() == shapeName.toUpperCase(),
+    );
+
+    final colorRow = colorProv.list.firstWhereOrNull(
+      (e) =>
+          (e.colorName ?? '').trim().toUpperCase() == colorName.toUpperCase(),
+    );
+
+    final purityRow = purityProv.list.firstWhereOrNull(
+      (e) =>
+          (e.purityName ?? '').trim().toUpperCase() == purityName.toUpperCase(),
+    );
+
+    final cutRow = cutProv.cuts.firstWhereOrNull(
+      (e) => (e.cutName ?? '').trim().toUpperCase() == cutName.toUpperCase(),
+    );
+
+    if (shapeRow == null ||
+        colorRow == null ||
+        purityRow == null ||
+        cutRow == null) {
+      _showSnack('QR Code master data not found');
+
+      _entryVals['qrCode'] = '';
+      _entryVals['scanValue'] = '';
+
+      _erpFormKey.currentState?.updateFieldValue('qrCode', '');
+
+      _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+
+      Future.delayed(
+        const Duration(milliseconds: 50),
+        () => _erpFormKey.currentState?.focusField('scanValue'),
+      );
+
+      return;
+    }
+
+    // 0.122 = Mackable Wt
+    set('mackRoughWt', parts[3]);
+
+    // 0.045 = DmWt
+    set('dmWt', parts[4]);
+
+    set('shape', shapeRow.shapeCode.toString());
+    set('color', colorRow.colorCode.toString());
+    set('purity', purityRow.purityCode.toString());
+    set('cutCode', cutRow.cutCode.toString());
+
+    // L:3.01
+    final lengthStr = parts[9].replaceAll('L:', '').trim();
+    set('length', lengthStr);
+
+    // W:2.01
+    final widthStr = parts[10].replaceAll('W:', '').trim();
+    set('diam', widthStr);
+
+    // 1.27
+    set('height', parts[11]);
+    print('_entryVals ${_entryVals.toString()}');
+  }
+
   /// Build a detail row for an existing (edit) record.
   SpkDeptIssDetModel _buildEditedRow({
     required int? srno,
@@ -677,12 +786,9 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       cutNo: existing.cutNo,
       clvCut: existing.clvCut,
       ArticalName: existing.ArticalName,
-      shapeCode: _isFieldVisible('SHAPE')
-          ?existing.shapeCode:0,
-      purityCode: _isFieldVisible('PURITY')
-          ?existing.purityCode:0,
-      colorCode: _isFieldVisible('COLOR')
-          ?existing.colorCode:0,
+      shapeCode: _isFieldVisible('SHAPE') ? existing.shapeCode : 0,
+      purityCode: _isFieldVisible('PURITY') ? existing.purityCode : 0,
+      colorCode: _isFieldVisible('COLOR') ? existing.colorCode : 0,
       kachaRec: existing.kachaRec,
       qrCode: existing.qrCode,
       entryType: existing.entryType,
@@ -704,7 +810,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       totalPc: recPc,
       totalWt: recWt,
       dmWt: _isFieldVisible('DM WT')
-          ?double.tryParse(_entryVals['dmWt'] ?? ''):0,
+          ? double.tryParse(_entryVals['dmWt'] ?? '')
+          : 0,
       dmPer: existing.dmPer,
       kPc: int.tryParse(_entryVals['kpc'] ?? ''),
       kWt: double.tryParse(_entryVals['kwt'] ?? ''),
@@ -722,16 +829,16 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       diffDmWt: double.tryParse(_entryVals['diffDmWt'] ?? ''),
       recutEmp: double.tryParse(_entryVals['recutEmp'] ?? '0.000'),
       ratio: double.tryParse(_entryVals['ratio'] ?? ''),
-      planShape: _isFieldVisible('SHAPE')
-          ?_entryVals['shape'] ?? '':0,
+      planShape: _isFieldVisible('SHAPE') ? _entryVals['shape'] ?? '' : 0,
       planPurity: _entryVals['planPurity'] ?? '',
       partName: int.tryParse(_entryVals['partName'].toString()),
       orderMstID: int.tryParse(_entryVals['orderMstId'] ?? ''),
       amountRs: double.tryParse(_entryVals['amount'] ?? '0.000'),
       amount: double.tryParse(_entryVals['amount'] ?? '0.000'),
       remarks: _entryVals['remarks'] ?? '',
-      cutCode:_isFieldVisible('CUT')
-          ? int.tryParse(_entryVals['cutCode'] ?? ''):0,
+      cutCode: _isFieldVisible('CUT')
+          ? int.tryParse(_entryVals['cutCode'] ?? '')
+          : 0,
       plDmWt: double.tryParse(_entryVals['dmWt'] ?? '0.000'),
       plDmPer: double.tryParse(_entryVals['dmPer'] ?? '0.00'),
       fluo: _isFieldVisible('FLUO')
@@ -747,7 +854,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           ? int.tryParse(_formValues['tensionCode'] ?? '')
           : 0,
       length: _isFieldVisible('LENGTH')
-          ? int.tryParse(_entryVals['length'].toString())
+          ? double.tryParse(_entryVals['length'].toString())
           : 0,
       diam: _isFieldVisible('DIAM')
           ? double.tryParse(_entryVals['diam'].toString())
@@ -755,6 +862,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       height: _isFieldVisible('HEIGHT')
           ? double.tryParse(_entryVals['height'].toString())
           : 0,
+      mackRoughWt: double.tryParse(_entryVals['mackRoughWt'] ?? '0.0000'),
       formType: 'SPK',
       confRec: _autoRec,
       clvRec: 'S',
@@ -781,11 +889,12 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       clvCut: _scannedDet?.clvCut,
       ArticalName: _scannedDet?.ArticalName,
       shapeCode: _isFieldVisible('SHAPE')
-          ? int.tryParse(_entryVals['shape'] ?? ''):0,
-      purityCode: _isFieldVisible('PURITY')
-          ? _scannedDet?.purityCode:0,
+          ? int.tryParse(_entryVals['shape'] ?? '')
+          : 0,
+      purityCode: _isFieldVisible('PURITY') ? _scannedDet?.purityCode : 0,
       colorCode: _isFieldVisible('COLOR')
-          ? int.tryParse(_entryVals['color'] ?? ''):0,
+          ? int.tryParse(_entryVals['color'] ?? '')
+          : 0,
       kachaRec: _scannedDet?.kachaRec ?? 'Y',
       fromDeptCode: _fromDeptCode,
       toDeptCode: _toDeptCodeVal,
@@ -794,8 +903,9 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       deptCode: _toDeptCodeVal,
       deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
       charniCode: int.tryParse(_entryVals['charniCode'] ?? ''),
-      pc: _scannedDet?.pc  ?? 0,
-      wt: _scannedDet?.wt  ?? 0.000,
+      mackRoughWt: double.tryParse(_entryVals['mackRoughWt'] ?? '0.0000'),
+      pc: _scannedDet?.pc ?? 0,
+      wt: _scannedDet?.wt ?? 0.000,
       issPc: int.tryParse(issPcStr),
       issWt: double.tryParse(issWtStr),
       recPc: recPc,
@@ -803,7 +913,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       totalPc: recPc,
       totalWt: recWt,
       dmWt: _isFieldVisible('DM WT')
-          ? double.tryParse(_entryVals['dmWt'] ?? ''):0.000,
+          ? double.tryParse(_entryVals['dmWt'] ?? '')
+          : 0.000,
       dmPer: _scannedDet?.dmPer ?? 0,
       kPc: int.tryParse(_entryVals['kpc'] ?? ''),
       kWt: double.tryParse(_entryVals['kwt'] ?? ''),
@@ -825,8 +936,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       plDmPer: double.tryParse(_entryVals['dmPer'] ?? '0.00'),
       recutEmp: double.tryParse(_entryVals['recutEmp'] ?? '0.000'),
       ratio: double.tryParse(_entryVals['ratio'] ?? ''),
-      planShape: _isFieldVisible('SHAPE')
-          ? _entryVals['shape'] ?? '':0,
+      planShape: _isFieldVisible('SHAPE') ? _entryVals['shape'] ?? '' : 0,
       planPurity: _entryVals['planPurity'] ?? '',
       qrCode: _entryVals['qrCode'] ?? '',
       partName: int.tryParse(_entryVals['partName'].toString()),
@@ -835,7 +945,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       amount: double.tryParse(_entryVals['amount'] ?? '0.000'),
       remarks: _entryVals['remarks'] ?? '',
       cutCode: _isFieldVisible('CUT')
-          ? int.tryParse(_entryVals['cutCode'] ?? ''):0,
+          ? int.tryParse(_entryVals['cutCode'] ?? '')
+          : 0,
       fluo: _isFieldVisible('FLUO')
           ? int.tryParse(_formValues['fluo'] ?? '')
           : 0,
@@ -849,7 +960,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           ? int.tryParse(_formValues['tensionCode'] ?? '')
           : 0,
       length: _isFieldVisible('LENGTH')
-          ? int.tryParse(_entryVals['length'].toString())
+          ? double.tryParse(_entryVals['length'].toString())
           : 0,
       diam: _isFieldVisible('DIAM')
           ? double.tryParse(_entryVals['diam'].toString())
@@ -897,7 +1008,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     set('issWt', fThreeDecimal(issWt));
 
     set('recPc', recPc.toString());
-    set('recPc', fThreeDecimal(recWt));
+    set('recWt', fThreeDecimal(recWt));
     set('dmPer', r.dmPer?.toStringAsFixed(2));
     set('dmWt', fThreeDecimal(r.dmWt));
     set('kpc', r.kPc?.toString());
@@ -929,6 +1040,19 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     set('diam', r.diam?.toString());
     set('height', r.height?.toString());
     set('scanValue', r.bCode?.toString());
+    set('qrCode', r.qrCode?.toString());
+
+    if ((r.qrCode ?? '').isNotEmpty) {
+      setState(() {
+        _allowQrCode = true;
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _erpFormKey.currentState?.updateFieldValue('allowQrCode', 'true');
+
+        _erpFormKey.currentState?.setFieldReadOnly('qrCode', true);
+      });
+    }
 
     Future.delayed(
       const Duration(milliseconds: 100),
@@ -1009,6 +1133,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           symmetryCode: v.symmetryCode,
           polishCode: v.polishCode,
           confRec: v.confRec,
+          mackRoughWt: v.mackRoughWt,
         );
       }).toList();
 
@@ -1025,6 +1150,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     const keys = [
       // SCAN
       'scanValue',
+      'qrCode',
 
       // ORG
       'orgPc',
@@ -1104,11 +1230,11 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       'recutEmp',
       'remarks',
       'ratio',
-      if (_isFieldVisible('SHAPE'))'shapeCode',
-      if (_isFieldVisible('CUT'))'cutCode',
-     'planShape',
-      if (_isFieldVisible('COLOR'))'colorCode',
-      if (_isFieldVisible('PURITY'))'purityCode',
+      if (_isFieldVisible('SHAPE')) 'shapeCode',
+      if (_isFieldVisible('CUT')) 'cutCode',
+      'planShape',
+      if (_isFieldVisible('COLOR')) 'colorCode',
+      if (_isFieldVisible('PURITY')) 'purityCode',
       'planPurity',
       'charniCode',
       'amount',
@@ -1143,17 +1269,19 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
             'recutEmp': r.recutEmp ?? '',
             'remarks': _remarksNameFor(r.remarksCode),
             'diam': r.diam?.toString() ?? '0.00',
-            'length': r.length?.toString() ?? '0.00',
+            'length': r.length?.toStringAsFixed(2) ?? '0.00',
             'ratio': r.ratio?.toString() ?? '0.00',
             'shapeCode': _shapeNameFor(r.shapeCode),
             'cutCode': _cutNameFor(r.cutCode),
             'planShape': _shapeNameFor(r.shapeCode),
-            'colorCode': r.colorCode?.toString() ?? '',
+            'colorCode': _colorNameFor(r.colorCode),
             'purityCode': _purityNameFor(r.purityCode),
             'planPurity': _purityNameFor(r.purityCode),
             'charniCode': r.charniCode?.toString() ?? '',
             'amount': r.amount?.toString() ?? '0.00',
-            'qrCode': r.qrCode ?? '',
+            'qrCode': (r.qrCode ?? '').length > 15
+                ? '${r.qrCode!.substring(0, 15)}...'
+                : r.qrCode ?? '',
             'partName': r.partName ?? '',
             'orderMstId': r.orderMstID ?? '',
             'plDmPer': r.plDmPer ?? '0.00',
@@ -1265,12 +1393,17 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       ..['deptCode'] = toDeptCode?.toString() ?? '';
 
     final success = _isEditMode && _selectedMst != null
-        ? await prov.update(_selectedMst!.spkDeptIssMstID!, merged, _detRows,bCodeArray: _detRows
-        .map((r) => num.parse(r.bCode.toString()))
-        .toList(),
-      expectedProcess: ProcessConstants.makableEntry,
-      theme: _theme,
-      context: context,)
+        ? await prov.update(
+            _selectedMst!.spkDeptIssMstID!,
+            merged,
+            _detRows,
+            bCodeArray: _detRows
+                .map((r) => num.parse(r.bCode.toString()))
+                .toList(),
+            expectedProcess: ProcessConstants.makableEntry,
+            theme: _theme,
+            context: context,
+          )
         : await prov.create(merged, _detRows);
 
     if (!mounted) return;
@@ -1311,7 +1444,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       context: context,
     );
 
-
     if (success && mounted) {
       final id = _selectedMst?.spkDeptIssMstID;
       _resetForm();
@@ -1348,6 +1480,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       _fromDisplayFields.clear();
       _erpFormKey = GlobalKey<ErpFormState>();
       _formValues.clear();
+      _allowQrCode = false;
     });
     _setDefaultFormValues();
   }
@@ -1506,8 +1639,16 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         .toList();
 
     //REMARKS
-    final remarkItems = remarkProv.list.where((e) => e.active == true).toList()
-      ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+    final selectedProcess = int.tryParse(_formValues['deptProcessCode'] ?? '');
+
+    final remarkItems =
+        remarkProv.list
+            .where(
+              (e) => e.active == true && e.deptProcessCode == selectedProcess,
+            )
+            .toList()
+          ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+
     final remarkDropdown = remarkItems
         .map(
           (e) => ErpDropdownItem(
@@ -1649,8 +1790,18 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           label: 'REMARK',
           type: ErpFieldType.dropdown,
           dropdownItems: remarkDropdown,
+          readOnly: remarkDropdown.isEmpty,
           width: 250,
           sectionIndex: 2,
+        ),
+        ErpFieldConfig(
+          width: 150,
+          key: 'allowQrCode',
+          label: 'Allow Qr Code',
+          type: ErpFieldType.checkbox,
+          sectionTitle: 'Allow Qr Code',
+          sectionIndex: 2,
+          initialBoolValue: false,
         ),
         ErpFieldConfig(
           key: 'scanValue',
@@ -1664,7 +1815,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           key: 'qrCode',
           label: 'QRCODE',
           type: ErpFieldType.text,
-          readOnly: true,
+          readOnly: !_allowQrCode,
           sectionIndex: 2,
           width: 200,
         ),
@@ -1723,45 +1874,45 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
 
       // DM
       if (_isFieldVisible('DM WT'))
-      ErpFieldConfig(
-        key: 'dmWt',
-        label: 'DM WT',
-        type: ErpFieldType.amount,
-        sectionIndex: 3,
-        flex: 1,
-      ),
+        ErpFieldConfig(
+          key: 'dmWt',
+          label: 'DM WT',
+          type: ErpFieldType.amount,
+          sectionIndex: 3,
+          flex: 1,
+        ),
       if (_isFieldVisible('SHAPE'))
-      ErpFieldConfig(
-        key: 'shape',
-        label: 'SHAPE',
-        type: ErpFieldType.dropdown,
-        dropdownItems: shapeDropdown,
-        sectionIndex: 3,
-      ),
+        ErpFieldConfig(
+          key: 'shape',
+          label: 'SHAPE',
+          type: ErpFieldType.dropdown,
+          dropdownItems: shapeDropdown,
+          sectionIndex: 3,
+        ),
       if (_isFieldVisible('COLOR'))
-      ErpFieldConfig(
-        key: 'color',
-        label: 'COLOR',
-        type: ErpFieldType.dropdown,
-        dropdownItems: colorDropdown,
-        sectionIndex: 3,
-      ),
+        ErpFieldConfig(
+          key: 'color',
+          label: 'COLOR',
+          type: ErpFieldType.dropdown,
+          dropdownItems: colorDropdown,
+          sectionIndex: 3,
+        ),
       if (_isFieldVisible('PURITY'))
-      ErpFieldConfig(
-        key: 'purity',
-        label: 'PURITY',
-        type: ErpFieldType.dropdown,
-        dropdownItems: purityDropdown,
-        sectionIndex: 3,
-      ),
+        ErpFieldConfig(
+          key: 'purity',
+          label: 'PURITY',
+          type: ErpFieldType.dropdown,
+          dropdownItems: purityDropdown,
+          sectionIndex: 3,
+        ),
       if (_isFieldVisible('CUT'))
-      ErpFieldConfig(
-        key: 'cutCode',
-        label: 'CUT',
-        type: ErpFieldType.dropdown,
-        dropdownItems: cutDropdown,
-        sectionIndex: 3,
-      ),
+        ErpFieldConfig(
+          key: 'cutCode',
+          label: 'CUT',
+          type: ErpFieldType.dropdown,
+          dropdownItems: cutDropdown,
+          sectionIndex: 3,
+        ),
       if (_isFieldVisible('POLISH'))
         ErpFieldConfig(
           key: 'polishCode',
@@ -1924,26 +2075,10 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     ErpColumnConfig(key: 'toDeptName', label: 'TO DEPT', width: 160),
     ErpColumnConfig(key: 'processName', label: 'PROCESS', width: 150),
     ErpColumnConfig(key: 'deptName', label: 'DEPT', width: 140),
-    ErpColumnConfig(
-      key: 'jno',
-      label: 'JNO',
-      width: 140,
-    ),
-    ErpColumnConfig(
-      key: 'totPkt',
-      label: 'TOT PKT',
-      width: 170,
-    ),
-    ErpColumnConfig(
-      key: 'totalPc',
-      label: 'TOT PC',
-      width: 170,
-    ),
-    ErpColumnConfig(
-      key: 'totalWt',
-      label: 'TOT WT',
-      width: 170,
-    ),
+    ErpColumnConfig(key: 'jno', label: 'JNO', width: 140),
+    ErpColumnConfig(key: 'totPkt', label: 'TOT PKT', width: 170),
+    ErpColumnConfig(key: 'totalPc', label: 'TOT PC', width: 170),
+    ErpColumnConfig(key: 'totalWt', label: 'TOT WT', width: 170),
   ];
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -2009,19 +2144,17 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     final selectedCompany = context.read<CompanyProvider>().selectedCompanyCode;
     print(selectedCompany);
     final company = companies.firstWhereOrNull(
-          (e) => e.companyCode.toString() == selectedCompany.toString(),
+      (e) => e.companyCode.toString() == selectedCompany.toString(),
     );
     print(jsonEncode(company));
     _selectedCompany = company;
-    setState(() {
-
-    });
+    setState(() {});
     if (_detRows.isEmpty) {
       return;
     }
     final prov = context.read<MakableEntryProvider>();
     final toCounter = context.read<CounterProvider>().list.firstWhereOrNull(
-          (e) => e.crId.toString() == _formValues['toCrId'],
+      (e) => e.crId.toString() == _formValues['toCrId'],
     );
 
     final pdfData = JobWorkPdfModel(
@@ -2030,10 +2163,10 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       partyType: _toDeptName ?? '',
 
       jobNo:
-      (_detRows.first.spkDeptIssMstID ??
-          prov.list.first.spkDeptIssMstID ??
-          0)
-          .toString(),
+          (_detRows.first.spkDeptIssMstID ??
+                  prov.list.first.spkDeptIssMstID ??
+                  0)
+              .toString(),
 
       date: _formValues['spkDeptIssDate']?.toString() ?? '',
       CVDPartyCode: toCounter?.CVDPartyCode ?? '',
@@ -2072,6 +2205,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           grouped[cutNo] = {
             'cutNo': cutNo,
             'articalName': e.ArticalName ?? '',
+
             /// UNIQUE PKTNO
             'pktNos': <String>{},
 
@@ -2116,10 +2250,10 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         partyType: _toDeptName ?? '',
 
         jobNo:
-        (_detRows.first.spkDeptIssMstID ??
-            prov.list.first.spkDeptIssMstID ??
-            0)
-            .toString(),
+            (_detRows.first.spkDeptIssMstID ??
+                    prov.list.first.spkDeptIssMstID ??
+                    0)
+                .toString(),
 
         date: _formValues['spkDeptIssDate']?.toString() ?? '',
         CVDPartyCode: toCounter?.CVDPartyCode ?? '',
@@ -2132,7 +2266,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       await Printing.layoutPdf(onLayout: (_) async => pdf);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -2188,30 +2321,38 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
               const Duration(milliseconds: 50),
               () => _erpFormKey.currentState?.focusField('toCrId'),
             );
-
+            break;
           case 'toCrId':
             _onToSelected(value.toString());
             Future.delayed(
               const Duration(milliseconds: 50),
               () => _erpFormKey.currentState?.focusField('deptProcessCode'),
             );
-
+            break;
           case 'deptProcessCode':
             _onProcessSelected(value.toString());
             Future.delayed(
               const Duration(milliseconds: 100),
               () => _erpFormKey.currentState?.focusField('remarks'),
             );
-
+            break;
           case 'remarks':
             _entryVals[key] = value.toString();
             Future.delayed(
               const Duration(milliseconds: 100),
               () => _erpFormKey.currentState?.focusField('scanValue'),
             );
+            break;
+
           case 'scanValue':
             _entryVals[key] = value.toString();
-
+            break;
+          case 'allowQrCode':
+            setState(() {
+              _allowQrCode =
+                  value == true || value.toString().toLowerCase() == 'true';
+            });
+            break;
           case 'dmPer':
             final dmPerVal = double.tryParse(value.toString()) ?? 0;
             if (dmPerVal > 100) {
@@ -2247,22 +2388,47 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       },
 
       onFieldSubmitted: (key, value) async {
-        // ─────────────────────────────
-        // HEIGHT SUBMIT
-        // ─────────────────────────────
+        final val = value.toString().trim();
 
+        // ─────────────────────────────
+        // HEIGHT
+        // ─────────────────────────────
         if (key == 'height') {
-          // VALIDATION
-          final height = double.tryParse(value.toString()) ?? 0;
+          final height = double.tryParse(val) ?? 0;
 
           if (height <= 0) {
             _showSnack('Height must be greater than 0');
+            return;
+          }
+
+          _addEntry();
+          return;
+        }
+
+        // ─────────────────────────────
+        // QR CODE
+        // ─────────────────────────────
+        if (key == 'qrCode') {
+          final scanValue = (_entryVals['scanValue'] ?? '').trim();
+
+          // BCODE REQUIRED FIRST
+          if (scanValue.isEmpty) {
+            _showSnack('Please scan BCode first');
+
+            _erpFormKey.currentState?.updateFieldValue('qrCode', '');
+            _entryVals['qrCode'] = '';
+
+            Future.delayed(
+              const Duration(milliseconds: 50),
+              () => _erpFormKey.currentState?.focusField('scanValue'),
+            );
 
             return;
           }
 
-          // ADD ENTRY
-          _addEntry();
+          if (val.isNotEmpty) {
+            _processQrCode(val);
+          }
 
           return;
         }
@@ -2270,29 +2436,23 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         // ─────────────────────────────
         // SCAN VALUE
         // ─────────────────────────────
-
         if (key != 'scanValue') return;
 
-        final scanVal = value.toString().trim();
-
-        if (scanVal.isEmpty) return;
+        if (val.isEmpty) return;
 
         // DUPLICATE CHECK
         if (_editingDetIndex == null) {
-          final isDuplicate = _detRows.any(
-            (r) => r.bCode?.toString() == scanVal,
-          );
+          final isDuplicate = _detRows.any((r) => r.bCode?.toString() == val);
 
           if (isDuplicate) {
             _showSnack('This BCode already added');
 
-            _erpFormKey.currentState?.updateFieldValue('scanValue', '');
-
             _entryVals['scanValue'] = '';
 
-            Future.delayed(
-              const Duration(milliseconds: 100),
+            _erpFormKey.currentState?.updateFieldValue('scanValue', '');
 
+            Future.delayed(
+              const Duration(milliseconds: 50),
               () => _erpFormKey.currentState?.focusField('scanValue'),
             );
 
@@ -2300,10 +2460,10 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           }
         }
 
-        // MAIN API CALL
+        // API CALL
         _isBCodePending = true;
 
-        _onBCodeScanned(scanVal);
+        await _onBCodeScanned(val);
       },
 
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
@@ -2476,19 +2636,10 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         ..['deptName'] = toDeptName
         ..['processName'] = processName
         ..['spkDeptIssTime'] = _formatTime(e.stime)
-        ..['jno'] =
-            e.jnoFirst?.toString() ?? ''
-
-        ..['totPkt'] =
-            e.totPkt?.toString() ?? '0'
-
-        ..['totalPc'] =
-            e.totalPc.toString() ?? '0'
-
-        ..['totalWt'] =
-        fThreeDecimal(
-          e.totalWt ?? 0,
-        );
+        ..['jno'] = e.jnoFirst?.toString() ?? ''
+        ..['totPkt'] = e.totPkt?.toString() ?? '0'
+        ..['totalPc'] = e.totalPc.toString() ?? '0'
+        ..['totalWt'] = fThreeDecimal(e.totalWt ?? 0);
 
       return row;
     }).toList();

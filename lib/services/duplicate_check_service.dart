@@ -10,6 +10,7 @@ Future<bool> checkDuplicateRecord({
   required Map<dynamic, dynamic> fields,
   required BuildContext context,
   required ErpTheme theme,
+   bool isComposite = false,
 }) async {
 
   return await DuplicateCheckService.checkExists(
@@ -17,6 +18,7 @@ Future<bool> checkDuplicateRecord({
     theme: theme,
     formName: formName,
     fields: fields,
+    isComposite: isComposite,
   );
 }
 
@@ -28,6 +30,7 @@ class DuplicateCheckService {
     required ErpTheme theme,
     required String formName,
     required Map<dynamic, dynamic> fields,
+    bool isComposite = false,
   }) async {
     try {
       final dio = Dio();
@@ -39,6 +42,8 @@ class DuplicateCheckService {
         data: {
           "formName": formName,
           "fields": fields,
+          if(isComposite)
+          "isComposite": isComposite,
         },
         options: Options(
           headers: {

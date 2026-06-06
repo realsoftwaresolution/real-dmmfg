@@ -10,6 +10,8 @@ import 'package:diam_mfg/providers/packet_provider.dart';
 import 'package:diam_mfg/providers/pkt_type_provider.dart';
 import 'package:diam_mfg/providers/purity_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
+import 'package:diam_mfg/services/duplicate_check_service.dart';
+import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/services/pdf.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/constants.dart';
@@ -101,14 +103,9 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     final tensProv = context.read<TensionsProvider>();
     // _buildFormRows mein cutNoItems filter update karo:
 
-    final cutNoItems = cutProv.list
-        .expand((cc) {
-      return cc.details
-          .where((d) => d.cutType == 'SPK')
-          .map((d) {
-        final pendingWt = _getPendingWtForCutNo(
-          d.cutNo ?? '',
-        );
+    final cutNoItems = cutProv.list.expand((cc) {
+      return cc.details.where((d) => d.cutType == 'SPK').map((d) {
+        final pendingWt = _getPendingWtForCutNo(d.cutNo ?? '');
 
         // edit mode current item always visible
         if (!_isEditMode && pendingWt <= 0.0001) {
@@ -117,26 +114,23 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
 
         return ErpDropdownItem(
           label:
-          'Cut: ${d.cutNo ?? ''} | Pending WT: ${fThreeDecimal(pendingWt)}',
-          value:
-          '${d.cutNo}|${cc.cutCreateMstID}|${d.cutCreateDetID}',
+              'Cut: ${d.cutNo ?? ''} | Pending WT: ${fThreeDecimal(pendingWt)}',
+          value: '${d.cutNo}|${cc.cutCreateMstID}|${d.cutCreateDetID}',
         );
-      })
-          .whereType<ErpDropdownItem>();
-    })
-        .toList();
+      }).whereType<ErpDropdownItem>();
+    }).toList();
 
     // ── PktType dropdown — active, sorted by sortID ──────────────────────────
     final pktTypeItems =
-    pktTypeProv.list.where((e) => e.active == true).toList()
-      ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+        pktTypeProv.list.where((e) => e.active == true).toList()
+          ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
     final pktTypeDropdown = pktTypeItems
         .map(
           (e) => ErpDropdownItem(
-        label: e.pktTypeName ?? '',
-        value: e.pktTypeCode?.toString() ?? '',
-      ),
-    )
+            label: e.pktTypeName ?? '',
+            value: e.pktTypeCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     // ── Color dropdown — active, sorted ──────────────────────────────────────
@@ -145,10 +139,10 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     final colorDropdown = colorItems
         .map(
           (e) => ErpDropdownItem(
-        label: e.colorName ?? '',
-        value: e.colorCode?.toString() ?? '',
-      ),
-    )
+            label: e.colorName ?? '',
+            value: e.colorCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     // ── Fluo dropdown ─────────────────────────────────────────────────────────
@@ -157,10 +151,10 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     final fluoDropdown = fluoItems
         .map(
           (e) => ErpDropdownItem(
-        label: e.fluoName ?? '',
-        value: e.fluoCode?.toString() ?? '',
-      ),
-    )
+            label: e.fluoName ?? '',
+            value: e.fluoCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     // ── Tensions dropdown ─────────────────────────────────────────────────────
@@ -169,10 +163,10 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     final tensDropdown = tensItems
         .map(
           (e) => ErpDropdownItem(
-        label: e.tensionsName ?? '',
-        value: e.tensionsCode?.toString() ?? '',
-      ),
-    )
+            label: e.tensionsName ?? '',
+            value: e.tensionsCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     return [
@@ -344,8 +338,8 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     final list = context.read<PktTypeProvider>().list;
     try {
       return list
-          .firstWhere((e) => e.pktTypeCode?.toString() == code)
-          .pktTypeName ??
+              .firstWhere((e) => e.pktTypeCode?.toString() == code)
+              .pktTypeName ??
           '';
     } catch (_) {
       return code;
@@ -399,13 +393,13 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         .read<PacketProvider>()
         .list
         .where(
-          (p) => p.cutNo == cutNo &&
-          p.packetMstID != _selectedMst?.packetMstID,
-    )
+          (p) => p.cutNo == cutNo && p.packetMstID != _selectedMst?.packetMstID,
+        )
         .fold(0.0, (s, p) => s + p.totalWt);
 
     return totalWt - usedWt;
   }
+
   // ── CutNo selected ────────────────────────────────────────────────────────
   Future<void> _onCutNoSelected(String value) async {
     final cutProv = context.read<CutCreateProvider>();
@@ -417,11 +411,9 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
 
     final actualCutNo = parts.isNotEmpty ? parts[0] : value;
 
-    final cutCreateMstID =
-    parts.length > 1 ? int.tryParse(parts[1]) : null;
+    final cutCreateMstID = parts.length > 1 ? int.tryParse(parts[1]) : null;
 
-    final cutCreateDetID =
-    parts.length > 2 ? int.tryParse(parts[2]) : null;
+    final cutCreateDetID = parts.length > 2 ? int.tryParse(parts[2]) : null;
 
     // ── FIND MASTER ──────────────────────────────────────────
 
@@ -431,8 +423,8 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
       if (cc.cutCreateMstID != cutCreateMstID) continue;
 
       final exists = cc.details.any(
-            (d) =>
-        d.cutType == 'SPK' &&
+        (d) =>
+            d.cutType == 'SPK' &&
             d.cutNo == actualCutNo &&
             d.cutCreateDetID == cutCreateDetID,
       );
@@ -454,8 +446,8 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     // ── FIND SELECTED DETAIL ─────────────────────────────────
 
     final selectedDet = details.firstWhere(
-          (d) =>
-      d.cutType == 'SPK' &&
+      (d) =>
+          d.cutType == 'SPK' &&
           d.cutNo == actualCutNo &&
           d.cutCreateDetID == cutCreateDetID,
     );
@@ -471,9 +463,9 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         .list
         .where(
           (p) =>
-      p.cutNo == actualCutNo &&
-          p.packetMstID != _selectedMst?.packetMstID,
-    )
+              p.cutNo == actualCutNo &&
+              p.packetMstID != _selectedMst?.packetMstID,
+        )
         .fold(0.0, (s, p) => s + p.totalWt);
 
     final usedPc = context
@@ -481,9 +473,9 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         .list
         .where(
           (p) =>
-      p.cutNo == actualCutNo &&
-          p.packetMstID != _selectedMst?.packetMstID,
-    )
+              p.cutNo == actualCutNo &&
+              p.packetMstID != _selectedMst?.packetMstID,
+        )
         .fold(0, (s, p) => s + p.totalPc);
 
     // ── CURRENT FORM USED WT/PC ─────────────────────────────
@@ -532,15 +524,9 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
 
     _formValues['pendPc'] = '$pendPc';
 
-    _erpFormKey.currentState?.updateFieldValue(
-      'pendWt',
-      fThreeDecimal(pendWt),
-    );
+    _erpFormKey.currentState?.updateFieldValue('pendWt', fThreeDecimal(pendWt));
 
-    _erpFormKey.currentState?.updateFieldValue(
-      'pendPc',
-      '$pendPc',
-    );
+    _erpFormKey.currentState?.updateFieldValue('pendPc', '$pendPc');
 
     // ── AUTO ENTRY VALUES ───────────────────────────────────
 
@@ -548,10 +534,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
 
     _entryVals['entryPlusWt'] = fThreeDecimal(plusWt);
 
-    _erpFormKey.currentState?.updateFieldValue(
-      'entryPc',
-      '1',
-    );
+    _erpFormKey.currentState?.updateFieldValue('entryPc', '1');
 
     _erpFormKey.currentState?.updateFieldValue(
       'entryPlusWt',
@@ -560,22 +543,18 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
 
     // ── AUTO LOT NO ─────────────────────────────────────────
 
-    final nextLotNo = await context
-        .read<PacketProvider>()
-        .getNextLotNo(actualCutNo);
+    final nextLotNo = await context.read<PacketProvider>().getNextLotNo(
+      actualCutNo,
+    );
 
     _lotNoMap[actualCutNo] = nextLotNo - 1;
 
     _entryVals['entryLotNo'] = '$nextLotNo';
 
-    _erpFormKey.currentState?.updateFieldValue(
-      'entryLotNo',
-      '$nextLotNo',
-    );
+    _erpFormKey.currentState?.updateFieldValue('entryLotNo', '$nextLotNo');
 
     setState(() {});
   }
-
 
   // ── Recalc pending after det change ──────────────────────────────────────
   void _recalcPending() {
@@ -595,20 +574,16 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         .read<PacketProvider>()
         .list
         .where(
-          (p) =>
-      p.cutNo == cutNo &&
-          p.packetMstID != _selectedMst?.packetMstID,
-    )
+          (p) => p.cutNo == cutNo && p.packetMstID != _selectedMst?.packetMstID,
+        )
         .fold(0.0, (s, p) => s + p.totalWt);
 
     final usedPc = context
         .read<PacketProvider>()
         .list
         .where(
-          (p) =>
-      p.cutNo == cutNo &&
-          p.packetMstID != _selectedMst?.packetMstID,
-    )
+          (p) => p.cutNo == cutNo && p.packetMstID != _selectedMst?.packetMstID,
+        )
         .fold(0, (s, p) => s + p.totalPc);
 
     final formUsedWt = _detRows
@@ -627,15 +602,9 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
 
     _formValues['pendPc'] = '$pendPc';
 
-    _erpFormKey.currentState?.updateFieldValue(
-      'pendWt',
-      fThreeDecimal(pendWt),
-    );
+    _erpFormKey.currentState?.updateFieldValue('pendWt', fThreeDecimal(pendWt));
 
-    _erpFormKey.currentState?.updateFieldValue(
-      'pendPc',
-      '$pendPc',
-    );
+    _erpFormKey.currentState?.updateFieldValue('pendPc', '$pendPc');
 
     final plusWt = pendWt * 0.15 / 100;
 
@@ -708,8 +677,8 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     /// ── DUPLICATE LOT CHECK ──────────────────────
 
     final isDuplicate = _detRows.asMap().entries.any(
-          (e) =>
-      e.value.lotNo == lotNo &&
+      (e) =>
+          e.value.lotNo == lotNo &&
           e.value.cutNo == cutNo &&
           e.key != _editingDetIndex,
     );
@@ -720,7 +689,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         theme: _theme,
         title: 'Duplicate Lot No',
         message:
-        'Lot No $lotNo already exists for '
+            'Lot No $lotNo already exists for '
             'Cut No $cutNo.\n'
             'Please use a different Lot No.',
       );
@@ -748,7 +717,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         theme: _theme,
         title: 'Weight Exceeded',
         message:
-        'Entry Wt (${fThreeDecimal(entryWt)}) exceeds '
+            'Entry Wt (${fThreeDecimal(entryWt)}) exceeds '
             'Pending Wt (${fThreeDecimal(pendWt)}).\n'
             'Please reduce weight.',
       );
@@ -771,6 +740,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     if (!isValid) return;
 
     /// ── VALUES ──────────────────────────────────
+    final typeVal = _entryVals['entryType'] ?? '';
 
     final colorVal = _entryVals['entryColor'] ?? '';
 
@@ -798,17 +768,29 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
       return;
     }
 
+    if (!_isEditMode) {
+      final exists = await _checkCutNameAndSortIdDuplicate(
+        fields: {'CutNo': cutNo, 'LotNo': lotNo},
+      );
+      if (exists) return;
+    }
+
     /// ── SR NO ───────────────────────────────────
 
     final srno = _editingDetIndex != null
         ? _detRows[_editingDetIndex!].srno
         : _detRows.length + 1;
+    final oldRow = _editingDetIndex != null
+        ? _detRows[_editingDetIndex!]
+        : null;
 
     /// ── CREATE MODEL ────────────────────────────
 
     final newRow = PacketDetModel(
       srno: srno,
-
+      packetDetID: oldRow?.packetDetID,
+      bCode: oldRow?.bCode,
+      // IMPORTANT
       cutNo: cutNo,
 
       lotNo: lotNo,
@@ -818,6 +800,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
       pc: 1,
 
       wt: entryWt,
+      pktTypeCode: int.tryParse(typeVal),
 
       pktType: 'ORG',
 
@@ -828,13 +811,9 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
       fluoCode: int.tryParse(fluoVal),
 
       jno: int.tryParse(_formValues['jno'] ?? ''),
-
       packetDate: _formValues['packetDate'],
-
       entryType: 'Packet Create',
-
       lastProcess: 'PACKET CREATE',
-
       pktValid: 'Y',
     );
 
@@ -892,7 +871,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
 
     Future.delayed(
       const Duration(milliseconds: 50),
-          () => _erpFormKey.currentState?.focusField('entryWt'),
+      () => _erpFormKey.currentState?.focusField('entryWt'),
     );
   }
 
@@ -906,7 +885,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
 
-    set('entryType', r.pktType);
+    set('entryType', r.pktTypeCode.toString());
     set('entryColor', r.colorCode?.toString());
     set('entryTensions', r.tensionsCode?.toString());
     set('entryFluo', r.fluoCode?.toString());
@@ -949,7 +928,8 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
           entryType: _detRows[i].entryType,
           lastProcess: _detRows[i].lastProcess,
           pktValid: _detRows[i].pktValid,
-          packetDetID: _detRows[i].packetDetID
+          packetDetID: _detRows[i].packetDetID,
+          pktTypeCode: _detRows[i].pktTypeCode,
         );
       }
 
@@ -1055,8 +1035,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         if (d.cutType != 'SPK') continue;
 
         if (d.cutNo == raw.cutNo) {
-          dropdownValue =
-          '${d.cutNo}|${cc.cutCreateMstID}|${d.cutCreateDetID}';
+          dropdownValue = '${d.cutNo}|${cc.cutCreateMstID}|${d.cutCreateDetID}';
 
           selectedDet = d;
 
@@ -1113,12 +1092,9 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
 
         // IMPORTANT
         // dropdown value required
-
         'cutNo': dropdownValue!,
 
-        'pendWt': fThreeDecimal(
-          _pendingWt - totalDetWt,
-        ),
+        'pendWt': fThreeDecimal(_pendingWt - totalDetWt),
 
         'pendPc': '${_pendingPc - totalDetPc}',
         'jno': details.first.jno?.toString() ?? '',
@@ -1142,6 +1118,19 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         }
       }
     }
+  }
+
+  Future<bool> _checkCutNameAndSortIdDuplicate({
+    required Map<dynamic, dynamic> fields,
+  }) async {
+    /// ── API CHECK ─────────────────────────────
+    return await checkDuplicateRecord(
+      context: context,
+      theme: _theme,
+      formName: 'PacketCreate',
+      fields: fields,
+      isComposite: true,
+    );
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1174,13 +1163,11 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
 
     final merged = Map<String, dynamic>.from(values);
 
-    merged['packetDate'] =
-        toIso(merged['packetDate']?.toString());
+    merged['packetDate'] = toIso(merged['packetDate']?.toString());
 
     final rawCutValue = _formValues['cutNo'] ?? '';
 
-    merged['cutNo'] =
-        rawCutValue.split('|').first;
+    merged['cutNo'] = rawCutValue.split('|').first;
 
     merged['entryType'] = 'Packet Create';
 
@@ -1280,16 +1267,16 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         padding: const EdgeInsets.all(8),
         child: Responsive.isMobile(context)
             ? _showTableOnMobile
-            ? _buildTable(prov)
-            : _buildForm(context)
+                  ? _buildTable(prov)
+                  : _buildForm(context)
             : Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(flex: 3, child: _buildForm(context)),
-            const SizedBox(width: 12),
-            Expanded(flex: 2, child: _buildTable(prov)),
-          ],
-        ),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 3, child: _buildForm(context)),
+                  const SizedBox(width: 12),
+                  Expanded(flex: 2, child: _buildTable(prov)),
+                ],
+              ),
       ),
     );
   }
@@ -1576,8 +1563,8 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
                 border: isLast
                     ? null
                     : Border(
-                  bottom: BorderSide(color: t.primary.withOpacity(0.08)),
-                ),
+                        bottom: BorderSide(color: t.primary.withOpacity(0.08)),
+                      ),
               ),
               child: Row(
                 children: [
@@ -1687,12 +1674,12 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
           pktTypeProv.list
               .firstWhereOrNull(
                 (p) =>
-            p.pktTypeName == e.entryType ||
-                p.pktTypeCode?.toString() == e.entryType,
-          )
+                    p.pktTypeName == e.entryType ||
+                    p.pktTypeCode?.toString() == e.entryType,
+              )
               ?.pktTypeName ??
-              e.entryType ??
-              '';
+          e.entryType ??
+          '';
       return row;
     }).toList();
     return ErpDataTable(

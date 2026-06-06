@@ -305,11 +305,10 @@ class _ReportScreenState extends State<ReportScreen> {
     } catch (_) {}
   }
 
-  List<Map<String, dynamic>> _reportData = [];
-
   @override
   void initState() {
     super.initState();
+    _setDefaultFormValues();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.wait([
         context.read<CounterProvider>().load(),
@@ -377,38 +376,31 @@ class _ReportScreenState extends State<ReportScreen> {
     final toItems = _fromCrId == null
         ? <ErpDropdownItem>[]
         : mgDetProv.list
-        .where(
-          (m) =>
-      m.crId == _fromCrId &&
-          m.allowCrId != null,
-    )
-        .map((m) => m.allowCrId!)
-        .toSet()
-        .map((allowId) {
-      try {
-        final c = counterProv.list.firstWhere(
-              (c) =>
-          c.crId == allowId &&
-              c.active == true,
-        );
+              .where((m) => m.crId == _fromCrId && m.allowCrId != null)
+              .map((m) => m.allowCrId!)
+              .toSet()
+              .map((allowId) {
+                try {
+                  final c = counterProv.list.firstWhere(
+                    (c) => c.crId == allowId && c.active == true,
+                  );
 
-        // OPTIONAL:
-        // avoid same FROM manager in TO
-        if (c.crId == _fromCrId) {
-          return null;
-        }
+                  // OPTIONAL:
+                  // avoid same FROM manager in TO
+                  if (c.crId == _fromCrId) {
+                    return null;
+                  }
 
-        return ErpDropdownItem(
-          label:
-          '${c.crName ?? ''} | ${_deptNameFor(c.deptCode)}',
-          value: c.crId?.toString() ?? '',
-        );
-      } catch (_) {
-        return null;
-      }
-    })
-        .whereType<ErpDropdownItem>()
-        .toList();
+                  return ErpDropdownItem(
+                    label: '${c.crName ?? ''} | ${_deptNameFor(c.deptCode)}',
+                    value: c.crId?.toString() ?? '',
+                  );
+                } catch (_) {
+                  return null;
+                }
+              })
+              .whereType<ErpDropdownItem>()
+              .toList();
 
     // ── PROCESS dropdown — intersection of FROM-issue ∩ TO-receive codes ──
     final processItems = (_fromCrId == null || _toCrId == null)
@@ -534,27 +526,26 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
         )
         .toList();
-print('cutProv.list ${jsonEncode(cutProv.list)}');
     final cutItems = cutProv.list
         .where((cc) => cc.details.isNotEmpty)
         .map((cc) {
-      final spkDet = cc.details.firstWhere(
+          final spkDet = cc.details.firstWhere(
             (d) => d.cutType == 'SPK',
-        orElse: () => cc.details.first,
-      );
+            orElse: () => cc.details.first,
+          );
 
-      return ErpDropdownItem(
-        label: spkDet.cutNo ?? '',
-        value: spkDet.cutNo ?? '',
-      );
-    })
+          return ErpDropdownItem(
+            label: spkDet.cutNo ?? '',
+            value: spkDet.cutNo ?? '',
+          );
+        })
         .where((e) => e.value.isNotEmpty)
         .fold<List<ErpDropdownItem>>([], (acc, item) {
-      if (!acc.any((x) => x.value == item.value)) {
-        acc.add(item);
-      }
-      return acc;
-    });
+          if (!acc.any((x) => x.value == item.value)) {
+            acc.add(item);
+          }
+          return acc;
+        });
 
     final roughItems = roughProv.roughs
         .map(
@@ -624,24 +615,32 @@ print('cutProv.list ${jsonEncode(cutProv.list)}');
           label: 'DATE',
           type: ErpFieldType.date,
           sectionIndex: 0,
+          isEntryRequired: true,
+          isEntryField: true,
         ),
         ErpFieldConfig(
           key: 'dateTo',
           label: 'TO',
           type: ErpFieldType.date,
           sectionIndex: 0,
+          isEntryRequired: true,
+          isEntryField: true,
         ),
         ErpFieldConfig(
           key: 'timeFrom',
           label: 'TIME',
           type: ErpFieldType.time,
           sectionIndex: 0,
+          isEntryRequired: true,
+          isEntryField: true,
         ),
         ErpFieldConfig(
           key: 'timeTo',
           label: 'TO',
           type: ErpFieldType.time,
           sectionIndex: 0,
+          isEntryRequired: true,
+          isEntryField: true,
         ),
         ErpFieldConfig(
           key: 'finish',
@@ -890,7 +889,7 @@ print('cutProv.list ${jsonEncode(cutProv.list)}');
     setState(() => _activeReportType = registryKey);
 
     final prov = context.read<ReportProvider>();
-
+    print('_formValues ${_formValues}');
     final filter = {
       "reportType": int.tryParse(testCode ?? ''),
       "sel": int.tryParse(_formValues['sel'] ?? ''),
@@ -914,10 +913,20 @@ print('cutProv.list ${jsonEncode(cutProv.list)}');
       "lotNoFrom": int.tryParse(_formValues['lotNoFrom'] ?? ''),
       "lotNoTo": int.tryParse(_formValues['lotNoTo'] ?? ''),
       "pktType": _formValues['pktType'],
-      "dateFrom": _formValues['dateFrom'],
-      "dateTo": _formValues['dateTo'],
-      "timeFrom": _formValues['timeFrom'],
-      "timeTo": _formValues['timeTo'],
+      "fromDate": DateFormat(
+        'yyyy-MM-dd',
+      ).format(DateFormat('dd/MM/yyyy').parse(_formValues['dateFrom']!)),
+
+      "toDate": DateFormat(
+        'yyyy-MM-dd',
+      ).format(DateFormat('dd/MM/yyyy').parse(_formValues['dateTo']!)),
+      "fromTime": DateFormat(
+        'HH:mm:ss',
+      ).format(DateFormat('hh:mm a').parse(_formValues['timeFrom']!)),
+
+      "toTime": DateFormat(
+        'HH:mm:ss',
+      ).format(DateFormat('hh:mm a').parse(_formValues['timeTo']!)),
     };
 
     await prov.loadReport(reportTypeCode: registryKey, filter: filter);
@@ -980,7 +989,19 @@ print('cutProv.list ${jsonEncode(cutProv.list)}');
       isEditMode: false,
       isShowSearch: true,
       onFieldChanged: (key, value) {
+        print('KEY = $key');
+        print('VALUE = $value');
+
         _formValues[key] = value.toString();
+
+        if (key == 'dateFrom' ||
+            key == 'dateTo' ||
+            key == 'timeFrom' ||
+            key == 'timeTo') {
+          print('DATE/TIME UPDATED');
+          print(_formValues);
+        }
+
         switch (key) {
           case 'type':
             final testCode = int.tryParse(value.toString());
@@ -1097,7 +1118,9 @@ print('cutProv.list ${jsonEncode(cutProv.list)}');
             _onToSelected(value.toString());
 
           default:
+            print('value $value');
             _entryVals[key] = value.toString();
+            _formValues[key] = value.toString();
         }
       },
 

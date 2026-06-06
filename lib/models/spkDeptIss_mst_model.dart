@@ -189,7 +189,7 @@ class SpkDeptIssDetModel {
   final int?    cutCode;
   final int?    purityCode;
   final int?    colorCode;
-  final int?    length;
+  final double?    length;
   final double? diam;
   final double? height;
   final double? acuraecy;
@@ -603,7 +603,7 @@ class SpkDeptIssDetModel {
     'IssWt': issWt ?? 0.000,
     'LastDmWt': LastDmWt ?? 0.000,
     'LastDmPer': LastDmPer ?? 0,
-    'Length': length ?? 0,
+    'Length': length ?? 0.00,
     'RecPc': recPc ?? 0,
     'RecWt': recWt ?? 0,
     'PolishCode': polishCode ?? 0,
