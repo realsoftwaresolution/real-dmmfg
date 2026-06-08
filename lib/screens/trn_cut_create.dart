@@ -808,7 +808,6 @@ print(assortWt);
       detailBuilder: (ctx) {
         final t = ctx.erpTheme;
         final tots = _footerTotals;
-        debugPrint('UI PEND WT => $_pendingWt');
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -868,6 +867,14 @@ print(assortWt);
               onDeleteRow: _deleteDetRow,
               onEditRow: _editDetRow,
               editingIndex: _editingDetIndex,
+              columnAlignments: const {
+                'srno': TextAlign.left,
+                'cutType': TextAlign.left,
+                'cutNo': TextAlign.left,
+                'pc': TextAlign.left,
+                'wt': TextAlign.left,
+                'comparisionCode': TextAlign.center,
+              },
               columnLabels: const {
                 'srno': 'SR NO',
                 'cutType': 'TYPE',

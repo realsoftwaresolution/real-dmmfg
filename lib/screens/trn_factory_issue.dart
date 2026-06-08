@@ -1293,20 +1293,8 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
                 columnLabels: {
                   for (final c in _activeDetColumns) c: _colLabel(c),
                 },
-                columnAlignments: const {
-                  'pc': TextAlign.right,
-                  'wt': TextAlign.right,
-                  'issPc': TextAlign.right,
-                  'issWt': TextAlign.right,
-                  'ghatWt': TextAlign.right,
-                  'dmWt': TextAlign.right,
-                  'dmPer': TextAlign.right,
-                  'diam': TextAlign.right,
-                  'length': TextAlign.right,
-                  'size': TextAlign.right,
-                  'purityCode': TextAlign.right,
-                  'colorCode': TextAlign.right,
-                  'charniCode': TextAlign.right,
+                columnWidths: const {
+                  'srno': 40,
                 },
                 footerTotCount: 'Tot: ${_detRows.length}',
                 footerTotals: _buildFooterTotals(),

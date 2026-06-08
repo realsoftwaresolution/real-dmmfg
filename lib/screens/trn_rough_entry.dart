@@ -1090,6 +1090,7 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
     return ErpForm(
       logo: AppImages.logo,
       key: _erpFormKey,
+      isFullFormScrollable: true,
       sectionDetailBuilder: (ctx, sectionIndex) {
         final theme = ctx.erpTheme;
 

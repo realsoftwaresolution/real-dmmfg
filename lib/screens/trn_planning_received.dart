@@ -1299,6 +1299,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
             confRec: _autoRec,
             clvRec: 'S',
             confCrID: _toCrId,
+
           );
         }).toList();
 

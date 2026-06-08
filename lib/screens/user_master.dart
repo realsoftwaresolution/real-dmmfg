@@ -1119,6 +1119,7 @@ class _MstCounterState extends State<MstCounter> {
           builder: (context, visP, mainMenuP, menuP, opP, mgP, _) {
             final tabsEnabled = _savedCrId != null;
             return ErpForm(
+              isFullFormScrollable: true,
               logo: AppImages.logo,
               isFirstTabSave: true,
               title: 'COUNTER MASTER',

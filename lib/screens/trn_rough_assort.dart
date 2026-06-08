@@ -1093,6 +1093,12 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
                 onDeleteRow: _isEditMode ? null : _deleteDetRow,
                 onEditRow: _editDetRow,
                 editingIndex: _editingDetIndex,
+                columnWidths: {
+                  'srno': 40,
+                  'purityGroup': 80,
+                  'pc': 50,
+                  'per': 50,
+                },
                 // ✅ Custom column header labels matching image exactly
                 columnLabels: const {
                   'srno': 'SR NO',

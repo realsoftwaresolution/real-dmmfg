@@ -876,10 +876,12 @@ class _ReportScreenState extends State<ReportScreen> {
     final testCode = _formValues['type'];
     final reportName = _formValues['report'];
 
+
     if (reportName == null || reportName.isEmpty) return;
 
     // 🔥 normalize: "Rough Detail" → "ROUGH_DETAIL"
     final registryKey = _toRegistryKey(reportName);
+    print('registryKey $registryKey');
 
     final config = ReportRegistry.of(registryKey);
     if (config == null) {
@@ -889,7 +891,6 @@ class _ReportScreenState extends State<ReportScreen> {
     setState(() => _activeReportType = registryKey);
 
     final prov = context.read<ReportProvider>();
-    print('_formValues ${_formValues}');
     final filter = {
       "reportType": int.tryParse(testCode ?? ''),
       "sel": int.tryParse(_formValues['sel'] ?? ''),
@@ -913,21 +914,21 @@ class _ReportScreenState extends State<ReportScreen> {
       "lotNoFrom": int.tryParse(_formValues['lotNoFrom'] ?? ''),
       "lotNoTo": int.tryParse(_formValues['lotNoTo'] ?? ''),
       "pktType": _formValues['pktType'],
-      "fromDate": DateFormat(
-        'yyyy-MM-dd',
-      ).format(DateFormat('dd/MM/yyyy').parse(_formValues['dateFrom']!)),
-
-      "toDate": DateFormat(
-        'yyyy-MM-dd',
-      ).format(DateFormat('dd/MM/yyyy').parse(_formValues['dateTo']!)),
-      "fromTime": DateFormat(
-        'HH:mm:ss',
-      ).format(DateFormat('hh:mm a').parse(_formValues['timeFrom']!)),
-
-      "toTime": DateFormat(
-        'HH:mm:ss',
-      ).format(DateFormat('hh:mm a').parse(_formValues['timeTo']!)),
     };
+
+    if (registryKey != 'PACKET_WISE_PLANNING_SUMMARY' &&
+        registryKey != 'PACKET_WISE_PLANNING_DETAIL') {
+      filter.addAll({
+        "fromDate": DateFormat('yyyy-MM-dd')
+            .format(DateFormat('dd/MM/yyyy').parse(_formValues['dateFrom']!)),
+        "toDate": DateFormat('yyyy-MM-dd')
+            .format(DateFormat('dd/MM/yyyy').parse(_formValues['dateTo']!)),
+        "fromTime": DateFormat('HH:mm:ss')
+            .format(DateFormat('hh:mm a').parse(_formValues['timeFrom']!)),
+        "toTime": DateFormat('HH:mm:ss')
+            .format(DateFormat('hh:mm a').parse(_formValues['timeTo']!)),
+      });
+    }
 
     await prov.loadReport(reportTypeCode: registryKey, filter: filter);
   }
