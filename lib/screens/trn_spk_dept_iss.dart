@@ -545,8 +545,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     set('orgPc', orgPc.toString());
     set('orgWt', fThreeDecimal(orgWt));
 
-    set('issPc', issPc.toString());
-    set('issWt', fThreeDecimal(issWt));
+    set('issPc', recPc.toString());
+    set('issWt', fThreeDecimal(recWt));
 
     set('recpc', recPc.toString());
     set('recwt', fThreeDecimal(recWt));

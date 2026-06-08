@@ -531,17 +531,14 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     final orgPc = r.pc ?? 0;
     final orgWt = r.wt ?? 0;
 
-    final issPc = (r.issPc == null || r.issPc == 0) ? orgPc : r.issPc;
-    final issWt = (r.issWt == null || r.issWt == 0) ? orgWt : r.issWt!;
-
     final recPc = (r.recPc == null || r.recPc == 0) ? orgPc : r.recPc;
-    final recWt = (r.recWt == null || r.recWt == 0) ? issWt : r.recWt!;
+    final recWt = (r.recWt == null || r.recWt == 0) ? orgWt : r.recWt!;
 
     set('orgPc', orgPc.toString());
     set('orgWt', fThreeDecimal(orgWt));
 
-    set('issPc', issPc.toString());
-    set('issWt', fThreeDecimal(issWt));
+    set('issPc', recPc.toString());
+    set('issWt', fThreeDecimal(recWt));
 
     set('recPc', recPc.toString());
     set('recWt', fThreeDecimal(recWt));

@@ -510,14 +510,11 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     final orgPc = r.pc ?? 0;
     final orgWt = r.wt ?? 0;
 
-    final issPc = (r.issPc == null || r.issPc == 0) ? orgPc : r.issPc;
-    final issWt = (r.issWt == null || r.issWt == 0) ? orgWt : r.issWt!;
-
     final recPc = (r.recPc == null || r.recPc == 0) ? orgPc : r.recPc;
-    final recWt = (r.recWt == null || r.recWt == 0) ? issWt : r.recWt!;
+    final recWt = (r.recWt == null || r.recWt == 0) ? orgWt : r.recWt!;
 
-    set('issPc', issPc.toString());
-    set('issWt', fThreeDecimal(issWt));
+    set('issPc', recPc.toString());
+    set('issWt', fThreeDecimal(recWt));
 
     set('recPc', recPc.toString());
     set('recWt', fThreeDecimal(recWt));
@@ -669,7 +666,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     );
   }
 
-  void _processQrCode(String qrText) {
+  Future<void> _processQrCode(String qrText) async {
     final scanValue = (_entryVals['scanValue'] ?? '').trim();
 
     if (scanValue.isEmpty) {
@@ -754,16 +751,26 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     set('cutCode', cutRow.cutCode.toString());
 
     // L:3.01
-    final lengthStr = parts[9].replaceAll('L:', '').trim();
+    final lengthStr = parts[10].replaceAll('L:', '').trim();
     set('length', lengthStr);
 
     // W:2.01
-    final widthStr = parts[10].replaceAll('W:', '').trim();
+    final widthStr = parts[11].replaceAll('W:', '').trim();
     set('diam', widthStr);
 
     // 1.27
-    set('height', parts[11]);
+    set('height', parts[12]);
     print('_entryVals ${_entryVals.toString()}');
+    _prepareAndAddEntry();
+  }
+
+  void _prepareAndAddEntry() {
+    _calcDmPer();
+    _calcLoss();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _addEntry();
+    });
   }
 
   /// Build a detail row for an existing (edit) record.
@@ -891,7 +898,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       shapeCode: _isFieldVisible('SHAPE')
           ? int.tryParse(_entryVals['shape'] ?? '')
           : 0,
-      purityCode: _isFieldVisible('PURITY') ? _scannedDet?.purityCode : 0,
+      purityCode: _isFieldVisible('PURITY') ? int.tryParse(_entryVals['purity'] ?? '') ?? _scannedDet?.purityCode : 0,
       colorCode: _isFieldVisible('COLOR')
           ? int.tryParse(_entryVals['color'] ?? '')
           : 0,
