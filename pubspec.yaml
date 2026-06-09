@@ -57,6 +57,7 @@ dependencies:
   universal_html: ^2.3.0
   image_picker: ^1.2.1
   url_launcher: ^6.3.0
+  pdfx: ^2.9.2
 
 dependency_overrides:
   rs_dashboard:

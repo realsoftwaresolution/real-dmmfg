@@ -270,16 +270,16 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     _resetForm();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.wait([
-        context.read<SpkDeptIssProvider>().load(),
         context.read<CounterProvider>().load(),
         context.read<CounterManagerDetProvider>().load(),
         context.read<DeptProvider>().load(),
         context.read<DeptGroupProvider>().load(),
         context.read<DeptProcessProvider>().load(),
-        context.read<CharniProvider>().load(),
-        context.read<TensionsProvider>().load(),
         context.read<CounterDisplayDetProvider>().load(),
         context.read<UserVisibilityProvider>().load(),
+        context.read<SpkDeptIssProvider>().load(),
+        context.read<CharniProvider>().load(),
+        context.read<TensionsProvider>().load(),
         context.read<EmployeeProvider>().loadEmployees(),
         context.read<RemarksProvider>().load(),
         context.read<ShapeProvider>().load(),

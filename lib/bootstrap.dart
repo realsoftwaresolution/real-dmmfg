@@ -79,10 +79,12 @@ import 'providers/Ls_party_wt_calc_entry_provider.dart';
 import 'providers/Packet_History_provider.dart';
 import 'providers/factory_man_group_provider.dart';
 
-String baseUrl = 'http://50.62.183.116:5000/api';
-// String baseUrl = 'https://marcus-graduation-certificate-position.trycloudflare.com/api';
-//CU-18,5/6/2026,14:29,0.122,0.045,ROUND,F,MACKABLE,klhkhkhjkkh,L:3.01,W:2.01,1.27,firoz,S.OVAL
+// String baseUrl = 'http://50.62.183.116:5000/api';
+String baseUrl = 'https://cardiovascular-hip-mid-hearings.trycloudflare.com/api';
+//CU-7,5/6/2026,17:12,0.096,0.049,ROUND,G,MACKABLE,klhkhkhjkkh,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
+
 //CU-7,5/6/2026,17:12,0.096,0.049,S.OVAL,G,VVS2,omjewR-1.50,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
+
 Future<void> bootstrap({required FutureOr<Widget> Function() fn}) async {
   return runZonedGuarded(
     () async {

@@ -38,11 +38,17 @@ class ReportConfig {
   final String endpoint;
   final List<ReportColumnDef> columns;
   final ReportMapper mapper;
+  final bool isPdf; // 🔥 ADD THIS
+  final Map<String, dynamic> Function(Map<String, dynamic>)? queryBuilder;
+
 
   const ReportConfig({
     required this.reportTypeCode,
     required this.endpoint,
     required this.columns,
     required this.mapper,
+    this.isPdf = false, // default false
+    this.queryBuilder,
+
   });
 }

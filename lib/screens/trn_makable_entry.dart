@@ -242,16 +242,16 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     _resetForm();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.wait([
-        context.read<MakableEntryProvider>().load(),
         context.read<CounterProvider>().load(),
         context.read<CounterManagerDetProvider>().load(),
         context.read<DeptProvider>().load(),
         context.read<DeptGroupProvider>().load(),
         context.read<DeptProcessProvider>().load(),
-        context.read<CharniProvider>().load(),
-        context.read<TensionsProvider>().load(),
         context.read<CounterDisplayDetProvider>().load(),
         context.read<UserVisibilityProvider>().load(),
+        context.read<MakableEntryProvider>().load(),
+        context.read<CharniProvider>().load(),
+        context.read<TensionsProvider>().load(),
         context.read<EmployeeProvider>().loadEmployees(),
         context.read<RemarksProvider>().load(),
         context.read<ShapeProvider>().load(),
@@ -455,8 +455,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       _formValues['toCrId'] = _toCrId?.toString() ?? '';
       _formValues['fromCrId'] = _fromCrId?.toString() ?? '';
     });
-
-    _rebuildForm();
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -694,7 +692,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     final shapeName = parts[5].trim();
     final colorName = parts[6].trim();
     final purityName = parts[7].trim();
-    final cutName = parts[8].trim();
+    // final cutName = parts[8].trim();
     final colorProv = context.read<ColorProvider>();
     final purityProv = context.read<PurityProvider>();
     final shapeProv = context.read<ShapeProvider>();
@@ -714,14 +712,14 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           (e.purityName ?? '').trim().toUpperCase() == purityName.toUpperCase(),
     );
 
-    final cutRow = cutProv.cuts.firstWhereOrNull(
-      (e) => (e.cutName ?? '').trim().toUpperCase() == cutName.toUpperCase(),
-    );
+    // final cutRow = cutProv.cuts.firstWhereOrNull(
+    //   (e) => (e.cutName ?? '').trim().toUpperCase() == cutName.toUpperCase(),
+    // );
 
     if (shapeRow == null ||
         colorRow == null ||
-        purityRow == null ||
-        cutRow == null) {
+        purityRow == null/* ||
+        cutRow == null*/) {
       _showSnack('QR Code master data not found');
 
       _entryVals['qrCode'] = '';
@@ -748,7 +746,8 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     set('shape', shapeRow.shapeCode.toString());
     set('color', colorRow.colorCode.toString());
     set('purity', purityRow.purityCode.toString());
-    set('cutCode', cutRow.cutCode.toString());
+    // set('cutCode', cutRow.cutCode.toString());
+    set('cutCode', '0');
 
     // L:3.01
     final lengthStr = parts[10].replaceAll('L:', '').trim();
@@ -1833,6 +1832,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           type: ErpFieldType.radio,
           radioDirection: Axis.horizontal,
           isRadioRow: true,
+          skipFocus: true,
           radioItems: [
             ErpRadioOption(label: 'Details', value: 'REPORT'),
             ErpRadioOption(label: 'Summary', value: 'SUMMARY'),

@@ -27,12 +27,19 @@ import 'package:diam_mfg/providers/test_provider.dart';
 import 'package:diam_mfg/providers/user_visibility_provider.dart';
 import 'package:diam_mfg/utils/ReportRegistry.dart';
 import 'package:diam_mfg/utils/app_images.dart';
-import 'package:diam_mfg/utils/constants.dart';
+import 'package:dio/dio.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
+
+import 'dart:typed_data';
+
+import 'package:universal_html/html.dart' as html;
+import 'package:pdfx/pdfx.dart';
+
+import '../bootstrap.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -617,6 +624,7 @@ class _ReportScreenState extends State<ReportScreen> {
           sectionIndex: 0,
           isEntryRequired: true,
           isEntryField: true,
+          skipFocus: true,
         ),
         ErpFieldConfig(
           key: 'dateTo',
@@ -625,6 +633,7 @@ class _ReportScreenState extends State<ReportScreen> {
           sectionIndex: 0,
           isEntryRequired: true,
           isEntryField: true,
+          skipFocus: true,
         ),
         ErpFieldConfig(
           key: 'timeFrom',
@@ -633,6 +642,7 @@ class _ReportScreenState extends State<ReportScreen> {
           sectionIndex: 0,
           isEntryRequired: true,
           isEntryField: true,
+          skipFocus: true,
         ),
         ErpFieldConfig(
           key: 'timeTo',
@@ -641,6 +651,7 @@ class _ReportScreenState extends State<ReportScreen> {
           sectionIndex: 0,
           isEntryRequired: true,
           isEntryField: true,
+          skipFocus: true,
         ),
         ErpFieldConfig(
           key: 'finish',
@@ -876,7 +887,6 @@ class _ReportScreenState extends State<ReportScreen> {
     final testCode = _formValues['type'];
     final reportName = _formValues['report'];
 
-
     if (reportName == null || reportName.isEmpty) return;
 
     // 🔥 normalize: "Rough Detail" → "ROUGH_DETAIL"
@@ -919,18 +929,26 @@ class _ReportScreenState extends State<ReportScreen> {
     if (registryKey != 'PACKET_WISE_PLANNING_SUMMARY' &&
         registryKey != 'PACKET_WISE_PLANNING_DETAIL') {
       filter.addAll({
-        "fromDate": DateFormat('yyyy-MM-dd')
-            .format(DateFormat('dd/MM/yyyy').parse(_formValues['dateFrom']!)),
-        "toDate": DateFormat('yyyy-MM-dd')
-            .format(DateFormat('dd/MM/yyyy').parse(_formValues['dateTo']!)),
-        "fromTime": DateFormat('HH:mm:ss')
-            .format(DateFormat('hh:mm a').parse(_formValues['timeFrom']!)),
-        "toTime": DateFormat('HH:mm:ss')
-            .format(DateFormat('hh:mm a').parse(_formValues['timeTo']!)),
+        "fromDate": DateFormat(
+          'yyyy-MM-dd',
+        ).format(DateFormat('dd/MM/yyyy').parse(_formValues['dateFrom']!)),
+        "toDate": DateFormat(
+          'yyyy-MM-dd',
+        ).format(DateFormat('dd/MM/yyyy').parse(_formValues['dateTo']!)),
+        "fromTime": DateFormat(
+          'HH:mm:ss',
+        ).format(DateFormat('hh:mm a').parse(_formValues['timeFrom']!)),
+        "toTime": DateFormat(
+          'HH:mm:ss',
+        ).format(DateFormat('hh:mm a').parse(_formValues['timeTo']!)),
       });
     }
-
-    await prov.loadReport(reportTypeCode: registryKey, filter: filter);
+    if (registryKey == 'KAPAN_PERFORMANCE' ) {
+      filter.addAll({
+        "kapanNos": _formValues['kNo'],
+      });
+    }
+    await prov.loadReport(reportTypeCode: registryKey, filter: filter,theme: _theme, context: context);
   }
 
   void _resetForm() {
@@ -992,17 +1010,7 @@ class _ReportScreenState extends State<ReportScreen> {
       onFieldChanged: (key, value) {
         print('KEY = $key');
         print('VALUE = $value');
-
         _formValues[key] = value.toString();
-
-        if (key == 'dateFrom' ||
-            key == 'dateTo' ||
-            key == 'timeFrom' ||
-            key == 'timeTo') {
-          print('DATE/TIME UPDATED');
-          print(_formValues);
-        }
-
         switch (key) {
           case 'type':
             final testCode = int.tryParse(value.toString());
@@ -1127,32 +1135,56 @@ class _ReportScreenState extends State<ReportScreen> {
 
       detailBuilder: (ctx) {
         final prov = context.watch<ReportProvider>();
-        final config = ReportRegistry.of(
-          _toRegistryKey(_activeReportType ?? ''),
-        );
+        final registryKey = _toRegistryKey(_activeReportType ?? '');
+        final config = ReportRegistry.of(registryKey);
 
-        if (config == null || prov.tableData.isEmpty) {
-          return const SizedBox.shrink();
+        if (config == null) return const SizedBox.shrink();
+
+        // 🔥 PDF VIEWER branch
+        if (config.isPdf) {
+          if (prov.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (prov.pdfBytes == null) return const SizedBox.shrink();
+
+          return LayoutBuilder(
+            // 🔥 ADD THIS
+            builder: (context, constraints) {
+              return SizedBox(
+                width: constraints.maxWidth,
+                height: constraints.maxHeight.isFinite
+                    ? constraints.maxHeight
+                    : 600.0, // fallback height
+                child: _PdfReportView(
+                  filter: _formValues,
+                  pdfBytes: prov.pdfBytes!,
+                  reportTitle: registryKey,
+                ),
+              );
+            },
+          );
         }
+
+        // Normal table branch
+        if (prov.tableData.isEmpty) return const SizedBox.shrink();
 
         final erpColumns = config.columns.map((c) => c.toErpColumn()).toList();
 
-        // 🔥 LayoutBuilder gives explicit constraints to the table
         return LayoutBuilder(
           builder: (context, constraints) {
             return SizedBox(
               width: constraints.maxWidth,
               height: constraints.maxHeight.isFinite
                   ? constraints.maxHeight
-                  : 500, // fallback height if parent is unbounded
+                  : 500,
               child: ErpDataTable(
                 key: ValueKey('${_activeReportType}_${prov.tableData.length}'),
                 data: prov.tableData,
                 columns: erpColumns,
                 showSearch: false,
-                title: _activeReportType!.isEmpty
+                title: registryKey.isEmpty
                     ? 'REPORT DATA'
-                    : _activeReportType!.replaceAll('_', ' '),
+                    : registryKey.replaceAll('_', ' '),
                 token: '',
                 url: '',
                 isReportRow: false,
@@ -1160,6 +1192,139 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
             );
           },
+        );
+      },
+    );
+  }
+}
+
+class _PdfReportView extends StatefulWidget {
+  final Uint8List pdfBytes;
+  final String reportTitle;
+  final dynamic filter;
+
+  const _PdfReportView({required this.pdfBytes, required this.reportTitle, this.filter});
+
+  @override
+  State<_PdfReportView> createState() => _PdfReportViewState();
+}
+
+class _PdfReportViewState extends State<_PdfReportView> {
+  late PdfControllerPinch _pdfController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pdfController = PdfControllerPinch(
+      document: PdfDocument.openData(widget.pdfBytes),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pdfController.dispose();
+    super.dispose();
+  }
+
+  Future _openInNewTab(BuildContext context) async {
+    final dio = Dio();
+    final String? token = AppStorage.getString('token');
+    final config = ReportRegistry.of(widget.reportTitle);
+    if (config == null) {
+      return [];
+    }
+
+    final queryParams =
+        config.queryBuilder?.call(widget.filter) ??
+            widget.filter;
+
+    print('🔥 Calling PDF endpoint: $baseUrl${config.endpoint}');
+
+    final response = await dio.get(
+      '$baseUrl${config.endpoint}',
+      queryParameters: queryParams,
+      options: Options(
+        responseType: ResponseType.bytes,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/pdf',
+          'Authorization': 'Bearer $token',
+        },
+      ),
+    );
+
+    final blob = html.Blob(
+      [response.data],
+      'application/pdf',
+    );
+
+    final url = html.Url.createObjectUrlFromBlob(
+      blob,
+    );
+
+    html.window.open(
+      url,
+      '_blank',
+    );
+
+    Future.delayed(
+      const Duration(seconds: 10),
+          () {
+        html.Url.revokeObjectUrl(url);
+      },
+    );
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      // 🔥 wrap in LayoutBuilder
+      builder: (context, constraints) {
+        // Fallback height if parent gives unbounded height
+        final height = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : 600.0;
+
+        return SizedBox(
+          // 🔥 explicit size
+          width: constraints.maxWidth,
+          height: height,
+          child: Column(
+            children: [
+              SizedBox(height: 10),
+              Align(
+                alignment: AlignmentGeometry.topRight,
+                child: ElevatedButton.icon(
+                  onPressed: ()=>_openInNewTab(context),
+                  icon: const Icon(Icons.print, size: 18),
+                  label: const Text('Open'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                  ),
+                ),
+              ),
+              // ── PDF Viewer ─────────────────────────────────────────────
+              Expanded(
+                // ✅ safe inside bounded Column
+                child: PdfViewPinch(
+                  controller: _pdfController,
+                  scrollDirection: Axis.vertical,
+                  builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
+                    options: const DefaultBuilderOptions(),
+                    errorBuilder: (_, error) =>
+                        Center(child: Text('Error loading PDF: $error')),
+                    // pageLoading: (_, loadingPage) => const Center(
+                    //   child: CircularProgressIndicator(),
+                    // ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );

@@ -23,7 +23,6 @@ import 'package:diam_mfg/utils/helper_functions.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:diam_mfg/utils/process_constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
@@ -490,7 +489,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       }
     });
 
-    _rebuildForm();
+    // _rebuildForm();
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -861,7 +860,9 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     if (_detRows[idx].spkDeptIssMstID == null ||
         _detRows[idx].spkDeptIssMstID == 0) {
       setState(() {
+        _detDisplay.removeAt(idx);
         _detRows.removeAt(idx);
+        _syncDetGrid();
       });
       return;
     }
@@ -1492,6 +1493,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
           type: ErpFieldType.radio,
           radioDirection: Axis.horizontal,
           isRadioRow: true,
+          skipFocus: true,
           radioItems: [
             ErpRadioOption(label: 'Details', value: 'REPORT'),
             ErpRadioOption(label: 'Summary', value: 'SUMMARY'),

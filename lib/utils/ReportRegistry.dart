@@ -2215,6 +2215,19 @@ class ReportRegistry {
       }).toList(),
     ),
 
+
+    // ── KAPAN_PERFORMANCE ─────────────────────────────────────────────────────── 41
+    'KAPAN_PERFORMANCE': ReportConfig(
+      reportTypeCode: 'KAPAN_PERFORMANCE',
+      endpoint: '/reports/kapan-performance',
+      isPdf: true, // 🔥 ADD THIS
+      columns: const [],
+      mapper: (raw) => [],
+      queryBuilder: (filter) => {
+        'kapanNos': filter['kNo'],
+      },
+    ),
+
   };
 
   static ReportConfig? of(String? code) => code == null ? null : _configs[code];

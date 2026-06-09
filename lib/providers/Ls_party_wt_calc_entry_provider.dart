@@ -1,7 +1,6 @@
 import 'package:diam_mfg/models/company_model.dart';
 import 'package:diam_mfg/models/ls_party_wt_calc_entry_model.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
-
 import '../utils/constants.dart';
 
 class MstLsPartyWtCalcEntryProvider extends BaseProvider {
