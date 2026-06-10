@@ -137,6 +137,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
           label: 'DATE',
           type: ErpFieldType.date,
           required: true,
+          skipFocus: true,
           flex: 1,
           sectionIndex: 0,
         ),
@@ -611,11 +612,13 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
   }
 
   void _editDetRow(int idx) {
-    final r = _detRows[idx];
-    setState(() => _editingDetIndex = idx);
+    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
+    final r = _detRows[actualIdx];
+    setState(() => _editingDetIndex = actualIdx);         // ← use actualIdx
 
     void set(String k, String? v) {
       _entryVals[k] = v ?? '';
+      _entryCalc[k] = v ?? '';
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
 
@@ -644,8 +647,10 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
   }
 
   void _deleteDetRow(int idx) {
+    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
+
     setState(() {
-      _detRows.removeAt(idx);
+      _detRows.removeAt(actualIdx);
       _detRows = _detRows
           .asMap()
           .entries
@@ -675,7 +680,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
           )
           .toList();
       _syncDetGrid();
-      if (_editingDetIndex == idx) _editingDetIndex = null;
+      if (_editingDetIndex == actualIdx) _editingDetIndex = null;
     });
     _recalcPendingWt();
   }
@@ -686,7 +691,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
   void _syncDetGrid() {
     final pg = context.read<PurityProvider>();
 
-    _detDisplay = _detRows.map((r) {
+    _detDisplay = _detRows.reversed.map((r) {
       final pgName =
           pg.list
               .firstWhere(
@@ -846,16 +851,17 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
 
       final merged = Map<String, dynamic>.from(values);
       merged['roughAssortDate'] = toIso(merged['roughAssortDate']?.toString());
-
+// ✅ Reverse detRows for API — srno 4,3,2,1 order
+      final reversedDet = _detRows.toList();
       bool success;
       if (_isEditMode && _selectedMst != null) {
         success = await prov.update(
           _selectedMst!.roughAssortMstID!,
           merged,
-          _detRows,
+          reversedDet,
         );
       } else {
-        success = await prov.create(merged, _detRows);
+        success = await prov.create(merged, reversedDet );
       }
       if (!mounted) return;
       if (success) {
@@ -1092,7 +1098,9 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
                 theme: theme,
                 onDeleteRow: _isEditMode ? null : _deleteDetRow,
                 onEditRow: _editDetRow,
-                editingIndex: _editingDetIndex,
+                editingIndex: _editingDetIndex != null
+                    ? (_detRows.length - 1 - _editingDetIndex!)
+                    : null,
                 columnWidths: {
                   'srno': 40,
                   'purityGroup': 80,

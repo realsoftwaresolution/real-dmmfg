@@ -296,6 +296,12 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     });
   }
 
+  @override
+  void dispose() {
+    _erpFormKey.currentState?.dispose();
+    super.dispose();
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   //  DEFAULT FORM VALUES
   // ─────────────────────────────────────────────────────────────────────────
@@ -521,8 +527,12 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       _erpFormKey.currentState?.updateFieldValue('scanValue', '');
       Future.delayed(
         const Duration(milliseconds: 100),
-        () => _erpFormKey.currentState?.focusField('scanValue'),
+            () {
+          if (!mounted) return;
+          _erpFormKey.currentState?.focusField('scanValue');
+        },
       );
+
       return;
     }
 
@@ -558,7 +568,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
     Future.delayed(
       const Duration(milliseconds: 100),
-      () => _erpFormKey.currentState?.focusField('recpc'),
+          () {
+        if (!mounted) return;
+        _erpFormKey.currentState?.focusField('recpc');
+      },
     );
   }
 // ─── 1. NEW: _onCutLotFetched ──────────────────────────────────────────────
@@ -575,7 +588,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       _showSnack('Please enter Cut No.');
       Future.delayed(
         const Duration(milliseconds: 50),
-            () => _erpFormKey.currentState?.focusField('cutNo'),
+            () {
+          if (!mounted) return;
+          _erpFormKey.currentState?.focusField('cutNo');
+        },
       );
       return;
     }
@@ -753,11 +769,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       );
 
       _erpFormKey.currentState?.updateFieldValue('scanValue', '');
-
-      Future.delayed(
-        const Duration(milliseconds: 100),
-        () => _erpFormKey.currentState?.focusField('scanValue'),
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _erpFormKey.currentState?.focusField('scanValue');
+      });
 
       return;
     }
@@ -1054,8 +1069,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _editDetRow(int idx) {
-    final r = _detRows[idx];
-    setState(() => _editingDetIndex = idx);
+    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
+    final r = _detRows[actualIdx];
+    setState(() => _editingDetIndex = actualIdx);         // ← use actualIdx
 
     void set(String k, String? v) {
       _entryVals[k] = v ?? '';
@@ -1085,8 +1101,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   }
 
   void _deleteDetRow(int idx) {
+    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
     setState(() {
-      _detRows.removeAt(idx);
+      _detRows.removeAt(actualIdx);
       // Re-number srno
       _detRows = _detRows.asMap().entries.map((e) {
         final v = e.value;
@@ -1141,7 +1158,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       }).toList();
 
       _syncDetGrid();
-      if (_editingDetIndex == idx) _editingDetIndex = null;
+      if (_editingDetIndex == actualIdx) _editingDetIndex = null;
     });
   }
 
@@ -1184,7 +1201,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     cols.addAll(['jnoRecPc', 'shapeCode', 'purityCode']);
     _activeDetColumns = cols;
 
-    _detDisplay = _detRows
+    _detDisplay = _detRows.reversed
         .map(
           (r) => {
             'srno': r.srno?.toString() ?? '',
@@ -1457,13 +1474,14 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         ..['fromCrID'] = _fromCrId?.toString() ?? ''
         ..['toCrID'] = _toCrId?.toString() ?? ''
         ..['deptCode'] = toDeptCode?.toString() ?? '';
+      final reversedDet = _detRows.toList();
 
       final success = _isEditMode && _selectedMst != null
           ? await prov.update(
               _selectedMst!.spkDeptIssMstID!,
               merged,
-              _detRows,
-              bCodeArray: _detRows
+        reversedDet,
+              bCodeArray: reversedDet
                   .where(
                     (r) => r.spkDeptIssDetID != null || r.spkDeptIssDetID != 0,
                   )
@@ -1473,7 +1491,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
               theme: _theme,
               context: context,
             )
-          : await prov.create(merged, _detRows);
+          : await prov.create(merged, reversedDet);
 
       if (!mounted) return;
       if (success) {
@@ -2277,7 +2295,10 @@ print('selectedName $selectedName');
             _editingDetIndex == null) {
           Future.delayed(
             const Duration(milliseconds: 50),
-                () => _erpFormKey.currentState?.focusField('scanValue'),
+                () {
+              if (!mounted) return;
+              _erpFormKey.currentState?.focusField('scanValue');
+            },
           );
           return;
         }
@@ -2301,21 +2322,30 @@ print('selectedName $selectedName');
             _onFromSelected(value.toString());
             Future.delayed(
               const Duration(milliseconds: 50),
-              () => _erpFormKey.currentState?.focusField('toCrId'),
+                  () {
+                if (!mounted) return;
+                _erpFormKey.currentState?.focusField('toCrId');
+              },
             );
 
           case 'toCrId':
             _onToSelected(value.toString());
             Future.delayed(
               const Duration(milliseconds: 50),
-              () => _erpFormKey.currentState?.focusField('deptProcessCode'),
+                  () {
+                if (!mounted) return;
+                _erpFormKey.currentState?.focusField('deptProcessCode');
+              },
             );
 
           case 'deptProcessCode':
             _onProcessSelected(value.toString());
             Future.delayed(
               const Duration(milliseconds: 100),
-              () => _erpFormKey.currentState?.focusField('charniCode'),
+                  () {
+                if (!mounted) return;
+                _erpFormKey.currentState?.focusField('charniCode');
+              },
             );
 
           case 'scanValue':
@@ -2374,14 +2404,19 @@ print('selectedName $selectedName');
                 message: 'This BCode already added.',
               );
               _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+              // scanValue duplicate error path:
               Future.delayed(
                 const Duration(milliseconds: 50),
-                    () => _erpFormKey.currentState?.focusField('scanValue'),
+                    () {
+                  if (!mounted) return;
+                  _erpFormKey.currentState?.focusField('scanValue');
+                },
               );
               return;
             }
 
             _onBCodeScanned(scanVal).then((_) {
+              if (!mounted) return;
               if (_scannedDet != null && !_hasEntryFields()) {
                 _addEntry();
                 _erpFormKey.currentState?.updateFieldValue('scanValue', '');
@@ -2389,7 +2424,10 @@ print('selectedName $selectedName');
                 _scannedDet = null;
                 Future.delayed(
                   const Duration(milliseconds: 50),
-                      () => _erpFormKey.currentState?.focusField('scanValue'),
+                      () {
+                    if (!mounted) return;
+                    _erpFormKey.currentState?.focusField('scanValue');
+                  },
                 );
               }
             });
@@ -2417,14 +2455,20 @@ print('selectedName $selectedName');
         if (key == 'cutNo') {
           Future.delayed(
             const Duration(milliseconds: 50),
-                () => _erpFormKey.currentState?.focusField('cutFrom'),
+                () {
+              if (!mounted) return;
+              _erpFormKey.currentState?.focusField('cutFrom');
+            },
           );
           return;
         }
         if (key == 'cutFrom') {
           Future.delayed(
             const Duration(milliseconds: 50),
-                () => _erpFormKey.currentState?.focusField('cutTo'),
+                () {
+              if (!mounted) return;
+              _erpFormKey.currentState?.focusField('cutTo');
+            },
           );
           return;
         }
@@ -2452,7 +2496,9 @@ print('selectedName $selectedName');
                 theme: t,
                 onDeleteRow: _deleteDetRow,
                 onEditRow: _editDetRow,
-                editingIndex: _editingDetIndex,
+                editingIndex: _editingDetIndex != null
+                    ? (_detRows.length - 1 - _editingDetIndex!)
+                    : null,
                 columnLabels: {
                   for (final c in _activeDetColumns) c: _colLabel(c),
                 },

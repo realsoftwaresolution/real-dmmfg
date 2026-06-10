@@ -877,8 +877,9 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
 
   // ── Edit det row ──────────────────────────────────────────────────────────
   void _editDetRow(int idx) {
-    final r = _detRows[idx];
-    setState(() => _editingDetIndex = idx);
+    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
+    final r = _detRows[actualIdx];
+    setState(() => _editingDetIndex = actualIdx);
 
     void set(String k, String? v) {
       _entryVals[k] = v ?? '';
@@ -945,7 +946,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
   //  SYNC DISPLAY GRID
   // ══════════════════════════════════════════════════════════════════════════
   void _syncDetGrid() {
-    _detDisplay = _detRows.map((r) {
+    _detDisplay = _detRows.reversed.map((r) {
       return {
         'bCode': r.bCode?.toString() ?? '',
         'srno': r.srno?.toString() ?? '',
@@ -1170,20 +1171,21 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     merged['cutNo'] = rawCutValue.split('|').first;
 
     merged['entryType'] = 'Packet Create';
+    final reversedDet = _detRows.toList();
 
     bool success;
     if (_isEditMode && _selectedMst != null) {
       success = await prov.update(
         _selectedMst!.packetMstID!,
         merged,
-        _detRows,
-        bCodeArray: _detRows.map((r) => r.bCode).toList(),
+        reversedDet,
+        bCodeArray: reversedDet.map((r) => r.bCode).toList(),
         expectedProcess: ProcessConstants.packetCreate,
         theme: _theme,
         context: context,
       );
     } else {
-      success = await prov.create(merged, _detRows);
+      success = await prov.create(merged, reversedDet);
     }
     if (!mounted) return;
     if (success) {
@@ -1359,7 +1361,9 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
                   _deleteDetRow(row);
                 },
                 onEditRow: _editDetRow,
-                editingIndex: _editingDetIndex,
+                editingIndex: _editingDetIndex != null
+                    ? (_detRows.length - 1 - _editingDetIndex!)
+                    : null,
                 columnLabels: const {
                   'bCode': 'BCODE',
                   'srno': 'SR NO',

@@ -987,8 +987,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _editDetRow(int idx) {
-    final r = _detRows[idx];
-    setState(() => _editingDetIndex = idx);
+    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
+    final r = _detRows[actualIdx];
+    setState(() => _editingDetIndex = actualIdx);
 
     void set(String k, String? v) {
       _entryVals[k] = v ?? '';
@@ -1044,21 +1045,23 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   }
 
   dynamic _deleteDetRow(int idx) async {
+    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
+
     dynamic success = false;
-    if (_detRows[idx].FactoryRecDetID?.toString() != null &&
-        _detRows[idx].FactoryRecDetID != 0) {
+    if (_detRows[actualIdx].FactoryRecDetID?.toString() != null &&
+        _detRows[actualIdx].FactoryRecDetID != 0) {
       final confirm = await ErpDeleteDialog.show(
         context: context,
         theme: _theme,
         title: 'Factory Issue',
-        itemName: 'ID: ${_detRows[idx].FactoryRecDetID?.toString()}',
+        itemName: 'ID: ${_detRows[actualIdx].FactoryRecDetID?.toString()}',
       );
       if (confirm != true || !mounted) return;
 
       success = await context.read<FactoryReceivedEntryProvider>().deleteRow(
-        _detRows[idx].factoryRecMstID?.toString(),
-        _detRows[idx].FactoryRecDetID?.toString(),
-        _detRows[idx].bCode,
+        _detRows[actualIdx].factoryRecMstID?.toString(),
+        _detRows[actualIdx].FactoryRecDetID?.toString(),
+        _detRows[actualIdx].bCode,
         _theme,
         context,
       );
@@ -1070,7 +1073,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     }
     if (mounted) {
       setState(() {
-        _detRows.removeAt(idx);
+        _detRows.removeAt(actualIdx);
         // Re-number srno
         _detRows = _detRows.asMap().entries.map((e) {
           final v = e.value;
@@ -1139,7 +1142,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         }).toList();
 
         _syncDetGrid();
-        if (_editingDetIndex == idx) _editingDetIndex = null;
+        if (_editingDetIndex == actualIdx) _editingDetIndex = null;
       });
     }
   }
@@ -1242,7 +1245,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       'height',
     ];
 
-    _detDisplay = _detRows.map((r) {
+    _detDisplay = _detRows.reversed.map((r) {
       return {
         'srno': r.srno ?? '',
         'jno': r.jno ?? '',
@@ -1420,7 +1423,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   }
 
   Future<void> _onSave(Map<String, dynamic> values) async {
-    if (_detRows.isNotEmpty) {
+    final reversedDet = _detRows.toList();
+
+    if (reversedDet.isNotEmpty) {
       final prov = context.read<FactoryReceivedEntryProvider>();
       final payload = {
         "FactoryRecDate": toUtcIso(values['factoryRecDate']),
@@ -1429,7 +1434,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         "Sdate": DateTime.now().toUtc().toIso8601String(),
         "Stime": DateTime.now().toUtc().toIso8601String(),
         "EntryType": _formValues['type'] ?? '',
-        "details": _detRows.map(_mapToApiDetail).toList(),
+        "details": reversedDet.map(_mapToApiDetail).toList(),
       };
 
       final success = await prov.create(payload);
@@ -2429,7 +2434,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
                 theme: t,
                 onDeleteRow: _deleteDetRow,
                 onEditRow: _editDetRow,
-                editingIndex: _editingDetIndex,
+                editingIndex: _editingDetIndex != null
+                    ? (_detRows.length - 1 - _editingDetIndex!)
+                    : null,
                 columnLabels: {
                   for (final c in _activeDetColumns) c: _colLabel(c),
                 },

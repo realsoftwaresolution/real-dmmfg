@@ -515,8 +515,9 @@ print(assortWt);
   }
 
   void _editDetRow(int idx) {
-    final r = _detRows[idx];
-    setState(() => _editingDetIndex = idx);
+    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
+    final r = _detRows[actualIdx];
+    setState(() => _editingDetIndex = actualIdx);
 
     void set(String k, String? v) {
       _entryVals[k] = v ?? '';
@@ -538,8 +539,10 @@ print(assortWt);
   }
 
   void _deleteDetRow(int idx) {
+    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
+
     setState(() {
-      _detRows.removeAt(idx);
+      _detRows.removeAt(actualIdx);
       _detRows = _detRows
           .asMap()
           .entries
@@ -558,13 +561,13 @@ print(assortWt);
           )
           .toList();
       _syncDetGrid();
-      if (_editingDetIndex == idx) _editingDetIndex = null;
+      if (_editingDetIndex == actualIdx) _editingDetIndex = null;
     });
     _recalcPending();
   }
 
   void _syncDetGrid() {
-    _detDisplay = _detRows
+    _detDisplay = _detRows.reversed
         .map(
           (r) => {
             'srno': r.srno?.toString() ?? '',
@@ -659,16 +662,17 @@ print(assortWt);
       final merged = Map<String, dynamic>.from(values);
       merged['cutCreateDate'] = toUtcIso(merged['cutCreateDate']?.toString());
       merged['Sdate'] = DateTime.now().toUtc().toIso8601String();
+      final reversedDet = _detRows.toList();
 
       bool success;
       if (_isEditMode && _selectedMst != null) {
         success = await prov.update(
           _selectedMst!.cutCreateMstID!,
           merged,
-          _detRows,
+          reversedDet,
         );
       } else {
-        success = await prov.create(merged, _detRows);
+        success = await prov.create(merged, reversedDet);
       }
       if (!mounted) return;
       if (success) {
@@ -866,7 +870,9 @@ print(assortWt);
               theme: t,
               onDeleteRow: _deleteDetRow,
               onEditRow: _editDetRow,
-              editingIndex: _editingDetIndex,
+              editingIndex: _editingDetIndex != null
+                  ? (_detRows.length - 1 - _editingDetIndex!)
+                  : null,
               columnAlignments: const {
                 'srno': TextAlign.left,
                 'cutType': TextAlign.left,

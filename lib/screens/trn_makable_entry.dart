@@ -988,9 +988,10 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _editDetRow(int idx) {
-    final r = _detRows[idx];
+    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
+    final r = _detRows[actualIdx];
     setState(() {
-      _editingDetIndex = idx;
+      _editingDetIndex = actualIdx;
       // IMPORTANT
       _scannedDet = r;
     });
@@ -1070,8 +1071,9 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
   }
 
   void _deleteDetRow(int idx) {
+    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
     setState(() {
-      _detRows.removeAt(idx);
+      _detRows.removeAt(actualIdx);
       // Re-number srno
       _detRows = _detRows.asMap().entries.map((e) {
         final v = e.value;
@@ -1146,7 +1148,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       }).toList();
 
       _syncDetGrid();
-      if (_editingDetIndex == idx) _editingDetIndex = null;
+      if (_editingDetIndex == actualIdx) _editingDetIndex = null;
     });
   }
 
@@ -1259,7 +1261,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       // if (_isFieldVisible('POLISH')) 'polishCode',
     ];
 
-    _detDisplay = _detRows
+    _detDisplay = _detRows.reversed
         .map(
           (r) => {
             'srno': r.srno?.toString() ?? '',
@@ -1398,20 +1400,21 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       ..['fromCrID'] = _fromCrId?.toString() ?? ''
       ..['toCrID'] = _toCrId?.toString() ?? ''
       ..['deptCode'] = toDeptCode?.toString() ?? '';
+    final reversedDet = _detRows.toList();
 
     final success = _isEditMode && _selectedMst != null
         ? await prov.update(
             _selectedMst!.spkDeptIssMstID!,
             merged,
-            _detRows,
-            bCodeArray: _detRows
+      reversedDet,
+            bCodeArray: reversedDet
                 .map((r) => num.parse(r.bCode.toString()))
                 .toList(),
             expectedProcess: ProcessConstants.makableEntry,
             theme: _theme,
             context: context,
           )
-        : await prov.create(merged, _detRows);
+        : await prov.create(merged, reversedDet);
 
     if (!mounted) return;
     if (success) {
@@ -2492,7 +2495,9 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
                 theme: t,
                 onDeleteRow: _deleteDetRow,
                 onEditRow: _editDetRow,
-                editingIndex: _editingDetIndex,
+                editingIndex: _editingDetIndex != null
+                    ? (_detRows.length - 1 - _editingDetIndex!)
+                    : null,
                 columnWidths: const {'srno': 40},
                 columnLabels: {
                   for (final c in _activeDetColumns) c: _colLabel(c),

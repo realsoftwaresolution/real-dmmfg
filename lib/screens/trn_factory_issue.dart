@@ -353,25 +353,27 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   dynamic _deleteDetRow(int idx) async {
+    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
+
     if (_isEditMode) {
       final confirm = await ErpDeleteDialog.show(
         context: context,
         theme: _theme,
         title: 'Factory Issue',
-        itemName: 'ID: ${_detRows[idx].spkDeptIssDetID?.toString()}',
+        itemName: 'ID: ${_detRows[actualIdx].spkDeptIssDetID?.toString()}',
       );
       if (confirm != true || !mounted) return;
 
       final success = await context.read<FactoryIssueEntryProvider>().deleteRow(
-        _detRows[idx].spkDeptIssMstID?.toString(),
-        _detRows[idx].spkDeptIssDetID?.toString(),
-        _detRows[idx].bCode,
+        _detRows[actualIdx].spkDeptIssMstID?.toString(),
+        _detRows[actualIdx].spkDeptIssDetID?.toString(),
+        _detRows[actualIdx].bCode,
         _theme,
         context,
       );
       if (success && mounted) {
         setState(() {
-          _detRows.removeAt(idx);
+          _detRows.removeAt(actualIdx);
           // Re-number srno
           _detRows = _detRows.asMap().entries.map((e) {
             final v = e.value;
@@ -440,7 +442,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           }).toList();
 
           _syncDetGrid();
-          if (_editingDetIndex == idx) _editingDetIndex = null;
+          if (_editingDetIndex == actualIdx) _editingDetIndex = null;
         });
         await ErpResultDialog.showDeleted(
           context: context,
@@ -450,7 +452,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       }
     } else {
       setState(() {
-        _detRows.removeAt(idx);
+        _detRows.removeAt(actualIdx);
         // Re-number srno
         _detRows = _detRows.asMap().entries.map((e) {
           final v = e.value;
@@ -519,7 +521,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         }).toList();
 
         _syncDetGrid();
-        if (_editingDetIndex == idx) _editingDetIndex = null;
+        if (_editingDetIndex == actualIdx) _editingDetIndex = null;
       });
     }
   }
@@ -550,7 +552,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       'length',
     ];
 
-    _detDisplay = _detRows
+    _detDisplay = _detRows.reversed
         .map(
           (r) => {
             'srno': r.srno?.toString() ?? '',
@@ -661,7 +663,9 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
   Future<void> _onSave(Map<String, dynamic> values) async {
     final prov = context.read<FactoryIssueEntryProvider>();
-    if (_detRows.isNotEmpty) {
+    final reversedDet = _detRows.toList();
+
+    if (reversedDet.isNotEmpty) {
       // ✅ MASTER PAYLOAD
       final payload = {
         "FactoryIssDate": toUtcIso(_formValues['date']),
@@ -674,7 +678,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         "Sdate": DateTime.now().toUtc().toIso8601String(),
 
         // ✅ DETAILS
-        "details": _detRows.map((r) {
+        "details": reversedDet.map((r) {
           return {
             "CutNo": r.cutNo ?? '',
             "BCode": int.tryParse(r.bCode ?? '0') ?? 0,
@@ -1289,7 +1293,9 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
                 title: 'ISSUE DETAILS',
                 theme: t,
                 onDeleteRow: _deleteDetRow,
-                editingIndex: _editingDetIndex,
+                editingIndex: _editingDetIndex != null
+                    ? (_detRows.length - 1 - _editingDetIndex!)
+                    : null,
                 columnLabels: {
                   for (final c in _activeDetColumns) c: _colLabel(c),
                 },

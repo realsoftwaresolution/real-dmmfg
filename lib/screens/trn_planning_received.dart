@@ -170,8 +170,8 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
   @override
   void initState() {
     super.initState();
-    _resetForm();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _resetForm();
       await Future.wait([
         context.read<TrnPlanningReceivedProvider>().load(),
         context.read<CounterProvider>().load(),
@@ -192,6 +192,13 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
         _onFromSelected(loggedUser!.crId!.toString());
       }
     });
+  }
+
+  @override
+  void dispose() {
+    // Prevent any pending focus callbacks from firing on a dead widget
+    _erpFormKey.currentState?.dispose();
+    super.dispose();
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -417,10 +424,13 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
 
       _erpFormKey.currentState?.updateFieldValue('scanValue', '');
 
+      // Error path (two places):
       Future.delayed(
         const Duration(milliseconds: 100),
-
-        () => _erpFormKey.currentState?.focusField('scanValue'),
+            () {
+          if (!mounted) return;
+          _erpFormKey.currentState?.focusField('scanValue');
+        },
       );
 
       return;
@@ -463,12 +473,14 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
 
       _erpFormKey.currentState?.updateFieldValue('scanValue', '');
 
+      // Success path:
       Future.delayed(
         const Duration(milliseconds: 100),
-
-        () => _erpFormKey.currentState?.focusField('scanValue'),
+            () {
+          if (!mounted) return;
+          _erpFormKey.currentState?.focusField('scanValue');
+        },
       );
-
       return;
     }
 
@@ -1165,7 +1177,10 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
         if (_scannedDet == null && _editingDetIndex == null) {
           Future.delayed(
             const Duration(milliseconds: 50),
-            () => _erpFormKey.currentState?.focusField('scanValue'),
+                () {
+              if (!mounted) return;
+              _erpFormKey.currentState?.focusField('scanValue');
+            },
           );
           return;
         }
@@ -1179,21 +1194,30 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
             _onFromSelected(value.toString());
             Future.delayed(
               const Duration(milliseconds: 50),
-              () => _erpFormKey.currentState?.focusField('toCrId'),
+                  () {
+                if (!mounted) return;
+                _erpFormKey.currentState?.focusField('toCrId');
+              },
             );
 
           case 'toCrId':
             _onToSelected(value.toString());
             Future.delayed(
               const Duration(milliseconds: 50),
-              () => _erpFormKey.currentState?.focusField('deptProcessCode'),
+                  () {
+                if (!mounted) return;
+                _erpFormKey.currentState?.focusField('deptProcessCode');
+              },
             );
 
           case 'deptProcessCode':
             _onProcessSelected(value.toString());
             Future.delayed(
               const Duration(milliseconds: 100),
-              () => _erpFormKey.currentState?.focusField('scanValue'),
+                  () {
+                if (!mounted) return;
+                _erpFormKey.currentState?.focusField('scanValue');
+              },
             );
 
           case 'scanValue':
@@ -1500,14 +1524,16 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
   }
 
   Widget _buildTableDefaultData(TrnPlanningReceivedProvider prov) {
-    final data = prov.planningDetList.asMap().entries.map((entry) {
-      final index = entry.key;
+    final reversed = prov.planningDetList.reversed.toList(); // ← add this
+    final total = reversed.length;
 
+    final data = reversed.asMap().entries.map((entry) {
+      final index = entry.key;
       final r = entry.value;
 
       return {
         // AUTO SR NO
-        'Srno': '${index + 1}',
+        'Srno': '${total - index}',
 
         'BCode': r.bCode?.toString() ?? '',
         'SPKDeptIssMstId': r.spkDeptIssMstID?.toString() ?? '',
@@ -1666,13 +1692,15 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
         }
       }
     }
+    final reversedData = data.reversed.toList(); // ← add this
+
     return ErpDataTable(
       isReportRow: false,
       token: token ?? '',
       url: baseUrl,
       title: 'SARIN DATA',
       columns: _tableColumnsByBarCode,
-      data: data,
+      data: reversedData,
       showHeader: false,
       showSearch: false,
       selectedRow: _selectedRow,
