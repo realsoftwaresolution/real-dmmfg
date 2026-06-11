@@ -36,6 +36,8 @@ class DeptProcessModel {
   final String? procCalcWt;
   final String? planPcAsRatePc;
   final String? rateOnShape;
+  final String? rateOnArticle;
+  final String? rateOnCut;
   final String? stockType;
   final String? getSarinOptData;
   final int? stockTypeCode;
@@ -43,6 +45,8 @@ class DeptProcessModel {
   final String? checkerPlanCheck;
 
   DeptProcessModel({
+    this.rateOnCut,
+    this.rateOnArticle,
     this.deptProcessMstID,
     this.deptProcessCode,
     this.deptProcessName,
@@ -122,6 +126,8 @@ class DeptProcessModel {
       procCalcWt: json['ProcCalcWt'],
       planPcAsRatePc: json['PlanPcAsRatePc'],
       rateOnShape: json['RateOnShape'],
+      rateOnArticle: json['RateOnArticle'],
+      rateOnCut: json['RateOnCut'],
       stockType: json['StockType'],
       getSarinOptData: json['GetSarinOptData'],
       stockTypeCode: json['StockTypeCode'],
@@ -161,6 +167,8 @@ class DeptProcessModel {
       'ProcCalcWt': procCalcWt,
       'PlanPcAsRatePc': planPcAsRatePc,
       'RateOnShape': rateOnShape,
+      'RateOnCut': rateOnCut,
+      'RateOnArticle': rateOnArticle,
       'StockType': stockType,
       'GetSarinOptData': getSarinOptData,
       'StockTypeCode': stockTypeCode,
@@ -176,6 +184,8 @@ class DeptProcessModel {
       'DeptName': DeptName ?? '',
       'StockType': stockType ?? '',
       'RateOnShape': rateOnShape ?? '',
+      'RateOnArticle': rateOnArticle ?? '',
+      'RateOnCut': rateOnCut ?? '',
       'deptCode': deptCode?.toString() ?? '',
       'companyCode':companyName?? companyCode?.toString() ?? '',
       'sortID': sortID?.toString() ?? '',
@@ -185,41 +195,6 @@ class DeptProcessModel {
   }
 
   static DeptProcessModel fromFormValues(Map<String, dynamic> v) {
-    // return DeptProcessModel(
-    //   deptProcessCode: int.tryParse(v['deptProcessCode'] ?? ''),
-    //   deptProcessName: v['deptProcessName'],
-    //   deptCode: int.tryParse(v['deptCode'] ?? ''),
-    //   companyCode: int.tryParse(v['companyCode'] ?? ''),
-    //   sortID: int.tryParse(v['sortID'] ?? ''),
-    //   active: v['active'] == 'Y',
-    //   delRights: v['delRights'] ?? 'Y',
-    //   tops: int.tryParse(v['tops'] ?? '0') ?? 0,
-    //   machineActive: v['machineActive'] == 'Y',
-    //   remarksSelect: v['remarksSelect'] == 'Y',
-    //   multiTimeIss: v['multiTimeIss'] ?? 'N',
-    //   jnoRecPc: v['jnoRecPc'] == 'Y',
-    //   jnoKPc: v['jnoKPc'] == 'Y',
-    //   jnoLastPc: v['jnoLastPc'] == 'Y',
-    //   lsMarkPc: v['lsMarkPc'] == 'Y',
-    //   proDirectIss: v['proDirectIss'] ?? 'Y',
-    //   diaPcMinus: v['diaPcMinus'] == 'Y',
-    //   jnoExtraPc: v['jnoExtraPc'] == 'Y',
-    //   remarksRate: v['remarksRate'] ?? 'N',
-    //   displayRatePc: v['displayRatePc'] ?? 'N',
-    //   planCheck: v['planCheck'] ?? 'N',
-    //   displayRemarks: v['displayRemarks'] ?? 'N',
-    //   multiTimeDeptIss: v['multiTimeDeptIss'] ?? 'N',
-    //   makableCheck: v['makableCheck'] ?? 'N',
-    //   remarksDisplay: v['remarksDisplay'] ?? 'N',
-    //   procCalcWt: v['procCalcWt'] ?? 'N',
-    //   planPcAsRatePc: v['planPcAsRatePc'],
-    //   rateOnShape: v['rateOnShape'],
-    //   stockType: v['stockType'],
-    //   getSarinOptData: v['getSarinOptData'],
-    //   stockTypeCode: int.tryParse(v['stockTypeCode'] ?? ''),
-    //   countInCostingProduction: v['countInCostingProduction'] ?? 'N',
-    //   checkerPlanCheck: v['checkerPlanCheck'] ?? 'N',
-    // );
 
     return DeptProcessModel(
       deptProcessCode: int.tryParse(v['deptProcessCode'] ?? ''),
@@ -259,6 +234,8 @@ class DeptProcessModel {
 
       planPcAsRatePc: v['planPcAsRatePc'],
       rateOnShape: v['rateOnShape'],
+      rateOnCut: v['rateOnCut'],
+      rateOnArticle: v['rateOnArticle'],
       stockType: v['stockType'],
       getSarinOptData: v['getSarinOptData'],
 

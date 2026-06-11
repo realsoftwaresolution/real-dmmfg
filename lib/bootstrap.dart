@@ -8,6 +8,7 @@ import 'package:diam_mfg/providers/article_provider.dart';
 import 'package:diam_mfg/providers/auth_provider.dart';
 import 'package:diam_mfg/providers/charni_group_provider.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
+import 'package:diam_mfg/providers/clv_rate_provider.dart';
 import 'package:diam_mfg/providers/color_group_provider.dart';
 import 'package:diam_mfg/providers/color_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
@@ -38,6 +39,7 @@ import 'package:diam_mfg/providers/factory_receive_provider.dart';
 import 'package:diam_mfg/providers/fluo_provider.dart';
 import 'package:diam_mfg/providers/holiday_provider.dart';
 import 'package:diam_mfg/providers/jangad_charni_provider.dart';
+import 'package:diam_mfg/providers/lab_provider.dart';
 import 'package:diam_mfg/providers/main_group_mst_provider.dart';
 import 'package:diam_mfg/providers/main_menuMst_provider.dart';
 import 'package:diam_mfg/providers/makable_entry_provider.dart';
@@ -79,8 +81,8 @@ import 'providers/Ls_party_wt_calc_entry_provider.dart';
 import 'providers/Packet_History_provider.dart';
 import 'providers/factory_man_group_provider.dart';
 
-String baseUrl = 'http://50.62.183.116:5000/api';
-// String baseUrl = 'https://jeremy-base-leaders-investigator.trycloudflare.com/api';
+// String baseUrl = 'http://50.62.183.116:5000/api';
+String baseUrl = 'https://fish-announcement-loop-pig.trycloudflare.com/api';
 //CU-7,5/6/2026,17:12,0.096,0.049,ROUND,G,MACKABLE,klhkhkhjkkh,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
 
 //CU-7,5/6/2026,17:12,0.096,0.049,S.OVAL,G,VVS2,omjewR-1.50,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
@@ -306,8 +308,14 @@ Future<void> bootstrap({required FutureOr<Widget> Function() fn}) async {
             ),
             ChangeNotifierProvider<ProcessIssueEntryProvider>(
               create: (_) => ProcessIssueEntryProvider(),
-            ), ChangeNotifierProvider<MstLsPartyWtCalcEntryProvider>(
+            ),
+            ChangeNotifierProvider<MstLsPartyWtCalcEntryProvider>(
               create: (_) => MstLsPartyWtCalcEntryProvider(),
+            ),
+            ChangeNotifierProvider<ClvRateProvider>(
+              create: (_) => ClvRateProvider(),
+            ),ChangeNotifierProvider<LabProvider>(
+              create: (_) => LabProvider(),
             ),
           ],
           child: app,

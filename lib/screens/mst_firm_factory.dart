@@ -109,45 +109,20 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
     DivisionProvider divisionProvider,
   ) => [
     /// ───────── BASIC INFO ─────────
-    // [
-    //   // ErpFieldConfig(
-    //   //   key: 'factoryCode',
-    //   //   label: 'FACTORY CODE',
-    //   //   type: ErpFieldType.number,
-    //   //   required: true,
-    //   //   sectionTitle: 'BASIC INFORMATION',
-    //   //   sectionIndex: 0,
-    //   // ),
-    //   ErpFieldConfig(
-    //     key: 'factoryName',
-    //     label: 'FACTORY NAME',
-    //     required: true,
-    //     sectionIndex: 0,
-    //   ),
-    // ],
     [
       ErpFieldConfig(
         key: 'factoryName',
         label: 'FACTORY NAME',
         required: true,
         sectionIndex: 0,
-        inputFormatters: [
-          UpperCaseTextFormatter(),
-        ],
+        inputFormatters: [UpperCaseTextFormatter()],
       ),
       ErpFieldConfig(
         key: 'contactPerson',
         label: 'CONTACT PERSON',
         sectionIndex: 0,
-        inputFormatters: [
-          UpperCaseTextFormatter(),
-        ],
+        inputFormatters: [UpperCaseTextFormatter()],
       ),
-      // ErpFieldConfig(
-      //   key: 'factoryType',
-      //   label: 'TYPE',
-      //   sectionIndex: 0,
-      // ),
       ErpFieldConfig(
         key: 'factoryType',
         label: 'TYPE',
@@ -181,18 +156,8 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
               );
             })
             .toList(),
-        // dropdownItems:companyProvider
-        //     .companies
-        //     .map((e) => e.companyName.toString())
-        //     .toList(),
         sectionIndex: 0,
       ),
-      // ErpFieldConfig(
-      //   key: 'factoryManGroupCode',
-      //   label: 'MAN GROUP CODE',
-      //   type: ErpFieldType.number,
-      //   sectionIndex: 0,
-      // ),
       ErpFieldConfig(
         key: 'divisionCode',
         label: 'DIVISION CODE',
@@ -210,42 +175,9 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
               );
             })
             .toList(),
-        // dropdownItems:companyProvider
-        //     .companies
-        //     .map((e) => e.companyName.toString())
-        //     .toList(),
         sectionIndex: 0,
       ),
-      // ErpFieldConfig(
-      //   key: 'divisionCode',
-      //   label: 'DIVISION CODE',
-      //   type: ErpFieldType.number,
-      //   sectionIndex: 0,
-      // ),
     ],
-
-    // [
-    //   ErpFieldConfig(
-    //     key: 'companyCode',
-    //     label: 'COMPANY',
-    //     type: ErpFieldType.dropdown,
-    //     dropdownItems: companyProvider.companies
-    //         .where((element) {
-    //       return element.active==true;
-    //     },).map((e) {
-    //       return ErpDropdownItem(
-    //         label: e.companyName ?? '',
-    //         value: e.companyCode?.toString() ?? '',
-    //       );
-    //     }).toList(),
-    //     // dropdownItems:companyProvider
-    //     //     .companies
-    //     //     .map((e) => e.companyName.toString())
-    //     //     .toList(),
-    //     sectionIndex: 0,
-    //
-    //   ),
-    // ],
 
     /// ───────── CONTACT DETAILS ─────────
     [
@@ -323,10 +255,6 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
         key: 'rateOnShape',
         label: 'RATE ON SHAPE',
         type: ErpFieldType.checkbox,
-        // dropdownItems: const [
-        //   ErpDropdownItem(label: 'Yes', value: 'Y'),
-        //   ErpDropdownItem(label: 'No', value: 'N'),
-        // ],
         sectionTitle: 'SETTINGS',
         checkboxDbType: 'YN',
         sectionIndex: 2,
@@ -336,24 +264,47 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
         label: 'RATE ON CUT',
         type: ErpFieldType.checkbox,
         checkboxDbType: 'YN',
-        // dropdownItems: const [
-        //   ErpDropdownItem(label: 'Yes', value: 'Y'),
-        //   ErpDropdownItem(label: 'No', value: 'N'),
-        // ],
         sectionIndex: 2,
       ),
     ],
-
+    [
+      ErpFieldConfig(
+        key: 'rateOnArticle',
+        label: 'RATE ON ARTICLE',
+        type: ErpFieldType.checkbox,
+        checkboxDbType: 'YN',
+        sectionIndex: 2,
+      ),
+      ErpFieldConfig(
+        key: 'rateOnPolish',
+        label: 'RATE ON POLISH',
+        type: ErpFieldType.checkbox,
+        checkboxDbType: 'YN',
+        sectionIndex: 2,
+      ),
+    ],
+    [
+      ErpFieldConfig(
+        key: 'rateOnSymmetry',
+        label: 'RATE ON SYMMETRY',
+        type: ErpFieldType.checkbox,
+        checkboxDbType: 'YN',
+        sectionIndex: 2,
+      ),
+      ErpFieldConfig(
+        key: 'rateOnLab',
+        label: 'RATE ON LAB',
+        type: ErpFieldType.checkbox,
+        checkboxDbType: 'YN',
+        sectionIndex: 2,
+      ),
+    ],
     [
       ErpFieldConfig(
         key: 'diamEntry',
         label: 'DIAMETER ENTRY',
         type: ErpFieldType.checkbox,
         checkboxDbType: 'YN',
-        // dropdownItems: const [
-        //   ErpDropdownItem(label: 'Yes', value: 'Y'),
-        //   ErpDropdownItem(label: 'No', value: 'N'),
-        // ],
         sectionIndex: 2,
       ),
       ErpFieldConfig(
@@ -362,10 +313,6 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
         type: ErpFieldType.checkbox,
         checkboxDbType: 'BIT',
         initialBoolValue: true,
-        // dropdownItems: const [
-        //   ErpDropdownItem(label: 'Yes', value: 'Y'),
-        //   ErpDropdownItem(label: 'No', value: 'N'),
-        // ],
         sectionIndex: 2,
       ),
     ],
@@ -419,14 +366,12 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
             '',
         'rateOnShape': raw.rateOnShape == 'Y' ? 'true' : 'false',
         'rateOnCut': raw.rateOnCut == 'Y' ? 'true' : 'false',
+        'rateOnArticle': raw.rateOnArticle == 'Y' ? 'true' : 'false',
+        'rateOnPolish': raw.rateOnPolish == 'Y' ? 'true' : 'false',
+        'rateOnSymmetry': raw.rateOnSymmetry == 'Y' ? 'true' : 'false',
+        'rateOnLab': raw.rateOnLab == 'Y' ? 'true' : 'false',
         'diamEntry': raw.diamEntry == 'Y' ? 'true' : 'false',
-
-        // 'delRights': raw.delRights == 'Y' ? 'true' : 'false',
         'active': raw.active == true ? 'true' : 'false',
-        // 'rateOnShape': raw.rateOnShape == 'Y' ? 'Yes' : 'No',
-        // 'rateOnCut': raw.rateOnCut == 'Y' ? 'Yes' : 'No',
-        // 'diamEntry': raw.diamEntry == 'Y' ? 'Yes' : 'No',
-        // 'active': raw.active == true ? 'Yes' : 'No',
       };
     });
     if (Responsive.isMobile(context)) {

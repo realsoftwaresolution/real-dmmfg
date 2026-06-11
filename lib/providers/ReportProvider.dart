@@ -56,7 +56,7 @@ class ReportProvider extends BaseProvider {
 
         final response = await dio.get(
           '$baseUrl${config.endpoint}',
-          queryParameters: filter,
+          queryParameters: _normalizeQueryParams(filter),
           options: Options(
             responseType: ResponseType.bytes,
             headers: {
@@ -120,7 +120,10 @@ class ReportProvider extends BaseProvider {
 
     // Normal table branch
     final result = await request<List<Map<String, dynamic>>>(
-      call: () => api.get(config.endpoint, query: filter),
+      call: () => api.get(
+        config.endpoint,
+        query: _normalizeQueryParams(filter),
+      ),
       onSuccess: (res) {
         final data = res.data;
         if (data == null || data['data'] == null) {
@@ -136,6 +139,26 @@ class ReportProvider extends BaseProvider {
     _isLoading = false;
     notifyListeners();
     return _tableData;
+  }
+
+  Map<String, dynamic> _normalizeQueryParams(
+      Map<String, dynamic> filter,
+      ) {
+    final params = <String, dynamic>{};
+
+    filter.forEach((key, value) {
+      if (value == null) return;
+
+      if (value is List) {
+        if (value.isNotEmpty) {
+          params[key] = value.join(',');
+        }
+      } else {
+        params[key] = value;
+      }
+    });
+
+    return params;
   }
 
   void clear() {

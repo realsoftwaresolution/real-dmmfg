@@ -56,22 +56,6 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
       ) =>
       [
         /// ── SECTION 0: BASIC INFORMATION ──
-        // [
-        //   // ErpFieldConfig(
-        //   //   key: 'deptProcessCode',
-        //   //   label: 'CODE',
-        //   //   type: ErpFieldType.number,
-        //   //   required: true,
-        //   //   sectionTitle: 'BASIC INFORMATION',
-        //   //   sectionIndex: 0,
-        //   // ),
-        //   ErpFieldConfig(
-        //     key: 'deptProcessName',
-        //     label: 'NAME',
-        //     required: true,
-        //     sectionIndex: 0,
-        //   ),
-        // ],
         [
           ErpFieldConfig(
             key: 'deptProcessName',
@@ -105,43 +89,8 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
             type: ErpFieldType.number,
             sectionIndex: 0,
           ),
-          // ErpFieldConfig(
-          //   key: 'companyCode',
-          //   label: 'COMPANY',
-          //   type: ErpFieldType.dropdown,
-          //   dropdownItems: companyProvider.companies
-          //       .where((element) {
-          //     return element.active==true;
-          //   },).map((e) {
-          //     return ErpDropdownItem(
-          //       label: e.companyName ?? '',
-          //       value: e.companyCode?.toString() ?? '',
-          //     );
-          //   }).toList(),
-          //   sectionIndex: 0,
-          // ),
         ],
-        // [
-        //   ErpFieldConfig(
-        //     key: 'sortID',
-        //     label: 'SORT ID',
-        //     type: ErpFieldType.number,
-        //     sectionIndex: 0,
-        //   ),
-        //   // ErpFieldConfig(
-        //   //   key: 'tops',
-        //   //   label: 'TOPS',
-        //   //   type: ErpFieldType.number,
-        //   //   sectionIndex: 0,
-        //   // ),
-        // ],
         [
-
-          // ErpFieldConfig(
-          //   key: 'stockType',
-          //   label: 'STOCK TYPE',
-          //   sectionIndex: 0,
-          // ),
           ErpFieldConfig(
             key: 'stockType',
             label: 'STOCK TYPE',
@@ -159,141 +108,37 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
             }).toList(),
             sectionIndex: 0,
           ),
-          // ErpFieldConfig(
-          //   key: 'stockTypeCode',
-          //   label: 'STOCK TYPE CODE',
-          //   type: ErpFieldType.number,
-          //   sectionIndex: 0,
-          // ),
           ErpFieldConfig(
             key: 'rateOnShape',
             label: 'RATE ON SHAPE',
             sectionIndex: 1,
+            type: ErpFieldType.dropdown,
+            dropdownItems: const [
+              ErpDropdownItem(label: 'Y', value: 'Y'),
+              ErpDropdownItem(label: 'N', value: 'N'),
+            ],
+          ),
+          ErpFieldConfig(
+            key: 'rateOnCut',
+            label: 'RATE ON CUT',
+            sectionIndex: 1,
+            type: ErpFieldType.dropdown,
+            dropdownItems: const [
+              ErpDropdownItem(label: 'Y', value: 'Y'),
+              ErpDropdownItem(label: 'N', value: 'N'),
+            ],
+          ),ErpFieldConfig(
+            key: 'rateOnArticle',
+            label: 'RATE ON ARTICLE',
+            sectionIndex: 1,
+            type: ErpFieldType.dropdown,
+            dropdownItems: const [
+              ErpDropdownItem(label: 'Y', value: 'Y'),
+              ErpDropdownItem(label: 'N', value: 'N'),
+            ],
           ),
         ],
-
-
-        /// ── SECTION 1: RATE & PLAN ──
-        // [
-        //   // ErpFieldConfig(
-        //   //   key: 'planPcAsRatePc',
-        //   //   label: 'PLAN PC AS RATE PC',
-        //   //   sectionTitle: 'RATE & PLAN',
-        //   //   sectionIndex: 1,
-        //   // ),
-        //   ErpFieldConfig(
-        //     key: 'rateOnShape',
-        //     label: 'RATE ON SHAPE',
-        //     sectionIndex: 1,
-        //   ),
-        // ],
-        // [
-        //   ErpFieldConfig(
-        //     key: 'getSarinOptData',
-        //     label: 'GET SARIN OPT DATA',
-        //     sectionIndex: 1,
-        //   ),
-        // ],
-
-        /// ── SECTION 2: FLAGS ──
-        // [
-        //   ErpFieldConfig(
-        //     key: 'machineActive',
-        //     label: 'MACHINE ACTIVE',
-        //     type: ErpFieldType.checkbox,
-        //     sectionTitle: 'FLAGS',
-        //     sectionIndex: 2,
-        //       checkboxDbType: 'BIT'
-        //
-        //   ),
-        //   ErpFieldConfig(
-        //     key: 'remarksSelect',
-        //     label: 'REMARKS SELECT',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //       checkboxDbType: 'BIT'
-        //
-        //   ),
-        // ],
-        // [
-        //   ErpFieldConfig(
-        //     key: 'multiTimeIss',
-        //     label: 'MULTI TIME ISS',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //     checkboxDbType: 'YN',
-        //
-        //   ),
-        //   ErpFieldConfig(
-        //     key: 'multiTimeDeptIss',
-        //     label: 'MULTI TIME DEPT ISS',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //     checkboxDbType: 'YN',
-        //
-        //   ),
-        // ],
-        // [
-        //   ErpFieldConfig(
-        //     key: 'jnoRecPc',
-        //     label: 'JNO REC PC',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //       checkboxDbType: 'BIT'
-        //
-        //   ),
-        //   ErpFieldConfig(
-        //     key: 'jnoKPc',
-        //     label: 'JNO K PC',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //       checkboxDbType: 'BIT'
-        //
-        //   ),
-        // ],
-        // [
-        //   ErpFieldConfig(
-        //     key: 'jnoLastPc',
-        //     label: 'JNO LAST PC',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //   ),
-        //   ErpFieldConfig(
-        //     key: 'jnoExtraPc',
-        //     label: 'JNO EXTRA PC',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //       checkboxDbType: 'BIT'
-        //
-        //   ),
-        // ],
-        // [
-        //   ErpFieldConfig(
-        //     key: 'lsMarkPc',
-        //     label: 'LS MARK PC',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //       checkboxDbType: 'BIT'
-        //
-        //   ),
-        //   ErpFieldConfig(
-        //     key: 'diaPcMinus',
-        //     label: 'DIA PC MINUS',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //       checkboxDbType: 'BIT'
-        //
-        //   ),
-        // ],
         [
-          // ErpFieldConfig(
-          //   key: 'proDirectIss',
-          //   label: 'PRO DIRECT ISS',
-          //   type: ErpFieldType.checkbox,
-          //   sectionIndex: 2,
-          //   checkboxDbType: 'YN',
-          //
-          // ),
           ErpFieldConfig(
             key: 'remarksRate',
             label: 'REMARKS RATE',
@@ -311,79 +156,6 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
 
           ),
         ],
-        // [
-        //   ErpFieldConfig(
-        //     key: 'displayRatePc',
-        //     label: 'DISPLAY RATE PC',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //     checkboxDbType: 'YN',
-        //
-        //   ),
-        //   ErpFieldConfig(
-        //     key: 'planCheck',
-        //     label: 'PLAN CHECK',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //     checkboxDbType: 'YN',
-        //
-        //   ),
-        // ],
-        // [
-        //   ErpFieldConfig(
-        //     key: 'displayRemarks',
-        //     label: 'DISPLAY REMARKS',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //     checkboxDbType: 'YN',
-        //
-        //   ),
-        //   ErpFieldConfig(
-        //     key: 'makableCheck',
-        //     label: 'MAKABLE CHECK',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //     checkboxDbType: 'YN',
-        //
-        //   ),
-        // ],
-        // [
-        //   ErpFieldConfig(
-        //     key: 'remarksDisplay',
-        //     label: 'REMARKS DISPLAY',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //     checkboxDbType: 'YN',
-        //
-        //   ),
-        //   ErpFieldConfig(
-        //     key: 'procCalcWt',
-        //     label: 'PROC CALC WT',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //     checkboxDbType: 'YN',
-        //
-        //   ),
-        // ],
-        // [
-        //   ErpFieldConfig(
-        //     key: 'countInCostingProduction',
-        //     label: 'COUNT IN COSTING PROD',
-        //     type: ErpFieldType.checkbox,
-        //     sectionIndex: 2,
-        //     checkboxDbType: 'YN',
-        //
-        //   ),
-        //   // ErpFieldConfig(
-        //   //   key: 'checkerPlanCheck',
-        //   //   label: 'CHECKER PLAN CHECK',
-        //   //   type: ErpFieldType.checkbox,
-        //   //   sectionIndex: 2,
-        //   //   checkboxDbType: 'YN',
-        //   //
-        //   // ),
-        // ],
-
         /// ── SECTION 3: SETTINGS ──
         [
           ErpFieldConfig(
@@ -395,13 +167,6 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
             initialBoolValue: true,
             checkboxDbType: 'BIT'
           ),
-          // ErpFieldConfig(
-          //   key: 'delRights',
-          //   label: 'DEL RIGHTS',
-          //   checkboxDbType: 'YN',
-          //   type: ErpFieldType.checkbox,
-          //   sectionIndex: 0,
-          // ),
         ],
       ];
 
@@ -433,18 +198,6 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
     );
   }
 
-
-
-  // // ── INIT ──────────────────────────────────────────────────────────────────
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     context.read<DeptProcessProvider>().load();
-  //     context.read<CompanyProvider>().loadCompanies();
-  //     context.read<DeptProvider>().load();
-  //   });
-  // }
   void _setDefaultSortId() {
     final provider = context.read<DeptProcessProvider>();
 
@@ -510,6 +263,8 @@ class _MstDeptProcessState extends State<MstDeptProcess> {
         'stockTypeCode': raw.stockTypeCode?.toString() ?? '',
         'planPcAsRatePc': raw.planPcAsRatePc ?? '',
         'rateOnShape': raw.rateOnShape ?? '',
+        'rateOnCut': raw.rateOnCut ?? '',
+        'rateOnArticle': raw.rateOnArticle ?? '',
         'getSarinOptData': raw.getSarinOptData ?? '',
         'active': raw.active == true ? 'true' : 'false',
         'machineActive': raw.machineActive == true ? 'true' : 'false',

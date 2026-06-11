@@ -1,5 +1,10 @@
 // lib/screens/mst_firm_clv_rate.dart
+import 'package:diam_mfg/providers/article_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/providers/cut_provider.dart';
+import 'package:diam_mfg/providers/lab_provider.dart';
+import 'package:diam_mfg/providers/polish_provider.dart';
+import 'package:diam_mfg/providers/symmetry_provider.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -17,14 +22,14 @@ import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
 import '../utils/msg_dialogue.dart';
 
-class MstClvRate extends StatefulWidget {
-  const MstClvRate({super.key});
+class MstDepartmentRate extends StatefulWidget {
+  const MstDepartmentRate({super.key});
 
   @override
-  State<MstClvRate> createState() => _MstClvRateState();
+  State<MstDepartmentRate> createState() => _MstDepartmentRateState();
 }
 
-class _MstClvRateState extends State<MstClvRate> {
+class _MstDepartmentRateState extends State<MstDepartmentRate> {
   final GlobalKey<ErpFormState> _erpFormKey = GlobalKey<ErpFormState>();
   Map<String, dynamic>? _selectedRow;
   bool _isEditMode = false;
@@ -153,7 +158,7 @@ class _MstClvRateState extends State<MstClvRate> {
     if (deptCode == null) return 'N';
     try {
       final dept = context.read<DeptProvider>().list.firstWhere(
-        (d) => d.deptCode == deptCode,
+            (d) => d.deptCode == deptCode,
       );
       // Adjust based on your actual model field
       return 'Y'; // Default to 'Y' if field doesn't exist
@@ -173,23 +178,35 @@ class _MstClvRateState extends State<MstClvRate> {
     // Filter dept process by selected department
     final processItems = deptProcessProvider.list
         .where((p) {
-          if (_selectedDeptCode == null) return false;
-          // Filter process by department code
-          return p.active == true && p.deptCode == _selectedDeptCode;
-        })
+      if (_selectedDeptCode == null) return false;
+      // Filter process by department code
+      return p.active == true && p.deptCode == _selectedDeptCode;
+    })
         .map(
           (e) => ErpDropdownItem(
-            label: e.deptProcessName ?? '',
-            value: e.deptProcessCode?.toString() ?? '',
-          ),
-        )
+        label: e.deptProcessName ?? '',
+        value: e.deptProcessCode?.toString() ?? '',
+      ),
+    )
         .toList();
-
-    // Check if party should be disabled
-    final isPartyDisabled = _selectedDeptRateOn == 'N';
 
     return [
       [
+        ErpFieldConfig(
+          key: 'manager',
+          label: 'MANAGER',
+          type: ErpFieldType.dropdown,
+          sectionIndex: 0,
+          dropdownItems: deptProvider.list
+              .where((e) => e.active == true)
+              .map(
+                (e) => ErpDropdownItem(
+              label: e.deptName ?? '',
+              value: e.deptCode?.toString() ?? '',
+            ),
+          )
+              .toList(),
+        ),
         ErpFieldConfig(
           key: 'deptCode',
           label: 'DEPARTMENT',
@@ -199,30 +216,11 @@ class _MstClvRateState extends State<MstClvRate> {
               .where((e) => e.active == true)
               .map(
                 (e) => ErpDropdownItem(
-                  label: e.deptName ?? '',
-                  value: e.deptCode?.toString() ?? '',
-                ),
-              )
+              label: e.deptName ?? '',
+              value: e.deptCode?.toString() ?? '',
+            ),
+          )
               .toList(),
-        ),
-        ErpFieldConfig(
-          key: 'crId',
-          label: 'PARTY',
-          type: ErpFieldType.dropdown,
-          required: !isPartyDisabled,
-          sectionIndex: 0,
-          readOnly: isPartyDisabled,
-          dropdownItems: isPartyDisabled
-              ? []
-              : partyProvider.list
-                    .where((e) => e.active == true)
-                    .map(
-                      (e) => ErpDropdownItem(
-                        label: e.partyName ?? '',
-                        value: e.partyCode?.toString() ?? '',
-                      ),
-                    )
-                    .toList(),
         ),
         ErpFieldConfig(
           key: 'deptProcessCode',
@@ -240,25 +238,10 @@ class _MstClvRateState extends State<MstClvRate> {
               .where((e) => e.active == true)
               .map(
                 (e) => ErpDropdownItem(
-                  label: e.shapeName ?? '',
-                  value: e.shapeCode?.toString() ?? '',
-                ),
-              )
-              .toList(),
-        ),
-        ErpFieldConfig(
-          key: 'remarksCode',
-          label: 'REMARKS',
-          type: ErpFieldType.dropdown,
-          sectionIndex: 0,
-          dropdownItems: remarksProvider.list
-              .where((e) => e.active == true)
-              .map(
-                (e) => ErpDropdownItem(
-                  label: e.remarksName ?? '',
-                  value: e.remarksCode?.toString() ?? '',
-                ),
-              )
+              label: e.shapeName ?? '',
+              value: e.shapeCode?.toString() ?? '',
+            ),
+          )
               .toList(),
         ),
       ],
@@ -339,6 +322,10 @@ class _MstClvRateState extends State<MstClvRate> {
         context.read<DeptProcessProvider>().load(),
         context.read<RemarksProvider>().load(),
         context.read<ShapeProvider>().load(),
+        context.read<CutProvider>().loadCuts(),
+        context.read<PolishProvider>().loadPolish(),
+        context.read<LabProvider>().loadCuts(),
+        context.read<ArticleProvider>().load(),
       ]);
     });
   }
@@ -389,7 +376,7 @@ class _MstClvRateState extends State<MstClvRate> {
       'DeptCode': int.tryParse(values['deptCode']?.toString() ?? '') ?? 0,
       'CrId': int.tryParse(values['crId']?.toString() ?? '') ?? 0,
       'DeptProcessCode':
-          int.tryParse(values['deptProcessCode']?.toString() ?? '') ?? 0,
+      int.tryParse(values['deptProcessCode']?.toString() ?? '') ?? 0,
       'RateID': int.tryParse(values['rateID']?.toString() ?? '') ?? 0,
       'ShapeCode': int.tryParse(values['shapeCode']?.toString() ?? '') ?? 0,
       'Type': values['type']?.toString() ?? 'SPK',
@@ -399,12 +386,12 @@ class _MstClvRateState extends State<MstClvRate> {
       'ToWt': double.tryParse(values['toWt']?.toString() ?? '') ?? 0.0,
       'Rate': double.tryParse(values['rate']?.toString() ?? '') ?? 0.0,
       'RepairRate':
-          double.tryParse(values['repairRate']?.toString() ?? '') ?? 0.0,
+      double.tryParse(values['repairRate']?.toString() ?? '') ?? 0.0,
       'PieRate': double.tryParse(values['pieRate']?.toString() ?? '') ?? 0.0,
       'LSRate': double.tryParse(values['lsRate']?.toString() ?? '') ?? 0.0,
       'Bonus': double.tryParse(values['bonus']?.toString() ?? '') ?? 0.0,
       'RepairBonus':
-          double.tryParse(values['repairBonus']?.toString() ?? '') ?? 0.0,
+      double.tryParse(values['repairBonus']?.toString() ?? '') ?? 0.0,
       'Ever': double.tryParse(values['ever']?.toString() ?? '') ?? 0.0,
       'RemarksCode': int.tryParse(values['remarksCode']?.toString() ?? '') ?? 0,
       'SortID': int.tryParse(values['sortID']?.toString() ?? '') ?? 0,
@@ -431,7 +418,7 @@ class _MstClvRateState extends State<MstClvRate> {
         context: context,
         theme: context.erpTheme,
         title: _isEditMode ? 'Updated' : 'Saved',
-        message: _isEditMode ? 'CLV Rate updated.' : 'CLV Rate saved.',
+        message: _isEditMode ? 'Department Rate updated.' : 'Department Rate saved.',
       );
     } else {
       await ErpResultDialog.showError(
@@ -449,7 +436,7 @@ class _MstClvRateState extends State<MstClvRate> {
     final confirm = await ErpDeleteDialog.show(
       context: context,
       theme: context.erpTheme,
-      title: 'CLV Rate',
+      title: 'Department Rate',
       itemName: raw!.clvRateCode?.toString() ?? 'Rate',
     );
     if (confirm != true || !mounted) return;
@@ -490,55 +477,194 @@ class _MstClvRateState extends State<MstClvRate> {
           padding: const EdgeInsets.all(8),
           child: Responsive.isMobile(context)
               ? _showTableOnMobile
-                    ? buildErpDataTable(provider)
-                    : ErpForm(
-                        logo: AppImages.logo,
-                        key: _erpFormKey,
-                        title: 'CLV RATE MASTER',
-                        subtitle: 'CLV Rate configuration',
-                        initialTabIndex: 0,
-                        onSearch: () =>
-                            setState(() => _showTableOnMobile = true),
-                        tabBarBackgroundColor: const Color(0xfff2f0ef),
-                        tabBarSelectedColor:
-                            context.erpTheme.primaryGradient.first,
-                        tabBarSelectedTxtColor: Colors.white,
-                        rows: _buildFormRows(),
-                        initialValues: _formValues,
-                        isEditMode: _isEditMode,
-                        onFieldChanged: _onFieldChanged,
-                        onSave: _onSave,
-                        onCancel: _resetForm,
-                        onDelete: _isEditMode ? _onDelete : null,
-                      )
+              ? buildErpDataTable(provider)
+              : ErpForm(
+            logo: AppImages.logo,
+            key: _erpFormKey,
+            title: 'CLV RATE MASTER',
+            subtitle: 'CLV Rate configuration',
+            initialTabIndex: 0,
+            onSearch: () =>
+                setState(() => _showTableOnMobile = true),
+            tabBarBackgroundColor: const Color(0xfff2f0ef),
+            tabBarSelectedColor:
+            context.erpTheme.primaryGradient.first,
+            tabBarSelectedTxtColor: Colors.white,
+            rows: _buildFormRows(),
+            initialValues: _formValues,
+            isEditMode: _isEditMode,
+            onFieldChanged: _onFieldChanged,
+            onSave: _onSave,
+            onCancel: _resetForm,
+            onDelete: _isEditMode ? _onDelete : null,
+          )
               : Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: ErpForm(
-                        logo: AppImages.logo,
-                        key: _erpFormKey,
-                        title: 'CLV RATE MASTER',
-                        subtitle: 'CLV Rate configuration',
-                        initialTabIndex: 0,
-                        tabBarBackgroundColor: const Color(0xfff2f0ef),
-                        tabBarSelectedColor:
-                            context.erpTheme.primaryGradient.first,
-                        tabBarSelectedTxtColor: Colors.white,
-                        rows: _buildFormRows(),
-                        initialValues: _formValues,
-                        isEditMode: _isEditMode,
-                        onFieldChanged: _onFieldChanged,
-                        onSave: _onSave,
-                        onCancel: _resetForm,
-                        onDelete: _isEditMode ? _onDelete : null,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(flex: 2, child: buildErpDataTable(provider)),
-                  ],
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 2,
+                child: ErpForm(
+                  logo: AppImages.logo,
+                  key: _erpFormKey,
+                  title: 'DEPARTMENT RATE MASTER',
+                  subtitle: 'Department Rate configuration',
+                  initialTabIndex: 0,
+                  tabBarBackgroundColor: const Color(0xfff2f0ef),
+                  tabBarSelectedColor:
+                  context.erpTheme.primaryGradient.first,
+                  tabBarSelectedTxtColor: Colors.white,
+                  rows: _buildFormRows(),
+                  initialValues: _formValues,
+                  isEditMode: _isEditMode,
+                  onFieldChanged: _onFieldChanged,
+                  onSave: _onSave,
+                  onCancel: _resetForm,
+                  onDelete: _isEditMode ? _onDelete : null,
+                  detailBuilder: (ctx) {
+                    // Use master providers directly (fixed 6 panels)
+                    final shapeProv = context.watch<ShapeProvider>();
+                    final cutProv = context.watch<CutProvider>();
+                    final polishProv = context.watch<PolishProvider>();
+                    final symmetryProv = context.watch<SymmetryProvider>();
+                    final labProv = context.watch<LabProvider>();
+                    final articleProv = context.watch<ArticleProvider>();
+
+                    // Map provider models to simple id/name lists
+                    final shapes = shapeProv.list
+                        .map((s) => {'id': s.shapeCode ?? 0, 'name': s.shapeName ?? ''})
+                        .toList();
+                    final cuts = cutProv.cuts
+                        .map((c) => {'id': c.cutCode ?? 0, 'name': c.cutName ?? ''})
+                        .toList();
+                    final polish = polishProv.polishs
+                        .map((p) => {'id': p.polishCode ?? 0, 'name': p.polishName ?? ''})
+                        .toList();
+                    final symmetry = symmetryProv.symmetrys
+                        .map((s) => {'id': s.symmetryCode ?? 0, 'name': s.symmetryName ?? ''})
+                        .toList();
+                    final labs = labProv.cuts // LabProvider exposes list as `cuts`
+                        .map((l) => {'id': l.labCode ?? 0, 'name': l.labName ?? ''})
+                        .toList();
+                    final articles = articleProv.list
+                        .map((a) => {'id': a.articalCode ?? 0, 'name': a.articalName ?? a.articalName ?? ''})
+                        .toList();
+
+                    final panels = [
+                      {'title': 'Shape', 'items': shapes},
+                      {'title': 'Cut', 'items': cuts},
+                      {'title': 'Polish', 'items': polish},
+                      {'title': 'Symmetry', 'items': symmetry},
+                      {'title': 'LAB', 'items': labs},
+                      {'title': 'ARTICLE', 'items': articles},
+                    ];
+
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SizedBox(
+                          width: constraints.maxWidth,
+                          height: constraints.maxHeight.isFinite ? constraints.maxHeight : 700,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Title / small header (optional)
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text('Masters: Shape / Cut / Polish / Symmetry / LAB / Article',
+                                      style: Theme.of(context).textTheme.labelSmall),
+                                ),
+
+                                // Middle: horizontally scrollable panels of checkable lists
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                  child: StatefulBuilder(builder: (context, setStateSB) {
+                                    // local selection state, keyed by panel title
+                                    final Map<String, Set<int>> selected = {};
+                                    for (final p in panels) {
+                                      selected[p['title'] as String] = <int>{};
+                                    }
+
+                                    // You can initialize selections here if desired (e.g., from saved prefs)
+
+                                    return SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: panels.map((panel) {
+                                          final title = panel['title'] as String;
+                                          final items = (panel['items'] as List).cast<Map<String, dynamic>>();
+                                          return SizedBox(
+                                            width: 220,
+                                            child: Card(
+                                              elevation: 1,
+                                              child: Column(
+                                                children: [
+                                                  Container(
+                                                    padding: const EdgeInsets.all(8),
+                                                    alignment: Alignment.centerLeft,
+                                                    child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                                  ),
+                                                  const Divider(height: 1),
+                                                  SizedBox(
+                                                    height: 300,
+                                                    child: items.isEmpty
+                                                        ? Center(
+                                                      child: (title == 'Shape' && !shapeProv.isLoaded) ||
+                                                          (title == 'Cut' && !cutProv.isLoaded) ||
+                                                          (title == 'Polish' && !polishProv.isLoaded) ||
+                                                          (title == 'Symmetry' && !symmetryProv.isLoaded) ||
+                                                          (title == 'LAB' && !labProv.isLoaded) ||
+                                                          (title == 'ARTICLE' && !articleProv.isLoaded)
+                                                          ? const CircularProgressIndicator()
+                                                          : const Text('No items'),
+                                                    )
+                                                        : ListView.builder(
+                                                      itemCount: items.length,
+                                                      itemBuilder: (c, i) {
+                                                        final it = items[i];
+                                                        final id = (it['id'] is num) ? (it['id'] as num).toInt() : (it['id'] as int? ?? i);
+                                                        final name = (it['name']?.toString() ?? '$title #$id');
+                                                        final isSelected = selected[title]?.contains(id) ?? false;
+                                                        return CheckboxListTile(
+                                                          dense: true,
+                                                          controlAffinity: ListTileControlAffinity.leading,
+                                                          value: isSelected,
+                                                          title: Text(name, style: const TextStyle(fontSize: 13)),
+                                                          onChanged: (v) {
+                                                            setStateSB(() {
+                                                              if (v == true)
+                                                                selected[title]?.add(id);
+                                                              else
+                                                                selected[title]?.remove(id);
+                                                            });
+                                                            // TODO: persist selection to provider or send to API if required.
+                                                          },
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(flex: 2, child: buildErpDataTable(provider)),
+            ],
+          ),
         );
       },
     );
@@ -596,7 +722,7 @@ class _MstClvRateState extends State<MstClvRate> {
       isReportRow: false,
       token: token ?? '',
       url: baseUrl,
-      title: 'CLV RATE LIST',
+      title: 'DEPARTMENT RATE LIST',
       columns: _tableColumns,
       data: provider.tableData,
       showSearch: true,

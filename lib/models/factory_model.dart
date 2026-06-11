@@ -31,6 +31,10 @@ class FactoryModel {
   final String? pcID;
   final int? ever;
   final String? rateOnShape; // Y/N
+  final String? rateOnArticle; // Y/N
+  final String? rateOnPolish; // Y/N
+  final String? rateOnLab; // Y/N
+  final String? rateOnSymmetry; // Y/N
   final String? rateOnCut;   // Y/N
   final String? diamEntry;   // Y/N
 
@@ -61,6 +65,10 @@ class FactoryModel {
     this.companyCode,
     this.active,
     this.rateOnShape,
+    this.rateOnSymmetry,
+    this.rateOnLab,
+    this.rateOnPolish,
+    this.rateOnArticle,
     this.rateOnCut,
     this.diamEntry,
     this.gstNo,
@@ -93,6 +101,10 @@ class FactoryModel {
         active: json['Active'],
         rateOnShape: json['RateOnShape'],
         rateOnCut: json['RateOnCut'],
+        rateOnArticle: json['RateOnArticle'],
+        rateOnPolish: json['RateOnPolish'],
+        rateOnLab: json['RateOnLab'],
+        rateOnSymmetry: json['RateOnSymmetry'],
         diamEntry: json['DiamEntry'],
         gstNo: json['GstNo'],
       );
@@ -123,6 +135,10 @@ class FactoryModel {
     'Active': active,
     'RateOnShape': rateOnShape,
     'RateOnCut': rateOnCut,
+    'RateOnLab': rateOnLab,
+    'RateOnSymmetry': rateOnSymmetry,
+    'RateOnPolish': rateOnPolish,
+    'RateOnArticle': rateOnArticle,
     'DiamEntry': diamEntry,
     'GstNo': gstNo,
   };
@@ -135,6 +151,10 @@ class FactoryModel {
     'email1': email1 ?? '',
     'gstNo': gstNo ?? '',
     'rateOnShape': rateOnShape == 'Y' ? 'Yes' : 'No',
+    'rateOnArticle': rateOnArticle == 'Y' ? 'Yes' : 'No',
+    'rateOnPolish': rateOnPolish == 'Y' ? 'Yes' : 'No',
+    'rateOnSymmetry': rateOnSymmetry == 'Y' ? 'Yes' : 'No',
+    'rateOnLab': rateOnLab == 'Y' ? 'Yes' : 'No',
     'rateOnCut': rateOnCut == 'Y' ? 'Yes' : 'No',
     'diamEntry': diamEntry == 'Y' ? 'Yes' : 'No',
     'active': active == true ? 'Yes' : 'No',
@@ -169,6 +189,10 @@ class FactoryModel {
         // active: v['active'] == 'Yes',
 
         rateOnShape: parseYN(v['rateOnShape']),
+        rateOnLab: parseYN(v['rateOnLab']),
+        rateOnSymmetry: parseYN(v['rateOnSymmetry']),
+        rateOnPolish: parseYN(v['rateOnPolish']),
+        rateOnArticle: parseYN(v['rateOnArticle']),
         // rateOnShape: v['rateOnShape'] == 'Yes' ? 'Y' : 'N',
         rateOnCut: parseYN(v['rateOnCut']),
         // rateOnCut: v['rateOnCut'] == 'Yes' ? 'Y' : 'N',
