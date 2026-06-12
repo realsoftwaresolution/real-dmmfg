@@ -1,36 +1,32 @@
-// lib/screens/mst_firm_clv_rate.dart
-import 'package:diam_mfg/models/department_rate_model.dart';
+import 'package:diam_mfg/models/factory_rate_model.dart';
 import 'package:diam_mfg/providers/article_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
-import 'package:diam_mfg/providers/counter_provider.dart';
 import 'package:diam_mfg/providers/cut_provider.dart';
-import 'package:diam_mfg/providers/department_rate_provider.dart';
+import 'package:diam_mfg/providers/factory_provider.dart';
+import 'package:diam_mfg/providers/factory_rate_provider.dart';
 import 'package:diam_mfg/providers/lab_provider.dart';
 import 'package:diam_mfg/providers/polish_provider.dart';
+import 'package:diam_mfg/providers/symmetry_provider.dart';
 import 'package:diam_mfg/utils/panel.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
-
 import '../bootstrap.dart';
 import '../providers/dept_provider.dart';
-import '../providers/dept_process_provider.dart';
-import '../providers/party_provider.dart';
-import '../providers/remarks_provider.dart';
 import '../providers/shape_provider.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
 import '../utils/msg_dialogue.dart';
 
-class MstDepartmentRate extends StatefulWidget {
-  const MstDepartmentRate({super.key});
+class MstFactoryRate extends StatefulWidget {
+  const MstFactoryRate({super.key});
 
   @override
-  State<MstDepartmentRate> createState() => _MstDepartmentRateState();
+  State<MstFactoryRate> createState() => _MstFactoryRateState();
 }
 
-class _MstDepartmentRateState extends State<MstDepartmentRate> {
+class _MstFactoryRateState extends State<MstFactoryRate> {
   final GlobalKey<ErpFormState> _erpFormKey = GlobalKey<ErpFormState>();
   Map<String, dynamic>? _selectedRow;
   bool _isEditMode = false;
@@ -40,6 +36,9 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
   Set<int> _selectedShapes = {};
   Set<int> _selectedCuts = {};
   Set<int> _selectedArticles = {};
+  Set<int> _selectedPolish = {};
+  Set<int> _selectedSymentry = {};
+  Set<int> _selectedCertificate = {};
 
   // ── Track selected department ──────────────────────────────────────────────
   int? _selectedDeptCode;
@@ -50,70 +49,28 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
   // Table columns matching model.toTableRow keys
   List<ErpColumnConfig> get _tableColumns => [
     ErpColumnConfig(
-      key: 'deptName',
-      label: 'DEPT',
+      key: 'factoryName', // was: 'deptName'
+      label: 'FACTORY', // was: 'DEPT'
       width: 150,
     ),
     ErpColumnConfig(
-      key: 'deptProcessName',
-      label: 'PROCESS',
-      width: 150,
-    ),
-    ErpColumnConfig(
-      key: 'deptRateCode',
+      key: 'factRateCode', // was: 'deptRateCode'
       label: 'RATE CODE',
       width: 200,
     ),
-    ErpColumnConfig(
-      key: 'rateon',
-      label: 'RATE ON',
-      width: 150,
-    ),
-    ErpColumnConfig(
-      key: 'sizeon',
-      label: 'SIZE ON',
-      width: 150,
-    ),
-    ErpColumnConfig(
-      key: 'fromWt',
-      label: 'FROM WT',
-      width: 150,
-    ),
-    ErpColumnConfig(
-      key: 'toWt',
-      label: 'TO WT',
-      width: 150,
-    ),
-    ErpColumnConfig(
-      key: 'companyName',
-      label: 'COMPANY',
-      width: 200,
-    ),
-    ErpColumnConfig(
-      key: 'rate',
-      label: 'RATE',
-      width: 150,
-    ),
-    ErpColumnConfig(
-      key: 'articles',
-      label: 'ARTICALS',
-      width: 150,
-    ),
-    ErpColumnConfig(
-      key: 'cuts',
-      label: 'CUTS',
-      width: 150,
-    ),
-    ErpColumnConfig(
-      key: 'shapes',
-      label: 'SHAPES',
-      width: 150,
-    ),
-    ErpColumnConfig(
-      key: 'active',
-      label: 'ACTIVE',
-      width: 200,
-    ),
+    ErpColumnConfig(key: 'rateon', label: 'RATE ON', width: 150),
+    ErpColumnConfig(key: 'sizeon', label: 'SIZE ON', width: 150),
+    ErpColumnConfig(key: 'fromWt', label: 'FROM WT', width: 150),
+    ErpColumnConfig(key: 'toWt', label: 'TO WT', width: 150),
+    ErpColumnConfig(key: 'companyName', label: 'COMPANY', width: 200),
+    ErpColumnConfig(key: 'rate', label: 'RATE', width: 150),
+    ErpColumnConfig(key: 'articles', label: 'ARTICALS', width: 150),
+    ErpColumnConfig(key: 'cuts', label: 'CUTS', width: 150),
+    ErpColumnConfig(key: 'shapes', label: 'SHAPES', width: 150),
+    ErpColumnConfig(key: 'polish', label: 'POLISH', width: 150),
+    ErpColumnConfig(key: 'symmetry', label: 'SYMENTRY', width: 150),
+    ErpColumnConfig(key: 'certificate', label: 'CERTIFICATE', width: 150),
+    ErpColumnConfig(key: 'active', label: 'ACTIVE', width: 200),
   ];
 
   // ── Helper: Get rateOn for selected department ──────────────────────────
@@ -132,65 +89,27 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
 
   // Form fields - DYNAMIC based on selected department
   List<List<ErpFieldConfig>> _buildFormRows() {
-    final deptProvider = context.read<DeptProvider>();
-    final counterProvider = context.read<CounterProvider>();
-    final deptProcessProvider = context.read<DeptProcessProvider>();
-
-    // Filter dept process by selected department
-    final processItems = deptProcessProvider.list
-        .where((p) {
-          if (_selectedDeptCode == null) return false;
-          // Filter process by department code
-          return p.active == true && p.deptCode == _selectedDeptCode;
-        })
-        .map(
-          (e) => ErpDropdownItem(
-            label: e.deptProcessName ?? '',
-            value: e.deptProcessCode?.toString() ?? '',
-          ),
-        )
-        .toList();
+    final factoryProvider = context.read<FactoryProvider>();
 
     return [
       [
         ErpFieldConfig(
-          key: 'crId',
-          label: 'MANAGER',
+          key: 'factoryCode',
+          label: 'FACTORY',
           type: ErpFieldType.dropdown,
           sectionIndex: 0,
-          dropdownItems: counterProvider.list
+          dropdownItems: factoryProvider.factories
               .where((e) => e.active == true)
               .map(
                 (e) => ErpDropdownItem(
-                  label: e.crName ?? '',
-                  value: e.crId?.toString() ?? '',
+                  label: e.factoryName ?? '',
+                  value: e.factoryCode?.toString() ?? '',
                 ),
               )
               .toList(),
-        ),
-        ErpFieldConfig(
-          key: 'deptCode',
-          label: 'DEPARTMENT',
-          type: ErpFieldType.dropdown,
-          sectionIndex: 0,
-          dropdownItems: deptProvider.list
-              .where((e) => e.active == true)
-              .map(
-                (e) => ErpDropdownItem(
-                  label: e.deptName ?? '',
-                  value: e.deptCode?.toString() ?? '',
-                ),
-              )
-              .toList(),
-        ),
-        ErpFieldConfig(
-          key: 'deptProcessCode',
-          label: 'PROCESS',
-          type: ErpFieldType.dropdown,
-          sectionIndex: 0,
-          dropdownItems: processItems,
         ),
       ],
+
       [
         ErpFieldConfig(
           key: 'rateID',
@@ -268,32 +187,29 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.wait([
-        context.read<DepartmentRateProvider>().loadClvRates(),
-        context.read<DeptProvider>().load(),
-        context.read<CounterProvider>().load(),
-        context.read<DeptProcessProvider>().load(),
+        context.read<FactoryRateProvider>().loadFactoryRates(),
+        context.read<FactoryProvider>().loadFactories(),
         context.read<CutProvider>().loadCuts(),
-        context.read<PolishProvider>().loadPolish(),
+        context.read<ShapeProvider>().load(),
         context.read<LabProvider>().loadCuts(),
         context.read<ArticleProvider>().load(),
+        context.read<PolishProvider>().loadPolish(),
+        context.read<SymmetryProvider>().loadSymmetry(),
+        context.read<LabProvider>().loadCuts(),
       ]);
     });
   }
 
   void _onRowTap(Map<String, dynamic> row) {
     print(row);
-    final raw = row['_raw'] as DepartmentRateModel?;  // ← correct cast
+    final raw = row['_raw'] as FactoryRateModel?; // ← correct cast
     if (raw == null) return;
 
     setState(() {
       _selectedRow = row;
       _isEditMode = true;
-      _selectedDeptCode = raw.deptCode;
-      _selectedDeptRateOn = _getRateOnForDept(raw.deptCode);
       _formValues = {
-        'crId': raw.crId.toString(),
-        'deptCode': raw.deptCode.toString(),
-        'deptProcessCode': raw.deptProcessCode.toString(),
+        'factoryCode': raw.factoryCode.toString(), // Changed field access
         'rateID': raw.rateID.toString(),
         'rateOn': raw.rateon,
         'rateSizeOn': raw.sizeon,
@@ -303,9 +219,13 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
         'sortID': raw.sortID.toString(),
         'active': raw.active == 1 ? 'true' : 'false',
       };
-      _selectedShapes = raw.shapesIds.toSet();
-      _selectedCuts = raw.cutsIds.toSet();
-      _selectedArticles = raw.articlesIds.toSet();
+      _selectedShapes = raw.shapeCodes.toSet(); // was: raw.shapesIds
+      _selectedCuts = raw.cutCodes.toSet(); // was: raw.cutsIds
+      _selectedArticles = raw.articalCodes.toSet(); // was: raw.articlesIds
+      _selectedCertificate = raw.certificateCodes
+          .toSet(); // was: raw.articlesIds
+      _selectedSymentry = raw.symmetryCodes.toSet(); // was: raw.articlesIds
+      _selectedPolish = raw.polishCodes.toSet(); // was: raw.articlesIds
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -320,7 +240,7 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
   }
 
   Future<void> _onSave(Map<String, dynamic> values) async {
-// ── Validate: at least one selection required in each panel ──
+    // ── Validate: at least one selection required in each panel ──
     if (_selectedShapes.isEmpty) {
       await ErpResultDialog.showError(
         context: context,
@@ -347,35 +267,101 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
         message: 'Please select at least one Article.',
       );
       return;
-    }    final provider = context.read<DepartmentRateProvider>();
+    }
+
+    if (_selectedCertificate.isEmpty) {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: context.erpTheme,
+        title: 'Validation Error',
+        message: 'Please select at least one Certificate.',
+      );
+      return;
+    }
+
+    if (_selectedSymentry.isEmpty) {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: context.erpTheme,
+        title: 'Validation Error',
+        message: 'Please select at least one Symentry.',
+      );
+      return;
+    }
+
+    if (_selectedPolish.isEmpty) {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: context.erpTheme,
+        title: 'Validation Error',
+        message: 'Please select at least one Polish.',
+      );
+      return;
+    }
+
+    final provider = context.read<FactoryRateProvider>();
 
     // Map form values to API payload
     final payload = {
-      'DeptCode': int.tryParse(_formValues['deptCode'] ?? values['deptCode']?.toString() ?? '') ?? 0,
-      'CrId': int.tryParse(_formValues['crId'] ?? values['crId']?.toString() ?? '') ?? 0,
-      'DeptProcessCode': int.tryParse(_formValues['deptProcessCode'] ?? values['deptProcessCode']?.toString() ?? '') ?? 0,
-      'RateID': int.tryParse(_formValues['rateID'] ?? values['rateID']?.toString() ?? '') ?? 0,
+      'FactoryCode':
+          int.tryParse(
+            _formValues['factoryCode'] ??
+                values['factoryCode']?.toString() ??
+                '',
+          ) ??
+          0,
+      'RateID':
+          int.tryParse(
+            _formValues['rateID'] ?? values['rateID']?.toString() ?? '',
+          ) ??
+          0,
       'Rateon': _formValues['rateOn'] ?? values['rateOn']?.toString() ?? '',
-      'Sizeon': _formValues['rateSizeOn'] ?? values['rateSizeOn']?.toString() ?? '',
-      'FromWt': double.tryParse(_formValues['fromWt'] ?? values['fromWt']?.toString() ?? '') ?? 0.0,
-      'ToWt': double.tryParse(_formValues['toWt'] ?? values['toWt']?.toString() ?? '') ?? 0.0,
-      'Rate': double.tryParse(_formValues['rate'] ?? values['rate']?.toString() ?? '') ?? 0.0,
-      'CompanyCode': int.tryParse(values['companyCode']?.toString() ?? '') ??
-          context.read<CompanyProvider>().selectedCompanyCode ?? 0,
-      'SortID': int.tryParse(_formValues['sortID'] ?? values['sortID']?.toString() ?? '') ?? 0,
-      'Active': (values['active'] == 'true' || values['active'] == '1' || values['active'] == true) ? 1 : 0,
+      'Sizeon':
+          _formValues['rateSizeOn'] ?? values['rateSizeOn']?.toString() ?? '',
+      'FromWt':
+          double.tryParse(
+            _formValues['fromWt'] ?? values['fromWt']?.toString() ?? '',
+          ) ??
+          0.0,
+      'ToWt':
+          double.tryParse(
+            _formValues['toWt'] ?? values['toWt']?.toString() ?? '',
+          ) ??
+          0.0,
+      'Rate':
+          double.tryParse(
+            _formValues['rate'] ?? values['rate']?.toString() ?? '',
+          ) ??
+          0.0,
+      'CompanyCode': context.read<CompanyProvider>().selectedCompanyCode ?? 0,
+      'SortID':
+          int.tryParse(
+            _formValues['sortID'] ?? values['sortID']?.toString() ?? '',
+          ) ??
+          0,
+      'Active':
+          (values['active'] == 'true' ||
+              values['active'] == '1' ||
+              values['active'] == true)
+          ? 1
+          : 0,
       'shapes': _selectedShapes.isEmpty ? [] : _selectedShapes.toList(),
       'cuts': _selectedCuts.isEmpty ? [] : _selectedCuts.toList(),
       'articles': _selectedArticles.isEmpty ? [] : _selectedArticles.toList(),
+      'certificate': _selectedCertificate.isEmpty
+          ? []
+          : _selectedCertificate.toList(),
+      'symmetry': _selectedSymentry.isEmpty ? [] : _selectedSymentry.toList(),
+      'polish': _selectedPolish.isEmpty ? [] : _selectedPolish.toList(),
     };
 
     bool success;
     if (_isEditMode && _selectedRow != null) {
-      final raw = _selectedRow!['_raw'] as DepartmentRateModel;
-      final id = raw.clvDeptRateMstID;
-      success = await provider.updateClvRate(id, payload);
+      final raw = _selectedRow!['_raw'] as FactoryRateModel;
+      final id = raw.factRateMstID;
+      success = await provider.updateFactoryRate(id, payload);
     } else {
-      success = await provider.createClvRate(payload);
+      success = await provider.createFactoryRate(payload);
     }
 
     if (!mounted) return;
@@ -385,9 +371,7 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
         context: context,
         theme: context.erpTheme,
         title: _isEditMode ? 'Updated' : 'Saved',
-        message: _isEditMode
-            ? 'CLV Department Rate updated.'
-            : 'CLV Department Rate saved.',
+        message: _isEditMode ? 'Factory Rate updated.' : 'Factory Rate saved.',
       );
     } else {
       await ErpResultDialog.showError(
@@ -400,23 +384,23 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
   }
 
   Future<void> _onDelete() async {
-    final raw = _selectedRow?['_raw'] as DepartmentRateModel?;
-    if (raw?.clvDeptRateMstID == null) return;
+    final raw = _selectedRow?['_raw'] as FactoryRateModel?;
+    if (raw?.factRateMstID == null) return;
     final confirm = await ErpDeleteDialog.show(
       context: context,
       theme: context.erpTheme,
-      title: 'CLV Department Rate',
-      itemName: raw!.deptRateCode?.toString() ?? 'Rate',
+      title: 'Factory Rate',
+      itemName: raw!.factRateCode?.toString() ?? 'Rate',
     );
     if (confirm != true || !mounted) return;
-    final success = await context.read<DepartmentRateProvider>().deleteClvRate(
-      raw.clvDeptRateMstID!,
+    final success = await context.read<FactoryRateProvider>().deleteFactoryRate(
+      raw.factRateMstID!,
     );
     if (success && mounted) {
       await ErpResultDialog.showDeleted(
         context: context,
         theme: context.erpTheme,
-        itemName: raw.deptRateCode?.toString() ?? '',
+        itemName: raw.factRateCode?.toString() ?? '',
       );
       _resetForm();
     }
@@ -434,6 +418,9 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
       _selectedShapes = {};
       _selectedCuts = {};
       _selectedArticles = {};
+      _selectedPolish = {};
+      _selectedSymentry = {};
+      _selectedCertificate = {};
     });
     _erpFormKey.currentState?.resetForm();
     _formValues['active'] = 'true';
@@ -444,7 +431,7 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DepartmentRateProvider>(
+    return Consumer<FactoryRateProvider>(
       builder: (context, provider, _) {
         return Padding(
           padding: const EdgeInsets.all(8),
@@ -454,8 +441,8 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
                     : ErpForm(
                         logo: AppImages.logo,
                         key: _erpFormKey,
-            title: 'CLV DEPARTMENT RATE MASTER',
-            subtitle: 'CLV Department Rate configuration',
+                        title: 'FACTORY RATE MASTER',
+                        subtitle: 'Factory Rate configuration',
                         initialTabIndex: 0,
                         onSearch: () =>
                             setState(() => _showTableOnMobile = true),
@@ -479,8 +466,8 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
                       child: ErpForm(
                         logo: AppImages.logo,
                         key: _erpFormKey,
-                        title: 'CLV DEPARTMENT RATE MASTER',
-                        subtitle: 'CLV Department Rate configuration',
+                        title: 'FACTORY RATE MASTER',
+                        subtitle: 'Factory Rate configuration',
                         initialTabIndex: 0,
                         tabBarBackgroundColor: const Color(0xfff2f0ef),
                         tabBarSelectedColor:
@@ -497,6 +484,10 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
                           final shapeProv = context.watch<ShapeProvider>();
                           final cutProv = context.watch<CutProvider>();
                           final articleProv = context.watch<ArticleProvider>();
+                          final polishProv = context.watch<PolishProvider>();
+                          final symentryProv = context
+                              .watch<SymmetryProvider>();
+                          final certificateProv = context.watch<LabProvider>();
 
                           final panels = [
                             PanelConfig(
@@ -528,6 +519,48 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
                                   setState(() => _selectedCuts = set),
                             ),
                             PanelConfig(
+                              title: 'POLISH',
+                              items: polishProv.polishs
+                                  .map(
+                                    (a) => PanelItem(
+                                      id: a.polishCode ?? 0,
+                                      name: a.polishName ?? '',
+                                    ),
+                                  )
+                                  .toList(),
+                              selectedIds: _selectedPolish,
+                              onChanged: (set) =>
+                                  setState(() => _selectedPolish = set),
+                            ),
+                            PanelConfig(
+                              title: 'SYMENTRY',
+                              items: symentryProv.symmetrys
+                                  .map(
+                                    (a) => PanelItem(
+                                      id: a.symmetryCode ?? 0,
+                                      name: a.symmetryName ?? '',
+                                    ),
+                                  )
+                                  .toList(),
+                              selectedIds: _selectedSymentry,
+                              onChanged: (set) =>
+                                  setState(() => _selectedSymentry = set),
+                            ),
+                            PanelConfig(
+                              title: 'CERTIFICATE',
+                              items: certificateProv.cuts
+                                  .map(
+                                    (a) => PanelItem(
+                                      id: a.certificateCode ?? 0,
+                                      name: a.certificateName ?? '',
+                                    ),
+                                  )
+                                  .toList(),
+                              selectedIds: _selectedCertificate,
+                              onChanged: (set) =>
+                                  setState(() => _selectedCertificate = set),
+                            ),
+                            PanelConfig(
                               title: 'ARTICLE',
                               items: articleProv.list
                                   .map(
@@ -543,7 +576,10 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
                             ),
                           ];
 
-                          return DetailPanels(panels: panels,childAspectRatio: 210 / 400);
+                          return DetailPanels(
+                            panels: panels,
+                            childAspectRatio: 210 / 225,
+                          );
                         },
                       ),
                     ),
@@ -572,12 +608,12 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
     }
   }
 
-  ErpDataTable buildErpDataTable(DepartmentRateProvider provider) {
+  ErpDataTable buildErpDataTable(FactoryRateProvider provider) {
     return ErpDataTable(
       isReportRow: false,
       token: token ?? '',
       url: baseUrl,
-      title: 'CLV DEPARTMENT RATE LIST',
+      title: 'FACTORY RATE LIST',
       columns: _tableColumns,
       data: provider.tableData,
       showSearch: true,

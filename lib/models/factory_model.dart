@@ -33,7 +33,7 @@ class FactoryModel {
   final String? rateOnShape; // Y/N
   final String? rateOnArticle; // Y/N
   final String? rateOnPolish; // Y/N
-  final String? rateOnLab; // Y/N
+  final String? rateOnCertificate; // Y/N
   final String? rateOnSymmetry; // Y/N
   final String? rateOnCut;   // Y/N
   final String? diamEntry;   // Y/N
@@ -66,7 +66,7 @@ class FactoryModel {
     this.active,
     this.rateOnShape,
     this.rateOnSymmetry,
-    this.rateOnLab,
+    this.rateOnCertificate,
     this.rateOnPolish,
     this.rateOnArticle,
     this.rateOnCut,
@@ -103,7 +103,7 @@ class FactoryModel {
         rateOnCut: json['RateOnCut'],
         rateOnArticle: json['RateOnArticle'],
         rateOnPolish: json['RateOnPolish'],
-        rateOnLab: json['RateOnLab'],
+        rateOnCertificate: json['RateOnCertificate'],
         rateOnSymmetry: json['RateOnSymmetry'],
         diamEntry: json['DiamEntry'],
         gstNo: json['GstNo'],
@@ -135,7 +135,7 @@ class FactoryModel {
     'Active': active,
     'RateOnShape': rateOnShape,
     'RateOnCut': rateOnCut,
-    'RateOnLab': rateOnLab,
+    'RateOnCertificate': rateOnCertificate,
     'RateOnSymmetry': rateOnSymmetry,
     'RateOnPolish': rateOnPolish,
     'RateOnArticle': rateOnArticle,
@@ -154,7 +154,7 @@ class FactoryModel {
     'rateOnArticle': rateOnArticle == 'Y' ? 'Yes' : 'No',
     'rateOnPolish': rateOnPolish == 'Y' ? 'Yes' : 'No',
     'rateOnSymmetry': rateOnSymmetry == 'Y' ? 'Yes' : 'No',
-    'rateOnLab': rateOnLab == 'Y' ? 'Yes' : 'No',
+    'rateOnCertificate': rateOnCertificate == 'Y' ? 'Yes' : 'No',
     'rateOnCut': rateOnCut == 'Y' ? 'Yes' : 'No',
     'diamEntry': diamEntry == 'Y' ? 'Yes' : 'No',
     'active': active == true ? 'Yes' : 'No',
@@ -189,7 +189,7 @@ class FactoryModel {
         // active: v['active'] == 'Yes',
 
         rateOnShape: parseYN(v['rateOnShape']),
-        rateOnLab: parseYN(v['rateOnLab']),
+        rateOnCertificate: parseYN(v['rateOnCertificate']),
         rateOnSymmetry: parseYN(v['rateOnSymmetry']),
         rateOnPolish: parseYN(v['rateOnPolish']),
         rateOnArticle: parseYN(v['rateOnArticle']),

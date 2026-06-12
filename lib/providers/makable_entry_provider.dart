@@ -1,3 +1,4 @@
+import 'package:diam_mfg/models/factory_issue_entry_model.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../models/spkDeptIss_mst_model.dart';
@@ -31,6 +32,22 @@ class MakableEntryProvider extends BaseProvider {
     notifyListeners();
     return dets;
   }
+
+  Future<List<FactoryIssueSummaryRow>> loadSummaryReport(int mstID) async {
+    final result = await request<List<FactoryIssueSummaryRow>>(
+      call: () => api.get('/spkDeptIss/$mstID?isSummary=true'),
+      onSuccess: (res) {
+        return (res.data as List<dynamic>? ?? [])
+            .map((e) => FactoryIssueSummaryRow.fromJson(
+          e as Map<String, dynamic>,
+        ))
+            .toList();
+      },
+    );
+
+    return result ?? [];
+  }
+
   // ── LOAD ALL ──────────────────────────────────────────────────────────────
   Future<void> load() async {
     final result = await request<List<SpkDeptIssMstModel>>(

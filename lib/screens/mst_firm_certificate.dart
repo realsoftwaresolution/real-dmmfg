@@ -39,8 +39,8 @@ class _MstLabState extends State<MstLab> {
 
   // ── TABLE COLUMNS ─────────────────────────────────────────────────────────
   List<ErpColumnConfig> get _tableColumns => [
-    ErpColumnConfig(key: 'labCode', label: 'CODE', width: 130),
-    ErpColumnConfig(key: 'labName', label: 'LAB NAME', width: 220),
+    ErpColumnConfig(key: 'certificateCode', label: 'CODE', width: 130),
+    ErpColumnConfig(key: 'certificateName', label: 'CERTIFICATE NAME', width: 220),
     ErpColumnConfig(key: 'CompanyName', label: 'COMPANY', width: 160),
     ErpColumnConfig(key: 'sortID', label: 'SORT ID', width: 160),
     ErpColumnConfig(key: 'active', label: 'ACTIVE', width: 140),
@@ -75,14 +75,14 @@ class _MstLabState extends State<MstLab> {
     /// ── BASIC INFO ──
     [
       ErpFieldConfig(
-        key: 'labName',
-        label: 'LAB NAME',
+        key: 'certificateName',
+        label: 'CERTIFICATE NAME',
         required: true,
         sectionIndex: 0,
         inputFormatters: [UpperCaseTextFormatter()],
         onDuplicateCheck: (value, allValues) async {
           return await _checkCutNameAndSortIdDuplicate(
-            fields: {'LabName': value},
+            fields: {'CertificateName': value},
           );
         },
       ),
@@ -116,7 +116,7 @@ class _MstLabState extends State<MstLab> {
       isEditMode: _isEditMode,
       selectedRow: _selectedRow,
       newFields: Map<String, dynamic>.from(fields),
-      fieldMapping: {'LabName': 'labName'},
+      fieldMapping: {'CertificateName': 'certificateName'},
     );
 
     if (skip) {
@@ -127,7 +127,7 @@ class _MstLabState extends State<MstLab> {
     return await checkDuplicateRecord(
       context: context,
       theme: _theme,
-      formName: 'Lab',
+      formName: 'Certificate',
       fields: fields,
     );
   }
@@ -158,8 +158,8 @@ class _MstLabState extends State<MstLab> {
       _selectedRow = row;
       _isEditMode = true;
       _formValues = {
-        'labCode': raw.labCode?.toString() ?? '',
-        'labName': raw.labName ?? '',
+        'certificateCode': raw.certificateCode?.toString() ?? '',
+        'certificateName': raw.certificateName ?? '',
         'companyCode':
         context.read<CompanyProvider>().selectedCompanyCode?.toString() ??
             raw.companyCode?.toString() ??
@@ -176,7 +176,7 @@ class _MstLabState extends State<MstLab> {
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
     final exists = await _checkCutNameAndSortIdDuplicate(
-      fields: {'LabName': values['labName']},
+      fields: {'CertificateName': values['certificateName']},
     );
     if (exists) return;
     final provider = context.read<LabProvider>();
@@ -184,7 +184,7 @@ class _MstLabState extends State<MstLab> {
     bool success;
     if (_isEditMode && _selectedRow != null) {
       final raw = _selectedRow!['_raw'] as LabModel;
-      success = await provider.updateCut(raw.labCode!, values);
+      success = await provider.updateCut(raw.certificateCode!, values);
     } else {
       success = await provider.createCut(values);
     }
@@ -198,8 +198,8 @@ class _MstLabState extends State<MstLab> {
         theme: _theme,
         title: _isEditMode ? 'Updated' : 'Saved',
         message: _isEditMode
-            ? 'Lab updated successfully.'
-            : 'Lab saved successfully.',
+            ? 'Certificate updated successfully.'
+            : 'Certificate saved successfully.',
       );
     }
   }
@@ -207,24 +207,24 @@ class _MstLabState extends State<MstLab> {
   // ── DELETE ────────────────────────────────────────────────────────────────
   Future<void> _onDelete() async {
     final raw = _selectedRow?['_raw'] as LabModel?;
-    if (raw?.labCode == null) return;
+    if (raw?.certificateCode == null) return;
     final confirm = await ErpDeleteDialog.show(
       context: context,
       theme: _theme,
-      title: 'Lab',
-      itemName: raw!.labName ?? "",
+      title: 'Certificate',
+      itemName: raw!.certificateName ?? "",
     );
 
     if (confirm != true || !mounted) return;
 
-    final success = await context.read<LabProvider>().deleteCut(raw.labCode!);
+    final success = await context.read<LabProvider>().deleteCut(raw.certificateCode!);
 
     if (success && mounted) {
       _resetForm();
       await ErpResultDialog.showDeleted(
         context: context,
         theme: _theme,
-        itemName: raw.labName ?? '',
+        itemName: raw.certificateName ?? '',
       );
     }
   }
@@ -260,7 +260,7 @@ class _MstLabState extends State<MstLab> {
             isReportRow: false,
             token: token ?? '',
             url: baseUrl,
-            title: 'LAB LIST',
+            title: 'CERTIFICATE LIST',
             columns: _tableColumns,
             data: provider.tableData,
             showSearch: true,
@@ -268,7 +268,7 @@ class _MstLabState extends State<MstLab> {
             selectedRow: _selectedRow,
             onRowTap: _onRowTap,
             emptyMessage: provider.isLoaded
-                ? 'No labs found'
+                ? 'No certificates found'
                 : 'Loading...',
           )
               : ErpForm(
@@ -277,8 +277,8 @@ class _MstLabState extends State<MstLab> {
             },
             logo: AppImages.logo,
             key: _erpFormKey,
-            title: 'LAB MASTER',
-            subtitle: 'Lab Information',
+            title: 'CERTIFICATE MASTER',
+            subtitle: 'Certificate Information',
             initialTabIndex: 0,
             onSearch: () =>
                 setState(() => _showTableOnMobile = true),
@@ -312,8 +312,8 @@ class _MstLabState extends State<MstLab> {
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
-                  title: 'LAB MASTER',
-                  subtitle: 'Lab Information',
+                  title: 'CERTIFICATE MASTER',
+                  subtitle: 'Certificate Information',
                   initialTabIndex: 0,
                   tabBarBackgroundColor: const Color(0xfff2f0ef),
                   tabBarSelectedColor: _theme.primaryGradient.first,
@@ -343,7 +343,7 @@ class _MstLabState extends State<MstLab> {
                   isReportRow: false,
                   token: token ?? '',
                   url: baseUrl,
-                  title: 'LAB LIST',
+                  title: 'CERTIFICATE LIST',
                   columns: _tableColumns,
                   data: provider.tableData,
                   showSearch: true,
@@ -351,7 +351,7 @@ class _MstLabState extends State<MstLab> {
                   selectedRow: _selectedRow,
                   onRowTap: _onRowTap,
                   emptyMessage: provider.isLoaded
-                      ? 'No labs found'
+                      ? 'No certificates found'
                       : 'Loading...',
                 ),
               ),

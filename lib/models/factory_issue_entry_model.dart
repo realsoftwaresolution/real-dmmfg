@@ -673,3 +673,83 @@ extension FactoryIssMstExt on FactoryIssueMstModel {
     'dmPer': (dmPer ?? 0).toStringAsFixed(2),
   };
 }
+
+// lib/models/factory_issue_summary_model.dart
+
+class FactoryIssueSummaryModel {
+  final String factoryName;
+  final String factoryAddress;
+  final String gstNo;
+  final String counterName;
+  final List<FactoryIssueSummaryRow> summary;
+
+  const FactoryIssueSummaryModel({
+    required this.factoryName,
+    required this.factoryAddress,
+    required this.gstNo,
+    required this.counterName,
+    required this.summary,
+  });
+
+  factory FactoryIssueSummaryModel.fromJson(Map<String, dynamic> json) {
+    final data = json['data'] as Map<String, dynamic>? ?? {};
+    return FactoryIssueSummaryModel(
+      factoryName: data['FactoryName']?.toString() ?? '',
+      factoryAddress: data['FactoryAddress']?.toString() ?? '',
+      gstNo: data['GstNo']?.toString() ?? '',
+      counterName: data['CounterName']?.toString() ?? '',
+      summary: (data['summary'] as List<dynamic>? ?? [])
+          .map((e) => FactoryIssueSummaryRow.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}
+
+class FactoryIssueSummaryRow {
+  final String sr;
+  final String cutNo;
+  final String articalName;
+  final String size;
+  final int? totalPkt;
+  final int totalPc;
+  final double totalWt;
+
+  // Computed helper
+  bool get isGrandTotal => sr == 'Grand Total';
+
+  const FactoryIssueSummaryRow({
+    required this.sr,
+    required this.cutNo,
+    required this.articalName,
+    required this.size,
+    required this.totalPkt,
+    required this.totalPc,
+    required this.totalWt,
+  });
+
+  factory FactoryIssueSummaryRow.fromJson(Map<String, dynamic> json) {
+    return FactoryIssueSummaryRow(
+      sr: json['Sr']?.toString() ?? '',
+      cutNo: json['CutNo']?.toString() ?? '',
+      articalName: json['ArticalName']?.toString() ?? '',
+      size: json['Size']?.toString() ?? '',
+      totalPkt: json['TotalPkt'] as int?,
+      totalPc: _toInt(json['TotalPc']),
+      totalWt: _toDouble(json['TotalWt']),
+    );
+  }
+
+  static int _toInt(dynamic v) {
+    if (v == null) return 0;
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return int.tryParse(v.toString()) ?? 0;
+  }
+
+  static double _toDouble(dynamic v) {
+    if (v == null) return 0.0;
+    if (v is double) return v;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString()) ?? 0.0;
+  }
+}

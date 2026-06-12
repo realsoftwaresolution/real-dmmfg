@@ -292,8 +292,8 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
         sectionIndex: 2,
       ),
       ErpFieldConfig(
-        key: 'rateOnLab',
-        label: 'RATE ON LAB',
+        key: 'rateOnCertificate',
+        label: 'RATE ON CERTIFICATE',
         type: ErpFieldType.checkbox,
         checkboxDbType: 'YN',
         sectionIndex: 2,
@@ -369,7 +369,7 @@ class _MstFirmFactoryState extends State<MstFirmFactory> {
         'rateOnArticle': raw.rateOnArticle == 'Y' ? 'true' : 'false',
         'rateOnPolish': raw.rateOnPolish == 'Y' ? 'true' : 'false',
         'rateOnSymmetry': raw.rateOnSymmetry == 'Y' ? 'true' : 'false',
-        'rateOnLab': raw.rateOnLab == 'Y' ? 'true' : 'false',
+        'rateOnCertificate': raw.rateOnCertificate == 'Y' ? 'true' : 'false',
         'diamEntry': raw.diamEntry == 'Y' ? 'true' : 'false',
         'active': raw.active == true ? 'true' : 'false',
       };

@@ -32,7 +32,7 @@ class LabProvider extends BaseProvider {
   Future<void> loadCuts() async {
     final result = await request<List<LabModel>>(
       showLoader: true,
-      call: () => api.get('/lab'),
+      call: () => api.get('/certificate'),
       onSuccess: (res) {
         final list = res.data['data'] as List;
         return list.map((e) => LabModel.fromJson(e)).toList();
@@ -54,7 +54,7 @@ class LabProvider extends BaseProvider {
 
     final result = await request<LabModel>(
       showLoader: true,
-      call: () => api.post('/lab', data: model.toJson()),
+      call: () => api.post('/certificate', data: model.toJson()),
       onSuccess: (res) => LabModel.fromJson(res.data),
     );
 
@@ -74,7 +74,7 @@ class LabProvider extends BaseProvider {
 
     final result = await request<LabModel>(
       showLoader: true,
-      call: () => api.put('/lab/$code', data: model.toJson()),
+      call: () => api.put('/certificate/$code', data: model.toJson()),
       onSuccess: (res) => LabModel.fromJson(res.data),
     );
 
@@ -90,7 +90,7 @@ class LabProvider extends BaseProvider {
   Future<bool> deleteCut(int code) async {
     final result = await request<bool>(
       showLoader: true,
-      call: () => api.delete('/lab/$code'),
+      call: () => api.delete('/certificate/$code'),
       onSuccess: (_) => true,
     );
 

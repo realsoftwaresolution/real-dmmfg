@@ -16,9 +16,10 @@ import 'package:diam_mfg/screens/mst_firm_divison.dart';
 import 'package:diam_mfg/screens/mst_firm_employee.dart';
 import 'package:diam_mfg/screens/mst_firm_factory.dart';
 import 'package:diam_mfg/screens/mst_firm_factory_man_group.dart';
+import 'package:diam_mfg/screens/mst_firm_factory_rate.dart';
 import 'package:diam_mfg/screens/mst_firm_fluo.dart';
 import 'package:diam_mfg/screens/mst_firm_jangad_charni.dart';
-import 'package:diam_mfg/screens/mst_firm_lab.dart';
+import 'package:diam_mfg/screens/mst_firm_certificate.dart';
 import 'package:diam_mfg/screens/mst_firm_ls_party_wt_calc_entry.dart';
 import 'package:diam_mfg/screens/mst_firm_party.dart';
 import 'package:diam_mfg/screens/mst_firm_polish.dart';
@@ -89,7 +90,7 @@ class AppRouter {
     '/2.30': (context) => const MstLsPartyWtCalcEntry(),
     '/2.31': (context) => const MstClvRate(),
     '/2.32': (context) => const MstLab(),
-    '/2.33': (context) => const MstDepartmentRate(),
+    '/2.33': (context) => const MstFactoryRate(),
     '/2.34': (context) => const MstDepartmentRate(),
     '/3.01': (context) => const TrnRoughEntry(),
     '/3.02': (context) => const TrnRoughAssortEntry(),

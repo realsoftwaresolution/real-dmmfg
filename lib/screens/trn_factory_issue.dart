@@ -353,7 +353,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   dynamic _deleteDetRow(int idx) async {
-    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
+    final actualIdx = _detRows.length - 1 - idx; // ← convert display→actual
 
     if (_isEditMode) {
       final confirm = await ErpDeleteDialog.show(
@@ -1093,114 +1093,92 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   // CREATE PDF
 
   Future<void> printJobWorkPdf() async {
-    if (_detRows.isEmpty) {
+    if (_detRows.isEmpty) return;
+
+    final prov = context.read<FactoryIssueEntryProvider>();
+    final masterId =
+        (_detRows.first.spkDeptIssMstID ?? prov.list.first.factoryIssMstID ?? 0)
+            .toInt();
+    final summaryModel = await prov.loadSummaryReport(masterId);
+    if (!mounted) return;
+
+    if (summaryModel == null) {
+      _showSnack('Failed to load summary data.');
       return;
     }
-    final prov = context.read<FactoryIssueEntryProvider>();
-
-    final pdfData = JobWorkPdfModel(
-      headerInfo: _selectedFactory,
-      partyName: _selectedFactory?.contactPerson ?? '',
-      partyType: _selectedFactory?.factoryType ?? '',
-
-      jobNo:
-          (_detRows.first.spkDeptIssMstID ??
-                  prov.list.first.factoryIssMstID ??
-                  0)
-              .toString(),
-
-      date: _formValues['date']?.toString() ?? '',
-
-      items: _detRows.map((e) {
-        return JobWorkItem(
-          kapan: e.cutNo ?? '',
-
-          bCode: e.bCode ?? '',
-          pktNo: e.pktNo ?? '',
-
-          type: e.ArticalName ?? '',
-
-          pcs: (e.issPc ?? 0).toString(),
-
-          cts: (e.issWt ?? 0).toStringAsFixed(3),
-        );
-      }).toList(),
-    );
-
-    /// DETAIL REPORT
+    // ── DETAIL REPORT — unchanged ─────────────────────────────────────────
     if (_entryVals['report'] == 'REPORT') {
-      final pdf = await generateJobWorkPdf(pdfData);
+      final pdfData = JobWorkPdfModel(
+        headerInfo: _selectedFactory,
+        partyName: summaryModel.counterName,
+        partyType: _selectedFactory?.factoryType ?? '',
+        jobNo: masterId.toString(),
+        date: _formValues['date']?.toString() ?? '',
+        items: _detRows.map((e) {
+          return JobWorkItem(
+            kapan: e.cutNo ?? '',
+            bCode: e.bCode ?? '',
+            pktNo: e.pktNo ?? '',
+            type: e.ArticalName ?? '',
+            pcs: (e.issPc ?? 0).toString(),
+            cts: (e.issWt ?? 0).toStringAsFixed(3),
+          );
+        }).toList(),
+      );
 
+      final pdf = await generateJobWorkPdf(pdfData);
       await Printing.layoutPdf(onLayout: (_) async => pdf);
     }
-    /// SUMMARY REPORT
+    // ── SUMMARY REPORT — use API data ─────────────────────────────────────
     else if (_entryVals['report'] == 'SUMMARY') {
-      /// GROUP CUTNO WISE
-      final Map<String, Map<String, dynamic>> grouped = {};
+      // Real rows only (exclude Grand Total)
+      final dataRows = summaryModel.summary
+          .where((r) => !r.isGrandTotal)
+          .toList();
 
-      for (final e in _detRows) {
-        final cutNo = e.cutNo ?? '';
+      final grandTotal = summaryModel.summary.firstWhereOrNull(
+        (r) => r.isGrandTotal,
+      );
 
-        if (!grouped.containsKey(cutNo)) {
-          grouped[cutNo] = {
-            'cutNo': cutNo,
-            'articalName': e.ArticalName ?? '',
+      // Map grandTotal to JobWorkItem if it exists
+      final grandTotalItem = grandTotal != null
+          ? JobWorkItem(
+              kapan: '',
+              bCode: (grandTotal.totalPkt ?? 0).toString(),
+              pktNo: '',
+              type: '',
+              pcs: grandTotal.totalPc.toString(),
+              cts: grandTotal.totalWt.toStringAsFixed(3),
+            )
+          : null;
 
-            /// UNIQUE PKTNO
-            'pktNos': <String>{},
-
-            'pcs': 0,
-
-            'wt': 0.0,
-          };
-        }
-
-        /// PKTNO COUNT
-        grouped[cutNo]!['pktNos'].add(e.pktNo?.toString() ?? '');
-
-        /// PCS SUM
-        grouped[cutNo]!['pcs'] += (e.issPc ?? 0);
-
-        /// WT SUM
-        grouped[cutNo]!['wt'] += (e.issPc ?? 0.0);
-      }
-
-      /// CONVERT SUMMARY ITEMS
-      final summaryItems = grouped.values.map((g) {
+      final summaryItems = dataRows.map((r) {
         return JobWorkItem(
-          kapan: g['cutNo'],
-
-          /// PKT COUNT
-          bCode: (g['pktNos'] as Set).length.toString(),
-
-          type: g['articalName'],
-          pktNo: '',
-
-          pcs: g['pcs'].toString(),
-
-          cts: (g['wt'] as double).toStringAsFixed(3),
+          kapan: r.cutNo,
+          bCode: (r.totalPkt ?? 0).toString(),
+          // pkt count
+          pktNo: r.size,
+          type: r.articalName,
+          pcs: r.totalPc.toString(),
+          size: r.size.toString(),
+          cts: r.totalWt.toStringAsFixed(3),
         );
       }).toList();
 
       final summaryPdfData = JobWorkPdfModel(
         headerInfo: _selectedFactory,
-
-        partyName: _selectedFactory?.contactPerson ?? '',
+        partyName: summaryModel.counterName,
         partyType: _selectedFactory?.factoryType ?? '',
-
-        jobNo:
-            (_detRows.first.spkDeptIssMstID ??
-                    prov.list.first.factoryIssMstID ??
-                    0)
-                .toString(),
-
+        jobNo: masterId.toString(),
         date: _formValues['date']?.toString() ?? '',
-
         items: summaryItems,
       );
 
-      final pdf = await generateJobWorkPdfSummary(summaryPdfData);
-
+      final pdf = await generateJobWorkPdfSummary(
+        summaryPdfData,
+        showSize: true,
+        grandTotal: grandTotalItem,
+      );
       await Printing.layoutPdf(onLayout: (_) async => pdf);
     }
   }
@@ -1299,9 +1277,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
                 columnLabels: {
                   for (final c in _activeDetColumns) c: _colLabel(c),
                 },
-                columnWidths: const {
-                  'srno': 40,
-                },
+                columnWidths: const {'srno': 40},
                 footerTotCount: 'Tot: ${_detRows.length}',
                 footerTotals: _buildFooterTotals(),
               ),

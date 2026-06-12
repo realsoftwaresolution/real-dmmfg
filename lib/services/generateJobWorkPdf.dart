@@ -40,6 +40,7 @@ class JobWorkItem {
   final String cts;
   final String bCode;
   final String pktNo;
+  final String size;
 
   const JobWorkItem({
     required this.kapan,
@@ -48,6 +49,7 @@ class JobWorkItem {
     required this.cts,
     required this.bCode,
     required this.pktNo,
+     this.size = '',
   });
 }
 
@@ -55,22 +57,14 @@ class JobWorkItem {
 /// DETAIL PDF
 /// ─────────────────────────────────────────────
 
-Future<Uint8List> generateJobWorkPdf(
-    JobWorkPdfModel data,
-    ) async {
-
+Future<Uint8List> generateJobWorkPdf(JobWorkPdfModel data) async {
   final pdf = pw.Document();
 
   const rowsPerPage = 15;
 
   final chunks = <List<JobWorkItem>>[];
 
-  for (
-  int i = 0;
-  i < data.items.length;
-  i += rowsPerPage
-  ) {
-
+  for (int i = 0; i < data.items.length; i += rowsPerPage) {
     chunks.add(
       data.items.sublist(
         i,
@@ -82,7 +76,6 @@ Future<Uint8List> generateJobWorkPdf(
   }
 
   for (final chunk in chunks) {
-
     final pageData = JobWorkPdfModel(
       headerInfo: data.headerInfo,
       partyName: data.partyName,
@@ -100,27 +93,15 @@ Future<Uint8List> generateJobWorkPdf(
         margin: const pw.EdgeInsets.all(20),
 
         build: (context) {
-
           return pw.Row(
             children: [
-
               /// ORIGINAL
-              pw.Expanded(
-                child: _buildSlip(
-                  pageData,
-                  'Original',
-                ),
-              ),
+              pw.Expanded(child: _buildSlip(pageData, 'Original')),
 
               pw.SizedBox(width: 20),
 
               /// DUPLICATE
-              pw.Expanded(
-                child: _buildSlip(
-                  pageData,
-                  'Duplicate',
-                ),
-              ),
+              pw.Expanded(child: _buildSlip(pageData, 'Duplicate')),
             ],
           );
         },
@@ -130,26 +111,19 @@ Future<Uint8List> generateJobWorkPdf(
 
   return pdf.save();
 }
+
 /// ─────────────────────────────────────────────
 /// SUMMARY PDF
 /// ─────────────────────────────────────────────
 
-Future<Uint8List> generateJobWorkPdfSummary(
-    JobWorkPdfModel data,
-    ) async {
-
+Future<Uint8List> generateJobWorkPdfSummary(JobWorkPdfModel data, {bool showSize = false,JobWorkItem? grandTotal}) async {
   final pdf = pw.Document();
 
   const rowsPerPage = 25;
 
   final chunks = <List<JobWorkItem>>[];
 
-  for (
-  int i = 0;
-  i < data.items.length;
-  i += rowsPerPage
-  ) {
-
+  for (int i = 0; i < data.items.length; i += rowsPerPage) {
     chunks.add(
       data.items.sublist(
         i,
@@ -161,7 +135,6 @@ Future<Uint8List> generateJobWorkPdfSummary(
   }
 
   for (final chunk in chunks) {
-
     final pageData = JobWorkPdfModel(
       headerInfo: data.headerInfo,
       partyName: data.partyName,
@@ -179,25 +152,13 @@ Future<Uint8List> generateJobWorkPdfSummary(
         margin: const pw.EdgeInsets.all(20),
 
         build: (context) {
-
           return pw.Row(
             children: [
-
-              pw.Expanded(
-                child: _buildSummarySlip(
-                  pageData,
-                  'Original',
-                ),
-              ),
+              pw.Expanded(child: _buildSummarySlip(pageData, 'Original', showSize,grandTotal)),
 
               pw.SizedBox(width: 20),
 
-              pw.Expanded(
-                child: _buildSummarySlip(
-                  pageData,
-                  'Duplicate',
-                ),
-              ),
+              pw.Expanded(child: _buildSummarySlip(pageData, 'Duplicate',showSize,grandTotal)),
             ],
           );
         },
@@ -207,6 +168,7 @@ Future<Uint8List> generateJobWorkPdfSummary(
 
   return pdf.save();
 }
+
 /// ─────────────────────────────────────────────
 /// DETAIL SLIP
 /// ─────────────────────────────────────────────
@@ -329,16 +291,14 @@ pw.Widget _buildSlip(JobWorkPdfModel data, text) {
 /// SUMMARY SLIP
 /// ─────────────────────────────────────────────
 
-pw.Widget _buildSummarySlip(JobWorkPdfModel data, text) {
-  final totalPcs = data.items.fold<int>(
-    0,
-    (sum, e) => sum + (int.tryParse(e.pcs) ?? 0),
-  );
+pw.Widget _buildSummarySlip(JobWorkPdfModel data, text, bool showSize,JobWorkItem? grandTotal) {
+  final totalPcs = grandTotal != null
+      ? (int.tryParse(grandTotal.pcs) ?? 0)
+      : data.items.fold<int>(0, (sum, e) => sum + (int.tryParse(e.pcs) ?? 0));
 
-  final totalCts = data.items.fold<double>(
-    0.0,
-    (sum, e) => sum + (double.tryParse(e.cts) ?? 0),
-  );
+  final totalCts = grandTotal != null
+      ? (double.tryParse(grandTotal.cts) ?? 0.0)
+      : data.items.fold<double>(0.0, (sum, e) => sum + (double.tryParse(e.cts) ?? 0));
 
   return pw.Container(
     padding: const pw.EdgeInsets.all(10),
@@ -376,16 +336,13 @@ pw.Widget _buildSummarySlip(JobWorkPdfModel data, text) {
           border: pw.TableBorder.all(width: 0.5),
 
           columnWidths: {
-            0: const pw.FixedColumnWidth(40),
-
-            1: const pw.FlexColumnWidth(),
-
-            2: const pw.FixedColumnWidth(60),
-            3: const pw.FixedColumnWidth(60),
-
-            4: const pw.FixedColumnWidth(70),
-
-            5: const pw.FixedColumnWidth(70),
+            0: const pw.FixedColumnWidth(30),   // SR
+            1: const pw.FlexColumnWidth(80),    // CUT NO
+            2: const pw.FixedColumnWidth(60),   // ARTICAL
+            if (showSize) 3: const pw.FixedColumnWidth(60), // SIZE (conditional)
+            (showSize ? 4 : 3): const pw.FixedColumnWidth(40), // PKT
+            (showSize ? 5 : 4): const pw.FixedColumnWidth(40), // PCS
+            (showSize ? 6 : 5): const pw.FixedColumnWidth(60), // WT
           },
 
           children: [
@@ -398,6 +355,7 @@ pw.Widget _buildSummarySlip(JobWorkPdfModel data, text) {
 
                 _tableHeader('CUT NO'),
                 _tableHeader('ARTICAL'),
+                if (showSize) _tableHeader('SIZE'),
 
                 _tableHeader('PKT'),
 
@@ -420,6 +378,7 @@ pw.Widget _buildSummarySlip(JobWorkPdfModel data, text) {
                   /// CUT NO
                   _summaryCell(item.kapan, align: pw.TextAlign.center),
                   _summaryCell(item.type, align: pw.TextAlign.center),
+                  if (showSize) _summaryCell(item.size, align: pw.TextAlign.center),
 
                   /// PKT COUNT
                   _summaryCell(item.bCode, align: pw.TextAlign.center),
@@ -441,6 +400,7 @@ pw.Widget _buildSummarySlip(JobWorkPdfModel data, text) {
                 _tableBold('TOTAL'),
 
                 _tableBold(''),
+                if (showSize) _tableBold(''),
                 _tableBold(''),
 
                 _tableBold(totalPcs.toString()),
@@ -511,25 +471,15 @@ pw.Widget _buildHeader(JobWorkPdfModel data, {String title = 'Job Work Out'}) {
     gstNo = (info['gstNo'] ?? info['GstNo'] ?? '').toString();
   }
 
-  final article =
-  data.items.isNotEmpty
+  final article = data.items.isNotEmpty
       ? data.items.first.type.toUpperCase()
       : '';
   String partyCode = '';
 
   if (article.contains('NATURAL')) {
-
-    partyCode =
-        data.NaturalPartyCode
-            ?.toString() ??
-            '';
-
+    partyCode = data.NaturalPartyCode?.toString() ?? '';
   } else if (article.contains('CVD')) {
-
-    partyCode =
-        data.CVDPartyCode
-            ?.toString() ??
-            '';
+    partyCode = data.CVDPartyCode?.toString() ?? '';
   }
   return pw.Column(
     children: [
@@ -574,14 +524,12 @@ pw.Widget _buildHeader(JobWorkPdfModel data, {String title = 'Job Work Out'}) {
 
               pw.Row(
                 children: [
-
                   pw.Text(
                     data.partyName,
                     style: const pw.TextStyle(fontSize: 9),
                   ),
 
                   if (partyCode.isNotEmpty)
-
                     pw.Text(
                       ' [$partyCode]',
                       style: const pw.TextStyle(fontSize: 9),

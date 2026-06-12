@@ -25,6 +25,7 @@ import 'package:diam_mfg/providers/counter_stock_type_det_provider.dart';
 import 'package:diam_mfg/providers/counter_type_provider.dart';
 import 'package:diam_mfg/providers/cut_create_provider.dart';
 import 'package:diam_mfg/providers/cut_provider.dart';
+import 'package:diam_mfg/providers/department_rate_provider.dart';
 import 'package:diam_mfg/providers/dept_group_provider.dart';
 import 'package:diam_mfg/providers/dept_process_provider.dart';
 import 'package:diam_mfg/providers/dept_provider.dart';
@@ -35,6 +36,7 @@ import 'package:diam_mfg/providers/employee_manager_det_provider.dart';
 import 'package:diam_mfg/providers/employee_provider.dart';
 import 'package:diam_mfg/providers/factory_issue_entry_provider.dart';
 import 'package:diam_mfg/providers/factory_provider.dart';
+import 'package:diam_mfg/providers/factory_rate_provider.dart';
 import 'package:diam_mfg/providers/factory_receive_provider.dart';
 import 'package:diam_mfg/providers/fluo_provider.dart';
 import 'package:diam_mfg/providers/holiday_provider.dart';
@@ -81,8 +83,8 @@ import 'providers/Ls_party_wt_calc_entry_provider.dart';
 import 'providers/Packet_History_provider.dart';
 import 'providers/factory_man_group_provider.dart';
 
-// String baseUrl = 'http://50.62.183.116:5000/api';
-String baseUrl = 'https://fish-announcement-loop-pig.trycloudflare.com/api';
+String baseUrl = 'http://50.62.183.116:5000/api';
+// String baseUrl = 'https://temple-economics-shake-contacting.trycloudflare.com/api';
 //CU-7,5/6/2026,17:12,0.096,0.049,ROUND,G,MACKABLE,klhkhkhjkkh,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
 
 //CU-7,5/6/2026,17:12,0.096,0.049,S.OVAL,G,VVS2,omjewR-1.50,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
@@ -314,8 +316,14 @@ Future<void> bootstrap({required FutureOr<Widget> Function() fn}) async {
             ),
             ChangeNotifierProvider<ClvRateProvider>(
               create: (_) => ClvRateProvider(),
-            ),ChangeNotifierProvider<LabProvider>(
+            ),
+            ChangeNotifierProvider<LabProvider>(
               create: (_) => LabProvider(),
+            ),
+            ChangeNotifierProvider<DepartmentRateProvider>(
+              create: (_) => DepartmentRateProvider(),
+            ),ChangeNotifierProvider<FactoryRateProvider>(
+              create: (_) => FactoryRateProvider(),
             ),
           ],
           child: app,

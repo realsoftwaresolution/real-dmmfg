@@ -2,8 +2,8 @@ import '../utils/helper_functions.dart';
 
 class LabModel {
   final int? labMstID;
-  final int? labCode;
-  final String? labName;
+  final int? certificateCode;
+  final String? certificateName;
   final String? sflag;
   final String? sdate;
   final int? logID;
@@ -16,8 +16,8 @@ class LabModel {
 
   LabModel({
     this.labMstID,
-    this.labCode,
-    this.labName,
+    this.certificateCode,
+    this.certificateName,
     this.sflag,
     this.sdate,
     this.logID,
@@ -31,8 +31,8 @@ class LabModel {
 
   factory LabModel.fromJson(Map<String, dynamic> json) => LabModel(
     labMstID: json['LabMstID'],
-    labCode: json['LabCode'],
-    labName: json['LabName'],
+    certificateCode: json['CertificateCode'],
+    certificateName: json['CertificateName'],
     sflag: json['Sflag'],
     sdate: json['Sdate']?.toString(),
     logID: json['LogID'],
@@ -45,8 +45,8 @@ class LabModel {
   );
 
   Map<String, dynamic> toJson() => {
-    'LabCode': labCode,
-    'LabName': labName,
+    'CertificateCode': certificateCode,
+    'CertificateName': certificateName,
     'Sflag': sflag,
     'Sdate': sdate,
     'LogID': logID,
@@ -59,8 +59,8 @@ class LabModel {
   };
 
   Map<String, dynamic> toTableRow({String? company}) => {
-    'labCode': labCode,
-    'labName': labName ?? '',
+    'certificateCode': certificateCode,
+    'certificateName': certificateName ?? '',
     'CompanyName': companyName ?? '',
     'companyCode': company ?? companyCode?.toString() ?? '',  // ← name show karega
     'sortID': sortID?.toString() ?? '',
@@ -69,8 +69,8 @@ class LabModel {
   };
 
   static LabModel fromFormValues(Map<String, dynamic> v) => LabModel(
-    labCode: int.tryParse(v['labCode'] ?? ''),
-    labName: v['labName'],
+    certificateCode: int.tryParse(v['certificateCode'] ?? ''),
+    certificateName: v['certificateName'],
     companyCode: int.tryParse(v['companyCode'] ?? ''),
     sortID: int.tryParse(v['sortID'] ?? ''),
     // active: v['active'] == 'Y',

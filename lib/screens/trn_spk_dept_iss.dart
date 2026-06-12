@@ -220,6 +220,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   /// Returns DEPT-scoped entry fields (excluding CHARNI, TENSIONS, ALL),
   /// de-duped by name. TO-fields win over FROM-fields on name collision.
   Map<String, UserVisibilityModel> _getMergedFields() {
+    print('_fromDisplayFields ${jsonEncode(_fromDisplayFields)} - ${jsonEncode(_toDisplayFields)}');
     const excluded = {'CHARNI', 'TENSIONS', 'ALL'};
     final merged = <String, UserVisibilityModel>{};
 
@@ -753,6 +754,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _addEntry() {
+    print(_entryVals);
     final scanBCode = (_scannedDet?.bCode ?? '').trim();
 
     /// DUPLICATE CHECK
@@ -777,6 +779,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       return;
     }
     final merged = _getMergedFields();
+
+    print('merged ${jsonEncode(merged)}');
     final hasRecPc = merged.containsKey('REC PC');
 
     final hasRecWt = merged.containsKey('REC WT');
@@ -815,7 +819,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     final totalPc = recPc + kPc;
     final totalWt = recWt + kWt;
     final finalRecPc = hasRecPc ? recPc : issPc;
-
+    print('hasRecWt $hasRecWt');
     final finalRecWt = hasRecWt ? recWt : issWt;
     final hasRecPair =
         merged.containsKey('REC PC') || merged.containsKey('REC WT');
@@ -1983,6 +1987,7 @@ print('selectedName $selectedName');
 
       // PC-WT pairs
       for (final pair in pairs) {
+        print('pair $pair - ${jsonEncode(merged)}');
         if (merged.containsKey(pair[0]) || merged.containsKey(pair[1])) {
           singleRow.add(
             ErpFieldConfig(
