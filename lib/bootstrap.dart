@@ -34,18 +34,21 @@ import 'package:diam_mfg/providers/division_provider.dart';
 import 'package:diam_mfg/providers/employee_dept_det_provider.dart';
 import 'package:diam_mfg/providers/employee_manager_det_provider.dart';
 import 'package:diam_mfg/providers/employee_provider.dart';
+import 'package:diam_mfg/providers/fColor_provider.dart';
 import 'package:diam_mfg/providers/factory_issue_entry_provider.dart';
 import 'package:diam_mfg/providers/factory_provider.dart';
 import 'package:diam_mfg/providers/factory_rate_provider.dart';
 import 'package:diam_mfg/providers/factory_receive_provider.dart';
 import 'package:diam_mfg/providers/fluo_provider.dart';
 import 'package:diam_mfg/providers/holiday_provider.dart';
+import 'package:diam_mfg/providers/intent_provider.dart';
 import 'package:diam_mfg/providers/jangad_charni_provider.dart';
-import 'package:diam_mfg/providers/lab_provider.dart';
+import 'package:diam_mfg/providers/certificate_provider.dart';
 import 'package:diam_mfg/providers/main_group_mst_provider.dart';
 import 'package:diam_mfg/providers/main_menuMst_provider.dart';
 import 'package:diam_mfg/providers/makable_entry_provider.dart';
 import 'package:diam_mfg/providers/menu_mst_provider.dart';
+import 'package:diam_mfg/providers/over_provider.dart';
 import 'package:diam_mfg/providers/packet_provider.dart';
 import 'package:diam_mfg/providers/party_provider.dart';
 import 'package:diam_mfg/providers/party_type_provider.dart';
@@ -83,8 +86,9 @@ import 'providers/Ls_party_wt_calc_entry_provider.dart';
 import 'providers/Packet_History_provider.dart';
 import 'providers/factory_man_group_provider.dart';
 
-String baseUrl = 'http://50.62.183.116:5000/api';
-// String baseUrl = 'https://temple-economics-shake-contacting.trycloudflare.com/api';
+// String baseUrl = 'http://50.62.183.116:5000/api';
+String baseUrl =
+    'https://jewel-irrigation-jazz-fever.trycloudflare.com/api';
 //CU-7,5/6/2026,17:12,0.096,0.049,ROUND,G,MACKABLE,klhkhkhjkkh,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
 
 //CU-7,5/6/2026,17:12,0.096,0.049,S.OVAL,G,VVS2,omjewR-1.50,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
@@ -317,14 +321,18 @@ Future<void> bootstrap({required FutureOr<Widget> Function() fn}) async {
             ChangeNotifierProvider<ClvRateProvider>(
               create: (_) => ClvRateProvider(),
             ),
-            ChangeNotifierProvider<LabProvider>(
-              create: (_) => LabProvider(),
-            ),
+            ChangeNotifierProvider<LabProvider>(create: (_) => LabProvider()),
             ChangeNotifierProvider<DepartmentRateProvider>(
               create: (_) => DepartmentRateProvider(),
-            ),ChangeNotifierProvider<FactoryRateProvider>(
+            ),
+            ChangeNotifierProvider<FactoryRateProvider>(
               create: (_) => FactoryRateProvider(),
             ),
+            ChangeNotifierProvider<IntentProvider>(
+              create: (_) => IntentProvider(),
+            ),
+            ChangeNotifierProvider<OverProvider>(create: (_) => OverProvider()),
+            ChangeNotifierProvider<FColorProvider>(create: (_) => FColorProvider()),
           ],
           child: app,
         ),

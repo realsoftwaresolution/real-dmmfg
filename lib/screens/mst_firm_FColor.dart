@@ -1,8 +1,6 @@
-import 'package:diam_mfg/models/cut_model.dart';
-import 'package:diam_mfg/models/lab_model.dart';
-import 'package:diam_mfg/providers/cut_provider.dart';
+import 'package:diam_mfg/models/fColor_model.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
-import 'package:diam_mfg/providers/certificate_provider.dart';
+import 'package:diam_mfg/providers/fColor_provider.dart';
 import 'package:diam_mfg/services/duplicate_check_service.dart';
 import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/constants.dart';
@@ -10,20 +8,19 @@ import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
-
 import '../bootstrap.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
 import '../utils/msg_dialogue.dart';
 
-class MstLab extends StatefulWidget {
-  const MstLab({super.key});
+class MstFColor extends StatefulWidget {
+  const MstFColor({super.key});
 
   @override
-  State<MstLab> createState() => _MstLabState();
+  State<MstFColor> createState() => _MstFColorState();
 }
 
-class _MstLabState extends State<MstLab> {
+class _MstFColorState extends State<MstFColor> {
   // ── Theme ─────────────────────────────────────────────────────────────────
   ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
 
@@ -39,15 +36,16 @@ class _MstLabState extends State<MstLab> {
 
   // ── TABLE COLUMNS ─────────────────────────────────────────────────────────
   List<ErpColumnConfig> get _tableColumns => [
-    ErpColumnConfig(key: 'certificateCode', label: 'CODE', width: 130),
-    ErpColumnConfig(key: 'certificateName', label: 'CERTIFICATE NAME', width: 220),
+    ErpColumnConfig(key: 'fColorCode', label: 'CODE', width: 130),
+    ErpColumnConfig(key: 'fColorName', label: 'FC COLOR NAME', width: 220),
+    ErpColumnConfig(key: 'type', label: 'TYPE', width: 220),
     ErpColumnConfig(key: 'CompanyName', label: 'COMPANY', width: 160),
     ErpColumnConfig(key: 'sortID', label: 'SORT ID', width: 160),
     ErpColumnConfig(key: 'active', label: 'ACTIVE', width: 140),
   ];
 
   void _setDefaultSortId() {
-    final provider = context.read<LabProvider>();
+    final provider = context.read<FColorProvider>();
 
     int nextSortId = 1;
     if (provider.cuts.isNotEmpty) {
@@ -75,16 +73,26 @@ class _MstLabState extends State<MstLab> {
     /// ── BASIC INFO ──
     [
       ErpFieldConfig(
-        key: 'certificateName',
-        label: 'CERTIFICATE NAME',
+        key: 'fColorName',
+        label: 'FC COLOR NAME',
         required: true,
         sectionIndex: 0,
         inputFormatters: [UpperCaseTextFormatter()],
         onDuplicateCheck: (value, allValues) async {
           return await _checkCutNameAndSortIdDuplicate(
-            fields: {'CertificateName': value},
+            fields: {'FColorName': value},
           );
         },
+      ),
+      ErpFieldConfig(
+        key: 'type',
+        label: 'TYPE',
+        sectionIndex: 0,
+        type: ErpFieldType.dropdown,
+        dropdownItems: const [
+          ErpDropdownItem(label: 'COLOR 1', value: 'color1'),
+          ErpDropdownItem(label: 'COLOR 2', value: 'color2'),
+        ],
       ),
       ErpFieldConfig(
         key: 'sortID',
@@ -116,7 +124,7 @@ class _MstLabState extends State<MstLab> {
       isEditMode: _isEditMode,
       selectedRow: _selectedRow,
       newFields: Map<String, dynamic>.from(fields),
-      fieldMapping: {'CertificateName': 'certificateName'},
+      fieldMapping: {'FColorName': 'fColorName'},
     );
 
     if (skip) {
@@ -127,7 +135,7 @@ class _MstLabState extends State<MstLab> {
     return await checkDuplicateRecord(
       context: context,
       theme: _theme,
-      formName: 'Certificate',
+      formName: 'FcColor',
       fields: fields,
     );
   }
@@ -140,26 +148,27 @@ class _MstLabState extends State<MstLab> {
       await context.read<CompanyProvider>().loadCompanies();
       if (!mounted) return;
       final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
-      context.read<LabProvider>().setSelectedCompany(selectedCode);
+      context.read<FColorProvider>().setSelectedCompany(selectedCode);
       // ← ab companies available hain, division provider ko pass karo
       final companies = context.read<CompanyProvider>().companies;
-      context.read<LabProvider>().setCompanies(companies);
+      context.read<FColorProvider>().setCompanies(companies);
       // ← last mein divisions load karo
-      await context.read<LabProvider>().loadCuts();
+      await context.read<FColorProvider>().loadColors();
       _setDefaultSortId();
     });
   }
 
   // ── ROW TAP ───────────────────────────────────────────────────────────────
   void _onRowTap(Map<String, dynamic> row) {
-    final raw = row['_raw'] as LabModel;
+    final raw = row['_raw'] as FColorModel;
 
     setState(() {
       _selectedRow = row;
       _isEditMode = true;
       _formValues = {
-        'certificateCode': raw.certificateCode?.toString() ?? '',
-        'certificateName': raw.certificateName ?? '',
+        'fColorCode': raw.fColorCode?.toString() ?? '',
+        'fColorName': raw.fColorName ?? '',
+        'type': raw.type ?? '',
         'companyCode':
         context.read<CompanyProvider>().selectedCompanyCode?.toString() ??
             raw.companyCode?.toString() ??
@@ -176,17 +185,17 @@ class _MstLabState extends State<MstLab> {
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
     final exists = await _checkCutNameAndSortIdDuplicate(
-      fields: {'CertificateName': values['certificateName']},
+      fields: {'FColorName': values['fColorName']},
     );
     if (exists) return;
-    final provider = context.read<LabProvider>();
+    final provider = context.read<FColorProvider>();
 
     bool success;
     if (_isEditMode && _selectedRow != null) {
-      final raw = _selectedRow!['_raw'] as LabModel;
-      success = await provider.updateCut(raw.labMstID!, values);
+      final raw = _selectedRow!['_raw'] as FColorModel;
+      success = await provider.updateColor(raw.fColorMstID!, values);
     } else {
-      success = await provider.createCut(values);
+      success = await provider.createColor(values);
     }
 
     if (!mounted) return;
@@ -198,33 +207,33 @@ class _MstLabState extends State<MstLab> {
         theme: _theme,
         title: _isEditMode ? 'Updated' : 'Saved',
         message: _isEditMode
-            ? 'Certificate updated successfully.'
-            : 'Certificate saved successfully.',
+            ? 'FC Color updated successfully.'
+            : 'FC Color saved successfully.',
       );
     }
   }
 
   // ── DELETE ────────────────────────────────────────────────────────────────
   Future<void> _onDelete() async {
-    final raw = _selectedRow?['_raw'] as LabModel?;
-    if (raw?.labMstID == null) return;
+    final raw = _selectedRow?['_raw'] as FColorModel?;
+    if (raw?.fColorCode == null) return;
     final confirm = await ErpDeleteDialog.show(
       context: context,
       theme: _theme,
-      title: 'Certificate',
-      itemName: raw!.certificateName ?? "",
+      title: 'FC Color',
+      itemName: raw!.fColorName ?? "",
     );
 
     if (confirm != true || !mounted) return;
 
-    final success = await context.read<LabProvider>().deleteCut(raw.labMstID!);
+    final success = await context.read<FColorProvider>().deleteColor(raw.fColorMstID!);
 
     if (success && mounted) {
       _resetForm();
       await ErpResultDialog.showDeleted(
         context: context,
         theme: _theme,
-        itemName: raw.certificateName ?? '',
+        itemName: raw.fColorName ?? '',
       );
     }
   }
@@ -250,7 +259,7 @@ class _MstLabState extends State<MstLab> {
   Widget build(BuildContext context) {
     final companyProvider = context.watch<CompanyProvider>();
 
-    return Consumer<LabProvider>(
+    return Consumer<FColorProvider>(
       builder: (context, provider, _) {
         return Padding(
           padding: const EdgeInsets.all(8),
@@ -260,7 +269,7 @@ class _MstLabState extends State<MstLab> {
             isReportRow: false,
             token: token ?? '',
             url: baseUrl,
-            title: 'CERTIFICATE LIST',
+            title: 'FC COLOR LIST',
             columns: _tableColumns,
             data: provider.tableData,
             showSearch: true,
@@ -268,7 +277,7 @@ class _MstLabState extends State<MstLab> {
             selectedRow: _selectedRow,
             onRowTap: _onRowTap,
             emptyMessage: provider.isLoaded
-                ? 'No certificates found'
+                ? 'No colors found'
                 : 'Loading...',
           )
               : ErpForm(
@@ -277,8 +286,8 @@ class _MstLabState extends State<MstLab> {
             },
             logo: AppImages.logo,
             key: _erpFormKey,
-            title: 'CERTIFICATE MASTER',
-            subtitle: 'Certificate Information',
+            title: 'FC COLOR MASTER',
+            subtitle: 'Fc Color Information',
             initialTabIndex: 0,
             onSearch: () =>
                 setState(() => _showTableOnMobile = true),
@@ -312,8 +321,8 @@ class _MstLabState extends State<MstLab> {
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
-                  title: 'CERTIFICATE MASTER',
-                  subtitle: 'Certificate Information',
+                  title: 'FC COLOR MASTER',
+                  subtitle: 'Fc Color Information',
                   initialTabIndex: 0,
                   tabBarBackgroundColor: const Color(0xfff2f0ef),
                   tabBarSelectedColor: _theme.primaryGradient.first,
@@ -343,7 +352,7 @@ class _MstLabState extends State<MstLab> {
                   isReportRow: false,
                   token: token ?? '',
                   url: baseUrl,
-                  title: 'CERTIFICATE LIST',
+                  title: 'FC COLOR LIST',
                   columns: _tableColumns,
                   data: provider.tableData,
                   showSearch: true,
@@ -351,7 +360,7 @@ class _MstLabState extends State<MstLab> {
                   selectedRow: _selectedRow,
                   onRowTap: _onRowTap,
                   emptyMessage: provider.isLoaded
-                      ? 'No certificates found'
+                      ? 'No colors found'
                       : 'Loading...',
                 ),
               ),

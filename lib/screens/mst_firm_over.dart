@@ -1,8 +1,11 @@
 import 'package:diam_mfg/models/cut_model.dart';
+import 'package:diam_mfg/models/intent_model.dart';
 import 'package:diam_mfg/models/lab_model.dart';
+import 'package:diam_mfg/models/over_model.dart';
 import 'package:diam_mfg/providers/cut_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/certificate_provider.dart';
+import 'package:diam_mfg/providers/intent_provider.dart';
 import 'package:diam_mfg/services/duplicate_check_service.dart';
 import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/constants.dart';
@@ -12,18 +15,19 @@ import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
 import '../bootstrap.dart';
+import '../providers/over_provider.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
 import '../utils/msg_dialogue.dart';
 
-class MstLab extends StatefulWidget {
-  const MstLab({super.key});
+class MstOver extends StatefulWidget {
+  const MstOver({super.key});
 
   @override
-  State<MstLab> createState() => _MstLabState();
+  State<MstOver> createState() => _MstOverState();
 }
 
-class _MstLabState extends State<MstLab> {
+class _MstOverState extends State<MstOver> {
   // ── Theme ─────────────────────────────────────────────────────────────────
   ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
 
@@ -39,15 +43,15 @@ class _MstLabState extends State<MstLab> {
 
   // ── TABLE COLUMNS ─────────────────────────────────────────────────────────
   List<ErpColumnConfig> get _tableColumns => [
-    ErpColumnConfig(key: 'certificateCode', label: 'CODE', width: 130),
-    ErpColumnConfig(key: 'certificateName', label: 'CERTIFICATE NAME', width: 220),
+    ErpColumnConfig(key: 'fcOverCode', label: 'CODE', width: 130),
+    ErpColumnConfig(key: 'fcOverName', label: 'FC OVER NAME', width: 220),
     ErpColumnConfig(key: 'CompanyName', label: 'COMPANY', width: 160),
     ErpColumnConfig(key: 'sortID', label: 'SORT ID', width: 160),
     ErpColumnConfig(key: 'active', label: 'ACTIVE', width: 140),
   ];
 
   void _setDefaultSortId() {
-    final provider = context.read<LabProvider>();
+    final provider = context.read<OverProvider>();
 
     int nextSortId = 1;
     if (provider.cuts.isNotEmpty) {
@@ -75,14 +79,14 @@ class _MstLabState extends State<MstLab> {
     /// ── BASIC INFO ──
     [
       ErpFieldConfig(
-        key: 'certificateName',
-        label: 'CERTIFICATE NAME',
+        key: 'fcOverName',
+        label: 'FC OVER NAME',
         required: true,
         sectionIndex: 0,
         inputFormatters: [UpperCaseTextFormatter()],
         onDuplicateCheck: (value, allValues) async {
           return await _checkCutNameAndSortIdDuplicate(
-            fields: {'CertificateName': value},
+            fields: {'FcOverName': value},
           );
         },
       ),
@@ -116,7 +120,7 @@ class _MstLabState extends State<MstLab> {
       isEditMode: _isEditMode,
       selectedRow: _selectedRow,
       newFields: Map<String, dynamic>.from(fields),
-      fieldMapping: {'CertificateName': 'certificateName'},
+      fieldMapping: {'FcOverName': 'fcOverName'},
     );
 
     if (skip) {
@@ -127,7 +131,7 @@ class _MstLabState extends State<MstLab> {
     return await checkDuplicateRecord(
       context: context,
       theme: _theme,
-      formName: 'Certificate',
+      formName: 'FcOver',
       fields: fields,
     );
   }
@@ -140,26 +144,26 @@ class _MstLabState extends State<MstLab> {
       await context.read<CompanyProvider>().loadCompanies();
       if (!mounted) return;
       final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
-      context.read<LabProvider>().setSelectedCompany(selectedCode);
+      context.read<OverProvider>().setSelectedCompany(selectedCode);
       // ← ab companies available hain, division provider ko pass karo
       final companies = context.read<CompanyProvider>().companies;
-      context.read<LabProvider>().setCompanies(companies);
+      context.read<OverProvider>().setCompanies(companies);
       // ← last mein divisions load karo
-      await context.read<LabProvider>().loadCuts();
+      await context.read<OverProvider>().loadOvers();
       _setDefaultSortId();
     });
   }
 
   // ── ROW TAP ───────────────────────────────────────────────────────────────
   void _onRowTap(Map<String, dynamic> row) {
-    final raw = row['_raw'] as LabModel;
+    final raw = row['_raw'] as OverModel;
 
     setState(() {
       _selectedRow = row;
       _isEditMode = true;
       _formValues = {
-        'certificateCode': raw.certificateCode?.toString() ?? '',
-        'certificateName': raw.certificateName ?? '',
+        'fcOverCode': raw.fcOverCode?.toString() ?? '',
+        'fcOverName': raw.fcOverName ?? '',
         'companyCode':
         context.read<CompanyProvider>().selectedCompanyCode?.toString() ??
             raw.companyCode?.toString() ??
@@ -176,17 +180,17 @@ class _MstLabState extends State<MstLab> {
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
     final exists = await _checkCutNameAndSortIdDuplicate(
-      fields: {'CertificateName': values['certificateName']},
+      fields: {'FcOverName': values['fcOverName']},
     );
     if (exists) return;
-    final provider = context.read<LabProvider>();
+    final provider = context.read<OverProvider>();
 
     bool success;
     if (_isEditMode && _selectedRow != null) {
-      final raw = _selectedRow!['_raw'] as LabModel;
-      success = await provider.updateCut(raw.labMstID!, values);
+      final raw = _selectedRow!['_raw'] as OverModel;
+      success = await provider.updateOver(raw.fcOverMstID!, values);
     } else {
-      success = await provider.createCut(values);
+      success = await provider.createOver(values);
     }
 
     if (!mounted) return;
@@ -198,33 +202,33 @@ class _MstLabState extends State<MstLab> {
         theme: _theme,
         title: _isEditMode ? 'Updated' : 'Saved',
         message: _isEditMode
-            ? 'Certificate updated successfully.'
-            : 'Certificate saved successfully.',
+            ? 'FC Over updated successfully.'
+            : 'FC Over saved successfully.',
       );
     }
   }
 
   // ── DELETE ────────────────────────────────────────────────────────────────
   Future<void> _onDelete() async {
-    final raw = _selectedRow?['_raw'] as LabModel?;
-    if (raw?.labMstID == null) return;
+    final raw = _selectedRow?['_raw'] as OverModel?;
+    if (raw?.fcOverCode == null) return;
     final confirm = await ErpDeleteDialog.show(
       context: context,
       theme: _theme,
-      title: 'Certificate',
-      itemName: raw!.certificateName ?? "",
+      title: 'FC Over',
+      itemName: raw!.fcOverName ?? "",
     );
 
     if (confirm != true || !mounted) return;
 
-    final success = await context.read<LabProvider>().deleteCut(raw.labMstID!);
+    final success = await context.read<OverProvider>().deleteOver(raw.fcOverMstID!);
 
     if (success && mounted) {
       _resetForm();
       await ErpResultDialog.showDeleted(
         context: context,
         theme: _theme,
-        itemName: raw.certificateName ?? '',
+        itemName: raw.fcOverName ?? '',
       );
     }
   }
@@ -250,7 +254,7 @@ class _MstLabState extends State<MstLab> {
   Widget build(BuildContext context) {
     final companyProvider = context.watch<CompanyProvider>();
 
-    return Consumer<LabProvider>(
+    return Consumer<OverProvider>(
       builder: (context, provider, _) {
         return Padding(
           padding: const EdgeInsets.all(8),
@@ -260,7 +264,7 @@ class _MstLabState extends State<MstLab> {
             isReportRow: false,
             token: token ?? '',
             url: baseUrl,
-            title: 'CERTIFICATE LIST',
+            title: 'FC OVER LIST',
             columns: _tableColumns,
             data: provider.tableData,
             showSearch: true,
@@ -268,7 +272,7 @@ class _MstLabState extends State<MstLab> {
             selectedRow: _selectedRow,
             onRowTap: _onRowTap,
             emptyMessage: provider.isLoaded
-                ? 'No certificates found'
+                ? 'No overs found'
                 : 'Loading...',
           )
               : ErpForm(
@@ -277,8 +281,8 @@ class _MstLabState extends State<MstLab> {
             },
             logo: AppImages.logo,
             key: _erpFormKey,
-            title: 'CERTIFICATE MASTER',
-            subtitle: 'Certificate Information',
+            title: 'FC OVER MASTER',
+            subtitle: 'Fc Over Information',
             initialTabIndex: 0,
             onSearch: () =>
                 setState(() => _showTableOnMobile = true),
@@ -312,8 +316,8 @@ class _MstLabState extends State<MstLab> {
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
-                  title: 'CERTIFICATE MASTER',
-                  subtitle: 'Certificate Information',
+                  title: 'FC OVER MASTER',
+                  subtitle: 'Fc Over Information',
                   initialTabIndex: 0,
                   tabBarBackgroundColor: const Color(0xfff2f0ef),
                   tabBarSelectedColor: _theme.primaryGradient.first,
@@ -343,7 +347,7 @@ class _MstLabState extends State<MstLab> {
                   isReportRow: false,
                   token: token ?? '',
                   url: baseUrl,
-                  title: 'CERTIFICATE LIST',
+                  title: 'FC OVER LIST',
                   columns: _tableColumns,
                   data: provider.tableData,
                   showSearch: true,
@@ -351,7 +355,7 @@ class _MstLabState extends State<MstLab> {
                   selectedRow: _selectedRow,
                   onRowTap: _onRowTap,
                   emptyMessage: provider.isLoaded
-                      ? 'No certificates found'
+                      ? 'No overs found'
                       : 'Loading...',
                 ),
               ),

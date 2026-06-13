@@ -4,6 +4,7 @@ import 'package:diam_mfg/screens/PacketHistoryScreen.dart' show PacketHistoryScr
 import 'package:diam_mfg/screens/PairScreen.dart';
 import 'package:diam_mfg/screens/Report_screen.dart';
 import 'package:diam_mfg/screens/admin_menu_create.dart';
+import 'package:diam_mfg/screens/mst_firm_FColor.dart';
 import 'package:diam_mfg/screens/mst_firm_clv_rate.dart';
 import 'package:diam_mfg/screens/mst_firm_color.dart';
 import 'package:diam_mfg/screens/mst_firm_department_rate.dart';
@@ -18,9 +19,11 @@ import 'package:diam_mfg/screens/mst_firm_factory.dart';
 import 'package:diam_mfg/screens/mst_firm_factory_man_group.dart';
 import 'package:diam_mfg/screens/mst_firm_factory_rate.dart';
 import 'package:diam_mfg/screens/mst_firm_fluo.dart';
+import 'package:diam_mfg/screens/mst_firm_intent.dart';
 import 'package:diam_mfg/screens/mst_firm_jangad_charni.dart';
 import 'package:diam_mfg/screens/mst_firm_certificate.dart';
 import 'package:diam_mfg/screens/mst_firm_ls_party_wt_calc_entry.dart';
+import 'package:diam_mfg/screens/mst_firm_over.dart';
 import 'package:diam_mfg/screens/mst_firm_party.dart';
 import 'package:diam_mfg/screens/mst_firm_polish.dart';
 import 'package:diam_mfg/screens/mst_firm_purity.dart';
@@ -92,6 +95,9 @@ class AppRouter {
     '/2.32': (context) => const MstLab(),
     '/2.33': (context) => const MstFactoryRate(),
     '/2.34': (context) => const MstDepartmentRate(),
+    '/2.35': (context) => const MstIntent(),
+    '/2.36': (context) => const MstOver(),
+    '/2.37': (context) => const MstFColor(),
     '/3.01': (context) => const TrnRoughEntry(),
     '/3.02': (context) => const TrnRoughAssortEntry(),
     '/3.03': (context) => const TrnCutCreateEntry(),

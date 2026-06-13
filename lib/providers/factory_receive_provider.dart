@@ -41,7 +41,7 @@ class FactoryReceivedEntryProvider extends BaseProvider {
   // ── LOAD ALL ──────────────────────────────────────────────────────────────
   Future<void> load() async {
     final result = await request<List<FactoryReceiveMstModel>>(
-      call: () => api.get('/factoryRec?page=1&limit=2000'),
+      call: () => api.get('/factoryRec'),
       onSuccess: (res) {
         final list = res.data['data'] as List;
         return list

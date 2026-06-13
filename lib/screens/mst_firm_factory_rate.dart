@@ -4,7 +4,7 @@ import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/cut_provider.dart';
 import 'package:diam_mfg/providers/factory_provider.dart';
 import 'package:diam_mfg/providers/factory_rate_provider.dart';
-import 'package:diam_mfg/providers/lab_provider.dart';
+import 'package:diam_mfg/providers/certificate_provider.dart';
 import 'package:diam_mfg/providers/polish_provider.dart';
 import 'package:diam_mfg/providers/symmetry_provider.dart';
 import 'package:diam_mfg/utils/panel.dart';

@@ -220,7 +220,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   /// Returns DEPT-scoped entry fields (excluding CHARNI, TENSIONS, ALL),
   /// de-duped by name. TO-fields win over FROM-fields on name collision.
   Map<String, UserVisibilityModel> _getMergedFields() {
-    print('_fromDisplayFields ${jsonEncode(_fromDisplayFields)} - ${jsonEncode(_toDisplayFields)}');
     const excluded = {'CHARNI', 'TENSIONS', 'ALL'};
     final merged = <String, UserVisibilityModel>{};
 
@@ -246,7 +245,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     // FROM first — these are the "scan source" fields
     for (final f in _fromDisplayFields) {
       final name = (f.userVisibilityName ?? '').toUpperCase();
-      print(name);
       if (radioNames.contains(name)) result[name] = f;
     }
 
@@ -257,7 +255,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         result[name] = f;
       }
     }
-    print(jsonEncode(result.values.toList()));
     return result;
   }
 
@@ -754,7 +751,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _addEntry() {
-    print(_entryVals);
     final scanBCode = (_scannedDet?.bCode ?? '').trim();
 
     /// DUPLICATE CHECK
@@ -780,7 +776,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     }
     final merged = _getMergedFields();
 
-    print('merged ${jsonEncode(merged)}');
     final hasRecPc = merged.containsKey('REC PC');
 
     final hasRecWt = merged.containsKey('REC WT');
@@ -818,9 +813,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
     final totalPc = recPc + kPc;
     final totalWt = recWt + kWt;
-    final finalRecPc = hasRecPc ? recPc : issPc;
-    print('hasRecWt $hasRecWt');
-    final finalRecWt = hasRecWt ? recWt : issWt;
+    final finalRecPc = hasRecPc || hasRecWt ? recPc : issPc;
+    final finalRecWt = hasRecWt || hasRecPc ? recWt : issWt;
     final hasRecPair =
         merged.containsKey('REC PC') || merged.containsKey('REC WT');
     final hasKPair = merged.containsKey('K PC') || merged.containsKey('K WT');
@@ -875,11 +869,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     final issPcStr = _entryVals['issPc'] ?? '0';
     final issWtStr = _entryVals['issWt'] ?? '0.000';
 
-    final finalDmWt = hasDmWt
+    final finalDmWt = hasDmWt || hasDmPer
         ? double.tryParse(_entryVals['dmwt'] ?? '')
         : _scannedDet?.LastDmWt;
 
-    final finalDmPer = hasDmPer
+    final finalDmPer = hasDmPer || hasDmWt
         ? double.tryParse(_entryVals['dmper'] ?? '')
         : _scannedDet?.LastDmPer;
 
@@ -1318,11 +1312,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   Future<void> printJobWorkPdf() async {
     final companies = context.read<CompanyProvider>().companies;
     final selectedCompany = context.read<CompanyProvider>().selectedCompanyCode;
-    print(selectedCompany);
     final company = companies.firstWhereOrNull(
       (e) => e.companyCode.toString() == selectedCompany.toString(),
     );
-    print(jsonEncode(company));
     _selectedCompany = company;
     setState(() {});
     if (_detRows.isEmpty) {
@@ -1829,7 +1821,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       // Use _getRadioFields so radio options appear even when only one of
       // _fromDisplayFields or _toDisplayFields contains these field names.
       final radioFieldsMap = _getRadioFields();
-      print(jsonEncode(radioFieldsMap.values.toList()));
 
       final radioItems = radioFieldsMap.values
           .map(
@@ -1844,12 +1835,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       final selectedField = radioFieldsMap.values.firstWhereOrNull(
         (f) => f.userVisibilityCode.toString() == _selectedRadioCode.toString(),
       );
-      print(jsonEncode(radioFieldsMap.values.first.userVisibilityCode));
-      print(jsonEncode(_selectedRadioCode));
-      print(jsonEncode(selectedField));
+
       final selectedName = (selectedField?.userVisibilityName ?? '')
           .toUpperCase();
-print('selectedName $selectedName');
       // Compute radio widget width based on option count
       final radioWidth = switch (radioItems.length) {
         <= 1 => 150.0,
@@ -1987,7 +1975,6 @@ print('selectedName $selectedName');
 
       // PC-WT pairs
       for (final pair in pairs) {
-        print('pair $pair - ${jsonEncode(merged)}');
         if (merged.containsKey(pair[0]) || merged.containsKey(pair[1])) {
           singleRow.add(
             ErpFieldConfig(

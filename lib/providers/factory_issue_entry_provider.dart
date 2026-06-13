@@ -58,7 +58,7 @@ class FactoryIssueEntryProvider extends BaseProvider {
   // ── LOAD ALL ──────────────────────────────────────────────────────────────
   Future<void> load() async {
     final result = await request<List<FactoryIssueMstModel>>(
-      call: () => api.get('/factoryIss?page=1&limit=2000'),
+      call: () => api.get('/factoryIss'),
       onSuccess: (res) {
         final list = res.data['data'] as List;
         return list

@@ -1,8 +1,10 @@
 import 'package:diam_mfg/models/cut_model.dart';
+import 'package:diam_mfg/models/intent_model.dart';
 import 'package:diam_mfg/models/lab_model.dart';
 import 'package:diam_mfg/providers/cut_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/certificate_provider.dart';
+import 'package:diam_mfg/providers/intent_provider.dart';
 import 'package:diam_mfg/services/duplicate_check_service.dart';
 import 'package:diam_mfg/services/duplicate_utils.dart';
 import 'package:diam_mfg/utils/constants.dart';
@@ -16,14 +18,14 @@ import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
 import '../utils/msg_dialogue.dart';
 
-class MstLab extends StatefulWidget {
-  const MstLab({super.key});
+class MstIntent extends StatefulWidget {
+  const MstIntent({super.key});
 
   @override
-  State<MstLab> createState() => _MstLabState();
+  State<MstIntent> createState() => _MstIntentState();
 }
 
-class _MstLabState extends State<MstLab> {
+class _MstIntentState extends State<MstIntent> {
   // ── Theme ─────────────────────────────────────────────────────────────────
   ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
 
@@ -39,15 +41,15 @@ class _MstLabState extends State<MstLab> {
 
   // ── TABLE COLUMNS ─────────────────────────────────────────────────────────
   List<ErpColumnConfig> get _tableColumns => [
-    ErpColumnConfig(key: 'certificateCode', label: 'CODE', width: 130),
-    ErpColumnConfig(key: 'certificateName', label: 'CERTIFICATE NAME', width: 220),
+    ErpColumnConfig(key: 'fcIntentCode', label: 'CODE', width: 130),
+    ErpColumnConfig(key: 'fcIntentName', label: 'FC INTENT NAME', width: 220),
     ErpColumnConfig(key: 'CompanyName', label: 'COMPANY', width: 160),
     ErpColumnConfig(key: 'sortID', label: 'SORT ID', width: 160),
     ErpColumnConfig(key: 'active', label: 'ACTIVE', width: 140),
   ];
 
   void _setDefaultSortId() {
-    final provider = context.read<LabProvider>();
+    final provider = context.read<IntentProvider>();
 
     int nextSortId = 1;
     if (provider.cuts.isNotEmpty) {
@@ -75,14 +77,14 @@ class _MstLabState extends State<MstLab> {
     /// ── BASIC INFO ──
     [
       ErpFieldConfig(
-        key: 'certificateName',
-        label: 'CERTIFICATE NAME',
+        key: 'fcIntentName',
+        label: 'FC INTENT NAME',
         required: true,
         sectionIndex: 0,
         inputFormatters: [UpperCaseTextFormatter()],
         onDuplicateCheck: (value, allValues) async {
           return await _checkCutNameAndSortIdDuplicate(
-            fields: {'CertificateName': value},
+            fields: {'FcIntentName': value},
           );
         },
       ),
@@ -116,7 +118,7 @@ class _MstLabState extends State<MstLab> {
       isEditMode: _isEditMode,
       selectedRow: _selectedRow,
       newFields: Map<String, dynamic>.from(fields),
-      fieldMapping: {'CertificateName': 'certificateName'},
+      fieldMapping: {'FcIntentName': 'fcIntentName'},
     );
 
     if (skip) {
@@ -127,7 +129,7 @@ class _MstLabState extends State<MstLab> {
     return await checkDuplicateRecord(
       context: context,
       theme: _theme,
-      formName: 'Certificate',
+      formName: 'FcIntent',
       fields: fields,
     );
   }
@@ -140,26 +142,26 @@ class _MstLabState extends State<MstLab> {
       await context.read<CompanyProvider>().loadCompanies();
       if (!mounted) return;
       final selectedCode = context.read<CompanyProvider>().selectedCompanyCode;
-      context.read<LabProvider>().setSelectedCompany(selectedCode);
+      context.read<IntentProvider>().setSelectedCompany(selectedCode);
       // ← ab companies available hain, division provider ko pass karo
       final companies = context.read<CompanyProvider>().companies;
-      context.read<LabProvider>().setCompanies(companies);
+      context.read<IntentProvider>().setCompanies(companies);
       // ← last mein divisions load karo
-      await context.read<LabProvider>().loadCuts();
+      await context.read<IntentProvider>().loadIntents();
       _setDefaultSortId();
     });
   }
 
   // ── ROW TAP ───────────────────────────────────────────────────────────────
   void _onRowTap(Map<String, dynamic> row) {
-    final raw = row['_raw'] as LabModel;
+    final raw = row['_raw'] as IntentModel;
 
     setState(() {
       _selectedRow = row;
       _isEditMode = true;
       _formValues = {
-        'certificateCode': raw.certificateCode?.toString() ?? '',
-        'certificateName': raw.certificateName ?? '',
+        'fcIntentCode': raw.fcIntentCode?.toString() ?? '',
+        'fcIntentName': raw.fcIntentName ?? '',
         'companyCode':
         context.read<CompanyProvider>().selectedCompanyCode?.toString() ??
             raw.companyCode?.toString() ??
@@ -176,17 +178,17 @@ class _MstLabState extends State<MstLab> {
   // ── SAVE ──────────────────────────────────────────────────────────────────
   Future<void> _onSave(Map<String, dynamic> values) async {
     final exists = await _checkCutNameAndSortIdDuplicate(
-      fields: {'CertificateName': values['certificateName']},
+      fields: {'FcIntentName': values['fcIntentName']},
     );
     if (exists) return;
-    final provider = context.read<LabProvider>();
+    final provider = context.read<IntentProvider>();
 
     bool success;
     if (_isEditMode && _selectedRow != null) {
-      final raw = _selectedRow!['_raw'] as LabModel;
-      success = await provider.updateCut(raw.labMstID!, values);
+      final raw = _selectedRow!['_raw'] as IntentModel;
+      success = await provider.updateIntent(raw.fcIntentMstID!, values);
     } else {
-      success = await provider.createCut(values);
+      success = await provider.createIntent(values);
     }
 
     if (!mounted) return;
@@ -198,33 +200,33 @@ class _MstLabState extends State<MstLab> {
         theme: _theme,
         title: _isEditMode ? 'Updated' : 'Saved',
         message: _isEditMode
-            ? 'Certificate updated successfully.'
-            : 'Certificate saved successfully.',
+            ? 'FC Intent updated successfully.'
+            : 'FC Intent saved successfully.',
       );
     }
   }
 
   // ── DELETE ────────────────────────────────────────────────────────────────
   Future<void> _onDelete() async {
-    final raw = _selectedRow?['_raw'] as LabModel?;
-    if (raw?.labMstID == null) return;
+    final raw = _selectedRow?['_raw'] as IntentModel?;
+    if (raw?.fcIntentCode == null) return;
     final confirm = await ErpDeleteDialog.show(
       context: context,
       theme: _theme,
-      title: 'Certificate',
-      itemName: raw!.certificateName ?? "",
+      title: 'FC Intent',
+      itemName: raw!.fcIntentName ?? "",
     );
 
     if (confirm != true || !mounted) return;
 
-    final success = await context.read<LabProvider>().deleteCut(raw.labMstID!);
+    final success = await context.read<IntentProvider>().deleteIntent(raw.fcIntentMstID!);
 
     if (success && mounted) {
       _resetForm();
       await ErpResultDialog.showDeleted(
         context: context,
         theme: _theme,
-        itemName: raw.certificateName ?? '',
+        itemName: raw.fcIntentName ?? '',
       );
     }
   }
@@ -250,7 +252,7 @@ class _MstLabState extends State<MstLab> {
   Widget build(BuildContext context) {
     final companyProvider = context.watch<CompanyProvider>();
 
-    return Consumer<LabProvider>(
+    return Consumer<IntentProvider>(
       builder: (context, provider, _) {
         return Padding(
           padding: const EdgeInsets.all(8),
@@ -260,7 +262,7 @@ class _MstLabState extends State<MstLab> {
             isReportRow: false,
             token: token ?? '',
             url: baseUrl,
-            title: 'CERTIFICATE LIST',
+            title: 'FC INTENT LIST',
             columns: _tableColumns,
             data: provider.tableData,
             showSearch: true,
@@ -268,7 +270,7 @@ class _MstLabState extends State<MstLab> {
             selectedRow: _selectedRow,
             onRowTap: _onRowTap,
             emptyMessage: provider.isLoaded
-                ? 'No certificates found'
+                ? 'No intents found'
                 : 'Loading...',
           )
               : ErpForm(
@@ -277,8 +279,8 @@ class _MstLabState extends State<MstLab> {
             },
             logo: AppImages.logo,
             key: _erpFormKey,
-            title: 'CERTIFICATE MASTER',
-            subtitle: 'Certificate Information',
+            title: 'FC INTENT MASTER',
+            subtitle: 'Fc Intent Information',
             initialTabIndex: 0,
             onSearch: () =>
                 setState(() => _showTableOnMobile = true),
@@ -312,8 +314,8 @@ class _MstLabState extends State<MstLab> {
                   logo: AppImages.logo,
 
                   key: _erpFormKey,
-                  title: 'CERTIFICATE MASTER',
-                  subtitle: 'Certificate Information',
+                  title: 'FC INTENT MASTER',
+                  subtitle: 'Fc Intent Information',
                   initialTabIndex: 0,
                   tabBarBackgroundColor: const Color(0xfff2f0ef),
                   tabBarSelectedColor: _theme.primaryGradient.first,
@@ -343,7 +345,7 @@ class _MstLabState extends State<MstLab> {
                   isReportRow: false,
                   token: token ?? '',
                   url: baseUrl,
-                  title: 'CERTIFICATE LIST',
+                  title: 'FC INTENT LIST',
                   columns: _tableColumns,
                   data: provider.tableData,
                   showSearch: true,
@@ -351,7 +353,7 @@ class _MstLabState extends State<MstLab> {
                   selectedRow: _selectedRow,
                   onRowTap: _onRowTap,
                   emptyMessage: provider.isLoaded
-                      ? 'No certificates found'
+                      ? 'No intents found'
                       : 'Loading...',
                 ),
               ),

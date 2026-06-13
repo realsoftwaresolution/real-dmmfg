@@ -266,6 +266,13 @@ class FactoryReceiveDetModel {
   final int? symmetryCode;
   final int? fluo;
   final double? height;
+  final String? topSide;
+  final int? markerMstID;
+  final int? fcIntentCode;
+  final int? fcOverCode;
+  final int? fColorCode1;
+  final int? fColorCode2;
+  final String? ha;
 
   const FactoryReceiveDetModel({
     this.pairNo,
@@ -421,6 +428,13 @@ class FactoryReceiveDetModel {
     this.recutEmp,
     this.LastCrID,
     this.CrID,
+    this.markerMstID,
+    this.fcIntentCode,
+    this.fcOverCode,
+    this.fColorCode1,
+    this.fColorCode2,
+    this.ha,
+    this.topSide,
   });
 
   factory FactoryReceiveDetModel.fromJson(Map<String, dynamic> json) =>
@@ -576,6 +590,13 @@ class FactoryReceiveDetModel {
         fluo: json['FluoCode'] ?? 0,
         height: _d(json['Height']),
         length:       json['Length'],
+        markerMstID: json['MarkerMstID'],
+        fcIntentCode: json['FcIntentCode'],
+        fcOverCode: json['FcOverCode'],
+        fColorCode1: json['FColorCode1'],
+        fColorCode2: json['FColorCode2'],
+        ha: json['HA']?.toString(),
+        topSide: json['TopSide']?.toString(),
         sarinData: (json['sarinData'] as List?)
             ?.map((e) => Map<String, dynamic>.from(e as Map))
             .toList() ?? [],
@@ -740,6 +761,13 @@ class FactoryReceiveDetModel {
     if (planPurity       != null) 'PlanPurity':       planPurity,
     if (recutEmp       != null) 'RecutEmp':       recutEmp,
     if (planShape       != null) 'PlanShape':       planShape,
+    if (markerMstID != null) 'MarkerMstID': markerMstID,
+    if (fcIntentCode  != null) 'FcIntentCode':  fcIntentCode,
+    if (fcOverCode    != null) 'FcOverCode':    fcOverCode,
+    if (fColorCode1   != null) 'FColorCode1':   fColorCode1,
+    if (fColorCode2   != null) 'FColorCode2':   fColorCode2,
+    if (ha            != null) 'HA':             ha,
+    if (topSide       != null) 'TopSide':        topSide,
   };
 
   static double? _d(dynamic v) {

@@ -5,7 +5,7 @@ import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
 import 'package:diam_mfg/providers/cut_provider.dart';
 import 'package:diam_mfg/providers/department_rate_provider.dart';
-import 'package:diam_mfg/providers/lab_provider.dart';
+import 'package:diam_mfg/providers/certificate_provider.dart';
 import 'package:diam_mfg/providers/polish_provider.dart';
 import 'package:diam_mfg/utils/panel.dart';
 import 'package:erp_data_table/erp_data_table.dart';
@@ -406,17 +406,17 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
       context: context,
       theme: context.erpTheme,
       title: 'CLV Department Rate',
-      itemName: raw!.deptRateCode?.toString() ?? 'Rate',
+      itemName: raw!.deptRateCode.toString(),
     );
     if (confirm != true || !mounted) return;
     final success = await context.read<DepartmentRateProvider>().deleteClvRate(
-      raw.clvDeptRateMstID!,
+      raw.clvDeptRateMstID,
     );
     if (success && mounted) {
       await ErpResultDialog.showDeleted(
         context: context,
         theme: context.erpTheme,
-        itemName: raw.deptRateCode?.toString() ?? '',
+        itemName: raw.deptRateCode.toString(),
       );
       _resetForm();
     }
