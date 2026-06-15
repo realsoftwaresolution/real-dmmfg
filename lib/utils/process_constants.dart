@@ -22,6 +22,7 @@ class ProcessConstants {
   static const String factoryIss =
       'FACTORY ISS';
 
+
   static const String factoryRec =
       'FACTORY REC';
 
@@ -64,6 +65,10 @@ class ProcessConstants {
   static const String spkBuncheCreate =
       'SPK Bunche Create';
 
+  static const String jobWorkIss =
+      'JOBWORK ISS';
+  static const String jobWorkRec =
+      'JOBWORK REC';
   /// ALL PROCESS LIST
   static const List<String> all = [
     deptConfirmInward,
@@ -85,5 +90,7 @@ class ProcessConstants {
     repairingProcessIssue,
     repairingProcessReceive,
     spkBuncheCreate,
+    jobWorkIss,
+    jobWorkRec,
   ];
 }

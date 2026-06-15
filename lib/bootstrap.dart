@@ -44,6 +44,8 @@ import 'package:diam_mfg/providers/holiday_provider.dart';
 import 'package:diam_mfg/providers/intent_provider.dart';
 import 'package:diam_mfg/providers/jangad_charni_provider.dart';
 import 'package:diam_mfg/providers/certificate_provider.dart';
+import 'package:diam_mfg/providers/job_work_issue_entry_provider.dart';
+import 'package:diam_mfg/providers/job_work_rec_entry_provider.dart';
 import 'package:diam_mfg/providers/main_group_mst_provider.dart';
 import 'package:diam_mfg/providers/main_menuMst_provider.dart';
 import 'package:diam_mfg/providers/makable_entry_provider.dart';
@@ -88,7 +90,7 @@ import 'providers/factory_man_group_provider.dart';
 
 // String baseUrl = 'http://50.62.183.116:5000/api';
 String baseUrl =
-    'https://jewel-irrigation-jazz-fever.trycloudflare.com/api';
+    'https://goals-let-shakespeare-believes.trycloudflare.com/api';
 //CU-7,5/6/2026,17:12,0.096,0.049,ROUND,G,MACKABLE,klhkhkhjkkh,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
 
 //CU-7,5/6/2026,17:12,0.096,0.049,S.OVAL,G,VVS2,omjewR-1.50,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
@@ -333,6 +335,8 @@ Future<void> bootstrap({required FutureOr<Widget> Function() fn}) async {
             ),
             ChangeNotifierProvider<OverProvider>(create: (_) => OverProvider()),
             ChangeNotifierProvider<FColorProvider>(create: (_) => FColorProvider()),
+            ChangeNotifierProvider<JobWorkIssueEntryProvider>(create: (_) => JobWorkIssueEntryProvider()),
+            ChangeNotifierProvider<JobWorkRecEntryProvider>(create: (_) => JobWorkRecEntryProvider()),
           ],
           child: app,
         ),

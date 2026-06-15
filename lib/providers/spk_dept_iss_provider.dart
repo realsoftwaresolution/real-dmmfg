@@ -154,6 +154,21 @@ class SpkDeptIssProvider extends BaseProvider {
     return false;
   }
 
+  Future<List<SpkDeptIssDetModel>> rateCallApi(payload) async {
+    final result = await request<List<SpkDeptIssDetModel>>(
+    call: () => api.post('/spkDeptIss/rate-calculate', data: [payload]),
+      onSuccess: (res) {
+        final data = res.data['data'];
+        final list = data is List ? data : [data];
+        return list
+            .map((e) => SpkDeptIssDetModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      },
+    );
+    return result ?? [];
+  }
+
+
   // ── UPDATE ────────────────────────────────────────────────────────────────
   Future<bool> update(
     int id,

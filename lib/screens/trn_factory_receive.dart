@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:collection/collection.dart';
 import 'package:diam_mfg/models/factory_receive_mst_model.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
@@ -58,7 +60,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   ErpTheme get _theme => ErpTheme(_themeVariant);
 
   // ── Form ───────────────────────────────────────────────────────────────────
-  GlobalKey<ErpFormState> _erpFormKey = GlobalKey<ErpFormState>();
+  final GlobalKey<ErpFormState> _erpFormKey = GlobalKey<ErpFormState>();
   Map<String, String> _formValues = {};
   final Map<String, String> _entryVals = {};
 
@@ -509,7 +511,13 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       _formValues['fromCrId'] = _fromCrId?.toString() ?? '';
     });
 
-    _rebuildForm();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      try {
+        _erpFormKey.currentState?.focusField('scanValue');
+      } catch (_) {}
+    });
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -523,7 +531,24 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
     if (!mounted) return;
     _isBCodePending = false;
+    if (rows.isNotEmpty && rows.first.bCode == null) {
+      ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'BCode',
+        message: 'BCode "$bCode" not found!',
+      );
+      _entryVals['scanValue'] = '';
+      _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
 
+        try {
+          _erpFormKey.currentState?.focusField('scanValue');
+        } catch (_) {}
+      });
+      return;
+    }
     if (rows.isEmpty) {
       ErpResultDialog.showError(
         context: context,
@@ -539,10 +564,13 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       );
       return;
     } else {
-      Future.delayed(
-        const Duration(milliseconds: 100),
-        () => _erpFormKey.currentState?.focusField('dmWt'),
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        try {
+          _erpFormKey.currentState?.focusField('dmWt');
+        } catch (_) {}
+      });
     }
 
     final r = rows.first;
@@ -635,7 +663,13 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   Future<void> _addEntry() async {
     // 🔒 Scan required
     if (_scannedDet == null && (_entryVals['scanValue'] ?? '').isEmpty) {
-      _erpFormKey.currentState?.focusField('scanValue');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        try {
+          _erpFormKey.currentState?.focusField('scanValue');
+        } catch (_) {}
+      });
       return;
     }
 
@@ -801,21 +835,37 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           recPc: recPc,
           recWt: recWt,
         );
-
-        setState(() {
-          _detRows[_editingDetIndex!] = updatedRow;
-          _editingDetIndex = null;
-          _syncDetGrid();
-        });
-
-        _clearEntryFields();
-        await ErpResultDialog.showSuccess(
-          context: context,
-          theme: _theme,
-          title: 'Updated',
-          message: 'Factory Receive Entry Updated.',
+        FactoryReceiveDetModel updatedRowData = updatedRow;
+        final apiData = await prov.rateCallApi(
+          _formValues['factory']!,
+          updatedRow,
         );
-        context.read<FactoryReceivedEntryProvider>().load();
+        if (apiData.isNotEmpty) {
+          if (apiData.first.bCode == null) {
+            return;
+          }
+          final responseRow = apiData.first;
+          updatedRowData = updatedRow.copyWith(
+            rateID: responseRow.rateID.toString(),
+            rateon: responseRow.rateon,
+            rate: responseRow.rate,
+            amount: responseRow.amount,
+          );
+          setState(() {
+            _detRows[_editingDetIndex!] = updatedRowData;
+            _editingDetIndex = null;
+            _syncDetGrid();
+          });
+
+          _clearEntryFields();
+          await ErpResultDialog.showSuccess(
+            context: context,
+            theme: _theme,
+            title: 'Updated',
+            message: 'Factory Receive Entry Updated.',
+          );
+          context.read<FactoryReceivedEntryProvider>().load();
+        }
       }
 
       return;
@@ -845,20 +895,47 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             recWt: recWt,
           );
 
-    setState(() {
-      if (_editingDetIndex != null) {
-        _detRows[_editingDetIndex!] = newRow;
-        _editingDetIndex = null;
-      } else {
-        _detRows.add(newRow);
+    final prov = context.read<FactoryReceivedEntryProvider>();
+    bool isRateCallRunning = false;
+    setState(() => isRateCallRunning = true);
+
+    FactoryReceiveDetModel updatedRow = newRow;
+    try {
+      final apiData = await prov.rateCallApi(_formValues['factory']!, newRow);
+      if (apiData.isNotEmpty) {
+        if (apiData.first.bCode == null) {
+          return;
+        }
+        final responseRow = apiData.first;
+        updatedRow = newRow.copyWith(
+          rateID: responseRow.rateID.toString(),
+          rateon: responseRow.rateon,
+          rate: responseRow.rate,
+          amount: responseRow.amount,
+        );
+        // Synchronous setState only
+        setState(() {
+          if (_editingDetIndex != null) {
+            _detRows[_editingDetIndex!] = updatedRow;
+            _editingDetIndex = null;
+          } else {
+            _detRows.add(updatedRow);
+          }
+          _lockMasterFields = true;
+          _syncDetGrid();
+          _clearEntryFields();
+        });
       }
-      _lockMasterFields = true;
-      _syncDetGrid();
-    });
-    _clearEntryFields();
+    } finally {
+      if (mounted) setState(() => isRateCallRunning = false);
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _erpFormKey.currentState?.focusField('scanValue');
+      if (!mounted) return;
+
+      try {
+        _erpFormKey.currentState?.focusField('scanValue');
+      } catch (_) {}
     });
 
     // 🔒 lock master fields after first add
@@ -1331,10 +1408,13 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     _isBCodePending = false;
     _entryVals['scanValue'] = '';
     _entryVals['factoryRecMstID'] = '0';
-    Future.delayed(
-      const Duration(milliseconds: 100),
-      () => _erpFormKey.currentState?.focusField('scanValue'),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      try {
+        _erpFormKey.currentState?.focusField('scanValue');
+      } catch (_) {}
+    });
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1494,7 +1574,13 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       _syncDetGrid();
     });
 
-    _rebuildForm();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      try {
+        _erpFormKey.currentState?.focusField('scanValue');
+      } catch (_) {}
+    });
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1663,31 +1749,57 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _resetForm() {
-    _erpFormKey.currentState?.resetForm();
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    try {
+      _erpFormKey.currentState?.resetForm();
+    } catch (_) {}
+
     _entryVals.clear();
+
     setState(() {
-      _selectedRow = _selectedMst = null;
-      _isEditMode = _showTableOnMobile = false;
+      _selectedRow = null;
+      _selectedMst = null;
+
+      _isEditMode = false;
+      _showTableOnMobile = false;
       _isAdding = false;
+
       _detRows = [];
       _detDisplay = [];
+
       _editingDetIndex = null;
-      _fromCrId = _toCrId = null;
-      _fromDeptName = _toDeptName = null;
-      _fromDeptCode = _toDeptCodeVal = null;
+
+      _fromCrId = null;
+      _toCrId = null;
+
+      _fromDeptName = null;
+      _toDeptName = null;
+
+      _fromDeptCode = null;
+      _toDeptCodeVal = null;
+
       _processSelected = false;
+
       _scannedDet = null;
+
       _toDisplayFields.clear();
       _fromDisplayFields.clear();
-      _erpFormKey = GlobalKey<ErpFormState>();
+
       _formValues.clear();
     });
+
     _setDefaultFormValues();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      try {
+        _erpFormKey.currentState?.focusField('scanValue');
+      } catch (_) {}
+    });
   }
 
-  void _rebuildForm() {
-    setState(() => _erpFormKey = GlobalKey<ErpFormState>());
-  }
 
   // ─────────────────────────────────────────────────────────────────────────
   //  SNACKBAR
@@ -2636,8 +2748,20 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         }
 
         if (key != 'scanValue') return;
+        FocusManager.instance.primaryFocus?.unfocus();
+
         final scanVal = value.toString().trim();
-        if (scanVal.isEmpty) return;
+        if (scanVal.isEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+
+            try {
+              _erpFormKey.currentState?.focusField('scanValue');
+            } catch (_) {}
+          });
+
+          return;
+        }
 
         // ✅ Duplicate check
         if (_editingDetIndex == null) {
@@ -2650,10 +2774,13 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             _erpFormKey.currentState?.updateFieldValue('scanValue', '');
             _entryVals['scanValue'] = '';
 
-            Future.delayed(
-              const Duration(milliseconds: 100),
-              () => _erpFormKey.currentState?.focusField('scanValue'),
-            );
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+
+              try {
+                _erpFormKey.currentState?.focusField('scanValue');
+              } catch (_) {}
+            });
             return;
           }
         }

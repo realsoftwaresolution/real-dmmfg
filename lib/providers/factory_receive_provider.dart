@@ -94,6 +94,33 @@ class FactoryReceivedEntryProvider extends BaseProvider {
     return false;
   }
 
+  // Send factoryCode first, then the detail payload as a map.
+  Future<List<FactoryReceiveDetModel>> rateCallApi(String factoryCode, dynamic payload) async {
+    // Ensure payload is a Map (models usually provide toJson())
+    final detail = payload is FactoryReceiveDetModel
+        ? payload.toJson()
+        : (payload is Map<String, dynamic> ? payload : payload);
+
+    // Add factoryCode into the detail map
+    detail['FactoryCode'] = factoryCode;
+
+
+    final result = await request<List<FactoryReceiveDetModel>>(
+      call: () => api.post(
+        '/factoryRec/rate-calculate',
+        data: [detail],
+      ),
+      onSuccess: (res) {
+        final data = res.data['data'];
+        final list = data is List ? data : [data];
+        return list
+            .map((e) => FactoryReceiveDetModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      },
+    );
+    return result ?? [];
+  }
+
   // ── UPDATE ────────────────────────────────────────────────────────────────
   Future<bool> update(Map<String, dynamic> values) async {
     final result = await request<FactoryReceiveMstModel>(

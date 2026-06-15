@@ -226,7 +226,6 @@ class TrnPlanningReceivedProvider extends BaseProvider {
   void commitTempScanData() {
 
     for (final item in _tempPlanningDetList) {
-
       final alreadyExists = _planningDetList.any(
             (e) =>
         e.bCode?.toString() ==
@@ -398,6 +397,20 @@ class TrnPlanningReceivedProvider extends BaseProvider {
       return true;
     }
     return false;
+  }
+
+  Future<List<PlanningReceivedDetModel>> rateCallApi(payload) async {
+    final result = await request<List<PlanningReceivedDetModel>>(
+      call: () => api.post('/spkDeptIss/rate-calculate', data: [payload]),
+      onSuccess: (res) {
+        final data = res.data['data'];
+        final list = data is List ? data : [data];
+        return list
+            .map((e) => PlanningReceivedDetModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      },
+    );
+    return result ?? [];
   }
 
   // ── DELETE ────────────────────────────────────────────────────────────────

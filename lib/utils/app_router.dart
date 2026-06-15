@@ -39,6 +39,8 @@ import 'package:diam_mfg/screens/mst_firm_team.dart';
 import 'package:diam_mfg/screens/mst_firm_tensions.dart';
 import 'package:diam_mfg/screens/trn_cut_create.dart';
 import 'package:diam_mfg/screens/trn_factory_issue.dart';
+import 'package:diam_mfg/screens/trn_jobwork_issue.dart';
+import 'package:diam_mfg/screens/trn_jobwork_rec.dart';
 import 'package:diam_mfg/screens/trn_laser_received.dart';
 import 'package:diam_mfg/screens/trn_makable_entry.dart';
 import 'package:diam_mfg/screens/trn_packet_create.dart';
@@ -110,6 +112,8 @@ class AppRouter {
     '/3.10': (context) => const FactoryReceiveEntry(),
     '/3.11': (context) => const TrnProcessIssueEntry(),
     '/3.12': (context) => const TrnProcessIssueEntry(),
+    '/3.13': (context) => const TrnJobWorkIssueEntry(),
+    '/3.14': (context) => const TrnJobWorkRecEntry(),
     '/4': (context) => const AdminMenuCreateScreen(),
     '/4.01': (context) => const ReportScreen(),
     '/5.01': (context) => const PairScreen(),

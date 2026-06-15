@@ -54,7 +54,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   ErpTheme get _theme => ErpTheme(_themeVariant);
 
   // ── Form ───────────────────────────────────────────────────────────────────
-  GlobalKey<ErpFormState> _erpFormKey = GlobalKey<ErpFormState>();
+  final GlobalKey<ErpFormState> _erpFormKey = GlobalKey<ErpFormState>();
   Map<String, String> _formValues = {};
   final Map<String, String> _entryVals = {};
 
@@ -271,7 +271,13 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   //  BCODE SCAN
   // ─────────────────────────────────────────────────────────────────────────
   void _focusScan() {
-    _erpFormKey.currentState?.focusField('scanValue');
+    Future.delayed(const Duration(milliseconds: 150), () {
+      if (!mounted) return;
+
+      try {
+        _erpFormKey.currentState?.focusField('scanValue');
+      } catch (_) {}
+    });
   }
 
   Future<void> _onBCodeScanned(String bCode) async {
@@ -338,14 +344,26 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       formType: 'FACTORY ISSUE',
       size: r.size ?? 0.00,
     );
-    _detRows.add(newRow);
-    _syncDetGrid();
+    setState(() {
+      _detRows.add(newRow);
 
-    setState(() {}); // ✅ FORCE UI REFRESH
+      _syncDetGrid();
+    });
 
-    // clear + refocus
-    _erpFormKey.currentState?.updateFieldValue('scanValue', '');
-    Future.delayed(const Duration(milliseconds: 50), _focusScan);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      try {
+        _erpFormKey.currentState?.updateFieldValue(
+          'scanValue',
+          '',
+        );
+
+        _erpFormKey.currentState?.focusField(
+          'scanValue',
+        );
+      } catch (_) {}
+    });
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -654,7 +672,13 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       _syncDetGrid();
     });
 
-    _rebuildForm();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      try {
+        _erpFormKey.currentState?.focusField('scanValue');
+      } catch (_) {}
+    });
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -775,30 +799,55 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _resetForm() {
-    _erpFormKey.currentState?.resetForm();
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    try {
+      _erpFormKey.currentState?.resetForm();
+    } catch (_) {}
+
     _entryVals.clear();
+
     setState(() {
-      _isEditMode = _showTableOnMobile = false;
+      _isEditMode = false;
+      _showTableOnMobile = false;
       _isAdding = false;
+
       _detRows = [];
       _detDisplay = [];
+
       _editingDetIndex = null;
-      _fromCrId = _toCrId = null;
-      _fromDeptName = _toDeptName = null;
-      _fromDeptCode = _toDeptCodeVal = null;
+
+      _fromCrId = null;
+      _toCrId = null;
+
+      _fromDeptName = null;
+      _toDeptName = null;
+
+      _fromDeptCode = null;
+      _toDeptCodeVal = null;
+
       _processSelected = false;
       _lockMasterFields = false;
+
       _selectedRadioCode = null;
+
       _toDisplayFields.clear();
       _fromDisplayFields.clear();
-      _erpFormKey = GlobalKey<ErpFormState>();
+
+      _selectedFactory = null;
+
       _formValues.clear();
     });
-    _setDefaultFormValues();
-  }
 
-  void _rebuildForm() {
-    setState(() => _erpFormKey = GlobalKey<ErpFormState>());
+    _setDefaultFormValues();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      try {
+        _erpFormKey.currentState?.focusField('scanValue');
+      } catch (_) {}
+    });
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1242,13 +1291,19 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         }
       },
 
-      onFieldSubmitted: (key, value) {
+      onFieldSubmitted: (key, value) async {
         if (key != 'scanValue') return;
 
-        final scanVal = value.toString().trim();
-        if (scanVal.isEmpty) return;
+        FocusManager.instance.primaryFocus?.unfocus();
 
-        _onBCodeScanned(scanVal);
+        final scanVal = value.toString().trim();
+
+        if (scanVal.isEmpty) {
+          _focusScan();
+          return;
+        }
+
+        await _onBCodeScanned(scanVal);
       },
       printOnPress: printJobWorkPdf,
       isShowPrintButton: true,

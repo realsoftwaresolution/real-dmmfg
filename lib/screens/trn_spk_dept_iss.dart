@@ -312,6 +312,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       'time': DateFormat('hh:mm a').format(now),
       'report': 'REPORT',
     };
+
     /// DEFAULT REPORT
     _entryVals['report'] = 'REPORT';
 
@@ -437,7 +438,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         _autoRec = (counter.autoRec ?? 'N').toString();
         _formValues['toCrId'] = crIdStr;
         _formValues['toDept'] = deptName;
-
       });
 
       _erpFormKey.currentState?.updateFieldValue('toDept', deptName);
@@ -523,13 +523,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       );
       _entryVals['scanValue'] = '';
       _erpFormKey.currentState?.updateFieldValue('scanValue', '');
-      Future.delayed(
-        const Duration(milliseconds: 100),
-            () {
-          if (!mounted) return;
-          _erpFormKey.currentState?.focusField('scanValue');
-        },
-      );
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (!mounted) return;
+        _erpFormKey.currentState?.focusField('scanValue');
+      });
 
       return;
     }
@@ -564,42 +561,37 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
     setState(() => _scannedDet = r);
 
-    Future.delayed(
-      const Duration(milliseconds: 100),
-          () {
-        if (!mounted) return;
-        _erpFormKey.currentState?.focusField('recpc');
-      },
-    );
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (!mounted) return;
+      _erpFormKey.currentState?.focusField('recpc');
+    });
   }
-// ─── 1. NEW: _onCutLotFetched ──────────────────────────────────────────────
-// Add this method right after _onBCodeScanned
+
+  // ─── 1. NEW: _onCutLotFetched ──────────────────────────────────────────────
+  // Add this method right after _onBCodeScanned
 
   Future<void> _onCutLotFetched() async {
     if (_isBCodePending) return;
 
-    final cutNo   = (_entryVals['cutNo']   ?? '').trim();
+    final cutNo = (_entryVals['cutNo'] ?? '').trim();
     final cutFrom = (_entryVals['cutFrom'] ?? '').trim();
-    final cutTo   = (_entryVals['cutTo']   ?? '').trim();
+    final cutTo = (_entryVals['cutTo'] ?? '').trim();
 
     if (cutNo.isEmpty) {
       _showSnack('Please enter Cut No.');
-      Future.delayed(
-        const Duration(milliseconds: 50),
-            () {
-          if (!mounted) return;
-          _erpFormKey.currentState?.focusField('cutNo');
-        },
-      );
+      Future.delayed(const Duration(milliseconds: 50), () {
+        if (!mounted) return;
+        _erpFormKey.currentState?.focusField('cutNo');
+      });
       return;
     }
 
     _isBCodePending = true;
 
     final rows = await context.read<SpkDeptIssProvider>().fetchByCutLot(
-      cutNo:    cutNo,
-      lotFrom:  cutFrom,
-      lotTo:    cutTo,
+      cutNo: cutNo,
+      lotFrom: cutFrom,
+      lotTo: cutTo,
       fromCrId: _fromCrId!.toString(),
     );
 
@@ -611,9 +603,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         context: context,
         theme: _theme,
         title: 'Cut Lot',
-        message: 'No packets found for Cut No "$cutNo"'
+        message:
+            'No packets found for Cut No "$cutNo"'
             '${cutFrom.isNotEmpty ? " (From: $cutFrom" : ''}'
-            '${cutTo.isNotEmpty   ? " To: $cutTo)"    : (cutFrom.isNotEmpty ? ')' : '')}.',
+            '${cutTo.isNotEmpty ? " To: $cutTo)" : (cutFrom.isNotEmpty ? ')' : '')}.',
       );
       return;
     }
@@ -637,59 +630,59 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       final recPc = (r.recPc == null || r.recPc == 0) ? issPc : r.recPc!;
       final recWt = (r.recWt == null || r.recWt == 0.0) ? issWt : r.recWt!;
 
-      final srno  = _detRows.length + 1;
+      final srno = _detRows.length + 1;
 
       final newRow = SpkDeptIssDetModel(
-        srno:            srno,
-        id:              r.id,
-        jno:             r.jno,
-        jnoRecPc:        r.jnoRecPc,
-        bCode:           r.bCode,
-        ArticalName:     r.ArticalName,
-        pktNo:           r.pktNo,
-        cutNo:           r.cutNo,
-        clvCut:          r.clvCut,
-        shapeCode:       r.shapeCode,
-        purityCode:      r.purityCode,
-        colorCode:       r.colorCode,
-        diam:            r.diam,
-        kachaRec:        r.kachaRec ?? 'Y',
-        fromDeptCode:    _fromDeptCode,
-        toDeptCode:      _toDeptCodeVal,
-        fromCrId:        _fromCrId,
-        toCrId:          _toCrId,
-        deptCode:        _toDeptCodeVal,
+        srno: srno,
+        id: r.id,
+        jno: r.jno,
+        jnoRecPc: r.jnoRecPc,
+        bCode: r.bCode,
+        ArticalName: r.ArticalName,
+        pktNo: r.pktNo,
+        cutNo: r.cutNo,
+        clvCut: r.clvCut,
+        shapeCode: r.shapeCode,
+        purityCode: r.purityCode,
+        colorCode: r.colorCode,
+        diam: r.diam,
+        kachaRec: r.kachaRec ?? 'Y',
+        fromDeptCode: _fromDeptCode,
+        toDeptCode: _toDeptCodeVal,
+        fromCrId: _fromCrId,
+        toCrId: _toCrId,
+        deptCode: _toDeptCodeVal,
         deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
-        charniCode:      int.tryParse(_formValues['charniCode']      ?? ''),
-        tensionsCode:    int.tryParse(_formValues['tensionsCode']    ?? ''),
-        pc:              orgPc,
-        wt:              orgWt,
-        issPc:           issPc,
-        issWt:           issWt,
-        recPc:           recPc,
-        recWt:           recWt,
-        totalPc:         recPc,
-        totalWt:         recWt,
-        dmWt:            r.LastDmWt,
-        dmPer:           r.LastDmPer,
-        kPc:             int.tryParse(_entryVals['kpc']      ?? ''),
-        kWt:             double.tryParse(_entryVals['kwt']   ?? ''),
-        brPc:            int.tryParse(_entryVals['brpc']     ?? ''),
-        brWt:            double.tryParse(_entryVals['brwt']  ?? ''),
-        lossPc:          int.tryParse(_entryVals['losspc']   ?? ''),
-        lossWt:          double.tryParse(_entryVals['losswt']?? ''),
-        topsPc:          int.tryParse(_entryVals['topspc']   ?? ''),
-        topsWt:          double.tryParse(_entryVals['topswt']?? ''),
-        employeeCode:    int.tryParse(_entryVals['employee'] ?? ''),
-        signerCode:      int.tryParse(_entryVals['signer']   ?? ''),
-        remarksCode:     int.tryParse(_entryVals['remarks']  ?? ''),
-        dueDay:          int.tryParse(_entryVals['dueDay']   ?? ''),
-        entryType:       'B',
-        formType:        'SPK',
-        pktType:         'A',
-        confRec:         _autoRec,
-        clvRec:          'S',
-        confCrID:        _toCrId,
+        charniCode: int.tryParse(_formValues['charniCode'] ?? ''),
+        tensionsCode: int.tryParse(_formValues['tensionsCode'] ?? ''),
+        pc: orgPc,
+        wt: orgWt,
+        issPc: issPc,
+        issWt: issWt,
+        recPc: recPc,
+        recWt: recWt,
+        totalPc: recPc,
+        totalWt: recWt,
+        dmWt: r.LastDmWt,
+        dmPer: r.LastDmPer,
+        kPc: int.tryParse(_entryVals['kpc'] ?? ''),
+        kWt: double.tryParse(_entryVals['kwt'] ?? ''),
+        brPc: int.tryParse(_entryVals['brpc'] ?? ''),
+        brWt: double.tryParse(_entryVals['brwt'] ?? ''),
+        lossPc: int.tryParse(_entryVals['losspc'] ?? ''),
+        lossWt: double.tryParse(_entryVals['losswt'] ?? ''),
+        topsPc: int.tryParse(_entryVals['topspc'] ?? ''),
+        topsWt: double.tryParse(_entryVals['topswt'] ?? ''),
+        employeeCode: int.tryParse(_entryVals['employee'] ?? ''),
+        signerCode: int.tryParse(_entryVals['signer'] ?? ''),
+        remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
+        dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
+        entryType: 'B',
+        formType: 'SPK',
+        pktType: 'A',
+        confRec: _autoRec,
+        clvRec: 'S',
+        confCrID: _toCrId,
       );
 
       _detRows.add(newRow);
@@ -712,6 +705,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     }
     // No snack when all clean — grid update is feedback enough.
   }
+
   // ─────────────────────────────────────────────────────────────────────────
   //  CALCULATIONS
   // ─────────────────────────────────────────────────────────────────────────
@@ -750,7 +744,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   //  ADD / EDIT ENTRY
   // ─────────────────────────────────────────────────────────────────────────
 
-  void _addEntry() {
+  Future<void> _addEntry() async {
     final scanBCode = (_scannedDet?.bCode ?? '').trim();
 
     /// DUPLICATE CHECK
@@ -901,19 +895,35 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
             dmWt: finalDmWt,
             dmPer: finalDmPer,
           );
-
+    final prov = context.read<SpkDeptIssProvider>();
+    final apiData = await prov.rateCallApi(newRow);
+    print(jsonEncode(apiData));
+    // ✅ UPDATE: Set rate fields from API response to a new variable
+    SpkDeptIssDetModel updatedRow = newRow;
+    if (apiData.isNotEmpty) {
+      if (apiData.first.bCode == null) {
+        return;
+      }
+      final responseRow = apiData.first;
+      updatedRow = newRow.copyWith(
+        rateID: responseRow.rateID.toString(),
+        rateon: responseRow.rateon,
+        rate: responseRow.rate,
+        amount: responseRow.amount,
+      );
+    } else {
+      return;
+    }
     setState(() {
       if (_editingDetIndex != null) {
-        _detRows[_editingDetIndex!] = newRow;
+        _detRows[_editingDetIndex!] = updatedRow;
         _editingDetIndex = null;
       } else {
-        _detRows.add(newRow);
+        _detRows.add(updatedRow);
       }
       _lockMasterFields = true;
       _syncDetGrid();
     });
-
-    // _clearEntryFields();
 
     // Return focus to scan field
     WidgetsBinding.instance.addPostFrameCallback(
@@ -1067,9 +1077,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _editDetRow(int idx) {
-    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
+    final actualIdx = _detRows.length - 1 - idx; // ← convert display→actual
     final r = _detRows[actualIdx];
-    setState(() => _editingDetIndex = actualIdx);         // ← use actualIdx
+    setState(() => _editingDetIndex = actualIdx); // ← use actualIdx
 
     void set(String k, String? v) {
       _entryVals[k] = v ?? '';
@@ -1099,7 +1109,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
   }
 
   void _deleteDetRow(int idx) {
-    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
+    final actualIdx = _detRows.length - 1 - idx; // ← convert display→actual
     setState(() {
       _detRows.removeAt(actualIdx);
       // Re-number srno
@@ -1476,7 +1486,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
           ? await prov.update(
               _selectedMst!.spkDeptIssMstID!,
               merged,
-        reversedDet,
+              reversedDet,
               bCodeArray: reversedDet
                   .where(
                     (r) => r.spkDeptIssDetID != null || r.spkDeptIssDetID != 0,
@@ -2162,26 +2172,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     ErpColumnConfig(key: 'toDeptName', label: 'TO DEPT', width: 160),
     ErpColumnConfig(key: 'processName', label: 'PROCESS', width: 150),
     ErpColumnConfig(key: 'deptName', label: 'DEPT', width: 140),
-    ErpColumnConfig(
-      key: 'jno',
-      label: 'JNO',
-      width: 140,
-    ),
-    ErpColumnConfig(
-      key: 'totPkt',
-      label: 'TOT PKT',
-      width: 170,
-    ),
-    ErpColumnConfig(
-      key: 'totalPc',
-      label: 'TOT PC',
-      width: 170,
-    ),
-    ErpColumnConfig(
-      key: 'totalWt',
-      label: 'TOT WT',
-      width: 170,
-    ),
+    ErpColumnConfig(key: 'jno', label: 'JNO', width: 140),
+    ErpColumnConfig(key: 'totPkt', label: 'TOT PKT', width: 170),
+    ErpColumnConfig(key: 'totalPc', label: 'TOT PC', width: 170),
+    ErpColumnConfig(key: 'totalWt', label: 'TOT WT', width: 170),
   ];
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -2269,7 +2263,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
         final selectedName = () {
           final f = _getRadioFields().values.firstWhereOrNull(
-                (f) => f.userVisibilityCode.toString() == _selectedRadioCode,
+            (f) => f.userVisibilityCode.toString() == _selectedRadioCode,
           );
           return (f?.userVisibilityName ?? '').toUpperCase();
         }();
@@ -2285,13 +2279,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         if (selectedName == 'BCODE' &&
             _scannedDet == null &&
             _editingDetIndex == null) {
-          Future.delayed(
-            const Duration(milliseconds: 50),
-                () {
-              if (!mounted) return;
-              _erpFormKey.currentState?.focusField('scanValue');
-            },
-          );
+          Future.delayed(const Duration(milliseconds: 50), () {
+            if (!mounted) return;
+            _erpFormKey.currentState?.focusField('scanValue');
+          });
           return;
         }
 
@@ -2300,11 +2291,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       onFieldChanged: (key, value) {
         _formValues[key] = value.toString();
         if (key == 'scanType') {
-
           setState(() {
-
             _selectedRadioCode = value.toString();
-
           });
 
           _rebuildForm();
@@ -2312,33 +2300,24 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         switch (key) {
           case 'fromCrId':
             _onFromSelected(value.toString());
-            Future.delayed(
-              const Duration(milliseconds: 50),
-                  () {
-                if (!mounted) return;
-                _erpFormKey.currentState?.focusField('toCrId');
-              },
-            );
+            Future.delayed(const Duration(milliseconds: 50), () {
+              if (!mounted) return;
+              _erpFormKey.currentState?.focusField('toCrId');
+            });
 
           case 'toCrId':
             _onToSelected(value.toString());
-            Future.delayed(
-              const Duration(milliseconds: 50),
-                  () {
-                if (!mounted) return;
-                _erpFormKey.currentState?.focusField('deptProcessCode');
-              },
-            );
+            Future.delayed(const Duration(milliseconds: 50), () {
+              if (!mounted) return;
+              _erpFormKey.currentState?.focusField('deptProcessCode');
+            });
 
           case 'deptProcessCode':
             _onProcessSelected(value.toString());
-            Future.delayed(
-              const Duration(milliseconds: 100),
-                  () {
-                if (!mounted) return;
-                _erpFormKey.currentState?.focusField('charniCode');
-              },
-            );
+            Future.delayed(const Duration(milliseconds: 100), () {
+              if (!mounted) return;
+              _erpFormKey.currentState?.focusField('charniCode');
+            });
 
           case 'scanValue':
             _entryVals[key] = value.toString();
@@ -2380,14 +2359,15 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
           if (merged.isEmpty) return;
 
           final selectedField = _getRadioFields().values.firstWhereOrNull(
-                (f) => f.userVisibilityCode.toString() == _selectedRadioCode,
+            (f) => f.userVisibilityCode.toString() == _selectedRadioCode,
           );
-          final selectedName =
-          (selectedField?.userVisibilityName ?? '').toUpperCase();
+          final selectedName = (selectedField?.userVisibilityName ?? '')
+              .toUpperCase();
 
           if (selectedName == 'BCODE') {
-            final isDuplicate =
-            _detRows.any((r) => r.bCode?.toString() == scanVal);
+            final isDuplicate = _detRows.any(
+              (r) => r.bCode?.toString() == scanVal,
+            );
             if (isDuplicate) {
               ErpResultDialog.showError(
                 context: context,
@@ -2397,13 +2377,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
               );
               _erpFormKey.currentState?.updateFieldValue('scanValue', '');
               // scanValue duplicate error path:
-              Future.delayed(
-                const Duration(milliseconds: 50),
-                    () {
-                  if (!mounted) return;
-                  _erpFormKey.currentState?.focusField('scanValue');
-                },
-              );
+              Future.delayed(const Duration(milliseconds: 50), () {
+                if (!mounted) return;
+                _erpFormKey.currentState?.focusField('scanValue');
+              });
               return;
             }
 
@@ -2414,13 +2391,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
                 _erpFormKey.currentState?.updateFieldValue('scanValue', '');
                 _entryVals['scanValue'] = '';
                 _scannedDet = null;
-                Future.delayed(
-                  const Duration(milliseconds: 50),
-                      () {
-                    if (!mounted) return;
-                    _erpFormKey.currentState?.focusField('scanValue');
-                  },
-                );
+                Future.delayed(const Duration(milliseconds: 50), () {
+                  if (!mounted) return;
+                  _erpFormKey.currentState?.focusField('scanValue');
+                });
               }
             });
             return;
@@ -2429,7 +2403,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
           // Non-BCODE duplicate check (ID / JNO / QR CODE)
           if (_editingDetIndex == null) {
             final isDuplicate = _detRows.any(
-                  (r) => r.id?.toString() == scanVal || r.jno?.toString() == scanVal,
+              (r) =>
+                  r.id?.toString() == scanVal || r.jno?.toString() == scanVal,
             );
             if (isDuplicate) {
               ErpResultDialog.showError(
@@ -2445,23 +2420,17 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
 
         // ── cutNo / cutFrom / cutTo: Enter key advances focus ──────────────────
         if (key == 'cutNo') {
-          Future.delayed(
-            const Duration(milliseconds: 50),
-                () {
-              if (!mounted) return;
-              _erpFormKey.currentState?.focusField('cutFrom');
-            },
-          );
+          Future.delayed(const Duration(milliseconds: 50), () {
+            if (!mounted) return;
+            _erpFormKey.currentState?.focusField('cutFrom');
+          });
           return;
         }
         if (key == 'cutFrom') {
-          Future.delayed(
-            const Duration(milliseconds: 50),
-                () {
-              if (!mounted) return;
-              _erpFormKey.currentState?.focusField('cutTo');
-            },
-          );
+          Future.delayed(const Duration(milliseconds: 50), () {
+            if (!mounted) return;
+            _erpFormKey.currentState?.focusField('cutTo');
+          });
           return;
         }
         // cutTo Enter = trigger the batch fetch directly
@@ -2607,19 +2576,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         ..['deptName'] = toDeptName
         ..['processName'] = processName
         ..['spkDeptIssTime'] = _formatTime(e.stime)
-        ..['jno'] =
-            e.jnoFirst?.toString() ?? ''
-
-        ..['totPkt'] =
-            e.totPkt?.toString() ?? '0'
-
-        ..['totalPc'] =
-            e.totalPc.toString() ?? '0'
-
-        ..['totalWt'] =
-        fThreeDecimal(
-          e.totalWt ?? 0,
-        );
+        ..['jno'] = e.jnoFirst?.toString() ?? ''
+        ..['totPkt'] = e.totPkt?.toString() ?? '0'
+        ..['totalPc'] = e.totalPc.toString() ?? '0'
+        ..['totalWt'] = fThreeDecimal(e.totalWt ?? 0);
 
       return row;
     }).toList();

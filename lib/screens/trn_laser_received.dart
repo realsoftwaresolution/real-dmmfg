@@ -586,16 +586,8 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _addEntry() async {
-    // Resolve selected scan-type name from radio fields (either list)
-    final selectedName = () {
-      final f = _getRadioFields().values.firstWhereOrNull(
-        (f) => f.userVisibilityCode.toString() == _selectedRadioCode,
-      );
-      return (f?.userVisibilityName ?? '').toUpperCase();
-    }();
-
     // BCODE guard — must scan before adding
-    if (selectedName == 'BCODE' && _editingDetIndex == null) {
+    if ( _editingDetIndex == null) {
       if (_scannedDet == null) {
         _isBCodePending = false;
         Future.delayed(
@@ -635,12 +627,30 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
             recWt: recWt,
           );
 
+    final prov = context.read<TrnLaserReceivedProvider>();
+    final apiData = await prov.rateCallApi(newRow);
+    // ✅ UPDATE: Set rate fields from API response to a new variable
+    LaserDetModel updatedRow = newRow;
+    if (apiData.isNotEmpty) {
+      if (apiData.first.bCode == null) {
+        return;
+      }
+      final responseRow = apiData.first;
+      updatedRow = newRow.copyWith(
+        rateID: responseRow.rateID.toString(),
+        rateon: responseRow.rateon,
+        rate: responseRow.rate,
+        amount: responseRow.amount,
+      );
+    } else {
+      return;
+    }
     setState(() {
       if (_editingDetIndex != null) {
-        _detRows[_editingDetIndex!] = newRow;
+        _detRows[_editingDetIndex!] = updatedRow;
         _editingDetIndex = null;
       } else {
-        _detRows.add(newRow);
+        _detRows.add(updatedRow);
       }
       _lockMasterFields = true;
       _syncDetGrid();
@@ -1269,25 +1279,23 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     final tensProv = context.read<TensionsProvider>();
     final remarkProv = context.read<RemarksProvider>();
 
-
-
     final selectedProcess = int.tryParse(_formValues['deptProcessCode'] ?? '');
 
     final remarkItems =
-    remarkProv.list
-        .where(
-          (e) => e.active == true && e.deptProcessCode == selectedProcess,
-    )
-        .toList()
-      ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+        remarkProv.list
+            .where(
+              (e) => e.active == true && e.deptProcessCode == selectedProcess,
+            )
+            .toList()
+          ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
 
     final remarkDropdown = remarkItems
         .map(
           (e) => ErpDropdownItem(
-        label: e.remarksName ?? '',
-        value: e.remarksCode?.toString() ?? '',
-      ),
-    )
+            label: e.remarksName ?? '',
+            value: e.remarksCode?.toString() ?? '',
+          ),
+        )
         .toList();
     final isFromSelected = _fromCrId != null;
     final isToSelected = _toCrId != null;
@@ -1469,7 +1477,8 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
           dropdownItems: remarkDropdown,
           width: 250,
           sectionIndex: 3,
-          readOnly: remarkDropdown.isEmpty || _isEditMode || _detRows.isNotEmpty,
+          readOnly:
+              remarkDropdown.isEmpty || _isEditMode || _detRows.isNotEmpty,
         ),
         ErpFieldConfig(
           key: 'print',
@@ -2128,6 +2137,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       },
 
       onFieldSubmitted: (key, value) {
+        print(key);
         if (key == 'recWt') {
           final issWt = double.tryParse(_entryVals['issWt'] ?? '') ?? 0;
 
@@ -2158,18 +2168,9 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
 
         final scanVal = value.toString().trim();
         if (scanVal.isEmpty) return;
-        if (_selectedRadioCode == null || _fromCrId == null) return;
+        if ( _fromCrId == null) return;
 
-        final merged = _getMergedFields();
-        if (merged.isEmpty) return;
-
-        final selectedField = merged.values.firstWhereOrNull(
-          (f) => f.userVisibilityCode.toString() == _selectedRadioCode,
-        );
-        final selectedName = (selectedField?.userVisibilityName ?? '')
-            .toUpperCase();
-
-        if (selectedName == 'BCODE') {
+        if (key == 'scanValue') {
           // Duplicate check before scanning
           if (_editingDetIndex == null) {
             final isDuplicate = _detRows.any(

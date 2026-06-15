@@ -483,12 +483,66 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
       );
       return;
     }
-
     // ─────────────────────────────
     // SUCCESS
     // ─────────────────────────────
 
     prov.commitTempScanData();
+
+    // after prov.commitTempScanData() and setState that highlights the bcode:
+    try {
+      // planningData was fetched earlier in this method:
+      if (planningData.isNotEmpty) {
+        // Send the first planning item (or send whole list if needed)
+        // provider.rateCallApi expects a payload (it wraps it in a list on the server call).
+        final payload = planningData.first.toJson();
+        final apiData = await prov.rateCallApi(payload);
+        print('rateCallApi result: ${jsonEncode(apiData)}');
+
+        if (apiData.isNotEmpty) {
+          final resp = apiData.first;
+
+          // Find and update the matching entry in provider.planningDetList by BCode
+          final matchB = planningData.first.bCode?.toString().trim() ?? '';
+          print('matchB $matchB');
+          for (var i = 0; i < prov.planningDetList.length; i++) {
+            final row = prov.planningDetList[i];
+            final rowB = row.bCode?.toString().trim() ?? '';
+            print('rowB $rowB');
+
+            if (rowB == matchB) {
+              prov.planningDetList[i] = row.copyWith(
+                rateID: resp.rateID?.toString(),     // coerce to String
+                rateon: resp.rateon?.toString(),
+                rate: resp.rate,
+                amount: resp.amount,
+              );
+            }
+          }
+          print('prov.planningDetList ${jsonEncode(prov.planningDetList)}');
+
+          // Optionally update scanned list as well (if UI uses it)
+          for (var i = 0; i < prov.scannedDetList.length; i++) {
+            final row = prov.scannedDetList[i];
+            final rowB = row.bCode?.toString().trim() ?? '';
+            if (rowB == matchB) {
+              prov.scannedDetList[i] = row.copyWith(
+                rateID: resp.rateID?.toString(),
+                rateon: resp.rateon?.toString(),
+                rate: resp.rate,
+                amount: resp.amount,
+              );
+            }
+          }
+
+          // Refresh UI
+          if (mounted) setState(() {});
+        }
+      }
+    } catch (e, st) {
+      debugPrint('Error calling rateCallApi for BCode $bCode: $e\n$st');
+      // optionally show an error dialog or snackbar
+    }
 
     setState(() {
       _highlightedBCode = bCode;
@@ -1317,6 +1371,10 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
             signerCode: e.signerCode,
             remarksCode: e.remarksCode,
             dueDay: e.dueDay,
+            rateID: e.rateID?.toString(),
+            rateon: e.rateon?.toString(),
+            rate: e.rate,
+            amount: e.amount,
             entryType: 'B',
             formType: 'SPK',
             pktType: 'A',

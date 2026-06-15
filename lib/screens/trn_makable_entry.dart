@@ -586,7 +586,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
   //  ADD / EDIT ENTRY
   // ─────────────────────────────────────────────────────────────────────────
 
-  void _addEntry() {
+  Future<void> _addEntry() async {
     if (_scannedDet == null) {
       _isBCodePending = false;
       Future.delayed(
@@ -633,13 +633,33 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
             recPc: recPc,
             recWt: recWt,
           );
+    final prov = context.read<MakableEntryProvider>();
+
+    final apiData = await prov.rateCallApi(newRow);
+    print(jsonEncode(apiData));
+    // ✅ UPDATE: Set rate fields from API response to a new variable
+    SpkDeptIssDetModel updatedRow = newRow;
+    if (apiData.isNotEmpty) {
+      if (apiData.first.bCode == null) {
+        return;
+      }
+      final responseRow = apiData.first;
+      updatedRow = newRow.copyWith(
+        rateID: responseRow.rateID.toString(),
+        rateon: responseRow.rateon,
+        rate: responseRow.rate,
+        amount: responseRow.amount,
+      );
+    } else {
+      return;
+    }
 
     setState(() {
       if (_editingDetIndex != null) {
-        _detRows[_editingDetIndex!] = newRow;
+        _detRows[_editingDetIndex!] = updatedRow;
         _editingDetIndex = null;
       } else {
-        _detRows.add(newRow);
+        _detRows.add(updatedRow);
       }
 
       if (_editingDetIndex == null) {
@@ -718,8 +738,9 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
 
     if (shapeRow == null ||
         colorRow == null ||
-        purityRow == null/* ||
-        cutRow == null*/) {
+        purityRow ==
+            null /* ||
+        cutRow == null*/ ) {
       _showSnack('QR Code master data not found');
 
       _entryVals['qrCode'] = '';
@@ -988,7 +1009,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   void _editDetRow(int idx) {
-    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
+    final actualIdx = _detRows.length - 1 - idx; // ← convert display→actual
     final r = _detRows[actualIdx];
     setState(() {
       _editingDetIndex = actualIdx;
@@ -1071,7 +1092,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
   }
 
   void _deleteDetRow(int idx) {
-    final actualIdx = _detRows.length - 1 - idx;  // ← convert display→actual
+    final actualIdx = _detRows.length - 1 - idx; // ← convert display→actual
     setState(() {
       _detRows.removeAt(actualIdx);
       // Re-number srno
@@ -1406,7 +1427,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         ? await prov.update(
             _selectedMst!.spkDeptIssMstID!,
             merged,
-      reversedDet,
+            reversedDet,
             bCodeArray: reversedDet
                 .map((r) => num.parse(r.bCode.toString()))
                 .toList(),
@@ -2209,10 +2230,11 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     }
     /// SUMMARY REPORT
     else if (_entryVals['report'] == 'SUMMARY') {
-      final masterId = (_detRows.first.spkDeptIssMstID ??
-          prov.list.first.spkDeptIssMstID ??
-          0)
-          .toInt();
+      final masterId =
+          (_detRows.first.spkDeptIssMstID ??
+                  prov.list.first.spkDeptIssMstID ??
+                  0)
+              .toInt();
       final summaryModel = await prov.loadSummaryReport(masterId);
       if (!mounted) return;
 
@@ -2221,30 +2243,27 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         return;
       }
       // Real rows only (exclude Grand Total)
-      final dataRows = summaryModel
-          .where((r) => !r.isGrandTotal)
-          .toList();
+      final dataRows = summaryModel.where((r) => !r.isGrandTotal).toList();
 
-      final grandTotal = summaryModel.firstWhereOrNull(
-            (r) => r.isGrandTotal,
-      );
+      final grandTotal = summaryModel.firstWhereOrNull((r) => r.isGrandTotal);
 
       // Map grandTotal to JobWorkItem if it exists
       final grandTotalItem = grandTotal != null
           ? JobWorkItem(
-        kapan: '',
-        bCode: (grandTotal.totalPkt ?? 0).toString(),
-        pktNo: '',
-        type: '',
-        pcs: grandTotal.totalPc.toString(),
-        cts: grandTotal.totalWt.toStringAsFixed(3),
-      )
+              kapan: '',
+              bCode: (grandTotal.totalPkt ?? 0).toString(),
+              pktNo: '',
+              type: '',
+              pcs: grandTotal.totalPc.toString(),
+              cts: grandTotal.totalWt.toStringAsFixed(3),
+            )
           : null;
 
       final summaryItems = dataRows.map((r) {
         return JobWorkItem(
           kapan: r.cutNo,
-          bCode: (r.totalPkt ?? 0).toString(),   // pkt count
+          bCode: (r.totalPkt ?? 0).toString(),
+          // pkt count
           pktNo: r.size,
           type: r.articalName,
           pcs: r.totalPc.toString(),
@@ -2261,10 +2280,10 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         partyType: _toDeptName ?? '',
 
         jobNo:
-        (_detRows.first.spkDeptIssMstID ??
-            prov.list.first.spkDeptIssMstID ??
-            0)
-            .toString(),
+            (_detRows.first.spkDeptIssMstID ??
+                    prov.list.first.spkDeptIssMstID ??
+                    0)
+                .toString(),
 
         date: _formValues['spkDeptIssDate']?.toString() ?? '',
         CVDPartyCode: toCounter?.CVDPartyCode ?? '',
@@ -2272,7 +2291,11 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         items: summaryItems,
       );
 
-      final pdf = await generateJobWorkPdfSummary(summaryPdfData,showSize: true,grandTotal: grandTotalItem);
+      final pdf = await generateJobWorkPdfSummary(
+        summaryPdfData,
+        showSize: true,
+        grandTotal: grandTotalItem,
+      );
 
       await Printing.layoutPdf(onLayout: (_) async => pdf);
     }

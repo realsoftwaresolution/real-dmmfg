@@ -146,6 +146,21 @@ class TrnLaserReceivedProvider extends BaseProvider {
     return result ?? [];
   }
 
+
+  Future<List<LaserDetModel>> rateCallApi(payload) async {
+    final result = await request<List<LaserDetModel>>(
+      call: () => api.post('/spkDeptIss/rate-calculate', data: [payload]),
+      onSuccess: (res) {
+        final data = res.data['data'];
+        final list = data is List ? data : [data];
+        return list
+            .map((e) => LaserDetModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      },
+    );
+    return result ?? [];
+  }
+
 // ── BULK DELETE ───────────────────────────────────────────────────────────
   Future<bool> delete({
     required int spkDeptIssMstID,
