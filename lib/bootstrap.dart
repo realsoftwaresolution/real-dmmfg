@@ -67,6 +67,7 @@ import 'package:diam_mfg/providers/report_type_provider.dart';
 import 'package:diam_mfg/providers/rough_assort_provider.dart';
 import 'package:diam_mfg/providers/rough_provider.dart';
 import 'package:diam_mfg/providers/rough_type_provider.dart';
+import 'package:diam_mfg/providers/sell_price_provider.dart';
 import 'package:diam_mfg/providers/shape_group_provider.dart';
 import 'package:diam_mfg/providers/shape_provider.dart';
 import 'package:diam_mfg/providers/spk_dept_iss_provider.dart';
@@ -88,9 +89,9 @@ import 'providers/Ls_party_wt_calc_entry_provider.dart';
 import 'providers/Packet_History_provider.dart';
 import 'providers/factory_man_group_provider.dart';
 
-// String baseUrl = 'http://50.62.183.116:5000/api';
-String baseUrl =
-    'https://goals-let-shakespeare-believes.trycloudflare.com/api';
+String baseUrl = 'http://50.62.183.116:5000/api';
+// String baseUrl =
+//     'https://pharmacology-celtic-rat-upon.trycloudflare.com/api';
 //CU-7,5/6/2026,17:12,0.096,0.049,ROUND,G,MACKABLE,klhkhkhjkkh,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
 
 //CU-7,5/6/2026,17:12,0.096,0.049,S.OVAL,G,VVS2,omjewR-1.50,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
@@ -334,9 +335,18 @@ Future<void> bootstrap({required FutureOr<Widget> Function() fn}) async {
               create: (_) => IntentProvider(),
             ),
             ChangeNotifierProvider<OverProvider>(create: (_) => OverProvider()),
-            ChangeNotifierProvider<FColorProvider>(create: (_) => FColorProvider()),
-            ChangeNotifierProvider<JobWorkIssueEntryProvider>(create: (_) => JobWorkIssueEntryProvider()),
-            ChangeNotifierProvider<JobWorkRecEntryProvider>(create: (_) => JobWorkRecEntryProvider()),
+            ChangeNotifierProvider<FColorProvider>(
+              create: (_) => FColorProvider(),
+            ),
+            ChangeNotifierProvider<JobWorkIssueEntryProvider>(
+              create: (_) => JobWorkIssueEntryProvider(),
+            ),
+            ChangeNotifierProvider<JobWorkRecEntryProvider>(
+              create: (_) => JobWorkRecEntryProvider(),
+            ),
+            ChangeNotifierProvider<SellPriceProvider>(
+              create: (_) => SellPriceProvider(),
+            ),
           ],
           child: app,
         ),

@@ -80,10 +80,23 @@ class FactoryReceivedEntryProvider extends BaseProvider {
   }
 
   // ── CREATE ────────────────────────────────────────────────────────────────
-  Future<bool> create(Map<String, dynamic> payload) async {
+  Future<bool> create(Map<String, dynamic> payload, theme,
+      context,) async {
     final result = await request<FactoryReceiveMstModel>(
       call: () => api.post('/factoryRec', data: payload),
-      onSuccess: (res) => _parseMstResponse(res.data),
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+          return data;
+        }
+        return _parseMstResponse(data);
+      },
     );
 
     if (result != null) {
@@ -120,12 +133,41 @@ class FactoryReceivedEntryProvider extends BaseProvider {
     );
     return result ?? [];
   }
+  Future<List<FactoryReceiveDetModel>> saleRateCallApi(dynamic payload) async {
+    final result = await request<List<FactoryReceiveDetModel>>(
+      call: () => api.post(
+        '/factoryRec/sell-rate-calculate',
+        data: [payload],
+      ),
+      onSuccess: (res) {
+        final data = res.data['data'];
+        final list = data is List ? data : [data];
+        return list
+            .map((e) => FactoryReceiveDetModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      },
+    );
+    return result ?? [];
+  }
 
   // ── UPDATE ────────────────────────────────────────────────────────────────
-  Future<bool> update(Map<String, dynamic> values) async {
+  Future<bool> update(Map<String, dynamic> values, theme,
+  context,) async {
     final result = await request<FactoryReceiveMstModel>(
       call: () => api.put('/factoryRec', data: values),
-      onSuccess: (res) => _parseMstResponse(res.data),
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+          return data;
+        }
+        return _parseMstResponse(data);
+      },
     );
     if (result != null) {
       notifyListeners();

@@ -33,6 +33,7 @@ import 'package:diam_mfg/screens/mst_firm_rough_type.dart';
 import 'package:diam_mfg/screens/mst_firm_holiday.dart';
 import 'package:diam_mfg/screens/mst_firm_pc.dart';
 import 'package:diam_mfg/screens/mst_firm_remarks.dart';
+import 'package:diam_mfg/screens/mst_firm_sell_price.dart';
 import 'package:diam_mfg/screens/mst_firm_shape_group.dart';
 import 'package:diam_mfg/screens/mst_firm_symmetry.dart';
 import 'package:diam_mfg/screens/mst_firm_team.dart';
@@ -100,6 +101,7 @@ class AppRouter {
     '/2.35': (context) => const MstIntent(),
     '/2.36': (context) => const MstOver(),
     '/2.37': (context) => const MstFColor(),
+    '/2.38': (context) => const MstSellPrice(),
     '/3.01': (context) => const TrnRoughEntry(),
     '/3.02': (context) => const TrnRoughAssortEntry(),
     '/3.03': (context) => const TrnCutCreateEntry(),

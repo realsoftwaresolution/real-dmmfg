@@ -1,4 +1,6 @@
 // lib/screens/mst_firm_clv_rate.dart
+import 'dart:convert';
+
 import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
@@ -69,7 +71,7 @@ class _MstClvRateState extends State<MstClvRate> {
       align: ColumnAlign.center,
     ),
     ErpColumnConfig(
-      key: 'clvRateCode',
+      key: 'clvProcessRateCode',
       label: 'RATE CODE',
       width: 200,
       align: ColumnAlign.center,
@@ -367,8 +369,8 @@ class _MstClvRateState extends State<MstClvRate> {
         'deptProcessCode': raw.deptProcessCode?.toString() ?? '',
         'shapeCode': raw.shapeCode?.toString() ?? '',
         'rateID': raw.rateID?.toString() ?? '',
-        'rateOn': raw.rateOn ?? '',
-        'rateSizeOn': raw.rateSizeOn ?? '',
+        'rateOn': raw.rateOn?.trim() ?? '',
+        'rateSizeOn': raw.rateSizeOn?.trim() ?? '',
         'fromWt': raw.fromWt?.toString() ?? '',
         'toWt': raw.toWt?.toString() ?? '',
         'rate': raw.rate?.toString() ?? '',
@@ -437,7 +439,7 @@ class _MstClvRateState extends State<MstClvRate> {
         context: context,
         theme: context.erpTheme,
         title: _isEditMode ? 'Updated' : 'Saved',
-        message: _isEditMode ? 'CLV Rate updated.' : 'CLV Rate saved.',
+        message: _isEditMode ? 'CLV Process Rate updated.' : 'CLV Process Rate saved.',
       );
     } else {
       await ErpResultDialog.showError(
@@ -500,8 +502,8 @@ class _MstClvRateState extends State<MstClvRate> {
                     : ErpForm(
                         logo: AppImages.logo,
                         key: _erpFormKey,
-                        title: 'CLV RATE MASTER',
-                        subtitle: 'CLV Rate configuration',
+                        title: 'CLV PROCESS RATE MASTER',
+                        subtitle: 'CLV Process Rate configuration',
                         initialTabIndex: 0,
                         onSearch: () =>
                             setState(() => _showTableOnMobile = true),
@@ -525,8 +527,8 @@ class _MstClvRateState extends State<MstClvRate> {
                       child: ErpForm(
                         logo: AppImages.logo,
                         key: _erpFormKey,
-                        title: 'CLV RATE MASTER',
-                        subtitle: 'CLV Rate configuration',
+                        title: 'CLV PROCESS RATE MASTER',
+                        subtitle: 'CLV Process Rate configuration',
                         initialTabIndex: 0,
                         tabBarBackgroundColor: const Color(0xfff2f0ef),
                         tabBarSelectedColor:
@@ -602,7 +604,7 @@ class _MstClvRateState extends State<MstClvRate> {
       isReportRow: false,
       token: token ?? '',
       url: baseUrl,
-      title: 'CLV RATE LIST',
+      title: 'CLV PROCESS RATE LIST',
       columns: _tableColumns,
       data: provider.tableData,
       showSearch: true,

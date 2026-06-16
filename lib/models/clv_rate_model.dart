@@ -66,8 +66,8 @@ class ClvRateModel {
 
   factory ClvRateModel.fromJson(Map<String, dynamic> json) {
     return ClvRateModel(
-      clvRateMstID: json['ClvRateMstID'],
-      clvRateCode: json['ClvRateCode'],
+      clvRateMstID: json['ClvProcessRateMstID'],
+      clvRateCode: json['ClvProcessRateCode'],
       crId: json['CrId'],
       deptCode: json['DeptCode'],
       deptProcessCode: json['DeptProcessCode'],
@@ -100,8 +100,8 @@ class ClvRateModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'ClvRateMstID': clvRateMstID,
-      'ClvRateCode': clvRateCode,
+      'ClvProcessRateMstID': clvRateMstID,
+      'ClvProcessRateCode': clvRateCode,
       'CrId': crId,
       'DeptCode': deptCode,
       'DeptProcessCode': deptProcessCode,
@@ -130,8 +130,8 @@ class ClvRateModel {
   Map<String, dynamic> toTableRow() {
     return {
       '_raw': this,
-      'clvRateMstID': clvRateMstID,
-      'clvRateCode': clvRateCode?.toString() ?? '',
+      'clvProcessRateMstID': clvRateMstID,
+      'clvProcessRateCode': clvRateCode?.toString() ?? '',
       'companyName': companyName ?? '',
       'crName': crName ?? '',
       'deptName': deptName ?? '',
@@ -139,7 +139,7 @@ class ClvRateModel {
       'shapeName': shapeName ?? '',
       'type': type ?? '',
       'rateOn': rateOn ?? '',
-      'rateSizeOn': rateSizeOn ?? '',
+      'rateSizeOn': rateSizeOn.toString().trim() ?? '',
       'fromWt': fromWt != null ? fromWt!.toStringAsFixed(3) : '',
       'toWt': toWt != null ? toWt!.toStringAsFixed(3) : '',
       'rate': rate != null ? rate!.toStringAsFixed(2) : '',

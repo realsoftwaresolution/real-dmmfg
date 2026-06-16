@@ -717,8 +717,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     }
 
     final totalWt = recWt + kWt + brWt;
-    print(totalWt);
-    print(issWt);
     if (totalWt > issWt) {
       _showSnack('Total WT (Rec + K + Br) cannot exceed Iss WT');
       return;
@@ -750,7 +748,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     if (_isEditMode && _editingDetIndex != null) {
       final prov = context.read<FactoryReceivedEntryProvider>();
 
-      final payload = {
+      final payloadData = {
         "FactoryRecMstID":
             int.tryParse(_formValues['factoryRecMstID'] ?? '0') ?? 0,
 
@@ -822,50 +820,98 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         "FColorCode1": int.tryParse(_entryVals['FColorCode1'] ?? '0') ?? 0,
         "FColorCode2": int.tryParse(_entryVals['FColorCode2'] ?? '0') ?? 0,
         "HA": _entryVals['HA'] ?? '',
+        "MarkerMstID": _entryVals['MarkerMstID'] ?? '',
+        "GroupType": _entryVals['groupType'] ?? '',
       };
 
-      final success = await prov.update(payload);
-      if (!mounted) return;
-      if (success) {
-        final updatedRow = _buildEditedRow(
-          srno: _detRows[_editingDetIndex!].srno,
-          existing: _detRows[_editingDetIndex!],
-          issPcStr: _entryVals['issPc'] ?? '',
-          issWtStr: _entryVals['issWt'] ?? '',
-          recPc: recPc,
-          recWt: recWt,
-        );
-        FactoryReceiveDetModel updatedRowData = updatedRow;
-        final apiData = await prov.rateCallApi(
+      final updatedRow = _buildEditedRow(
+        srno: _detRows[_editingDetIndex!].srno,
+        existing: _detRows[_editingDetIndex!],
+        issPcStr: _entryVals['issPc'] ?? '',
+        issWtStr: _entryVals['issWt'] ?? '',
+        recPc: recPc,
+        recWt: recWt,
+      );
+
+      FactoryReceiveDetModel updatedRowData = updatedRow;
+
+      try {
+        /// STEP 1 : RATE CALC
+        final rateResult = await prov.rateCallApi(
           _formValues['factory']!,
           updatedRow,
         );
-        if (apiData.isNotEmpty) {
-          if (apiData.first.bCode == null) {
-            return;
-          }
-          final responseRow = apiData.first;
-          updatedRowData = updatedRow.copyWith(
-            rateID: responseRow.rateID.toString(),
-            rateon: responseRow.rateon,
-            rate: responseRow.rate,
-            amount: responseRow.amount,
-          );
-          setState(() {
-            _detRows[_editingDetIndex!] = updatedRowData;
-            _editingDetIndex = null;
-            _syncDetGrid();
-          });
 
-          _clearEntryFields();
-          await ErpResultDialog.showSuccess(
-            context: context,
-            theme: _theme,
-            title: 'Updated',
-            message: 'Factory Receive Entry Updated.',
-          );
-          context.read<FactoryReceivedEntryProvider>().load();
+        if (rateResult.isEmpty || rateResult.first.bCode == null) {
+          return;
         }
+
+        final rateRow = rateResult.first;
+
+        updatedRowData = updatedRow.copyWith(
+          rateID: rateRow.rateID?.toString(),
+          rateon: rateRow.rateon,
+          rate: rateRow.rate,
+          amount: rateRow.amount,
+        );
+
+        /// STEP 2 : SELL RATE CALC
+        final sellResult = await prov.saleRateCallApi(updatedRowData);
+
+        if (sellResult.isNotEmpty &&
+            sellResult.first.bCode != null) {
+          final sellRow = sellResult.first;
+
+          updatedRowData = updatedRowData.copyWith(
+            SellCode: sellRow.SellCode,
+            SellRate: sellRow.SellRate,
+            SellAmount: sellRow.SellAmount,
+          );
+        }
+
+        /// STEP 3 : UPDATE API
+        final payload = {
+          ...payloadData,
+
+          "RateID": updatedRowData.rateID,
+          "Rateon": updatedRowData.rateon,
+          "Rate": updatedRowData.rate,
+          "Amount": updatedRowData.amount,
+
+          "SellCode": updatedRowData.SellCode,
+          "SellRate": updatedRowData.SellRate,
+          "SellAmount": updatedRowData.SellAmount,
+        };
+
+        final success = await prov.update(
+          payload,
+          _theme,
+          context,
+        );
+
+        if (!mounted || !success) return;
+
+        /// STEP 4 : UPDATE LOCAL GRID
+        setState(() {
+          _detRows[_editingDetIndex!] = updatedRowData;
+          _editingDetIndex = null;
+
+          _syncDetGrid();
+        });
+
+        _clearEntryFields();
+
+        await ErpResultDialog.showSuccess(
+          context: context,
+          theme: _theme,
+          title: 'Updated',
+          message: 'Factory Receive Entry Updated.',
+        );
+
+        context.read<FactoryReceivedEntryProvider>().load();
+
+      } catch (e) {
+        debugPrint('Edit Error => $e');
       }
 
       return;
@@ -901,7 +947,8 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
     FactoryReceiveDetModel updatedRow = newRow;
     try {
-      final apiData = await prov.rateCallApi(_formValues['factory']!, newRow);
+      final apiDataFirst = await prov.rateCallApi(_formValues['factory']!, newRow);
+      final apiData = await prov.saleRateCallApi(apiDataFirst.first);
       if (apiData.isNotEmpty) {
         if (apiData.first.bCode == null) {
           return;
@@ -912,6 +959,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           rateon: responseRow.rateon,
           rate: responseRow.rate,
           amount: responseRow.amount,
+          SellAmount: responseRow.SellAmount,
+          SellRate: responseRow.SellRate,
+          SellCode: responseRow.SellCode,
         );
         // Synchronous setState only
         setState(() {
@@ -965,6 +1015,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       bCode: existing.bCode,
       pktNo: existing.pktNo,
       cutNo: existing.cutNo,
+      ArticalCode: existing.ArticalCode,
       clvCut: existing.clvCut,
       shapeCode: existing.shapeCode,
       purityCode: existing.purityCode,
@@ -1008,6 +1059,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       ratio: double.tryParse(_entryVals['ratio'] ?? ''),
       planShape: _entryVals['shape'] ?? '',
       planPurity: _entryVals['planPurity'] ?? '',
+      groupType: _entryVals['groupType'] ?? existing.groupType,
       partName: int.tryParse(_entryVals['partName'].toString()),
       orderMstID: int.tryParse(_entryVals['orderMstId'] ?? ''),
       amountRs: double.tryParse(_entryVals['amount'] ?? '0.000'),
@@ -1084,6 +1136,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       clvCut: _scannedDet?.clvCut,
       MfgCut: _scannedDet?.MfgCut,
       size: _scannedDet?.size,
+      ArticalCode: _scannedDet?.ArticalCode,
       shapeCode: int.tryParse(_entryVals['shape'] ?? ''),
       purityCode: int.tryParse(_entryVals['purity'] ?? ''),
       colorCode: int.tryParse(_entryVals['color'] ?? ''),
@@ -1127,6 +1180,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       planShape: _entryVals['shape'] ?? '',
       planPurity: _entryVals['planPurity'] ?? '',
       qrCode: _entryVals['qrCode'] ?? '',
+      groupType: _entryVals['groupType'],
       partName: int.tryParse(_entryVals['partName'].toString()),
       orderMstID: int.tryParse(_entryVals['orderMstId'] ?? ''),
       amountRs: double.tryParse(_entryVals['amount'] ?? '0.000'),
@@ -1228,12 +1282,14 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     set('diam', r.diam?.toString());
     set('height', r.height?.toString());
     set('TopSide', r.topSide?.toString());
+    set('pairNo', r.pairNo?.toString());
     set('FcIntentCode', r.fcIntentCode?.toString());
     set('FcOverCode', r.fcOverCode?.toString());
     set('FColorCode1', r.fColorCode1?.toString());
     set('FColorCode2', r.fColorCode2?.toString());
     set('MarkerMstID', r.markerMstID?.toString());
     set('HA', r.ha?.toString());
+    set('groupType', r.groupType?.toString());
   }
 
   dynamic _deleteDetRow(int idx) async {
@@ -1399,6 +1455,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       'FColorCode1',
       'FColorCode2',
       'HA',
+      'groupType',
     ];
     for (final k in keys) {
       _entryVals.remove(k);
@@ -1466,6 +1523,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       'FColorCode2',
       'HA',
       'MarkerMstID',
+    'groupType',
     ];
 
     _detDisplay = _detRows.reversed.map((r) {
@@ -1526,6 +1584,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         'FColorCode2': _fColorCode1NameFor(r.fColorCode2),
         'HA': r.ha ?? '',
         'MarkerMstID': r.markerMstID ?? 0,
+        'groupType': r.groupType ?? '',
       };
     }).toList();
   }
@@ -1570,6 +1629,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         'factory': _s(row['factory']),
         'type': _s(row['type']),
         "polishChecker": _s(details.first.LastCrID ?? 0),
+        "MarkerMstID": _s(details.first.markerMstID ?? 0),
       };
       _syncDetGrid();
     });
@@ -1664,6 +1724,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       "MarkerMstID":
           r.markerMstID ??
           (int.tryParse(_formValues['MarkerMstID'] ?? '0') ?? 0),
+      "GroupType": r.groupType ?? '',
     };
   }
 
@@ -1681,7 +1742,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         "details": reversedDet.map(_mapToApiDetail).toList(),
       };
 
-      final success = await prov.create(payload);
+      final success = await prov.create(payload, _theme, context);
 
       if (!mounted) return;
       if (success) {
@@ -1799,7 +1860,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       } catch (_) {}
     });
   }
-
 
   // ─────────────────────────────────────────────────────────────────────────
   //  SNACKBAR
@@ -2180,6 +2240,17 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           sectionIndex: 2,
           flex: 1,
         ),
+        ErpFieldConfig(
+          key: 'groupType',
+          label: 'GROUP TYPE',
+          sectionIndex: 2,
+          type: ErpFieldType.dropdown,
+          dropdownItems: const [
+            ErpDropdownItem(label: 'Layout', value: 'Layout'),
+            ErpDropdownItem(label: 'Pair', value: 'Pair'),
+            ErpDropdownItem(label: 'Fency', value: 'Fency'),
+          ],
+        ),
       ],
       [
         if (_isFieldVisible('PURITY'))
@@ -2363,18 +2434,20 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           label: 'TOP SIDE',
           type: ErpFieldType.text,
           sectionIndex: 4,
+          isEntryField: _entryVals['groupType'] != 'Pair' ? true : false,
+          showAddButton: _entryVals['groupType'] != 'Pair' ? true : false,
           flex: 1,
         ),
-
-        ErpFieldConfig(
-          key: 'pairNo',
-          label: 'PAIR NO',
-          type: ErpFieldType.number,
-          sectionIndex: 4,
-          showAddButton: true,
-          isEntryField: true,
-          flex: 1,
-        ),
+        if (_entryVals['groupType'] == 'Pair')
+          ErpFieldConfig(
+            key: 'pairNo',
+            label: 'PAIR NO',
+            type: ErpFieldType.number,
+            sectionIndex: 4,
+            showAddButton: true,
+            isEntryField: true,
+            flex: 1,
+          ),
       ],
     ];
 
@@ -2686,8 +2759,16 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           // ─────────────────────────────
           // SCAN FIELD
           // ─────────────────────────────
-          case 'scanValue':
-            // handled in onFieldSubmitted
+          case 'groupType':
+            setState(() {
+              _entryVals['groupType'] = value ?? '';
+
+              // clear pair no if not pair
+              if (value != 'Pair') {
+                _entryVals['pairNo'] = '';
+                _erpFormKey.currentState?.updateFieldValue('pairNo', '');
+              }
+            });
             break;
 
           // ─────────────────────────────
@@ -2736,6 +2817,16 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       },
       onFieldSubmitted: (key, value) {
         if (key == 'pairNo') {
+          // VALIDATION
+          if (value == null || value.toString().isEmpty) {
+            return;
+          }
+
+          // ADD ENTRY
+          _addEntry();
+
+          return;
+        } else if (key == 'TopSide') {
           // VALIDATION
           if (value == null || value.toString().isEmpty) {
             return;

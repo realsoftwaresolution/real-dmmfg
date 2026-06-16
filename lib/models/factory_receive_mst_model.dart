@@ -116,6 +116,7 @@ class FactoryReceiveDetModel {
   final int? factoryIssDetID;
   final int?    factoryRecMstID;
   final int?    FactoryRecDetID;
+  final int?    ArticalCode;
   final int?    srno;
   final int?    id;
   final int?    jno;
@@ -273,16 +274,22 @@ class FactoryReceiveDetModel {
   final int? fColorCode1;
   final int? fColorCode2;
   final String? ha;
+  final String? groupType;
+  final String? SellCode;
+  final double? SellAmount;
+  final double? SellRate;
 
   const FactoryReceiveDetModel({
     this.pairNo,
     this.polishCode,
     this.symmetryCode,
+    this.groupType,
     this.fluo,
     this.height,
     this.factoryIssDetID,
     this.factoryRecMstID,
     this.FactoryRecDetID,
+    this.ArticalCode,
     this.srno,
     this.MfgCut,
     this.id,
@@ -434,7 +441,7 @@ class FactoryReceiveDetModel {
     this.fColorCode1,
     this.fColorCode2,
     this.ha,
-    this.topSide,
+    this.topSide, this.SellCode, this.SellAmount, this.SellRate,
   });
 
   factory FactoryReceiveDetModel.fromJson(Map<String, dynamic> json) =>
@@ -442,6 +449,7 @@ class FactoryReceiveDetModel {
         factoryIssDetID: json['FactoryIssDetID'],
         factoryRecMstID:  json['FactoryRecMstID'] ?? 0,
         FactoryRecDetID:  json['FactoryRecDetID'],
+        ArticalCode:  json['ArticalCode'],
         srno:             json['Srno'],
         id:               json['ID'],
         fromDeptCode: json['FromDeptCode'],
@@ -507,6 +515,9 @@ class FactoryReceiveDetModel {
         diam:             _d(json['Diam']),
         acuraecy:         _d(json['Acuraecy']),
         amt:              _d(json['Amt']),
+        SellRate:              _d(json['SellRate']),
+        SellAmount:              _d(json['SellAmount']),
+        SellCode:       json['SellCode'],
         manualAuto:       json['ManualAuto'],
         qrCode:           json['QrCode'],
         checkerCrId:      json['CheckerCrId'],
@@ -596,6 +607,7 @@ class FactoryReceiveDetModel {
         fColorCode1: json['FColorCode1'],
         fColorCode2: json['FColorCode2'],
         ha: json['HA']?.toString(),
+        groupType: json['GroupType']?.toString(),
         topSide: json['TopSide']?.toString(),
         sarinData: (json['sarinData'] as List?)
             ?.map((e) => Map<String, dynamic>.from(e as Map))
@@ -607,6 +619,7 @@ class FactoryReceiveDetModel {
     if (factoryIssDetID != null) 'FactoryIssDetID': factoryIssDetID,
     'FactoryRecMstID':  factoryRecMstID,
     'FactoryRecDetID':  FactoryRecDetID,
+    'ArticalCode':  ArticalCode,
     'Srno':             srno,
     'ID':               id,
     'Jno':              jno,
@@ -635,6 +648,9 @@ class FactoryReceiveDetModel {
     'TotalPc':          totalPc,
     'TotalWt':          totalWt,
     'EntryType':        entryType,
+    'SellRate':        SellRate,
+    'SellAmount':        SellAmount,
+    'SellCode':        SellCode,
     if (fromCrId        != null) 'FromCrID':        fromCrId,
     if (toCrId          != null) 'ToCrID':          toCrId,
     if (deptProcessCode != null) 'DeptProcessCode': deptProcessCode,
@@ -694,10 +710,10 @@ class FactoryReceiveDetModel {
     if (mackRoughWt      != null) 'MackRoughWt':      mackRoughWt,
     if (rateRs           != null) 'RateRs':           rateRs,
     if (amountRs         != null) 'AmountRs':         amountRs,
-    if (rateID           != null) 'RateID':           rateID,
-    if (rateon           != null) 'Rateon':           rateon,
-    if (rate             != null) 'Rate':             rate,
-    if (amount           != null) 'Amount':           amount,
+     'RateID':           rateID,
+     'Rateon':           rateon,
+     'Rate':             rate,
+     'Amount':           amount,
     if (ratio            != null) 'Ratio':            ratio,
     if (pcName           != null) 'PcName':           pcName,
     if (machineSrNo      != null) 'MachineSrNo':      machineSrNo,
@@ -767,6 +783,7 @@ class FactoryReceiveDetModel {
     if (fColorCode1   != null) 'FColorCode1':   fColorCode1,
     if (fColorCode2   != null) 'FColorCode2':   fColorCode2,
     if (ha            != null) 'HA':             ha,
+    if (groupType            != null) 'GroupType':             groupType,
     if (topSide       != null) 'TopSide':        topSide,
   };
 
@@ -775,6 +792,7 @@ class FactoryReceiveDetModel {
     int? factoryIssDetID,
     int? factoryRecMstID,
     int? FactoryRecDetID,
+    int? ArticalCode,
     int? srno,
     int? id,
     int? jno,
@@ -932,6 +950,10 @@ class FactoryReceiveDetModel {
     int? fColorCode1,
     int? fColorCode2,
     String? ha,
+    String? groupType,
+    String? SellCode,
+    double? SellAmount,
+    double? SellRate,
   }) =>
       FactoryReceiveDetModel(
         factoryIssDetID: factoryIssDetID ?? this.factoryIssDetID,
@@ -996,6 +1018,7 @@ class FactoryReceiveDetModel {
         colorCode: colorCode ?? this.colorCode,
         length: length ?? this.length,
         diam: diam ?? this.diam,
+        ArticalCode: ArticalCode ?? this.ArticalCode,
         acuraecy: acuraecy ?? this.acuraecy,
         amt: amt ?? this.amt,
         manualAuto: manualAuto ?? this.manualAuto,
@@ -1094,6 +1117,10 @@ class FactoryReceiveDetModel {
         fColorCode2: fColorCode2 ?? this.fColorCode2,
         ha: ha ?? this.ha,
         topSide: topSide ?? this.topSide,
+        groupType: groupType ?? this.groupType,
+        SellRate: SellRate ?? this.SellRate,
+        SellAmount: SellAmount ?? this.SellAmount,
+        SellCode: SellCode ?? this.SellCode,
       );
 
   static double? _d(dynamic v) {

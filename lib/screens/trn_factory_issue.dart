@@ -736,7 +736,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       if (!mounted) return;
       if (success) {
         final wasEdit = _isEditMode;
-        printJobWorkPdf();
         await ErpResultDialog.showSuccess(
           context: context,
           theme: _theme,
@@ -745,8 +744,9 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
               ? 'Factory Issue Entry updated.'
               : 'Factory Issue Entry saved.',
         );
-        _resetForm();
         await context.read<FactoryIssueEntryProvider>().load();
+        printJobWorkPdf();
+        _resetForm();
       }
     } else {
       await ErpResultDialog.showError(

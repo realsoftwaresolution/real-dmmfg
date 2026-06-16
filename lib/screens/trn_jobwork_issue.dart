@@ -406,7 +406,6 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
         'jobWorkIssMstID': _s(row['jobWorkIssMstID'], '0'),
         'partyMstID': _s(row['partyMstID'], '0'),
         'deptProcessCode': _s(row['deptProcessCode'], '0'),
-        'scanValue': _s(_detRows.isNotEmpty ? _detRows.first.bCode : ''),
       };
       _selectedPartyMstID = int.tryParse(_formValues['partyMstID'] ?? '0');
       final counterProvider = context.read<CounterProvider>();

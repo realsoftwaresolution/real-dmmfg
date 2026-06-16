@@ -1,26 +1,25 @@
-// lib/providers/clv_rate_provider.dart
+import 'package:diam_mfg/models/sell_price_model.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
-import '../models/clv_rate_model.dart';
-import '../models/company_model.dart';
 
-class ClvRateProvider extends BaseProvider {
-  List<ClvRateModel> _list = [];
+
+class SellPriceProvider extends BaseProvider {
+  List<SellPriceModel> _list = [];
   bool _isLoaded = false;
 
-  List<ClvRateModel> get list => _list;
+  List<SellPriceModel> get list => _list;
   bool get isLoaded => _isLoaded;
 
   List<Map<String, dynamic>>  get tableData =>
       _list.map((e) => e.toTableRow()).toList();
 
   // ── GET ALL ──────────────────────────────────────────────────────────────
-  Future<void> loadClvRates() async {
-    final result = await request<List<ClvRateModel>>(
+  Future<void> loadSellPrice() async {
+    final result = await request<List<SellPriceModel>>(
       showLoader: true,
-      call: () => api.get('/clvProcessRate'),
+      call: () => api.get('/sell-price-list'),
       onSuccess: (res) {
         final list = res.data['data'] as List;
-        return list.map((e) => ClvRateModel.fromJson(e)).toList();
+        return list.map((e) => SellPriceModel.fromJson(e)).toList();
       },
     );
 
@@ -32,10 +31,10 @@ class ClvRateProvider extends BaseProvider {
   }
 
   // ── CREATE ───────────────────────────────────────────────────────────────
-  Future<bool> createClvRate(Map<String, dynamic> formValues) async {
+  Future<bool> createSellPrice(Map<String, dynamic> formValues) async {
     final result = await request(
       showLoader: true,
-      call: () => api.post('/clvProcessRate', data: formValues),
+      call: () => api.post('/sell-price-list', data: formValues),
       onSuccess: (res) {
         if(res.data['success'] == true){
           return true;
@@ -44,17 +43,17 @@ class ClvRateProvider extends BaseProvider {
     );
     print(result);
     if (result != null) {
-      loadClvRates();
+      loadSellPrice();
       return true;
     }
     return false;
   }
 
   // ── UPDATE ───────────────────────────────────────────────────────────────
-  Future<bool> updateClvRate(int id, Map<String, dynamic> formValues) async {
+  Future<bool> updateSellPrice(int id, Map<String, dynamic> formValues) async {
     final result = await request(
       showLoader: true,
-      call: () => api.put('/clvProcessRate/$id', data: formValues),
+      call: () => api.put('/sell-price-list/$id', data: formValues),
       onSuccess: (res) {
         if(res.data['success'] == true){
           return true;
@@ -63,7 +62,7 @@ class ClvRateProvider extends BaseProvider {
     );
     print(result);
     if (result != null) {
-      loadClvRates();
+      loadSellPrice();
       return true;
     }
     return false;
@@ -72,17 +71,15 @@ class ClvRateProvider extends BaseProvider {
 
 
   // ── DELETE ───────────────────────────────────────────────────────────────
-  Future<bool> deleteClvRate(int id) async {
+  Future<bool> deleteSellPrice(int id) async {
     final result = await request<bool>(
       showLoader: true,
-      call: () => api.delete('/clvProcessRate/bulk-delete',data: {
-        'ids':[id]
-      }),
+      call: () => api.delete('/sell-price-list/$id'),
       onSuccess: (_) => true,
     );
 
     if (result == true) {
-      _list.removeWhere((e) => (e.clvRateMstID ?? 0) == id || (e.clvRateCode ?? 0) == id);
+      _list.removeWhere((e) => (e.sellPriceListMstID ?? 0) == id || (e.sellCode ?? 0) == id);
       notifyListeners();
       return true;
     }

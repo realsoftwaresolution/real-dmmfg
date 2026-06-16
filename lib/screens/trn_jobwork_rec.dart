@@ -128,7 +128,7 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
 
       // Cut & Package Info
       cutNo: r.cutNo ?? '',
-      mfgCut: r.mfgCut ?? r.cutNo ?? '',
+      mfgCut: r.mfgCut ,
       bCode: r.bCode ?? 0,
       pktNo: r.pktNo ?? '',
       pairNo: r.pairNo,
