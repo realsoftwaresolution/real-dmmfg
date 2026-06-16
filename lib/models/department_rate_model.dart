@@ -8,7 +8,7 @@ class DepartmentRateModel {
   final String deptProcessName;
   final int deptCode;
   final String deptName;
-  final int rateID;
+  final dynamic rateID;
   final String rateon;
   final String sizeon;
   final double fromWt;
@@ -68,7 +68,7 @@ class DepartmentRateModel {
       deptProcessName: json['DeptProcessName']?.toString() ?? '',
       deptCode: _toInt(json['DeptCode']),
       deptName: json['DeptName']?.toString() ?? '',
-      rateID: _toInt(json['RateID']),
+      rateID: json['RateID'] ?? '',
       rateon: json['Rateon']?.toString() ?? '',
       sizeon: json['Sizeon']?.toString() ?? '',
       fromWt: _toDouble(json['FromWt']),

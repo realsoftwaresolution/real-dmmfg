@@ -1981,7 +1981,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         ErpFieldConfig(
           key: 'length',
           label: 'LENGTH',
-          type: ErpFieldType.number,
+          type: ErpFieldType.amount,
           sectionIndex: 3,
           flex: 1,
         ),

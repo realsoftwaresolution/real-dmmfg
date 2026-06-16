@@ -7,7 +7,7 @@ class ClvRateModel {
   final int? crId;
   final int? deptCode;
   final int? deptProcessCode;
-  final int? rateID;
+  final dynamic rateID;
   final String? rateOn;
   final String? rateSizeOn;
   final double? fromWt;

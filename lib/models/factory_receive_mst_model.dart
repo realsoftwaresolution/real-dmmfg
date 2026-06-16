@@ -174,7 +174,7 @@ class FactoryReceiveDetModel {
   final int?    cutCode;
   final int?    purityCode;
   final int?    colorCode;
-  final int?    length;
+  final double?    length;
   final double? diam;
   final double? acuraecy;
   final double? amt;
@@ -850,7 +850,7 @@ class FactoryReceiveDetModel {
     int? cutCode,
     int? purityCode,
     int? colorCode,
-    int? length,
+    double? length,
     double? diam,
     double? acuraecy,
     double? amt,

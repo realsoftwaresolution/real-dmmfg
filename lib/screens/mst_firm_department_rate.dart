@@ -1,5 +1,6 @@
 // lib/screens/mst_firm_clv_rate.dart
 import 'package:diam_mfg/models/department_rate_model.dart';
+import 'package:diam_mfg/models/dept_process_model.dart';
 import 'package:diam_mfg/providers/article_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
@@ -35,7 +36,7 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
   Map<String, dynamic>? _selectedRow;
   bool _isEditMode = false;
   Map<String, String> _formValues = {};
-
+  DeptProcessModel? _selectedDept;
   // selection arrays for detail panels (persisted to API on save)
   Set<int> _selectedShapes = {};
   Set<int> _selectedCuts = {};
@@ -195,7 +196,7 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
         ErpFieldConfig(
           key: 'rateID',
           label: 'RATE ID',
-          type: ErpFieldType.number,
+          type: ErpFieldType.text,
           sectionIndex: 1,
         ),
         ErpFieldConfig(
@@ -273,6 +274,7 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
         context.read<CounterProvider>().load(),
         context.read<DeptProcessProvider>().load(),
         context.read<CutProvider>().loadCuts(),
+        context.read<ShapeProvider>().load(),
         context.read<PolishProvider>().loadPolish(),
         context.read<LabProvider>().loadCuts(),
         context.read<ArticleProvider>().load(),
@@ -289,6 +291,11 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
       _selectedRow = row;
       _isEditMode = true;
       _selectedDeptCode = raw.deptCode;
+      _selectedDept = context
+          .read<DeptProcessProvider>()
+          .list
+          .where((e) => e.deptCode == raw.deptCode)
+          .firstOrNull;
       _selectedDeptRateOn = _getRateOnForDept(raw.deptCode);
       _formValues = {
         'crId': raw.crId.toString(),
@@ -321,7 +328,8 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
 
   Future<void> _onSave(Map<String, dynamic> values) async {
 // ── Validate: at least one selection required in each panel ──
-    if (_selectedShapes.isEmpty) {
+    if (_selectedDept?.rateOnShape == 'Y' &&
+        _selectedShapes.isEmpty) {
       await ErpResultDialog.showError(
         context: context,
         theme: context.erpTheme,
@@ -330,7 +338,9 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
       );
       return;
     }
-    if (_selectedCuts.isEmpty) {
+
+    if (_selectedDept?.rateOnCut == 'Y' &&
+        _selectedCuts.isEmpty) {
       await ErpResultDialog.showError(
         context: context,
         theme: context.erpTheme,
@@ -339,7 +349,9 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
       );
       return;
     }
-    if (_selectedArticles.isEmpty) {
+
+    if (_selectedDept?.rateOnArticle == 'Y' &&
+        _selectedArticles.isEmpty) {
       await ErpResultDialog.showError(
         context: context,
         theme: context.erpTheme,
@@ -347,14 +359,16 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
         message: 'Please select at least one Article.',
       );
       return;
-    }    final provider = context.read<DepartmentRateProvider>();
+    }
+
+    final provider = context.read<DepartmentRateProvider>();
 
     // Map form values to API payload
     final payload = {
       'DeptCode': int.tryParse(_formValues['deptCode'] ?? values['deptCode']?.toString() ?? '') ?? 0,
       'CrId': int.tryParse(_formValues['crId'] ?? values['crId']?.toString() ?? '') ?? 0,
       'DeptProcessCode': int.tryParse(_formValues['deptProcessCode'] ?? values['deptProcessCode']?.toString() ?? '') ?? 0,
-      'RateID': int.tryParse(_formValues['rateID'] ?? values['rateID']?.toString() ?? '') ?? 0,
+      'RateID': _formValues['rateID'] ?? values['rateID']?.toString() ?? 0,
       'Rateon': _formValues['rateOn'] ?? values['rateOn']?.toString() ?? '',
       'Sizeon': _formValues['rateSizeOn'] ?? values['rateSizeOn']?.toString() ?? '',
       'FromWt': double.tryParse(_formValues['fromWt'] ?? values['fromWt']?.toString() ?? '') ?? 0.0,
@@ -438,6 +452,7 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
     _erpFormKey.currentState?.resetForm();
     _formValues['active'] = 'true';
     _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    _selectedDept = null;
   }
 
   bool _showTableOnMobile = false;
@@ -498,50 +513,73 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
                           final cutProv = context.watch<CutProvider>();
                           final articleProv = context.watch<ArticleProvider>();
 
-                          final panels = [
-                            PanelConfig(
-                              title: 'SHAPE',
-                              items: shapeProv.list
-                                  .map(
-                                    (s) => PanelItem(
-                                      id: s.shapeCode ?? 0,
-                                      name: s.shapeName ?? '',
-                                    ),
-                                  )
-                                  .toList(),
-                              selectedIds: _selectedShapes,
-                              onChanged: (set) =>
-                                  setState(() => _selectedShapes = set),
-                            ),
-                            PanelConfig(
-                              title: 'CUT',
-                              items: cutProv.cuts
-                                  .map(
-                                    (c) => PanelItem(
-                                      id: c.cutCode ?? 0,
-                                      name: c.cutName ?? '',
-                                    ),
-                                  )
-                                  .toList(),
-                              selectedIds: _selectedCuts,
-                              onChanged: (set) =>
-                                  setState(() => _selectedCuts = set),
-                            ),
-                            PanelConfig(
-                              title: 'ARTICLE',
-                              items: articleProv.list
-                                  .map(
-                                    (a) => PanelItem(
-                                      id: a.articalCode ?? 0,
-                                      name: a.articalName ?? '',
-                                    ),
-                                  )
-                                  .toList(),
-                              selectedIds: _selectedArticles,
-                              onChanged: (set) =>
-                                  setState(() => _selectedArticles = set),
-                            ),
-                          ];
+                          final panels = <PanelConfig>[];
+
+                          if (_selectedDept?.rateOnShape == 'Y') {
+                            panels.add(
+                              PanelConfig(
+                                title: 'SHAPE',
+                                items: shapeProv.list
+                                    .map(
+                                      (e) => PanelItem(
+                                    id: e.shapeCode ?? 0,
+                                    name: e.shapeName ?? '',
+                                  ),
+                                )
+                                    .toList(),
+                                selectedIds: _selectedShapes,
+                                onChanged: (set) {
+                                  setState(() {
+                                    _selectedShapes = set;
+                                  });
+                                },
+                              ),
+                            );
+                          }
+
+                          if (_selectedDept?.rateOnCut == 'Y') {
+                            panels.add(
+                              PanelConfig(
+                                title: 'CUT',
+                                items: cutProv.cuts
+                                    .map(
+                                      (e) => PanelItem(
+                                    id: e.cutCode ?? 0,
+                                    name: e.cutName ?? '',
+                                  ),
+                                )
+                                    .toList(),
+                                selectedIds: _selectedCuts,
+                                onChanged: (set) {
+                                  setState(() {
+                                    _selectedCuts = set;
+                                  });
+                                },
+                              ),
+                            );
+                          }
+
+                          if (_selectedDept?.rateOnArticle == 'Y') {
+                            panels.add(
+                              PanelConfig(
+                                title: 'ARTICLE',
+                                items: articleProv.list
+                                    .map(
+                                      (e) => PanelItem(
+                                    id: e.articalCode ?? 0,
+                                    name: e.articalName ?? '',
+                                  ),
+                                )
+                                    .toList(),
+                                selectedIds: _selectedArticles,
+                                onChanged: (set) {
+                                  setState(() {
+                                    _selectedArticles = set;
+                                  });
+                                },
+                              ),
+                            );
+                          }
 
                           return DetailPanels(panels: panels,childAspectRatio: 210 / 400);
                         },
@@ -562,13 +600,36 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
     // When department is selected, update the tracking state
     if (key == 'deptCode') {
       final deptCode = int.tryParse(value.toString());
+
+      final dept = context
+          .read<DeptProcessProvider>()
+          .list
+          .where((e) => e.deptCode == deptCode)
+          .firstOrNull;
+
       setState(() {
+        _selectedDept = dept;
         _selectedDeptCode = deptCode;
-        _selectedDeptRateOn = _getRateOnForDept(deptCode);
-        // Clear dependent fields
+
+        if (dept?.rateOnShape != 'Y') {
+          _selectedShapes.clear();
+        }
+
+        if (dept?.rateOnCut != 'Y') {
+          _selectedCuts.clear();
+        }
+
+        if (dept?.rateOnArticle != 'Y') {
+          _selectedArticles.clear();
+        }
+
         _formValues['deptProcessCode'] = '';
       });
-      _erpFormKey.currentState?.updateFieldValue('deptProcessCode', '');
+
+      _erpFormKey.currentState?.updateFieldValue(
+        'deptProcessCode',
+        '',
+      );
     }
   }
 

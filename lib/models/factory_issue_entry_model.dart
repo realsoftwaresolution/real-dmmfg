@@ -139,7 +139,7 @@ class FactoryIssueDetModel {
   final int?    cutCode;
   final int?    purityCode;
   final int?    colorCode;
-  final int?    length;
+  final num?    length;
   final double? diam;
   final double? acuraecy;
   final double? amt;

@@ -858,8 +858,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         /// STEP 2 : SELL RATE CALC
         final sellResult = await prov.saleRateCallApi(updatedRowData);
 
-        if (sellResult.isNotEmpty &&
-            sellResult.first.bCode != null) {
+        if (sellResult.isNotEmpty && sellResult.first.bCode != null) {
           final sellRow = sellResult.first;
 
           updatedRowData = updatedRowData.copyWith(
@@ -883,11 +882,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           "SellAmount": updatedRowData.SellAmount,
         };
 
-        final success = await prov.update(
-          payload,
-          _theme,
-          context,
-        );
+        final success = await prov.update(payload, _theme, context);
 
         if (!mounted || !success) return;
 
@@ -909,12 +904,41 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         );
 
         context.read<FactoryReceivedEntryProvider>().load();
-
       } catch (e) {
         debugPrint('Edit Error => $e');
       }
 
       return;
+    }
+
+    // ─────────────────────────────
+    // 🚫 DUPLICATE BCODE CHECK
+    // ─────────────────────────────
+    final currentBCode = int.tryParse(_entryVals['scanValue'] ?? '0');
+
+    if (_editingDetIndex == null && currentBCode != null) {
+      final alreadyExists = _detRows.any(
+        (e) => int.tryParse(e.bCode?.toString() ?? '0') == currentBCode,
+      );
+
+      if (alreadyExists) {
+        await ErpResultDialog.showError(
+          context: context,
+          theme: _theme,
+          title: 'Duplicate Barcode',
+          message: 'Barcode $currentBCode is already added.',
+        );
+
+        _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+
+        _entryVals['scanValue'] = '';
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _erpFormKey.currentState?.focusField('scanValue');
+        });
+
+        return;
+      }
     }
 
     // ─────────────────────────────
@@ -947,7 +971,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
     FactoryReceiveDetModel updatedRow = newRow;
     try {
-      final apiDataFirst = await prov.rateCallApi(_formValues['factory']!, newRow);
+      final apiDataFirst = await prov.rateCallApi(
+        _formValues['factory']!,
+        newRow,
+      );
       final apiData = await prov.saleRateCallApi(apiDataFirst.first);
       if (apiData.isNotEmpty) {
         if (apiData.first.bCode == null) {
@@ -1085,7 +1112,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           : 0,
 
       length: _isFieldVisible('LENGTH')
-          ? int.tryParse(_entryVals['length'] ?? '')
+          ? double.tryParse(_entryVals['length'] ?? '')
           : 0,
 
       diam: _isFieldVisible('DIAM')
@@ -1202,7 +1229,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           ? int.tryParse(_entryVals['tensionCode'] ?? '')
           : 0,
       length: _isFieldVisible('LENGTH')
-          ? int.tryParse(_entryVals['length'].toString())
+          ? double.tryParse(_entryVals['length'].toString())
           : 0,
       diam: _isFieldVisible('DIAM')
           ? double.tryParse(_entryVals['diam'].toString())
@@ -1401,6 +1428,8 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             ha: v.ha,
             MfgCut: v.MfgCut,
             size: v.size,
+            ArticalCode: v.ArticalCode,
+            groupType: v.groupType,
           );
         }).toList();
 
@@ -1523,7 +1552,14 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       'FColorCode2',
       'HA',
       'MarkerMstID',
-    'groupType',
+      'groupType',
+      'rateID',
+      'rateon',
+      'rate',
+      'amount',
+      'sellCode',
+      'sellRate',
+      'sellAmount',
     ];
 
     _detDisplay = _detRows.reversed.map((r) {
@@ -1585,6 +1621,14 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         'HA': r.ha ?? '',
         'MarkerMstID': r.markerMstID ?? 0,
         'groupType': r.groupType ?? '',
+        'rateID': r.rateID ?? '',
+        'rateon': r.rateon ?? '',
+        'rate': fThreeDecimal(r.rate ?? 0),
+        'amount': fThreeDecimal(r.amount ?? 0),
+
+        'sellCode': r.SellCode ?? '',
+        'sellRate': fThreeDecimal(r.SellRate ?? 0),
+        'sellAmount': fThreeDecimal(r.SellAmount ?? 0),
       };
     }).toList();
   }
@@ -1729,6 +1773,29 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   }
 
   Future<void> _onSave(Map<String, dynamic> values) async {
+    final duplicateBCodes = <String>{};
+    final seenBCodes = <String>{};
+
+    for (final row in _detRows) {
+      final bCode = row.bCode?.toString() ?? '';
+
+      if (bCode.isEmpty) continue;
+
+      if (!seenBCodes.add(bCode)) {
+        duplicateBCodes.add(bCode);
+      }
+    }
+
+    if (duplicateBCodes.isNotEmpty) {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'Duplicate Barcode',
+        message: 'Duplicate barcode(s) found: ${duplicateBCodes.join(', ')}',
+      );
+
+      return;
+    }
     final reversedDet = _detRows.toList();
 
     if (reversedDet.isNotEmpty) {
@@ -2408,7 +2475,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           ErpFieldConfig(
             key: 'length',
             label: 'LENGTH',
-            type: ErpFieldType.number,
+            type: ErpFieldType.amount,
             sectionIndex: 4,
             flex: 1,
           ),
@@ -2947,6 +3014,14 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
                   'size': TextAlign.center,
                   'diam': TextAlign.center,
                   'length': TextAlign.center,
+                  'rateID': TextAlign.center,
+                  'rateon':TextAlign.center,
+                  'rate': TextAlign.center,
+                  'amount': TextAlign.center,
+
+                  'sellCode': TextAlign.center,
+                  'sellRate': TextAlign.center,
+                  'sellAmount': TextAlign.center,
                 },
                 footerTotCount: 'Tot: ${_detRows.length}',
                 footerTotals: _buildFooterTotals(),

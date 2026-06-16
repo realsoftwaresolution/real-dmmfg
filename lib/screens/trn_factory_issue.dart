@@ -343,6 +343,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       entryType: 'B',
       formType: 'FACTORY ISSUE',
       size: r.size ?? 0.00,
+      length: r.length
     );
     setState(() {
       _detRows.add(newRow);
@@ -745,7 +746,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
               : 'Factory Issue Entry saved.',
         );
         await context.read<FactoryIssueEntryProvider>().load();
-        printJobWorkPdf();
         _resetForm();
       }
     } else {

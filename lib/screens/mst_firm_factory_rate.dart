@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+import 'package:diam_mfg/models/factory_model.dart';
 import 'package:diam_mfg/models/factory_rate_model.dart';
 import 'package:diam_mfg/providers/article_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
@@ -31,7 +33,7 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
   Map<String, dynamic>? _selectedRow;
   bool _isEditMode = false;
   Map<String, String> _formValues = {};
-
+  FactoryModel? _selectedFactory;
   // selection arrays for detail panels (persisted to API on save)
   Set<int> _selectedShapes = {};
   Set<int> _selectedCuts = {};
@@ -58,6 +60,7 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
       label: 'RATE CODE',
       width: 200,
     ),
+    ErpColumnConfig(key: 'rateID', label: 'RATE ID', width: 150),
     ErpColumnConfig(key: 'rateon', label: 'RATE ON', width: 150),
     ErpColumnConfig(key: 'sizeon', label: 'SIZE ON', width: 150),
     ErpColumnConfig(key: 'fromWt', label: 'FROM WT', width: 150),
@@ -114,7 +117,7 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
         ErpFieldConfig(
           key: 'rateID',
           label: 'RATE ID',
-          type: ErpFieldType.number,
+          type: ErpFieldType.text,
           sectionIndex: 1,
         ),
         ErpFieldConfig(
@@ -241,7 +244,8 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
 
   Future<void> _onSave(Map<String, dynamic> values) async {
     // ── Validate: at least one selection required in each panel ──
-    if (_selectedShapes.isEmpty) {
+    if (_selectedFactory?.rateOnShape == 'Y' &&
+        _selectedShapes.isEmpty) {
       await ErpResultDialog.showError(
         context: context,
         theme: context.erpTheme,
@@ -250,7 +254,9 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
       );
       return;
     }
-    if (_selectedCuts.isEmpty) {
+
+    if (_selectedFactory?.rateOnCut == 'Y' &&
+        _selectedCuts.isEmpty) {
       await ErpResultDialog.showError(
         context: context,
         theme: context.erpTheme,
@@ -259,7 +265,9 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
       );
       return;
     }
-    if (_selectedArticles.isEmpty) {
+
+    if (_selectedFactory?.rateOnArticle == 'Y' &&
+        _selectedArticles.isEmpty) {
       await ErpResultDialog.showError(
         context: context,
         theme: context.erpTheme,
@@ -269,32 +277,35 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
       return;
     }
 
-    if (_selectedCertificate.isEmpty) {
-      await ErpResultDialog.showError(
-        context: context,
-        theme: context.erpTheme,
-        title: 'Validation Error',
-        message: 'Please select at least one Certificate.',
-      );
-      return;
-    }
-
-    if (_selectedSymentry.isEmpty) {
-      await ErpResultDialog.showError(
-        context: context,
-        theme: context.erpTheme,
-        title: 'Validation Error',
-        message: 'Please select at least one Symentry.',
-      );
-      return;
-    }
-
-    if (_selectedPolish.isEmpty) {
+    if (_selectedFactory?.rateOnPolish == 'Y' &&
+        _selectedPolish.isEmpty) {
       await ErpResultDialog.showError(
         context: context,
         theme: context.erpTheme,
         title: 'Validation Error',
         message: 'Please select at least one Polish.',
+      );
+      return;
+    }
+
+    if (_selectedFactory?.rateOnSymmetry == 'Y' &&
+        _selectedSymentry.isEmpty) {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: context.erpTheme,
+        title: 'Validation Error',
+        message: 'Please select at least one Symmetry.',
+      );
+      return;
+    }
+
+    if (_selectedFactory?.rateOnCertificate == 'Y' &&
+        _selectedCertificate.isEmpty) {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: context.erpTheme,
+        title: 'Validation Error',
+        message: 'Please select at least one Certificate.',
       );
       return;
     }
@@ -310,11 +321,7 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
                 '',
           ) ??
           0,
-      'RateID':
-          int.tryParse(
-            _formValues['rateID'] ?? values['rateID']?.toString() ?? '',
-          ) ??
-          0,
+      'RateID': _formValues['rateID'] ?? values['rateID']?.toString() ?? 0,
       'Rateon': _formValues['rateOn'] ?? values['rateOn']?.toString() ?? '',
       'Sizeon':
           _formValues['rateSizeOn'] ?? values['rateSizeOn']?.toString() ?? '',
@@ -425,6 +432,7 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
     _erpFormKey.currentState?.resetForm();
     _formValues['active'] = 'true';
     _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    _selectedFactory = null;
   }
 
   bool _showTableOnMobile = false;
@@ -489,92 +497,139 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
                               .watch<SymmetryProvider>();
                           final certificateProv = context.watch<LabProvider>();
 
-                          final panels = [
-                            PanelConfig(
-                              title: 'SHAPE',
-                              items: shapeProv.list
-                                  .map(
-                                    (s) => PanelItem(
-                                      id: s.shapeCode ?? 0,
-                                      name: s.shapeName ?? '',
-                                    ),
-                                  )
-                                  .toList(),
-                              selectedIds: _selectedShapes,
-                              onChanged: (set) =>
-                                  setState(() => _selectedShapes = set),
-                            ),
-                            PanelConfig(
-                              title: 'CUT',
-                              items: cutProv.cuts
-                                  .map(
-                                    (c) => PanelItem(
-                                      id: c.cutCode ?? 0,
-                                      name: c.cutName ?? '',
-                                    ),
-                                  )
-                                  .toList(),
-                              selectedIds: _selectedCuts,
-                              onChanged: (set) =>
-                                  setState(() => _selectedCuts = set),
-                            ),
-                            PanelConfig(
-                              title: 'POLISH',
-                              items: polishProv.polishs
-                                  .map(
-                                    (a) => PanelItem(
-                                      id: a.polishCode ?? 0,
-                                      name: a.polishName ?? '',
-                                    ),
-                                  )
-                                  .toList(),
-                              selectedIds: _selectedPolish,
-                              onChanged: (set) =>
-                                  setState(() => _selectedPolish = set),
-                            ),
-                            PanelConfig(
-                              title: 'SYMENTRY',
-                              items: symentryProv.symmetrys
-                                  .map(
-                                    (a) => PanelItem(
-                                      id: a.symmetryCode ?? 0,
-                                      name: a.symmetryName ?? '',
-                                    ),
-                                  )
-                                  .toList(),
-                              selectedIds: _selectedSymentry,
-                              onChanged: (set) =>
-                                  setState(() => _selectedSymentry = set),
-                            ),
-                            PanelConfig(
-                              title: 'CERTIFICATE',
-                              items: certificateProv.cuts
-                                  .map(
-                                    (a) => PanelItem(
-                                      id: a.certificateCode ?? 0,
-                                      name: a.certificateName ?? '',
-                                    ),
-                                  )
-                                  .toList(),
-                              selectedIds: _selectedCertificate,
-                              onChanged: (set) =>
-                                  setState(() => _selectedCertificate = set),
-                            ),
-                            PanelConfig(
-                              title: 'ARTICLE',
-                              items: articleProv.list
-                                  .map(
-                                    (a) => PanelItem(
-                                      id: a.articalCode ?? 0,
-                                      name: a.articalName ?? '',
-                                    ),
-                                  )
-                                  .toList(),
-                              selectedIds: _selectedArticles,
-                              onChanged: (set) =>
-                                  setState(() => _selectedArticles = set),
-                            ),
-                          ];
+                          final panels = <PanelConfig>[];
+
+                          if (_selectedFactory?.rateOnShape == 'Y') {
+                            panels.add(
+                              PanelConfig(
+                                title: 'SHAPE',
+                                items: shapeProv.list
+                                    .map(
+                                      (e) => PanelItem(
+                                    id: e.shapeCode ?? 0,
+                                    name: e.shapeName ?? '',
+                                  ),
+                                )
+                                    .toList(),
+                                selectedIds: _selectedShapes,
+                                onChanged: (set) {
+                                  setState(() {
+                                    _selectedShapes = set;
+                                  });
+                                },
+                              ),
+                            );
+                          }
+
+                          if (_selectedFactory?.rateOnCut == 'Y') {
+                            panels.add(
+                              PanelConfig(
+                                title: 'CUT',
+                                items: cutProv.cuts
+                                    .map(
+                                      (e) => PanelItem(
+                                    id: e.cutCode ?? 0,
+                                    name: e.cutName ?? '',
+                                  ),
+                                )
+                                    .toList(),
+                                selectedIds: _selectedCuts,
+                                onChanged: (set) {
+                                  setState(() {
+                                    _selectedCuts = set;
+                                  });
+                                },
+                              ),
+                            );
+                          }
+
+                          if (_selectedFactory?.rateOnArticle == 'Y') {
+                            panels.add(
+                              PanelConfig(
+                                title: 'ARTICLE',
+                                items: articleProv.list
+                                    .map(
+                                      (e) => PanelItem(
+                                    id: e.articalCode ?? 0,
+                                    name: e.articalName ?? '',
+                                  ),
+                                )
+                                    .toList(),
+                                selectedIds: _selectedArticles,
+                                onChanged: (set) {
+                                  setState(() {
+                                    _selectedArticles = set;
+                                  });
+                                },
+                              ),
+                            );
+                          }
+
+                          if (_selectedFactory?.rateOnPolish == 'Y') {
+                            panels.add(
+                              PanelConfig(
+                                title: 'POLISH',
+                                items: polishProv.polishs
+                                    .map(
+                                      (e) => PanelItem(
+                                    id: e.polishCode ?? 0,
+                                    name: e.polishName ?? '',
+                                  ),
+                                )
+                                    .toList(),
+                                selectedIds: _selectedPolish,
+                                onChanged: (set) {
+                                  setState(() {
+                                    _selectedPolish = set;
+                                  });
+                                },
+                              ),
+                            );
+                          }
+
+                          if (_selectedFactory?.rateOnSymmetry == 'Y') {
+                            panels.add(
+                              PanelConfig(
+                                title: 'SYMMETRY',
+                                items: symentryProv.symmetrys
+                                    .map(
+                                      (e) => PanelItem(
+                                    id: e.symmetryCode ?? 0,
+                                    name: e.symmetryName ?? '',
+                                  ),
+                                )
+                                    .toList(),
+                                selectedIds: _selectedSymentry,
+                                onChanged: (set) {
+                                  setState(() {
+                                    _selectedSymentry = set;
+                                  });
+                                },
+                              ),
+                            );
+                          }
+
+                          if (_selectedFactory?.rateOnCertificate == 'Y') {
+                            panels.add(
+                              PanelConfig(
+                                title: 'CERTIFICATE',
+                                items: certificateProv.cuts
+                                    .map(
+                                      (e) => PanelItem(
+                                    id: e.certificateCode ?? 0,
+                                    name: e.certificateName ?? '',
+                                  ),
+                                )
+                                    .toList(),
+                                selectedIds: _selectedCertificate,
+                                onChanged: (set) {
+                                  setState(() {
+                                    _selectedCertificate = set;
+                                  });
+                                },
+                              ),
+                            );
+                          }
 
                           return DetailPanels(
                             panels: panels,
@@ -594,7 +649,43 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
 
   void _onFieldChanged(String key, dynamic value) {
     _formValues[key] = value.toString();
+    if (key == 'factoryCode') {
+      final factoryCode = int.tryParse(value.toString());
 
+      final factory = context
+          .read<FactoryProvider>()
+          .factories
+          .firstWhereOrNull((e) => e.factoryCode == factoryCode);
+
+      setState(() {
+        _selectedFactory = factory;
+
+        // clear selections for disabled panels
+        if (factory?.rateOnShape != 'Y') {
+          _selectedShapes.clear();
+        }
+
+        if (factory?.rateOnCut != 'Y') {
+          _selectedCuts.clear();
+        }
+
+        if (factory?.rateOnArticle != 'Y') {
+          _selectedArticles.clear();
+        }
+
+        if (factory?.rateOnPolish != 'Y') {
+          _selectedPolish.clear();
+        }
+
+        if (factory?.rateOnSymmetry != 'Y') {
+          _selectedSymentry.clear();
+        }
+
+        if (factory?.rateOnCertificate != 'Y') {
+          _selectedCertificate.clear();
+        }
+      });
+    }
     // When department is selected, update the tracking state
     if (key == 'deptCode') {
       final deptCode = int.tryParse(value.toString());

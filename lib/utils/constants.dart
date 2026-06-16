@@ -1,6 +1,11 @@
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+
+
+
+
+
 String toUtcIso(String? v) {
   if (v == null || v.isEmpty) return '';
 
@@ -112,3 +117,13 @@ String toIso(String? v) {
 String f2TwoDecimal(double? v) => v == null ? '' : v.toStringAsFixed(2);
 
 String fThreeDecimal(double? v) => v == null ? '' : v.toStringAsFixed(3);
+
+
+// Helper functions
+double? toDouble(dynamic v) {
+  if (v == null) return null;
+  if (v is double) return v;
+  if (v is int) return v.toDouble();
+  if (v is num) return v.toDouble();
+  return double.tryParse(v.toString());
+}

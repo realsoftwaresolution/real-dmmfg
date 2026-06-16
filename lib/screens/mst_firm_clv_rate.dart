@@ -268,7 +268,7 @@ class _MstClvRateState extends State<MstClvRate> {
         ErpFieldConfig(
           key: 'rateID',
           label: 'RATE ID',
-          type: ErpFieldType.number,
+          type: ErpFieldType.text,
           sectionIndex: 1,
         ),
         ErpFieldConfig(
@@ -398,7 +398,7 @@ class _MstClvRateState extends State<MstClvRate> {
       'CrId': int.tryParse(values['crId']?.toString() ?? '') ?? 0,
       'DeptProcessCode':
           int.tryParse(values['deptProcessCode']?.toString() ?? '') ?? 0,
-      'RateID': int.tryParse(values['rateID']?.toString() ?? '') ?? 0,
+      'RateID': values['rateID']?.toString() ?? 0,
       'ShapeCode': int.tryParse(values['shapeCode']?.toString() ?? '') ?? 0,
       'Type': values['type']?.toString() ?? 'SPK',
       'Rateon': values['rateOn']?.toString() ?? '',

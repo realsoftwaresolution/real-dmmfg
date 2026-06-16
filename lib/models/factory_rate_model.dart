@@ -5,7 +5,7 @@ class FactoryRateModel {
   final String factRateCode;
   final String factoryCode;
   final String factoryName;
-  final int rateID;
+  final dynamic rateID;
   final String rateon;
   final String sizeon;
   final double fromWt;
@@ -94,7 +94,7 @@ class FactoryRateModel {
       factRateCode: (_get<dynamic>(json, ['FactRateCode', 'DeptRateCode', 'FactRateCode'], '')).toString(),
       factoryCode: (_get<dynamic>(json, ['FactoryCode'], '')).toString(),
       factoryName: (_get<dynamic>(json, ['FactoryName'], '')).toString(),
-      rateID: _toInt(_get<dynamic>(json, ['RateID'], 0)),
+      rateID: (_get<dynamic>(json, ['RateID'], '')).toString(),
       rateon: (_get<dynamic>(json, ['Rateon'], '')).toString(),
       sizeon: (_get<dynamic>(json, ['Sizeon'], '')).toString(),
       fromWt: _toDouble(_get<dynamic>(json, ['FromWt'], 0.0)),
@@ -234,6 +234,7 @@ class FactoryRateModel {
     'factRateMstID': factRateMstID,
     'factRateCode': factRateCode,
     'factoryName': factoryName,
+    'rateID': rateID,
     'rateon': rateon,
     'sizeon': sizeon,
     'fromWt': fromWt,
