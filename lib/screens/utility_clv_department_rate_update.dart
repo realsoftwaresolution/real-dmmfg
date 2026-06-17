@@ -1,5 +1,6 @@
 import 'package:diam_mfg/providers/counter_provider.dart';
 import 'package:diam_mfg/providers/utility_clvdepartment_rate_update_provider.dart';
+import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
@@ -122,12 +123,12 @@ class _UtilityClvDepartmentRateUpdateState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _resetForm();
       await Future.wait([
         context.read<DeptProvider>().load(),
         context.read<CounterProvider>().load(),
         context.read<DeptProcessProvider>().load(),
       ]);
-      _setDefaultFormValues();
     });
   }
 
@@ -138,20 +139,6 @@ class _UtilityClvDepartmentRateUpdateState
       'toDate': DateFormat('dd/MM/yyyy').format(now),
     };
     if (mounted) setState(() {});
-  }
-
-  /// Converts a dd/MM/yyyy display string into an ISO-8601 string for the
-  /// API. Adjust this if the backend expects a different date shape
-  /// (e.g. 'yyyy-MM-dd') — I don't have the API contract to confirm.
-  String? _parseDateForApi(String? displayDate) {
-    if (displayDate == null || displayDate.isEmpty) return null;
-
-    try {
-      final date = DateFormat('dd/MM/yyyy').parse(displayDate);
-      return DateFormat('yyyy-MM-dd').format(date);
-    } catch (_) {
-      return null;
-    }
   }
 
   Future<void> _onSave(Map<String, dynamic> values) async {
@@ -182,10 +169,10 @@ class _UtilityClvDepartmentRateUpdateState
       'DeptCode': deptCode,
       'CrID': crId,
       'DeptProcessCode': deptProcessCode,
-      'FromDate': _parseDateForApi(
+      'FromDate': parseDateForApi(
         _formValues['fromDate'] ?? values['fromDate']?.toString(),
       ),
-      'ToDate': _parseDateForApi(
+      'ToDate': parseDateForApi(
         _formValues['toDate'] ?? values['toDate']?.toString(),
       ),
     };

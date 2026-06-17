@@ -220,6 +220,5 @@ class ClvDepartmentRateUpdateModel {
     'Rate': rate,
     'Amount': amount,
     'ArticalCode': articalCode,
-
   };
 }

@@ -112,6 +112,16 @@ String toIso(String? v) {
   }
 }
 
+String? parseDateForApi(String? displayDate) {
+  if (displayDate == null || displayDate.isEmpty) return null;
+
+  try {
+    final date = DateFormat('dd/MM/yyyy').parse(displayDate);
+    return DateFormat('yyyy-MM-dd').format(date);
+  } catch (_) {
+    return null;
+  }
+}
 
 
 String f2TwoDecimal(double? v) => v == null ? '' : v.toStringAsFixed(2);

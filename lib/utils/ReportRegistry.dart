@@ -98,23 +98,58 @@ class ReportRegistry {
       reportTypeCode: 'CUT_CREATE_DETAIL',
       endpoint: '/reports/cutcreate-detail-report',
       columns: const [
-        ReportColumnDef(key: 'kapanNo', label: 'Kapan No', width: 140),
-        ReportColumnDef(key: 'jno', label: 'Jno', width: 120),
-        ReportColumnDef(key: 'wt', label: 'Wt', width: 120),
-        ReportColumnDef(key: 'issWt', label: 'Iss Wt', width: 140),
-        ReportColumnDef(key: 'pendWt', label: 'Pend Wt', width: 140),
+        ReportColumnDef(key: 'MstID', label: 'Mst ID', width: 140),
+        ReportColumnDef(key: 'Date', label: 'Date', width: 140),
+        ReportColumnDef(key: 'Time', label: 'Time', width: 140),
+
+        ReportColumnDef(key: 'Jno', label: 'Jno', width: 120),
+
+        ReportColumnDef(key: 'KapanNo', label: 'Kapan No', width: 140),
+
+        ReportColumnDef(key: 'CutType', label: 'Cut Type', width: 140),
+        ReportColumnDef(key: 'CutNo', label: 'Cut No', width: 140),
+        ReportColumnDef(key: 'ClvCut', label: 'Clv Cut', width: 140),
+        ReportColumnDef(key: 'MfgCut', label: 'Mfg Cut', width: 140),
+
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+
+        ReportColumnDef(key: 'WtLoss', label: 'Wt Loss', width: 140),
+        ReportColumnDef(key: 'Out', label: 'Out', width: 140),
+
+        ReportColumnDef(key: 'PurityName', label: 'Purity', width: 140),
+        ReportColumnDef(key: 'Manager', label: 'Manager', width: 180),
+
+        ReportColumnDef(key: 'Finish', label: 'Finish', width: 120),
+        ReportColumnDef(key: 'FinishDate', label: 'Finish Date', width: 160),
       ],
-      mapper: (raw) => raw
-          .map(
-            (e) => {
-              'kapanNo': '${e['KapanNo'] ?? '-'}',
-              'jno': e['Jno'] ?? '-',
-              'wt': formatDecimal(e['Wt'], decimal: 3),
-              'issWt': formatDecimal(e['IssWt'], decimal: 3),
-              'pendWt': formatDecimal(e['PendWt'], decimal: 3),
-            },
-          )
-          .toList(),
+      mapper: (raw) => raw.map((e) => {
+        'MstID': '${e['MstID'] ?? 0}',
+
+        'Date': formatDate(e['Date']),
+        'Time': e['Time'] ?? '-',
+
+        'Jno': '${e['Jno'] ?? 0}',
+
+        'KapanNo': e['KapanNo'] ?? '-',
+
+        'CutType': e['CutType'] ?? '-',
+        'CutNo': e['CutNo'] ?? '-',
+        'ClvCut': e['ClvCut'] ?? '-',
+        'MfgCut': e['MfgCut'] ?? '-',
+
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+
+        'WtLoss': formatDecimal(e['WtLoss'], decimal: 3),
+        'Out': e['Out'] ?? '-',
+
+        'PurityName': e['PurityName'] ?? '-',
+        'Manager': e['Manager'] ?? '-',
+
+        'Finish': e['Finish'] ?? '-',
+        'FinishDate': formatDate(e['FinishDate']),
+      }).toList(),
     ),
 
     // ── KAPAN STOCK ─────────────────────────────────────────────────────── 4
@@ -145,29 +180,6 @@ class ReportRegistry {
           .toList(),
     ),
 
-    // ── CUT STOCK ─────────────────────────────────────────────────────── 5
-    'CUT_STOCK': ReportConfig(
-      reportTypeCode: 'CUT_STOCK',
-      endpoint: '/reports/cut-stock',
-      columns: const [
-        ReportColumnDef(key: 'cutNo', label: 'Cut No', width: 140),
-        ReportColumnDef(key: 'jno', label: 'Jno', width: 140),
-        ReportColumnDef(key: 'wt', label: 'Wt', width: 140),
-        ReportColumnDef(key: 'issWt', label: 'Iss Wt', width: 140),
-        ReportColumnDef(key: 'pendWt', label: 'Pend Wt', width: 140),
-      ],
-      mapper: (raw) => raw
-          .map(
-            (e) => {
-              'cutNo': '${e['CutNo'] ?? '-'}',
-              'jno': e['Jno'] ?? '-',
-              'wt': formatDecimal(e['Wt'], decimal: 3),
-              'issWt': formatDecimal(e['IssWt'], decimal: 3),
-              'pendWt': formatDecimal(e['PendWt'], decimal: 3),
-            },
-          )
-          .toList(),
-    ),
 
     // ── PACKET DETAIL ─────────────────────────────────────────────────────── 6
     'PACKET_DETAIL': ReportConfig(
@@ -1350,52 +1362,70 @@ class ReportRegistry {
       reportTypeCode: 'LASER_REC_BCODEWISE_DETAIL',
       endpoint: '/reports/dept-rec-laser-bcodewise-detail',
       columns: const [
+        ReportColumnDef(key: 'IssDate', label: 'Issue Date', width: 140),
+
         ReportColumnDef(key: 'Manager', label: 'Manager', width: 180),
-        ReportColumnDef(key: 'Pkt', label: 'Pkt', width: 120),
-        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
-        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+        ReportColumnDef(key: 'RecutEmp', label: 'Recut Emp', width: 180),
+
+        ReportColumnDef(key: 'ID', label: 'ID', width: 120),
+
+        ReportColumnDef(key: 'CutNo', label: 'Cut No', width: 140),
+        ReportColumnDef(key: 'CutWt', label: 'Cut Wt', width: 140),
+
+        ReportColumnDef(key: 'PktNo', label: 'Pkt No', width: 140),
+        ReportColumnDef(key: 'BCode', label: 'BCode', width: 140),
+
         ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
         ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+
+        ReportColumnDef(key: 'Remarks', label: 'Remarks', width: 200),
+
+        ReportColumnDef(key: 'RecDate', label: 'Rec Date', width: 140),
         ReportColumnDef(key: 'RecPc', label: 'Rec Pc', width: 140),
         ReportColumnDef(key: 'RecWt', label: 'Rec Wt', width: 140),
-        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
-        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
-        ReportColumnDef(key: 'RecPer', label: 'Rec %', width: 140),
-        ReportColumnDef(key: 'KPc', label: 'K Pc', width: 140),
-        ReportColumnDef(key: 'KWt', label: 'K Wt', width: 140),
-        ReportColumnDef(key: 'BrPc', label: 'Br Pc', width: 140),
-        ReportColumnDef(key: 'BrWt', label: 'Br Wt', width: 140),
-        ReportColumnDef(key: 'LossPc', label: 'Loss Pc', width: 140),
-        ReportColumnDef(key: 'LossWt', label: 'Loss Wt', width: 140),
+
         ReportColumnDef(key: 'TopsPc', label: 'Tops Pc', width: 140),
         ReportColumnDef(key: 'TopsWt', label: 'Tops Wt', width: 140),
-      ],
 
-      mapper: (raw) => raw
-          .map(
-            (e) => {
-              'Manager': e['Manager'] ?? '-',
-              'Pkt': formatDecimal(e['Pkt'], decimal: 0),
-              'Pc': formatDecimal(e['Pc'], decimal: 0),
-              'Wt': formatDecimal(e['Wt'], decimal: 3),
-              'IssPc': formatDecimal(e['IssPc'], decimal: 0),
-              'IssWt': formatDecimal(e['IssWt'], decimal: 3),
-              'RecPc': formatDecimal(e['RecPc'], decimal: 0),
-              'RecWt': formatDecimal(e['RecWt'], decimal: 3),
-              'DmWt': formatDecimal(e['DmWt'], decimal: 3),
-              'DmPer': formatDecimal(e['DmPer'], decimal: 2),
-              'RecPer': formatDecimal(e['RecPer'], decimal: 2),
-              'KPc': formatDecimal(e['KPc'], decimal: 0),
-              'KWt': formatDecimal(e['KWt'], decimal: 3),
-              'BrPc': formatDecimal(e['BrPc'], decimal: 0),
-              'BrWt': formatDecimal(e['BrWt'], decimal: 3),
-              'LossPc': formatDecimal(e['LossPc'], decimal: 0),
-              'LossWt': formatDecimal(e['LossWt'], decimal: 3),
-              'TopsPc': formatDecimal(e['TopsPc'], decimal: 0),
-              'TopsWt': formatDecimal(e['TopsWt'], decimal: 3),
-            },
-          )
-          .toList(),
+        ReportColumnDef(key: 'LossWt', label: 'Loss Wt', width: 140),
+        ReportColumnDef(key: 'LossPer', label: 'Loss %', width: 140),
+
+        ReportColumnDef(key: 'NetLossPer', label: 'Net Loss %', width: 140),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'IssDate': formatDate(e['IssDate']),
+
+        'Manager': e['Manager'] ?? '-',
+        'RecutEmp': e['RecutEmp'] ?? '-',
+
+        'ID': '${e['ID'] ?? 0}',
+
+        'CutNo': e['CutNo'] ?? '-',
+        'CutWt': formatDecimal(e['CutWt'], decimal: 3),
+
+        'PktNo': e['PktNo'] ?? '-',
+        'BCode': '${e['BCode'] ?? 0}',
+
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+
+        'Remarks': e['Remarks'] ?? '-',
+
+        'RecDate': e['RecDate'] != null
+            ? formatDate(e['RecDate'])
+            : '-',
+
+        'RecPc': formatDecimal(e['RecPc'], decimal: 0),
+        'RecWt': formatDecimal(e['RecWt'], decimal: 3),
+
+        'TopsPc': formatDecimal(e['TopsPc'], decimal: 0),
+        'TopsWt': formatDecimal(e['TopsWt'], decimal: 3),
+
+        'LossWt': formatDecimal(e['LossWt'], decimal: 3),
+        'LossPer': formatDecimal(e['LossPer'], decimal: 2),
+
+        'NetLossPer': e['NetLossPer'] ?? '-',
+      }).toList(),
     ),
 
     // ── DEPT_REC_DETAIL ─────────────────────────────────────────────────────── 27
@@ -1741,52 +1771,68 @@ class ReportRegistry {
       reportTypeCode: 'MAKABLE_DETAIL',
       endpoint: '/reports/dept-rec-makable-detail',
       columns: const [
-        ReportColumnDef(key: 'Manager', label: 'Manager', width: 180),
-        ReportColumnDef(key: 'Pkt', label: 'Pkt', width: 120),
-        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
-        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+        ReportColumnDef(key: 'ToManager', label: 'To Manager', width: 180),
+
+        ReportColumnDef(key: 'Date', label: 'Date', width: 140),
+
+        ReportColumnDef(key: 'CutNo', label: 'Cut No', width: 140),
+        ReportColumnDef(key: 'CutMan', label: 'Cut Man', width: 140),
+
+        ReportColumnDef(key: 'PktNo', label: 'Pkt No', width: 140),
+        ReportColumnDef(key: 'BCode', label: 'BCode', width: 140),
+
         ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
         ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+
         ReportColumnDef(key: 'RecPc', label: 'Rec Pc', width: 140),
         ReportColumnDef(key: 'RecWt', label: 'Rec Wt', width: 140),
+
         ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
         ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
-        ReportColumnDef(key: 'RecPer', label: 'Rec %', width: 140),
-        ReportColumnDef(key: 'KPc', label: 'K Pc', width: 140),
-        ReportColumnDef(key: 'KWt', label: 'K Wt', width: 140),
-        ReportColumnDef(key: 'BrPc', label: 'Br Pc', width: 140),
-        ReportColumnDef(key: 'BrWt', label: 'Br Wt', width: 140),
-        ReportColumnDef(key: 'LossPc', label: 'Loss Pc', width: 140),
-        ReportColumnDef(key: 'LossWt', label: 'Loss Wt', width: 140),
-        ReportColumnDef(key: 'TopsPc', label: 'Tops Pc', width: 140),
-        ReportColumnDef(key: 'TopsWt', label: 'Tops Wt', width: 140),
+
+        ReportColumnDef(key: 'ShapeName', label: 'Shape', width: 140),
+        ReportColumnDef(key: 'ColorName', label: 'Color', width: 140),
+        ReportColumnDef(key: 'PurityName', label: 'Purity', width: 140),
+
+        ReportColumnDef(key: 'CutName', label: 'Cut', width: 140),
+
+        ReportColumnDef(key: 'Diam', label: 'Diam', width: 140),
+        ReportColumnDef(key: 'Acuraecy', label: 'Accuracy', width: 140),
+
+        ReportColumnDef(key: 'AmountRs', label: 'Amount Rs', width: 140),
       ],
 
-      mapper: (raw) => raw
-          .map(
-            (e) => {
-              'Manager': e['Manager'] ?? '-',
-              'Pkt': formatDecimal(e['Pkt'], decimal: 0),
-              'Pc': formatDecimal(e['Pc'], decimal: 0),
-              'Wt': formatDecimal(e['Wt'], decimal: 3),
-              'IssPc': formatDecimal(e['IssPc'], decimal: 0),
-              'IssWt': formatDecimal(e['IssWt'], decimal: 3),
-              'RecPc': formatDecimal(e['RecPc'], decimal: 0),
-              'RecWt': formatDecimal(e['RecWt'], decimal: 3),
-              'DmWt': formatDecimal(e['DmWt'], decimal: 3),
-              'DmPer': formatDecimal(e['DmPer'], decimal: 2),
-              'RecPer': formatDecimal(e['RecPer'], decimal: 2),
-              'KPc': formatDecimal(e['KPc'], decimal: 0),
-              'KWt': formatDecimal(e['KWt'], decimal: 3),
-              'BrPc': formatDecimal(e['BrPc'], decimal: 0),
-              'BrWt': formatDecimal(e['BrWt'], decimal: 3),
-              'LossPc': formatDecimal(e['LossPc'], decimal: 0),
-              'LossWt': formatDecimal(e['LossWt'], decimal: 3),
-              'TopsPc': formatDecimal(e['TopsPc'], decimal: 0),
-              'TopsWt': formatDecimal(e['TopsWt'], decimal: 3),
-            },
-          )
-          .toList(),
+      mapper: (raw) => raw.map((e) => {
+        'ToManager': e['ToManager'] ?? '-',
+
+        'Date': formatDate(e['Date']),
+
+        'CutNo': e['CutNo'] ?? '-',
+        'CutMan': e['CutMan'] ?? '-',
+
+        'PktNo': e['PktNo'] ?? '-',
+        'BCode': '${e['BCode'] ?? 0}',
+
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+
+        'RecPc': formatDecimal(e['RecPc'], decimal: 0),
+        'RecWt': formatDecimal(e['RecWt'], decimal: 3),
+
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+
+        'ShapeName': e['ShapeName'] ?? '-',
+        'ColorName': e['ColorName'] ?? '-',
+        'PurityName': e['PurityName'] ?? '-',
+
+        'CutName': e['CutName'] ?? '-',
+
+        'Diam': formatDecimal(e['Diam'], decimal: 2),
+        'Acuraecy': formatDecimal(e['Acuraecy'], decimal: 2),
+
+        'AmountRs': formatDecimal(e['AmountRs'], decimal: 2),
+      }).toList(),
     ),
 
     // ── DEPT_CONFIRM_PENDING ─────────────────────────────────────────────────────── 34
@@ -2131,6 +2177,1220 @@ class ReportRegistry {
       }).toList(),
     ),
 
+
+    /* Factory Rec.......................................................................... */
+
+    // ── RECEIVE_DETAIL ─────────────────────────────────────────────────────── 42
+    'RECEIVE_DETAIL': ReportConfig(
+      reportTypeCode: 'RECEIVE_DETAIL',
+      endpoint: '/reports/factory-rec-detail',
+      columns: const [
+        ReportColumnDef(key: 'Jno', label: 'Jno', width: 120),
+        ReportColumnDef(key: 'Date', label: 'Date', width: 140),
+        ReportColumnDef(key: 'Time', label: 'Time', width: 140),
+
+        ReportColumnDef(key: 'FactoryName', label: 'Factory Name', width: 180),
+
+        ReportColumnDef(key: 'KapanNo', label: 'Kapan No', width: 160),
+        ReportColumnDef(key: 'CutNo', label: 'Cut No', width: 140),
+
+        ReportColumnDef(key: 'BCode', label: 'BCode', width: 140),
+        ReportColumnDef(key: 'PktNo', label: 'Pkt No', width: 140),
+
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+
+        ReportColumnDef(key: 'GhatWt', label: 'Ghat Wt', width: 140),
+
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+
+        ReportColumnDef(key: 'RecPc', label: 'Rec Pc', width: 140),
+        ReportColumnDef(key: 'RecWt', label: 'Rec Wt', width: 140),
+        ReportColumnDef(key: 'RecPer', label: 'Rec %', width: 140),
+
+        ReportColumnDef(key: 'DiffPer', label: 'Diff %', width: 140),
+        ReportColumnDef(key: 'PolishLossPer', label: 'Polish Loss %', width: 180),
+
+        ReportColumnDef(key: 'GhatDmGunak', label: 'Ghat DM Gunak', width: 180),
+        ReportColumnDef(key: 'GhatWtPer', label: 'Ghat Wt %', width: 180),
+
+        ReportColumnDef(key: 'RusianWt', label: 'Rusian Wt', width: 160),
+        ReportColumnDef(key: 'RusianPer', label: 'Rusian %', width: 160),
+        ReportColumnDef(key: 'GhatRusianPer', label: 'Ghat Rusian %', width: 180),
+
+        ReportColumnDef(key: 'Size', label: 'Size', width: 140),
+        ReportColumnDef(key: 'PolishSize', label: 'Polish Size', width: 140),
+
+        ReportColumnDef(key: 'KPc', label: 'K Pc', width: 140),
+        ReportColumnDef(key: 'KWt', label: 'K Wt', width: 140),
+
+        ReportColumnDef(key: 'BrPc', label: 'Br Pc', width: 140),
+        ReportColumnDef(key: 'BrWt', label: 'Br Wt', width: 140),
+
+        ReportColumnDef(key: 'LossPc', label: 'Loss Pc', width: 140),
+        ReportColumnDef(key: 'LossWt', label: 'Loss Wt', width: 140),
+
+        ReportColumnDef(key: 'DiffWt', label: 'Diff Wt', width: 140),
+        ReportColumnDef(key: 'DiffDmWt', label: 'Diff DM Wt', width: 140),
+        ReportColumnDef(key: 'DiffDmPer', label: 'Diff DM %', width: 140),
+
+        ReportColumnDef(key: 'GDmWt', label: 'G DM Wt', width: 140),
+        ReportColumnDef(key: 'GDmPer', label: 'G DM %', width: 140),
+        ReportColumnDef(key: 'GDiffPer', label: 'G Diff %', width: 140),
+
+        ReportColumnDef(key: 'PoDiffPer', label: 'Po Diff %', width: 140),
+
+        ReportColumnDef(key: 'PurityName', label: 'Purity', width: 140),
+        ReportColumnDef(key: 'CharniName', label: 'Charni', width: 140),
+        ReportColumnDef(key: 'ColorName', label: 'Color', width: 140),
+        ReportColumnDef(key: 'ShapeName', label: 'Shape', width: 140),
+
+        ReportColumnDef(key: 'SarinEmp', label: 'Sarin Emp', width: 140),
+        ReportColumnDef(key: 'StichEmp', label: 'Stich Emp', width: 140),
+        ReportColumnDef(key: 'OptEmp', label: 'Opt Emp', width: 140),
+
+        ReportColumnDef(key: 'RateID', label: 'Rate ID', width: 140),
+        ReportColumnDef(key: 'Rateon', label: 'Rate On', width: 140),
+        ReportColumnDef(key: 'Rate', label: 'Rate', width: 140),
+        ReportColumnDef(key: 'Amount', label: 'Amount', width: 140),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'Jno': '${e['Jno'] ?? 0}',
+        'Date': formatDate(e['Date']),
+        'Time': e['Time'] ?? '-',
+
+        'FactoryName': e['FactoryName'] ?? '-',
+
+        'KapanNo': e['KapanNo'] ?? '-',
+        'CutNo': e['CutNo'] ?? '-',
+
+        'BCode': '${e['BCode'] ?? 0}',
+        'PktNo': e['PktNo'] ?? '-',
+
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+
+        'GhatWt': formatDecimal(e['GhatWt'], decimal: 3),
+
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+
+        'RecPc': formatDecimal(e['RecPc'], decimal: 0),
+        'RecWt': formatDecimal(e['RecWt'], decimal: 3),
+        'RecPer': formatDecimal(e['RecPer'], decimal: 2),
+
+        'DiffPer': formatDecimal(e['DiffPer'], decimal: 2),
+        'PolishLossPer': formatDecimal(e['PolishLossPer'], decimal: 2),
+
+        'GhatDmGunak': formatDecimal(e['GhatDmGunak'], decimal: 2),
+        'GhatWtPer': formatDecimal(e['GhatWtPer'], decimal: 2),
+
+        'RusianWt': formatDecimal(e['RusianWt'], decimal: 3),
+        'RusianPer': formatDecimal(e['RusianPer'], decimal: 2),
+        'GhatRusianPer': formatDecimal(e['GhatRusianPer'], decimal: 2),
+
+        'Size': formatDecimal(e['Size'], decimal: 2),
+        'PolishSize': formatDecimal(e['PolishSize'], decimal: 2),
+
+        'KPc': formatDecimal(e['KPc'], decimal: 0),
+        'KWt': formatDecimal(e['KWt'], decimal: 3),
+
+        'BrPc': formatDecimal(e['BrPc'], decimal: 0),
+        'BrWt': formatDecimal(e['BrWt'], decimal: 3),
+
+        'LossPc': formatDecimal(e['LossPc'], decimal: 0),
+        'LossWt': formatDecimal(e['LossWt'], decimal: 3),
+
+        'DiffWt': formatDecimal(e['DiffWt'], decimal: 3),
+        'DiffDmWt': formatDecimal(e['DiffDmWt'], decimal: 3),
+        'DiffDmPer': formatDecimal(e['DiffDmPer'], decimal: 2),
+
+        'GDmWt': formatDecimal(e['GDmWt'], decimal: 3),
+        'GDmPer': formatDecimal(e['GDmPer'], decimal: 2),
+        'GDiffPer': formatDecimal(e['GDiffPer'], decimal: 2),
+
+        'PoDiffPer': formatDecimal(e['PoDiffPer'], decimal: 2),
+
+        'PurityName': e['PurityName'] ?? '-',
+        'CharniName': e['CharniName'] ?? '-',
+        'ColorName': e['ColorName'] ?? '-',
+        'ShapeName': e['ShapeName'] ?? '-',
+
+        'SarinEmp': e['SarinEmp'] ?? '-',
+        'StichEmp': e['StichEmp'] ?? '-',
+        'OptEmp': e['OptEmp'] ?? '-',
+
+        'RateID': e['RateID'] ?? '-',
+        'Rateon': e['Rateon'] ?? '-',
+        'Rate': formatDecimal(e['Rate'], decimal: 2),
+        'Amount': formatDecimal(e['Amount'], decimal: 2),
+      }).toList(),
+    ),
+
+    // ── REC_KAPANWISE ─────────────────────────────────────────────────────── 43
+    'REC_KAPANWISE': ReportConfig(
+      reportTypeCode: 'REC_KAPANWISE',
+      endpoint: '/reports/factory-rec-kapanwise',
+      columns: const [
+        ReportColumnDef(key: 'KapanNo', label: 'Kapan No', width: 160),
+        ReportColumnDef(key: 'Pkt', label: 'Pkt', width: 140),
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+        ReportColumnDef(key: 'Size', label: 'Size', width: 120),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'KapanNo': e['KapanNo'] ?? '-',
+        'Pkt': formatDecimal(e['Pkt'], decimal: 0),
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+        'Size': formatDecimal(e['Size'], decimal: 2),
+      }).toList(),
+    ),
+
+    // ── REC_CUTWISE ─────────────────────────────────────────────────────── 44
+    'REC_CUTWISE': ReportConfig(
+      reportTypeCode: 'REC_CUTWISE',
+      endpoint: '/reports/factory-rec-cutwise',
+      columns: const [
+        ReportColumnDef(key: 'KapanNo', label: 'Kapan No', width: 160),
+        ReportColumnDef(key: 'CutNo', label: 'Cut No', width: 140),
+        ReportColumnDef(key: 'CutWt', label: 'Cut Wt', width: 140),
+        ReportColumnDef(key: 'Pkt', label: 'Pkt', width: 140),
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+        ReportColumnDef(key: 'Size', label: 'Size', width: 120),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'KapanNo': e['KapanNo'] ?? '-',
+        'CutNo': e['CutNo'] ?? '-',
+        'CutWt': formatDecimal(e['CutWt'], decimal: 3),
+        'Pkt': formatDecimal(e['Pkt'], decimal: 0),
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+        'Size': formatDecimal(e['Size'], decimal: 2),
+      }).toList(),
+    ),
+
+    // ── REC_FACTORYWISE ─────────────────────────────────────────────────────── 45
+    'REC_FACTORYWISE': ReportConfig(
+      reportTypeCode: 'REC_FACTORYWISE',
+      endpoint: '/reports/factory-rec-factorywise',
+      columns: const [
+        ReportColumnDef(key: 'FactoryName', label: 'Factory Name', width: 180),
+        ReportColumnDef(key: 'Pkt', label: 'Pkt', width: 120),
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+        ReportColumnDef(key: 'Size', label: 'Size', width: 120),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'FactoryName': e['FactoryName'] ?? '-',
+        'Pkt': formatDecimal(e['Pkt'], decimal: 0),
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+        'Size': formatDecimal(e['Size'], decimal: 2),
+      }).toList(),
+    ),
+
+    // ── RECEIVE_DETAIL_[BUNCH_CREATE] ─────────────────────────────────────────────────────── 46
+    'RECEIVE_DETAIL_[BUNCH_CREATE]': ReportConfig(
+      reportTypeCode: 'RECEIVE_DETAIL_[BUNCH_CREATE]',
+      endpoint: '/reports/factory-rec-bunch-create',
+      columns: const [
+        ReportColumnDef(key: 'Factory', label: 'Factory', width: 180),
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+        ReportColumnDef(key: 'RateID', label: 'Rate ID', width: 140),
+        ReportColumnDef(key: 'Rateon', label: 'Rate On', width: 140),
+        ReportColumnDef(key: 'Rate', label: 'Rate', width: 120),
+        ReportColumnDef(key: 'Amount', label: 'Amount', width: 140),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'Factory': e['Factory'] ?? '-',
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+        'RateID': e['RateID'] ?? '-',
+        'Rateon': e['Rateon'] ?? '-',
+        'Rate': formatDecimal(e['Rate'], decimal: 2),
+        'Amount': formatDecimal(e['Amount'], decimal: 2),
+      }).toList(),
+    ),
+
+    // ── FACTORY_REC_LABOUR_SUMMARY ─────────────────────────────────────────────────────── 47
+    'FACTORY_REC_LABOUR_SUMMARY': ReportConfig(
+      reportTypeCode: 'FACTORY_REC_LABOUR_SUMMARY',
+      endpoint: '/reports/factory-rec-labour-summary',
+      columns: const [
+        ReportColumnDef(key: 'Factory', label: 'Factory', width: 180),
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+        ReportColumnDef(key: 'RateID', label: 'Rate ID', width: 140),
+        ReportColumnDef(key: 'Rateon', label: 'Rate On', width: 140),
+        ReportColumnDef(key: 'Rate', label: 'Rate', width: 120),
+        ReportColumnDef(key: 'Amount', label: 'Amount', width: 140),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'Factory': e['Factory'] ?? '-',
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+        'RateID': e['RateID'] ?? '-',
+        'Rateon': e['Rateon'] ?? '-',
+        'Rate': formatDecimal(e['Rate'], decimal: 2),
+        'Amount': formatDecimal(e['Amount'], decimal: 2),
+      }).toList(),
+    ),
+
+
+    // ── REC_DATEWISE ─────────────────────────────────────────────────────── 48
+    'REC_DATEWISE': ReportConfig(
+      reportTypeCode: 'REC_DATEWISE',
+      endpoint: '/reports/factory-rec-datewise',
+      columns: const [
+        ReportColumnDef(key: 'Date', label: 'Date', width: 140),
+
+        ReportColumnDef(key: 'Pkt', label: 'Pkt', width: 140),
+
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+
+        ReportColumnDef(key: 'RecPc', label: 'Rec Pc', width: 140),
+        ReportColumnDef(key: 'RecWt', label: 'Rec Wt', width: 140),
+        ReportColumnDef(key: 'RecPer', label: 'Rec %', width: 140),
+
+        ReportColumnDef(key: 'KPc', label: 'K Pc', width: 140),
+        ReportColumnDef(key: 'KWt', label: 'K Wt', width: 140),
+
+        ReportColumnDef(key: 'BrPc', label: 'Br Pc', width: 140),
+        ReportColumnDef(key: 'BrWt', label: 'Br Wt', width: 140),
+
+        ReportColumnDef(key: 'LossPc', label: 'Loss Pc', width: 140),
+        ReportColumnDef(key: 'LossWt', label: 'Loss Wt', width: 140),
+
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+
+        ReportColumnDef(key: 'DiffWt', label: 'Diff Wt', width: 140),
+        ReportColumnDef(key: 'DiffPer', label: 'Diff %', width: 140),
+
+        ReportColumnDef(key: 'Size', label: 'Size', width: 140),
+        ReportColumnDef(key: 'PoDiffPer', label: 'Po Diff %', width: 140),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'Date': formatDate(e['Date']),
+
+        'Pkt': formatDecimal(e['Pkt'], decimal: 0),
+
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+
+        'RecPc': formatDecimal(e['RecPc'], decimal: 0),
+        'RecWt': formatDecimal(e['RecWt'], decimal: 3),
+        'RecPer': formatDecimal(e['RecPer'], decimal: 2),
+
+        'KPc': formatDecimal(e['KPc'], decimal: 0),
+        'KWt': formatDecimal(e['KWt'], decimal: 3),
+
+        'BrPc': formatDecimal(e['BrPc'], decimal: 0),
+        'BrWt': formatDecimal(e['BrWt'], decimal: 3),
+
+        'LossPc': formatDecimal(e['LossPc'], decimal: 0),
+        'LossWt': formatDecimal(e['LossWt'], decimal: 3),
+
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+
+        'DiffWt': formatDecimal(e['DiffWt'], decimal: 3),
+        'DiffPer': formatDecimal(e['DiffPer'], decimal: 2),
+
+        'Size': formatDecimal(e['Size'], decimal: 2),
+        'PoDiffPer': formatDecimal(e['PoDiffPer'], decimal: 2),
+      }).toList(),
+    ),
+
+    // ── REC_STICH_EMP_SUMMARY ─────────────────────────────────────────────────────── 49
+    'REC_STICH_EMP_SUMMARY': ReportConfig(
+      reportTypeCode: 'REC_STICH_EMP_SUMMARY',
+      endpoint: '/reports/factory-rec-stich-emp-summary',
+      columns: const [
+        ReportColumnDef(key: 'StichEmp', label: 'Stich Emp', width: 180),
+
+        ReportColumnDef(key: 'Pkt', label: 'Pkt', width: 140),
+
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+
+        ReportColumnDef(key: 'GhatWt', label: 'Ghat Wt', width: 140),
+
+        ReportColumnDef(key: 'RecPc', label: 'Rec Pc', width: 140),
+        ReportColumnDef(key: 'RecWt', label: 'Rec Wt', width: 140),
+        ReportColumnDef(key: 'RecPer', label: 'Rec %', width: 140),
+
+        ReportColumnDef(key: 'KPc', label: 'K Pc', width: 140),
+        ReportColumnDef(key: 'KWt', label: 'K Wt', width: 140),
+
+        ReportColumnDef(key: 'BrPc', label: 'Br Pc', width: 140),
+        ReportColumnDef(key: 'BrWt', label: 'Br Wt', width: 140),
+
+        ReportColumnDef(key: 'LossPc', label: 'Loss Pc', width: 140),
+        ReportColumnDef(key: 'LossWt', label: 'Loss Wt', width: 140),
+
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+
+        ReportColumnDef(key: 'DiffWt', label: 'Diff Wt', width: 140),
+        ReportColumnDef(key: 'DiffPer', label: 'Diff %', width: 140),
+
+        ReportColumnDef(key: 'GP', label: 'GP', width: 140),
+        ReportColumnDef(key: 'GD', label: 'GD', width: 140),
+        ReportColumnDef(key: 'GhatDiff', label: 'Ghat Diff', width: 140),
+
+        ReportColumnDef(key: 'Size', label: 'Size', width: 140),
+        ReportColumnDef(key: 'PoDiffPer', label: 'Po Diff %', width: 140),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'StichEmp': e['StichEmp'] ?? '-',
+
+        'Pkt': formatDecimal(e['Pkt'], decimal: 0),
+
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+
+        'GhatWt': formatDecimal(e['GhatWt'], decimal: 3),
+
+        'RecPc': formatDecimal(e['RecPc'], decimal: 0),
+        'RecWt': formatDecimal(e['RecWt'], decimal: 3),
+        'RecPer': formatDecimal(e['RecPer'], decimal: 2),
+
+        'KPc': formatDecimal(e['KPc'], decimal: 0),
+        'KWt': formatDecimal(e['KWt'], decimal: 3),
+
+        'BrPc': formatDecimal(e['BrPc'], decimal: 0),
+        'BrWt': formatDecimal(e['BrWt'], decimal: 3),
+
+        'LossPc': formatDecimal(e['LossPc'], decimal: 0),
+        'LossWt': formatDecimal(e['LossWt'], decimal: 3),
+
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+
+        'DiffWt': formatDecimal(e['DiffWt'], decimal: 3),
+        'DiffPer': formatDecimal(e['DiffPer'], decimal: 2),
+
+        'GP': formatDecimal(e['GP'], decimal: 2),
+        'GD': formatDecimal(e['GD'], decimal: 2),
+        'GhatDiff': formatDecimal(e['GhatDiff'], decimal: 2),
+
+        'Size': formatDecimal(e['Size'], decimal: 2),
+        'PoDiffPer': formatDecimal(e['PoDiffPer'], decimal: 2),
+      }).toList(),
+    ),
+
+    // ── REC_OPT_EMP_SUMMARY ─────────────────────────────────────────────────────── 50
+    'REC_OPT_EMP_SUMMARY': ReportConfig(
+      reportTypeCode: 'REC_OPT_EMP_SUMMARY',
+      endpoint: '/reports/factory-rec-opt-emp-summary',
+      columns: const [
+        ReportColumnDef(key: 'OptEmp', label: 'Opt Emp', width: 180),
+
+        ReportColumnDef(key: 'Pkt', label: 'Pkt', width: 140),
+
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+
+        ReportColumnDef(key: 'GhatWt', label: 'Ghat Wt', width: 140),
+
+        ReportColumnDef(key: 'RecPc', label: 'Rec Pc', width: 140),
+        ReportColumnDef(key: 'RecWt', label: 'Rec Wt', width: 140),
+        ReportColumnDef(key: 'RecPer', label: 'Rec %', width: 140),
+
+        ReportColumnDef(key: 'KPc', label: 'K Pc', width: 140),
+        ReportColumnDef(key: 'KWt', label: 'K Wt', width: 140),
+
+        ReportColumnDef(key: 'BrPc', label: 'Br Pc', width: 140),
+        ReportColumnDef(key: 'BrWt', label: 'Br Wt', width: 140),
+
+        ReportColumnDef(key: 'LossPc', label: 'Loss Pc', width: 140),
+        ReportColumnDef(key: 'LossWt', label: 'Loss Wt', width: 140),
+
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+
+        ReportColumnDef(key: 'DiffWt', label: 'Diff Wt', width: 140),
+        ReportColumnDef(key: 'DiffPer', label: 'Diff %', width: 140),
+
+        ReportColumnDef(key: 'PolishLossPer', label: 'Polish Loss %', width: 140),
+
+        ReportColumnDef(key: 'GP', label: 'GP', width: 140),
+        ReportColumnDef(key: 'GD', label: 'GD', width: 140),
+        ReportColumnDef(key: 'GhatDiff', label: 'Ghat Diff', width: 140),
+
+        ReportColumnDef(key: 'Size', label: 'Size', width: 140),
+        ReportColumnDef(key: 'PoDiffPer', label: 'Po Diff %', width: 140),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'OptEmp': e['OptEmp'] ?? '-',
+
+        'Pkt': formatDecimal(e['Pkt'], decimal: 0),
+
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+
+        'GhatWt': formatDecimal(e['GhatWt'], decimal: 3),
+
+        'RecPc': formatDecimal(e['RecPc'], decimal: 0),
+        'RecWt': formatDecimal(e['RecWt'], decimal: 3),
+        'RecPer': formatDecimal(e['RecPer'], decimal: 2),
+
+        'KPc': formatDecimal(e['KPc'], decimal: 0),
+        'KWt': formatDecimal(e['KWt'], decimal: 3),
+
+        'BrPc': formatDecimal(e['BrPc'], decimal: 0),
+        'BrWt': formatDecimal(e['BrWt'], decimal: 3),
+
+        'LossPc': formatDecimal(e['LossPc'], decimal: 0),
+        'LossWt': formatDecimal(e['LossWt'], decimal: 3),
+
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+
+        'DiffWt': formatDecimal(e['DiffWt'], decimal: 3),
+        'DiffPer': formatDecimal(e['DiffPer'], decimal: 2),
+
+        'PolishLossPer': formatDecimal(e['PolishLossPer'], decimal: 2),
+
+        'GP': formatDecimal(e['GP'], decimal: 2),
+        'GD': formatDecimal(e['GD'], decimal: 2),
+        'GhatDiff': formatDecimal(e['GhatDiff'], decimal: 2),
+
+        'Size': formatDecimal(e['Size'], decimal: 2),
+        'PoDiffPer': formatDecimal(e['PoDiffPer'], decimal: 2),
+      }).toList(),
+    ),
+
+
+    /* Factory pending .......................................................................... */
+
+    // ── ISSUE_PENDING ─────────────────────────────────────────────────────── 51
+    'ISSUE_PENDING': ReportConfig(
+      reportTypeCode: 'ISSUE_PENDING',
+      endpoint: '/reports/factory-pen-issue-pending',
+      columns: const [
+        ReportColumnDef(key: 'CutNo', label: 'Cut No', width: 140),
+        ReportColumnDef(key: 'BCode', label: 'BCode', width: 140),
+        ReportColumnDef(key: 'LotNo', label: 'Lot No', width: 140),
+
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+
+        ReportColumnDef(key: 'EntryType', label: 'Entry Type', width: 180),
+
+        ReportColumnDef(key: 'ShapeName', label: 'Shape', width: 140),
+        ReportColumnDef(key: 'PurityName', label: 'Purity', width: 140),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'CutNo': e['CutNo'] ?? '-',
+
+        'BCode': '${e['BCode'] ?? 0}',
+        'LotNo': '${e['LotNo'] ?? 0}',
+
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+
+        'EntryType': e['EntryType'] ?? '-',
+
+        'ShapeName': e['ShapeName'] ?? '-',
+        'PurityName': e['PurityName'] ?? '-',
+      }).toList(),
+    ),
+
+    // ── JAMA_PENDING ─────────────────────────────────────────────────────── 52
+    'JAMA_PENDING': ReportConfig(
+      reportTypeCode: 'JAMA_PENDING',
+      endpoint: '/reports/factory-pen-jama-pending',
+      columns: const [
+        ReportColumnDef(key: 'Jno', label: 'Jno', width: 120),
+        ReportColumnDef(key: 'Date', label: 'Date', width: 140),
+        ReportColumnDef(key: 'Time', label: 'Time', width: 140),
+
+        ReportColumnDef(key: 'SelectType', label: 'Select Type', width: 180),
+        ReportColumnDef(key: 'FactoryName', label: 'Factory Name', width: 180),
+        ReportColumnDef(key: 'FactoryType', label: 'Factory Type', width: 180),
+        ReportColumnDef(key: 'EntryType', label: 'Entry Type', width: 180),
+
+        ReportColumnDef(key: 'KapanNo', label: 'Kapan No', width: 160),
+        ReportColumnDef(key: 'CutNo', label: 'Cut No', width: 140),
+        ReportColumnDef(key: 'MfgCut', label: 'Mfg Cut', width: 140),
+
+        ReportColumnDef(key: 'BCode', label: 'BCode', width: 140),
+        ReportColumnDef(key: 'PktNo', label: 'Pkt No', width: 140),
+
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+
+        ReportColumnDef(key: 'Size', label: 'Size', width: 140),
+
+        ReportColumnDef(key: 'PurityName', label: 'Purity', width: 140),
+        ReportColumnDef(key: 'CharniName', label: 'Charni', width: 140),
+        ReportColumnDef(key: 'ColorName', label: 'Color', width: 140),
+        ReportColumnDef(key: 'ShapeName', label: 'Shape', width: 140),
+
+        ReportColumnDef(key: 'RateID', label: 'Rate ID', width: 140),
+        ReportColumnDef(key: 'Rateon', label: 'Rate On', width: 140),
+        ReportColumnDef(key: 'Rate', label: 'Rate', width: 140),
+        ReportColumnDef(key: 'Amount', label: 'Amount', width: 140),
+
+        ReportColumnDef(key: 'Rec', label: 'Rec', width: 140),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'Jno': '${e['Jno'] ?? 0}',
+        'Date': formatDate(e['Date']),
+        'Time': e['Time'] ?? '-',
+
+        'SelectType': e['SelectType'] ?? '-',
+        'FactoryName': e['FactoryName'] ?? '-',
+        'FactoryType': e['FactoryType'] ?? '-',
+        'EntryType': e['EntryType'] ?? '-',
+
+        'KapanNo': e['KapanNo'] ?? '-',
+        'CutNo': e['CutNo'] ?? '-',
+        'MfgCut': e['MfgCut'] ?? '-',
+
+        'BCode': '${e['BCode'] ?? 0}',
+        'PktNo': e['PktNo'] ?? '-',
+
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+
+        'Size': formatDecimal(e['Size'], decimal: 2),
+
+        'PurityName': e['PurityName'] ?? '-',
+        'CharniName': e['CharniName'] ?? '-',
+        'ColorName': e['ColorName'] ?? '-',
+        'ShapeName': e['ShapeName'] ?? '-',
+
+        'RateID': e['RateID'] ?? '-',
+        'Rateon': e['Rateon'] ?? '-',
+        'Rate': formatDecimal(e['Rate'], decimal: 2),
+        'Amount': formatDecimal(e['Amount'], decimal: 2),
+
+        'Rec': e['Rec'] ?? '-',
+      }).toList(),
+    ),
+
+    // ── JAMA_PENDING ─────────────────────────────────────────────────────── 53
+    'JAMA_KAPANWISE_PENDING': ReportConfig(
+      reportTypeCode: 'JAMA_KAPANWISE_PENDING',
+      endpoint: '/reports/factory-pen-jama-kapanwise-pending',
+      columns: const [
+        ReportColumnDef(key: 'KapanNo', label: 'Kapan No', width: 160),
+
+        ReportColumnDef(key: 'Pkt', label: 'Pkt', width: 140),
+
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+
+        ReportColumnDef(key: 'Size', label: 'Size', width: 140),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'KapanNo': e['KapanNo'] ?? '-',
+
+        'Pkt': formatDecimal(e['Pkt'], decimal: 0),
+
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+
+        'Size': formatDecimal(e['Size'], decimal: 2),
+      }).toList(),
+    ),
+
+    // ── JAMA_CUTWISE_PENDING ─────────────────────────────────────────────────────── 54
+    'JAMA_CUTWISE_PENDING': ReportConfig(
+      reportTypeCode: 'JAMA_CUTWISE_PENDING',
+      endpoint: '/reports/factory-pen-jama-cutwise-pending',
+      columns: const [
+        ReportColumnDef(key: 'KapanNo', label: 'Kapan No', width: 160),
+        ReportColumnDef(key: 'CutNo', label: 'Cut No', width: 140),
+        ReportColumnDef(key: 'CutWt', label: 'Cut Wt', width: 140),
+
+        ReportColumnDef(key: 'Pkt', label: 'Pkt', width: 140),
+
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+
+        ReportColumnDef(key: 'Size', label: 'Size', width: 140),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'KapanNo': e['KapanNo'] ?? '-',
+        'CutNo': e['CutNo'] ?? '-',
+
+        'CutWt': formatDecimal(e['CutWt'], decimal: 3),
+
+        'Pkt': formatDecimal(e['Pkt'], decimal: 0),
+
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+
+        'Size': formatDecimal(e['Size'], decimal: 2),
+      }).toList(),
+    ),
+
+    // ── JAMA_FACTORYWISE_PENDING ─────────────────────────────────────────────────────── 55
+    'JAMA_FACTORYWISE_PENDING': ReportConfig(
+      reportTypeCode: 'JAMA_FACTORYWISE_PENDING',
+      endpoint: '/reports/factory-pen-jama-factorywise-pending',
+      columns: const [
+        ReportColumnDef(key: 'FactoryName', label: 'Factory Name', width: 180),
+
+        ReportColumnDef(key: 'Pkt', label: 'Pkt', width: 140),
+
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+
+        ReportColumnDef(key: 'Size', label: 'Size', width: 140),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'FactoryName': e['FactoryName'] ?? '-',
+
+        'Pkt': formatDecimal(e['Pkt'], decimal: 0),
+
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+
+        'Size': formatDecimal(e['Size'], decimal: 2),
+      }).toList(),
+    ),
+
+    /* Job Work .......................................................................... */
+
+    // ── JOBWORK_ISSUE_DETAIL ─────────────────────────────────────────────────────── 56
+    'JOBWORK_ISSUE_DETAIL': ReportConfig(
+      reportTypeCode: 'JOBWORK_ISSUE_DETAIL',
+      endpoint: '/reports/jobwork-iss-detail',
+      columns: const [
+        ReportColumnDef(key: 'Jno', label: 'Jno', width: 120),
+        ReportColumnDef(key: 'Date', label: 'Date', width: 140),
+        ReportColumnDef(key: 'Time', label: 'Time', width: 140),
+
+        ReportColumnDef(key: 'PartyName', label: 'Party Name', width: 180),
+        ReportColumnDef(key: 'DeptName', label: 'Dept Name', width: 180),
+        ReportColumnDef(key: 'DeptProcessName', label: 'Dept Process', width: 180),
+
+        ReportColumnDef(key: 'ArticalName', label: 'Article', width: 180),
+
+        ReportColumnDef(key: 'CutNo', label: 'Cut No', width: 140),
+        ReportColumnDef(key: 'MfgCut', label: 'Mfg Cut', width: 140),
+
+        ReportColumnDef(key: 'BCode', label: 'BCode', width: 140),
+        ReportColumnDef(key: 'PktNo', label: 'Pkt No', width: 140),
+        ReportColumnDef(key: 'PairNo', label: 'Pair No', width: 140),
+
+        ReportColumnDef(key: 'PurityName', label: 'Purity', width: 140),
+        ReportColumnDef(key: 'CharniName', label: 'Charni', width: 140),
+        ReportColumnDef(key: 'ColorName', label: 'Color', width: 140),
+        ReportColumnDef(key: 'ShapeName', label: 'Shape', width: 140),
+
+        ReportColumnDef(key: 'CutName', label: 'Cut', width: 140),
+        ReportColumnDef(key: 'PolishName', label: 'Polish', width: 140),
+        ReportColumnDef(key: 'SymmetryName', label: 'Symmetry', width: 140),
+        ReportColumnDef(key: 'FluoName', label: 'Fluo', width: 140),
+        ReportColumnDef(key: 'TensionsName', label: 'Tensions', width: 180),
+
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+
+        ReportColumnDef(key: 'RecPc', label: 'Rec Pc', width: 140),
+        ReportColumnDef(key: 'RecWt', label: 'Rec Wt', width: 140),
+
+        ReportColumnDef(key: 'KPc', label: 'K Pc', width: 140),
+        ReportColumnDef(key: 'KWt', label: 'K Wt', width: 140),
+
+        ReportColumnDef(key: 'BrPc', label: 'Br Pc', width: 140),
+        ReportColumnDef(key: 'BrWt', label: 'Br Wt', width: 140),
+
+        ReportColumnDef(key: 'LossPc', label: 'Loss Pc', width: 140),
+        ReportColumnDef(key: 'LossWt', label: 'Loss Wt', width: 140),
+
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+
+        ReportColumnDef(key: 'Size', label: 'Size', width: 140),
+
+        ReportColumnDef(key: 'RecPer', label: 'Rec %', width: 140),
+        ReportColumnDef(key: 'DiffPer', label: 'Diff %', width: 140),
+        ReportColumnDef(key: 'DiffWt', label: 'Diff Wt', width: 140),
+
+        ReportColumnDef(key: 'Diam', label: 'Diam', width: 140),
+        ReportColumnDef(key: 'Length', label: 'Length', width: 140),
+        ReportColumnDef(key: 'Height', label: 'Height', width: 140),
+        ReportColumnDef(key: 'TopSide', label: 'Top Side', width: 140),
+
+        ReportColumnDef(key: 'HA', label: 'HA', width: 100),
+        ReportColumnDef(key: 'QRCode', label: 'QR Code', width: 180),
+        ReportColumnDef(key: 'JobRec', label: 'Job Rec', width: 120),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'Jno': '${e['Jno'] ?? 0}',
+        'Date': formatDate(e['Date']),
+        'Time': e['Time'] ?? '-',
+
+        'PartyName': e['PartyName'] ?? '-',
+        'DeptName': e['DeptName'] ?? '-',
+        'DeptProcessName': e['DeptProcessName'] ?? '-',
+
+        'ArticalName': e['ArticalName'] ?? '-',
+
+        'CutNo': e['CutNo'] ?? '-',
+        'MfgCut': e['MfgCut'] ?? '-',
+
+        'BCode': '${e['BCode'] ?? 0}',
+        'PktNo': e['PktNo'] ?? '-',
+        'PairNo': '${e['PairNo'] ?? 0}',
+
+        'PurityName': e['PurityName'] ?? '-',
+        'CharniName': e['CharniName'] ?? '-',
+        'ColorName': e['ColorName'] ?? '-',
+        'ShapeName': e['ShapeName'] ?? '-',
+
+        'CutName': e['CutName'] ?? '-',
+        'PolishName': e['PolishName'] ?? '-',
+        'SymmetryName': e['SymmetryName'] ?? '-',
+        'FluoName': e['FluoName'] ?? '-',
+        'TensionsName': e['TensionsName'] ?? '-',
+
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+
+        'RecPc': formatDecimal(e['RecPc'], decimal: 0),
+        'RecWt': formatDecimal(e['RecWt'], decimal: 3),
+
+        'KPc': formatDecimal(e['KPc'], decimal: 0),
+        'KWt': formatDecimal(e['KWt'], decimal: 3),
+
+        'BrPc': formatDecimal(e['BrPc'], decimal: 0),
+        'BrWt': formatDecimal(e['BrWt'], decimal: 3),
+
+        'LossPc': formatDecimal(e['LossPc'], decimal: 0),
+        'LossWt': formatDecimal(e['LossWt'], decimal: 3),
+
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+
+        'Size': formatDecimal(e['Size'], decimal: 2),
+
+        'RecPer': formatDecimal(e['RecPer'], decimal: 2),
+        'DiffPer': formatDecimal(e['DiffPer'], decimal: 2),
+        'DiffWt': formatDecimal(e['DiffWt'], decimal: 3),
+
+        'Diam': formatDecimal(e['Diam'], decimal: 2),
+        'Length': formatDecimal(e['Length'], decimal: 2),
+        'Height': formatDecimal(e['Height'], decimal: 2),
+        'TopSide': e['TopSide'] ?? '-',
+
+        'HA': e['HA'] ?? '-',
+        'QRCode': e['QRCode'] ?? '',
+        'JobRec': e['JobRec'] ?? '-',
+      }).toList(),
+    ),
+
+    // ── JOBWORK_RECEIVE_DETAIL ─────────────────────────────────────────────────────── 57
+    'JOBWORK_RECEIVE_DETAIL': ReportConfig(
+      reportTypeCode: 'JOBWORK_RECEIVE_DETAIL',
+      endpoint: '/reports/jobwork-rec-detail',
+      columns: const [
+        ReportColumnDef(key: 'Jno', label: 'Jno', width: 120),
+        ReportColumnDef(key: 'Date', label: 'Date', width: 140),
+        ReportColumnDef(key: 'Time', label: 'Time', width: 140),
+
+        ReportColumnDef(key: 'PartyName', label: 'Party Name', width: 180),
+        ReportColumnDef(key: 'DeptName', label: 'Dept Name', width: 180),
+        ReportColumnDef(key: 'DeptProcessName', label: 'Dept Process', width: 180),
+
+        ReportColumnDef(key: 'ArticalName', label: 'Article', width: 180),
+
+        ReportColumnDef(key: 'CutNo', label: 'Cut No', width: 140),
+        ReportColumnDef(key: 'MfgCut', label: 'Mfg Cut', width: 140),
+
+        ReportColumnDef(key: 'BCode', label: 'BCode', width: 140),
+        ReportColumnDef(key: 'PktNo', label: 'Pkt No', width: 140),
+        ReportColumnDef(key: 'PairNo', label: 'Pair No', width: 140),
+
+        ReportColumnDef(key: 'PurityName', label: 'Purity', width: 140),
+        ReportColumnDef(key: 'CharniName', label: 'Charni', width: 140),
+        ReportColumnDef(key: 'ColorName', label: 'Color', width: 140),
+        ReportColumnDef(key: 'ShapeName', label: 'Shape', width: 140),
+
+        ReportColumnDef(key: 'CutName', label: 'Cut', width: 140),
+        ReportColumnDef(key: 'PolishName', label: 'Polish', width: 140),
+        ReportColumnDef(key: 'SymmetryName', label: 'Symmetry', width: 140),
+        ReportColumnDef(key: 'FluoName', label: 'Fluo', width: 140),
+        ReportColumnDef(key: 'TensionsName', label: 'Tensions', width: 180),
+
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+
+        ReportColumnDef(key: 'RecPc', label: 'Rec Pc', width: 140),
+        ReportColumnDef(key: 'RecWt', label: 'Rec Wt', width: 140),
+
+        ReportColumnDef(key: 'KPc', label: 'K Pc', width: 140),
+        ReportColumnDef(key: 'KWt', label: 'K Wt', width: 140),
+
+        ReportColumnDef(key: 'BrPc', label: 'Br Pc', width: 140),
+        ReportColumnDef(key: 'BrWt', label: 'Br Wt', width: 140),
+
+        ReportColumnDef(key: 'LossPc', label: 'Loss Pc', width: 140),
+        ReportColumnDef(key: 'LossWt', label: 'Loss Wt', width: 140),
+
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+
+        ReportColumnDef(key: 'Size', label: 'Size', width: 140),
+
+        ReportColumnDef(key: 'RecPer', label: 'Rec %', width: 140),
+        ReportColumnDef(key: 'DiffPer', label: 'Diff %', width: 140),
+        ReportColumnDef(key: 'DiffWt', label: 'Diff Wt', width: 140),
+
+        ReportColumnDef(key: 'Diam', label: 'Diam', width: 140),
+        ReportColumnDef(key: 'Length', label: 'Length', width: 140),
+        ReportColumnDef(key: 'Height', label: 'Height', width: 140),
+        ReportColumnDef(key: 'TopSide', label: 'Top Side', width: 140),
+
+        ReportColumnDef(key: 'HA', label: 'HA', width: 100),
+        ReportColumnDef(key: 'QRCode', label: 'QR Code', width: 180),
+        ReportColumnDef(key: 'JobRec', label: 'Job Rec', width: 120),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'Jno': '${e['Jno'] ?? 0}',
+        'Date': formatDate(e['Date']),
+        'Time': e['Time'] ?? '-',
+
+        'PartyName': e['PartyName'] ?? '-',
+        'DeptName': e['DeptName'] ?? '-',
+        'DeptProcessName': e['DeptProcessName'] ?? '-',
+
+        'ArticalName': e['ArticalName'] ?? '-',
+
+        'CutNo': e['CutNo'] ?? '-',
+        'MfgCut': e['MfgCut'] ?? '-',
+
+        'BCode': '${e['BCode'] ?? 0}',
+        'PktNo': e['PktNo'] ?? '-',
+        'PairNo': '${e['PairNo'] ?? 0}',
+
+        'PurityName': e['PurityName'] ?? '-',
+        'CharniName': e['CharniName'] ?? '-',
+        'ColorName': e['ColorName'] ?? '-',
+        'ShapeName': e['ShapeName'] ?? '-',
+
+        'CutName': e['CutName'] ?? '-',
+        'PolishName': e['PolishName'] ?? '-',
+        'SymmetryName': e['SymmetryName'] ?? '-',
+        'FluoName': e['FluoName'] ?? '-',
+        'TensionsName': e['TensionsName'] ?? '-',
+
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+
+        'RecPc': formatDecimal(e['RecPc'], decimal: 0),
+        'RecWt': formatDecimal(e['RecWt'], decimal: 3),
+
+        'KPc': formatDecimal(e['KPc'], decimal: 0),
+        'KWt': formatDecimal(e['KWt'], decimal: 3),
+
+        'BrPc': formatDecimal(e['BrPc'], decimal: 0),
+        'BrWt': formatDecimal(e['BrWt'], decimal: 3),
+
+        'LossPc': formatDecimal(e['LossPc'], decimal: 0),
+        'LossWt': formatDecimal(e['LossWt'], decimal: 3),
+
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+
+        'Size': formatDecimal(e['Size'], decimal: 2),
+
+        'RecPer': formatDecimal(e['RecPer'], decimal: 2),
+        'DiffPer': formatDecimal(e['DiffPer'], decimal: 2),
+        'DiffWt': formatDecimal(e['DiffWt'], decimal: 3),
+
+        'Diam': formatDecimal(e['Diam'], decimal: 2),
+        'Length': formatDecimal(e['Length'], decimal: 2),
+        'Height': formatDecimal(e['Height'], decimal: 2),
+        'TopSide': e['TopSide'] ?? '-',
+
+        'HA': e['HA'] ?? '-',
+        'QRCode': e['QRCode'] ?? '',
+        'JobRec': e['JobRec'] ?? '-',
+      }).toList(),
+    ),
+
+    // ── JOBWORK_PENDING_DETAIL ─────────────────────────────────────────────────────── 58
+    'JOBWORK_PENDING_DETAIL': ReportConfig(
+      reportTypeCode: 'JOBWORK_PENDING_DETAIL',
+      endpoint: '/reports/jobwork-pen-detail',
+      columns: const [
+        ReportColumnDef(key: 'Jno', label: 'Jno', width: 120),
+        ReportColumnDef(key: 'Date', label: 'Date', width: 140),
+        ReportColumnDef(key: 'Time', label: 'Time', width: 140),
+
+        ReportColumnDef(key: 'PartyName', label: 'Party Name', width: 180),
+        ReportColumnDef(key: 'DeptName', label: 'Dept Name', width: 180),
+        ReportColumnDef(key: 'DeptProcessName', label: 'Dept Process', width: 180),
+
+        ReportColumnDef(key: 'ArticalName', label: 'Article', width: 180),
+
+        ReportColumnDef(key: 'CutNo', label: 'Cut No', width: 140),
+        ReportColumnDef(key: 'MfgCut', label: 'Mfg Cut', width: 140),
+
+        ReportColumnDef(key: 'BCode', label: 'BCode', width: 140),
+        ReportColumnDef(key: 'PktNo', label: 'Pkt No', width: 140),
+        ReportColumnDef(key: 'PairNo', label: 'Pair No', width: 140),
+
+        ReportColumnDef(key: 'PurityName', label: 'Purity', width: 140),
+        ReportColumnDef(key: 'CharniName', label: 'Charni', width: 140),
+        ReportColumnDef(key: 'ColorName', label: 'Color', width: 140),
+        ReportColumnDef(key: 'ShapeName', label: 'Shape', width: 140),
+
+        ReportColumnDef(key: 'CutName', label: 'Cut', width: 140),
+        ReportColumnDef(key: 'PolishName', label: 'Polish', width: 140),
+        ReportColumnDef(key: 'SymmetryName', label: 'Symmetry', width: 140),
+        ReportColumnDef(key: 'FluoName', label: 'Fluo', width: 140),
+        ReportColumnDef(key: 'TensionsName', label: 'Tensions', width: 180),
+
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
+        ReportColumnDef(key: 'Wt', label: 'Wt', width: 120),
+
+        ReportColumnDef(key: 'IssPc', label: 'Iss Pc', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'Iss Wt', width: 140),
+
+        ReportColumnDef(key: 'RecPc', label: 'Rec Pc', width: 140),
+        ReportColumnDef(key: 'RecWt', label: 'Rec Wt', width: 140),
+
+        ReportColumnDef(key: 'KPc', label: 'K Pc', width: 140),
+        ReportColumnDef(key: 'KWt', label: 'K Wt', width: 140),
+
+        ReportColumnDef(key: 'BrPc', label: 'Br Pc', width: 140),
+        ReportColumnDef(key: 'BrWt', label: 'Br Wt', width: 140),
+
+        ReportColumnDef(key: 'LossPc', label: 'Loss Pc', width: 140),
+        ReportColumnDef(key: 'LossWt', label: 'Loss Wt', width: 140),
+
+        ReportColumnDef(key: 'DmWt', label: 'DM Wt', width: 140),
+        ReportColumnDef(key: 'DmPer', label: 'DM %', width: 140),
+
+        ReportColumnDef(key: 'Size', label: 'Size', width: 140),
+
+        ReportColumnDef(key: 'RecPer', label: 'Rec %', width: 140),
+        ReportColumnDef(key: 'DiffPer', label: 'Diff %', width: 140),
+        ReportColumnDef(key: 'DiffWt', label: 'Diff Wt', width: 140),
+
+        ReportColumnDef(key: 'Diam', label: 'Diam', width: 140),
+        ReportColumnDef(key: 'Length', label: 'Length', width: 140),
+        ReportColumnDef(key: 'Height', label: 'Height', width: 140),
+        ReportColumnDef(key: 'TopSide', label: 'Top Side', width: 140),
+
+        ReportColumnDef(key: 'HA', label: 'HA', width: 100),
+        ReportColumnDef(key: 'QRCode', label: 'QR Code', width: 180),
+        ReportColumnDef(key: 'JobRec', label: 'Job Rec', width: 120),
+      ],
+      mapper: (raw) => raw.map((e) => {
+        'Jno': '${e['Jno'] ?? 0}',
+        'Date': formatDate(e['Date']),
+        'Time': e['Time'] ?? '-',
+
+        'PartyName': e['PartyName'] ?? '-',
+        'DeptName': e['DeptName'] ?? '-',
+        'DeptProcessName': e['DeptProcessName'] ?? '-',
+
+        'ArticalName': e['ArticalName'] ?? '-',
+
+        'CutNo': e['CutNo'] ?? '-',
+        'MfgCut': e['MfgCut'] ?? '-',
+
+        'BCode': '${e['BCode'] ?? 0}',
+        'PktNo': e['PktNo'] ?? '-',
+        'PairNo': '${e['PairNo'] ?? 0}',
+
+        'PurityName': e['PurityName'] ?? '-',
+        'CharniName': e['CharniName'] ?? '-',
+        'ColorName': e['ColorName'] ?? '-',
+        'ShapeName': e['ShapeName'] ?? '-',
+
+        'CutName': e['CutName'] ?? '-',
+        'PolishName': e['PolishName'] ?? '-',
+        'SymmetryName': e['SymmetryName'] ?? '-',
+        'FluoName': e['FluoName'] ?? '-',
+        'TensionsName': e['TensionsName'] ?? '-',
+
+        'Pc': formatDecimal(e['Pc'], decimal: 0),
+        'Wt': formatDecimal(e['Wt'], decimal: 3),
+
+        'IssPc': formatDecimal(e['IssPc'], decimal: 0),
+        'IssWt': formatDecimal(e['IssWt'], decimal: 3),
+
+        'RecPc': formatDecimal(e['RecPc'], decimal: 0),
+        'RecWt': formatDecimal(e['RecWt'], decimal: 3),
+
+        'KPc': formatDecimal(e['KPc'], decimal: 0),
+        'KWt': formatDecimal(e['KWt'], decimal: 3),
+
+        'BrPc': formatDecimal(e['BrPc'], decimal: 0),
+        'BrWt': formatDecimal(e['BrWt'], decimal: 3),
+
+        'LossPc': formatDecimal(e['LossPc'], decimal: 0),
+        'LossWt': formatDecimal(e['LossWt'], decimal: 3),
+
+        'DmWt': formatDecimal(e['DmWt'], decimal: 3),
+        'DmPer': formatDecimal(e['DmPer'], decimal: 2),
+
+        'Size': formatDecimal(e['Size'], decimal: 2),
+
+        'RecPer': formatDecimal(e['RecPer'], decimal: 2),
+        'DiffPer': formatDecimal(e['DiffPer'], decimal: 2),
+        'DiffWt': formatDecimal(e['DiffWt'], decimal: 3),
+
+        'Diam': formatDecimal(e['Diam'], decimal: 2),
+        'Length': formatDecimal(e['Length'], decimal: 2),
+        'Height': formatDecimal(e['Height'], decimal: 2),
+        'TopSide': e['TopSide'] ?? '-',
+
+        'HA': e['HA'] ?? '-',
+        'QRCode': e['QRCode'] ?? '',
+        'JobRec': e['JobRec'] ?? '-',
+      }).toList(),
+    ),
+
+    /* Packet Wise Planning .......................................................................... */
+
+    // ── PACKET_WISE_PLANNING_SUMMARY ─────────────────────────────────────────────────────── 59
     'PACKET_WISE_PLANNING_SUMMARY': ReportConfig(
       reportTypeCode: 'PACKET_WISE_PLANNING_SUMMARY',
       endpoint: '/reports/packet-wise-planning-summary',
@@ -2164,8 +3424,7 @@ class ReportRegistry {
       }).toList(),
     ),
 
-
-    // ── PACKET_WISE_PLANNING_DETAIL ─────────────────────────────────────────────────────── 41
+    // ── PACKET_WISE_PLANNING_DETAIL ─────────────────────────────────────────────────────── 60
     'PACKET_WISE_PLANNING_DETAIL': ReportConfig(
       reportTypeCode: 'PACKET_WISE_PLANNING_DETAIL',
       endpoint: '/reports/packet-wise-planning-detail',
@@ -2178,7 +3437,7 @@ class ReportRegistry {
         ReportColumnDef(key: 'Date', label: 'Date', width: 140),
         ReportColumnDef(key: 'OrgWt', label: 'Org Wt', width: 140),
         ReportColumnDef(key: 'RgWt', label: 'Rg Wt', width: 140),
-        ReportColumnDef(key: 'Pc', label: 'Pc', width: 80),
+        ReportColumnDef(key: 'Pc', label: 'Pc', width: 120),
         ReportColumnDef(key: 'PoWt', label: 'Po Wt', width: 140),
         ReportColumnDef(key: 'PoPer', label: 'Po %', width: 120),
         ReportColumnDef(key: 'AmountRs', label: 'Amount', width: 140),
@@ -2215,8 +3474,7 @@ class ReportRegistry {
       }).toList(),
     ),
 
-
-    // ── KAPAN_PERFORMANCE ─────────────────────────────────────────────────────── 41
+    // ── KAPAN_PERFORMANCE ─────────────────────────────────────────────────────── 61
     'KAPAN_PERFORMANCE': ReportConfig(
       reportTypeCode: 'KAPAN_PERFORMANCE',
       endpoint: '/reports/kapan-performance',

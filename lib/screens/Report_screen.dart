@@ -71,7 +71,7 @@ class _ReportScreenState extends State<ReportScreen> {
   /// Parallel map that keeps the raw List<String> for every multi-select field.
   /// _formValues[key] holds the comma-joined string (for display / reset).
   /// _multiSelectValues[key] holds the typed list (for API calls).
-   Map<String, List<String>>? _multiSelectValues; // ← ADD
+  Map<String, List<String>>? _multiSelectValues; // ← ADD
   int? _selectedTestCode;
   int? _selectedReportTypeCode;
   String? _activeReportType = '';
@@ -126,11 +126,10 @@ class _ReportScreenState extends State<ReportScreen> {
   // ─────────────────────────────────────────────────────────────────────────
 
   /// Returns a List<int> for a multi-select field (empty list if nothing selected).
-  List<int> _intList(String key) =>
-      (_multiSelectValues?[key] ?? [])
-          .map((e) => int.tryParse(e))
-          .whereType<int>()
-          .toList();
+  List<int> _intList(String key) => (_multiSelectValues?[key] ?? [])
+      .map((e) => int.tryParse(e))
+      .whereType<int>()
+      .toList();
 
   /// Returns a single nullable int for normal (single) dropdown / text fields.
   int? _intVal(String key) => int.tryParse(_formValues[key] ?? '');
@@ -143,10 +142,10 @@ class _ReportScreenState extends State<ReportScreen> {
     if (deptCode == null) return '';
     try {
       return context
-          .read<DeptProvider>()
-          .list
-          .firstWhere((d) => d.deptCode == deptCode)
-          .deptName ??
+              .read<DeptProvider>()
+              .list
+              .firstWhere((d) => d.deptCode == deptCode)
+              .deptName ??
           '';
     } catch (_) {
       return '';
@@ -157,10 +156,10 @@ class _ReportScreenState extends State<ReportScreen> {
     if (code == null) return '';
     try {
       return context
-          .read<DeptGroupProvider>()
-          .list
-          .firstWhere((d) => d.deptGroupCode == code)
-          .deptGroupName ??
+              .read<DeptGroupProvider>()
+              .list
+              .firstWhere((d) => d.deptGroupCode == code)
+              .deptGroupName ??
           '';
     } catch (_) {
       return '';
@@ -171,10 +170,10 @@ class _ReportScreenState extends State<ReportScreen> {
     if (code == null) return '';
     try {
       return context
-          .read<ShapeProvider>()
-          .list
-          .firstWhere((s) => s.shapeCode == code)
-          .shapeName ??
+              .read<ShapeProvider>()
+              .list
+              .firstWhere((s) => s.shapeCode == code)
+              .shapeName ??
           '';
     } catch (_) {
       return '';
@@ -185,10 +184,10 @@ class _ReportScreenState extends State<ReportScreen> {
     if (code == null) return '';
     try {
       return context
-          .read<PurityProvider>()
-          .list
-          .firstWhere((p) => p.purityCode == code)
-          .purityName ??
+              .read<PurityProvider>()
+              .list
+              .firstWhere((p) => p.purityCode == code)
+              .purityName ??
           '';
     } catch (_) {
       return '';
@@ -199,10 +198,10 @@ class _ReportScreenState extends State<ReportScreen> {
     if (code == null) return '';
     try {
       return context
-          .read<EmployeeProvider>()
-          .list
-          .firstWhere((e) => e.employeeCode == code)
-          .employeeName ??
+              .read<EmployeeProvider>()
+              .list
+              .firstWhere((e) => e.employeeCode == code)
+              .employeeName ??
           '';
     } catch (_) {
       return '';
@@ -213,10 +212,10 @@ class _ReportScreenState extends State<ReportScreen> {
     if (crId == null) return '';
     try {
       return context
-          .read<CounterProvider>()
-          .list
-          .firstWhere((c) => c.crId == crId)
-          .logInName ??
+              .read<CounterProvider>()
+              .list
+              .firstWhere((c) => c.crId == crId)
+              .logInName ??
           '';
     } catch (_) {
       return '';
@@ -227,10 +226,10 @@ class _ReportScreenState extends State<ReportScreen> {
     if (code == null) return '';
     try {
       return context
-          .read<RemarksProvider>()
-          .list
-          .firstWhere((r) => r.remarksCode == code)
-          .remarksName ??
+              .read<RemarksProvider>()
+              .list
+              .firstWhere((r) => r.remarksCode == code)
+              .remarksName ??
           '';
     } catch (_) {
       return '';
@@ -245,23 +244,23 @@ class _ReportScreenState extends State<ReportScreen> {
     return rawList
         .where(
           (r) =>
-      r.counterType == counterType &&
-          r.userVisibilityCode != null &&
-          _visProv.list.any(
+              r.counterType == counterType &&
+              r.userVisibilityCode != null &&
+              _visProv.list.any(
                 (v) => v.userVisibilityCode == r.userVisibilityCode,
-          ),
-    )
+              ),
+        )
         .map(
           (r) => _visProv.list.firstWhereOrNull(
             (v) => v.userVisibilityCode == r.userVisibilityCode,
-      ),
-    )
+          ),
+        )
         .where(
           (v) =>
-      v != null &&
-          v!.userVisibilityCode != null &&
-          (v.userVisibilityName ?? '').isNotEmpty,
-    )
+              v != null &&
+              v!.userVisibilityCode != null &&
+              (v.userVisibilityName ?? '').isNotEmpty,
+        )
         .cast<UserVisibilityModel>()
         .toList()
       ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
@@ -269,7 +268,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
   Future<void> _loadToDisplayFields(int crId) async {
     final counter = context.read<CounterProvider>().list.firstWhereOrNull(
-          (c) => c.crId == crId,
+      (c) => c.crId == crId,
     );
     if (counter == null || counter.counterMstID == null) return;
 
@@ -286,7 +285,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
   Future<void> _loadFromDisplayFields(int crId) async {
     final counter = context.read<CounterProvider>().list.firstWhereOrNull(
-          (c) => c.crId == crId,
+      (c) => c.crId == crId,
     );
     if (counter == null || counter.counterMstID == null) return;
 
@@ -307,7 +306,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
     try {
       final counter = context.read<CounterProvider>().list.firstWhere(
-            (c) => c.crId == crId,
+        (c) => c.crId == crId,
       );
       final deptName = _deptNameFor(counter.deptCode);
 
@@ -337,7 +336,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
     try {
       final counter = context.read<CounterProvider>().list.firstWhere(
-            (c) => c.crId == crId,
+        (c) => c.crId == crId,
       );
       final deptName = _deptNameFor(counter.deptCode);
 
@@ -413,69 +412,69 @@ class _ReportScreenState extends State<ReportScreen> {
     // ── FROM dropdown ────────────────────────────────────────────────────────
     final fromItems = counterProv.list
         .where((c) {
-      final grp = _deptGroupNameFor(c.deptGroupCode).toUpperCase();
-      return grp.contains('CLEAVING') || grp.contains('CLV');
-    })
+          final grp = _deptGroupNameFor(c.deptGroupCode).toUpperCase();
+          return grp.contains('CLEAVING') || grp.contains('CLV');
+        })
         .map(
           (c) => ErpDropdownItem(
-        label: '${c.crName ?? ''}  |  ${_deptNameFor(c.deptCode)}',
-        value: c.crId?.toString() ?? '',
-      ),
-    )
+            label: '${c.crName ?? ''}  |  ${_deptNameFor(c.deptCode)}',
+            value: c.crId?.toString() ?? '',
+          ),
+        )
         .toList();
 
     // ── TO dropdown — allowCrIds from CounterManagerDet ───────────────────
     final toItems = _fromCrId == null
         ? <ErpDropdownItem>[]
         : mgDetProv.list
-        .where((m) => m.crId == _fromCrId && m.allowCrId != null)
-        .map((m) => m.allowCrId!)
-        .toSet()
-        .map((allowId) {
-      try {
-        final c = counterProv.list.firstWhere(
-              (c) => c.crId == allowId && c.active == true,
-        );
-        if (c.crId == _fromCrId) return null;
-        return ErpDropdownItem(
-          label: '${c.crName ?? ''} | ${_deptNameFor(c.deptCode)}',
-          value: c.crId?.toString() ?? '',
-        );
-      } catch (_) {
-        return null;
-      }
-    })
-        .whereType<ErpDropdownItem>()
-        .toList();
+              .where((m) => m.crId == _fromCrId && m.allowCrId != null)
+              .map((m) => m.allowCrId!)
+              .toSet()
+              .map((allowId) {
+                try {
+                  final c = counterProv.list.firstWhere(
+                    (c) => c.crId == allowId && c.active == true,
+                  );
+                  if (c.crId == _fromCrId) return null;
+                  return ErpDropdownItem(
+                    label: '${c.crName ?? ''} | ${_deptNameFor(c.deptCode)}',
+                    value: c.crId?.toString() ?? '',
+                  );
+                } catch (_) {
+                  return null;
+                }
+              })
+              .whereType<ErpDropdownItem>()
+              .toList();
 
     // ── PROCESS dropdown ──────────────────────────────────────────────────
     final processItems = (_fromCrId == null || _toCrId == null)
         ? <ErpDropdownItem>[]
         : () {
-      final issueCodes = mgDetProv.list
-          .where((m) => m.crId == _fromCrId && m.deptProcessCode != null)
-          .map((m) => m.deptProcessCode!)
-          .toSet();
+            final issueCodes = mgDetProv.list
+                .where((m) => m.crId == _fromCrId && m.deptProcessCode != null)
+                .map((m) => m.deptProcessCode!)
+                .toSet();
 
-      final recvCodes = mgDetProv.list
-          .where(
-            (m) => m.allowCrId == _toCrId && m.deptProcessCode != null,
-      )
-          .map((m) => m.deptProcessCode!)
-          .toSet();
+            final recvCodes = mgDetProv.list
+                .where(
+                  (m) => m.allowCrId == _toCrId && m.deptProcessCode != null,
+                )
+                .map((m) => m.deptProcessCode!)
+                .toSet();
 
-      return issueCodes.intersection(recvCodes).map((code) {
-        String label = '$code';
-        try {
-          label =
-              procProv.list
-                  .firstWhere((p) => p.deptProcessCode == code)
-                  .deptProcessName ??
-                  '$code';
-        } catch (_) {}
-        return ErpDropdownItem(label: label, value: code.toString());
-      }).toList();
-    }();
+            return issueCodes.intersection(recvCodes).map((code) {
+              String label = '$code';
+              try {
+                label =
+                    procProv.list
+                        .firstWhere((p) => p.deptProcessCode == code)
+                        .deptProcessName ??
+                    '$code';
+              } catch (_) {}
+              return ErpDropdownItem(label: label, value: code.toString());
+            }).toList();
+          }();
 
     // ── TENSIONS dropdown ─────────────────────────────────────────────────
     final tensItems = tensProv.list.where((e) => e.active == true).toList()
@@ -483,145 +482,145 @@ class _ReportScreenState extends State<ReportScreen> {
     final tensDropdown = tensItems
         .map(
           (e) => ErpDropdownItem(
-        label: e.tensionsName ?? '',
-        value: e.tensionsCode?.toString() ?? '',
-      ),
-    )
+            label: e.tensionsName ?? '',
+            value: e.tensionsCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     final factoryItems = factoryProv.factories
         .map(
           (e) => ErpDropdownItem(
-        label: e.factoryName ?? '',
-        value: e.factoryCode?.toString() ?? '',
-      ),
-    )
+            label: e.factoryName ?? '',
+            value: e.factoryCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     final reportTypeItems = reportTypeProv.list
         .where(
           (e) => _selectedTestCode == null || e.TestCode == _selectedTestCode,
-    )
+        )
         .map(
           (e) => ErpDropdownItem(
-        label: e.reportTypeName ?? '',
-        value: e.reportTypeCode?.toString() ?? '',
-      ),
-    )
+            label: e.reportTypeName ?? '',
+            value: e.reportTypeCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     final typeItems = typeProv.list
         .map(
           (e) => ErpDropdownItem(
-        label: e.testName ?? '',
-        value: e.testCode?.toString() ?? '',
-      ),
-    )
+            label: e.testName ?? '',
+            value: e.testCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     final purityItems = purityProv.list
         .map(
           (e) => ErpDropdownItem(
-        label: e.purityName ?? '',
-        value: e.purityCode?.toString() ?? '',
-      ),
-    )
+            label: e.purityName ?? '',
+            value: e.purityCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     final colorItems = colorProv.list
         .map(
           (e) => ErpDropdownItem(
-        label: e.colorName ?? '',
-        value: e.colorCode?.toString() ?? '',
-      ),
-    )
+            label: e.colorName ?? '',
+            value: e.colorCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     final shapeItems = shapeProv.list
         .map(
           (e) => ErpDropdownItem(
-        label: e.shapeName ?? '',
-        value: e.shapeCode?.toString() ?? '',
-      ),
-    )
+            label: e.shapeName ?? '',
+            value: e.shapeCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     final empItems = employeeProv.list
         .map(
           (e) => ErpDropdownItem(
-        label: e.employeeName ?? '',
-        value: e.employeeCode?.toString() ?? '',
-      ),
-    )
+            label: e.employeeName ?? '',
+            value: e.employeeCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     final divisionItems = divisionProv.divisions
         .map(
           (e) => ErpDropdownItem(
-        label: e.divisionName ?? '',
-        value: e.divisionCode?.toString() ?? '',
-      ),
-    )
+            label: e.divisionName ?? '',
+            value: e.divisionCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     final remarksItems = remarksProv.list
         .map(
           (e) => ErpDropdownItem(
-        label: e.remarksName ?? '',
-        value: e.remarksCode?.toString() ?? '',
-      ),
-    )
+            label: e.remarksName ?? '',
+            value: e.remarksCode?.toString() ?? '',
+          ),
+        )
         .toList();
 
     final cutItems = cutProv.list
         .where((cc) => cc.details.isNotEmpty)
         .map((cc) {
-      final spkDet = cc.details.firstWhere(
+          final spkDet = cc.details.firstWhere(
             (d) => d.cutType == 'SPK',
-        orElse: () => cc.details.first,
-      );
-      return ErpDropdownItem(
-        label: spkDet.cutNo ?? '',
-        value: spkDet.cutNo ?? '',
-      );
-    })
+            orElse: () => cc.details.first,
+          );
+          return ErpDropdownItem(
+            label: spkDet.cutNo ?? '',
+            value: spkDet.cutNo ?? '',
+          );
+        })
         .where((e) => e.value.isNotEmpty)
         .fold<List<ErpDropdownItem>>([], (acc, item) {
-      if (!acc.any((x) => x.value == item.value)) acc.add(item);
-      return acc;
-    });
+          if (!acc.any((x) => x.value == item.value)) acc.add(item);
+          return acc;
+        });
 
     final roughItems = roughProv.roughs
         .map(
           (e) => ErpDropdownItem(
-        label: e.kapanNo ?? '',
-        value: e.kapanNo?.toString() ?? '',
-      ),
-    )
+            label: e.kapanNo ?? '',
+            value: e.kapanNo?.toString() ?? '',
+          ),
+        )
         .toList();
 
     final mainCutNoItems = roughProv.roughs
         .map(
           (e) => ErpDropdownItem(
-        label: e.mainCutNo ?? '',
-        value: e.mainCutNo?.toString() ?? '',
-      ),
-    )
+            label: e.mainCutNo ?? '',
+            value: e.mainCutNo?.toString() ?? '',
+          ),
+        )
         .toList();
 
     final reportsItems = reportsProv.list
         .where(
           (e) =>
-      (_selectedTestCode == null || e.testCode == _selectedTestCode) &&
-          (_selectedReportTypeCode == null ||
-              e.reportTypeCode == _selectedReportTypeCode),
-    )
+              (_selectedTestCode == null || e.testCode == _selectedTestCode) &&
+              (_selectedReportTypeCode == null ||
+                  e.reportTypeCode == _selectedReportTypeCode),
+        )
         .map(
           (e) => ErpDropdownItem(
-        label: e.reportName ?? '',
-        value: e.reportName ?? '',
-      ),
-    )
+            label: e.reportName ?? '',
+            value: e.reportName ?? '',
+          ),
+        )
         .toList();
 
     // ─────────────────────────────────────────────────────────────────────
@@ -672,24 +671,24 @@ class _ReportScreenState extends State<ReportScreen> {
           isEntryField: true,
           skipFocus: true,
         ),
-        ErpFieldConfig(
-          key: 'timeFrom',
-          label: 'TIME',
-          type: ErpFieldType.time,
-          sectionIndex: 0,
-          isEntryRequired: true,
-          isEntryField: true,
-          skipFocus: true,
-        ),
-        ErpFieldConfig(
-          key: 'timeTo',
-          label: 'TO',
-          type: ErpFieldType.time,
-          sectionIndex: 0,
-          isEntryRequired: true,
-          isEntryField: true,
-          skipFocus: true,
-        ),
+        // ErpFieldConfig(
+        //   key: 'timeFrom',
+        //   label: 'TIME',
+        //   type: ErpFieldType.time,
+        //   sectionIndex: 0,
+        //   isEntryRequired: true,
+        //   isEntryField: true,
+        //   skipFocus: true,
+        // ),
+        // ErpFieldConfig(
+        //   key: 'timeTo',
+        //   label: 'TO',
+        //   type: ErpFieldType.time,
+        //   sectionIndex: 0,
+        //   isEntryRequired: true,
+        //   isEntryField: true,
+        //   skipFocus: true,
+        // ),
         ErpFieldConfig(
           key: 'finish',
           label: 'finish',
@@ -926,15 +925,12 @@ class _ReportScreenState extends State<ReportScreen> {
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _onSearch() async {
-    print(_formValues);
-    print(_multiSelectValues);
-
     final reportName = _formValues['report'];
-
     if (reportName == null || reportName.isEmpty) return;
+    context.read<ReportProvider>().clear();
 
     final registryKey = _toRegistryKey(reportName);
-
+    print(registryKey);
     final config = ReportRegistry.of(registryKey);
     if (config == null) return;
 
@@ -983,17 +979,19 @@ class _ReportScreenState extends State<ReportScreen> {
     if (registryKey != 'PACKET_WISE_PLANNING_SUMMARY' &&
         registryKey != 'PACKET_WISE_PLANNING_DETAIL') {
       filter.addAll({
-        "fromDate": DateFormat('yyyy-MM-dd')
-            .format(DateFormat('dd/MM/yyyy').parse(_formValues['dateFrom']!)),
+        "fromDate": DateFormat(
+          'yyyy-MM-dd',
+        ).format(DateFormat('dd/MM/yyyy').parse(_formValues['dateFrom']!)),
 
-        "toDate": DateFormat('yyyy-MM-dd')
-            .format(DateFormat('dd/MM/yyyy').parse(_formValues['dateTo']!)),
+        "toDate": DateFormat(
+          'yyyy-MM-dd',
+        ).format(DateFormat('dd/MM/yyyy').parse(_formValues['dateTo']!)),
 
-        "fromTime": DateFormat('HH:mm:ss')
-            .format(DateFormat('hh:mm a').parse(_formValues['timeFrom']!)),
-
-        "toTime": DateFormat('HH:mm:ss')
-            .format(DateFormat('hh:mm a').parse(_formValues['timeTo']!)),
+        // "fromTime": DateFormat('HH:mm:ss')
+        //     .format(DateFormat('hh:mm a').parse(_formValues['timeFrom']!)),
+        //
+        // "toTime": DateFormat('HH:mm:ss')
+        //     .format(DateFormat('hh:mm a').parse(_formValues['timeTo']!)),
       });
     }
 
@@ -1060,12 +1058,9 @@ class _ReportScreenState extends State<ReportScreen> {
     // After reset the ErpForm subtree is recreated (new ValueKey), so wait
     // two frames before requesting focus so the new State is mounted.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(
-        const Duration(milliseconds: 80),
-            () {
-          if (mounted) _erpFormKey.currentState?.focusField('type');
-        },
-      );
+      Future.delayed(const Duration(milliseconds: 80), () {
+        if (mounted) _erpFormKey.currentState?.focusField('type');
+      });
     });
   }
 
@@ -1119,53 +1114,36 @@ class _ReportScreenState extends State<ReportScreen> {
           }
         });
 
-        print('Key: $key');
-        print('Value: $value');
-        print('Multi: $_multiSelectValues');
-
-          switch (key) {
-        // ── TYPE ────────────────────────────────────────────────────────
+        switch (key) {
+          // ── TYPE ────────────────────────────────────────────────────────
           case 'type':
             final testCode = int.tryParse(value.toString());
-
             final firstReportType = context
                 .read<ReportTypeProvider>()
                 .list
                 .firstWhereOrNull(
                   (e) => testCode == null || e.TestCode == testCode,
-            );
+                );
 
             final firstReportTypeCode = firstReportType?.reportTypeCode;
-            final firstReportTypeCodeStr = firstReportTypeCode?.toString() ?? '';
-
-            final filtered = context
-                .read<ReportMstProvider>()
-                .list
-                .where(
-                  (e) =>
-              (testCode == null || e.testCode == testCode) &&
-                  (firstReportTypeCode == null ||
-                      e.reportTypeCode == firstReportTypeCode),
-            )
-                .toList();
-
-            final firstReportName =
-            filtered.isNotEmpty ? filtered.first.reportName ?? '' : '';
+            final firstReportTypeCodeStr =
+                firstReportTypeCode?.toString() ?? '';
 
             setState(() {
               _selectedTestCode = testCode;
               _selectedReportTypeCode = firstReportTypeCode;
               _formValues['sel'] = firstReportTypeCodeStr;
-              _formValues['report'] = firstReportName;
-              _activeReportType = _toRegistryKey(firstReportName);
             });
 
-            _erpFormKey.currentState?.updateFieldValue('sel', firstReportTypeCodeStr);
-            _erpFormKey.currentState?.updateFieldValue('report', firstReportName);
+            _erpFormKey.currentState?.updateFieldValue(
+              'sel',
+              firstReportTypeCodeStr,
+            );
 
-        // ── SEL ─────────────────────────────────────────────────────────
+          // ── SEL ─────────────────────────────────────────────────────────
           case 'sel':
             _entryVals[key] = value.toString();
+            context.read<ReportProvider>().clear();
             _selectedReportTypeCode = int.tryParse(value.toString());
 
             final filtered = context
@@ -1173,51 +1151,58 @@ class _ReportScreenState extends State<ReportScreen> {
                 .list
                 .where(
                   (e) =>
-              (_selectedTestCode == null ||
-                  e.testCode == _selectedTestCode) &&
-                  (_selectedReportTypeCode == null ||
-                      e.reportTypeCode == _selectedReportTypeCode),
-            )
+                      (_selectedTestCode == null ||
+                          e.testCode == _selectedTestCode) &&
+                      (_selectedReportTypeCode == null ||
+                          e.reportTypeCode == _selectedReportTypeCode),
+                )
                 .toList();
 
-            final firstReportName =
-            filtered.isNotEmpty ? filtered.first.reportName ?? '' : '';
+            final firstReportName = filtered.isNotEmpty
+                ? filtered.first.reportName ?? ''
+                : '';
 
             setState(() {
               _formValues['report'] = firstReportName;
               _activeReportType = _toRegistryKey(firstReportName);
             });
 
-            _erpFormKey.currentState?.updateFieldValue('report', firstReportName);
+            _erpFormKey.currentState?.updateFieldValue(
+              'report',
+              firstReportName,
+            );
 
             Future.delayed(
               const Duration(milliseconds: 50),
-                  () => _erpFormKey.currentState?.focusField('report'),
+              () => _erpFormKey.currentState?.focusField('report'),
             );
 
-        // ── REPORT ──────────────────────────────────────────────────────
+          // ── REPORT ──────────────────────────────────────────────────────
           case 'report':
             _entryVals[key] = value.toString();
+            context.read<ReportProvider>().clear();
 
-        // ── FROM (multi-select: use first selected for dept lookup) ─────
+          // ── FROM (multi-select: use first selected for dept lookup) ─────
           case 'fromCrId':
-            final firstId = (_multiSelectValues?['fromCrId'] ?? []).firstOrNull ?? '';
+            final firstId =
+                (_multiSelectValues?['fromCrId'] ?? []).firstOrNull ?? '';
             if (firstId.isNotEmpty) {
               _onFromSelected(firstId);
             }
             Future.delayed(
               const Duration(milliseconds: 50),
-                  () => _erpFormKey.currentState?.focusField('toCrId'),
+              () => _erpFormKey.currentState?.focusField('toCrId'),
             );
 
-        // ── TO (multi-select: use first selected for dept lookup) ────────
+          // ── TO (multi-select: use first selected for dept lookup) ────────
           case 'toCrId':
-            final firstId = (_multiSelectValues?['toCrId'] ?? []).firstOrNull ?? '';
+            final firstId =
+                (_multiSelectValues?['toCrId'] ?? []).firstOrNull ?? '';
             if (firstId.isNotEmpty) {
               _onToSelected(firstId);
             }
 
-        // ── ALL OTHER FIELDS ────────────────────────────────────────────
+          // ── ALL OTHER FIELDS ────────────────────────────────────────────
           default:
             _entryVals[key] = value.toString();
             _formValues[key] = value.toString();
@@ -1254,10 +1239,6 @@ class _ReportScreenState extends State<ReportScreen> {
             },
           );
         }
-
-        // ── Table branch ─────────────────────────────────────────────────
-        if (prov.tableData.isEmpty) return const SizedBox.shrink();
-
         final erpColumns = config.columns.map((c) => c.toErpColumn()).toList();
 
         return LayoutBuilder(
@@ -1267,19 +1248,48 @@ class _ReportScreenState extends State<ReportScreen> {
               height: constraints.maxHeight.isFinite
                   ? constraints.maxHeight
                   : 500,
-              child: ErpDataTable(
-                key: ValueKey('${_activeReportType}_${prov.tableData.length}'),
-                data: prov.tableData,
-                columns: erpColumns,
-                showSearch: false,
-                title: registryKey.isEmpty
-                    ? 'REPORT DATA'
-                    : registryKey.replaceAll('_', ' '),
-                token: '',
-                url: '',
-                isReportRow: false,
-                showFooterTotals: true,
-              ),
+              child: prov.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : prov.tableData.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.info_outline, size: 60),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'No Data Found',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'No records match the selected filters.\nPlease adjust your filters and try again.',
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : ErpDataTable(
+                      key: ValueKey(
+                        '${_activeReportType}_${prov.tableData.length}',
+                      ),
+                      data: prov.tableData,
+                      columns: erpColumns,
+                      showSearch: false,
+                      title: registryKey.isEmpty
+                          ? 'REPORT DATA'
+                          : registryKey.replaceAll('_', ' '),
+                      token: '',
+                      url: '',
+                      isReportRow: false,
+                      showFooterTotals: true,
+                    ),
             );
           },
         );
@@ -1333,8 +1343,6 @@ class _PdfReportViewState extends State<_PdfReportView> {
     final queryParams =
         config.queryBuilder?.call(widget.filter) ?? widget.filter;
 
-    print('🔥 Calling PDF endpoint: $baseUrl${config.endpoint}');
-
     final response = await dio.get(
       '$baseUrl${config.endpoint}',
       queryParameters: queryParams,
@@ -1353,7 +1361,7 @@ class _PdfReportViewState extends State<_PdfReportView> {
     html.window.open(url, '_blank');
     Future.delayed(
       const Duration(seconds: 10),
-          () => html.Url.revokeObjectUrl(url),
+      () => html.Url.revokeObjectUrl(url),
     );
   }
 
@@ -1361,8 +1369,9 @@ class _PdfReportViewState extends State<_PdfReportView> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final height =
-        constraints.maxHeight.isFinite ? constraints.maxHeight : 600.0;
+        final height = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : 600.0;
 
         return SizedBox(
           width: constraints.maxWidth,

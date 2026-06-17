@@ -189,7 +189,7 @@ class _MstSellPriceState extends State<MstSellPrice> {
         ErpFieldConfig(
           key: 'length',
           label: 'LENGTH',
-          type: ErpFieldType.number,
+          type: ErpFieldType.amount,
           sectionIndex: 1,
           flex: 1,
         ),
@@ -301,15 +301,17 @@ class _MstSellPriceState extends State<MstSellPrice> {
       orElse: () => throw Exception(),
     );
 
+    // First letter from Article
     final articleLetter =
     (article.articalName?.isNotEmpty ?? false)
         ? article.articalName![0].toUpperCase()
         : '';
 
-    final shapeLetter =
-    (shape.shapeName?.isNotEmpty ?? false)
-        ? shape.shapeName![0].toUpperCase()
-        : '';
+    // First 2 letters from Shape
+    final shapeLetters =
+    (shape.shapeName?.length ?? 0) >= 2
+        ? shape.shapeName!.substring(0, 2).toUpperCase()
+        : (shape.shapeName ?? '').toUpperCase();
 
     final length =
         double.tryParse(_formValues['length'] ?? '') ?? 0;
@@ -317,12 +319,11 @@ class _MstSellPriceState extends State<MstSellPrice> {
     final width =
         double.tryParse(_formValues['diam'] ?? '') ?? 0;
 
-    final lengthPart = (length * 10).round().toString().padLeft(3, '0');
-
-    final widthPart = (width * 10).round().toString().padLeft(2, '0');
+    final lengthPart = getTwoDigitValue(length);
+    final widthPart = getTwoDigitValue(width);
 
     final code =
-        '$articleLetter$shapeLetter$lengthPart$widthPart';
+        '$articleLetter$shapeLetters$lengthPart$widthPart';
 
     _formValues['code'] = code;
 
@@ -330,6 +331,12 @@ class _MstSellPriceState extends State<MstSellPrice> {
       'code',
       code,
     );
+  }
+
+  String getTwoDigitValue(double value) {
+    final str = value.toStringAsFixed(2).replaceAll('.', '');
+
+    return str.substring(0, 2);
   }
 
   Future<void> _onSave(Map<String, dynamic> values) async {

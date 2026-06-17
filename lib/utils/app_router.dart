@@ -51,6 +51,7 @@ import 'package:diam_mfg/screens/trn_rough_assort.dart';
 import 'package:diam_mfg/screens/trn_rough_entry.dart';
 import 'package:diam_mfg/screens/trn_spk_dept_iss.dart';
 import 'package:diam_mfg/screens/utility_clv_department_rate_update.dart';
+import 'package:diam_mfg/screens/utility_jobwork_rate_update.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../screens/dashboard_screen.dart';
 import '../screens/mst_firm_dept.dart';
@@ -58,6 +59,8 @@ import '../screens/mst_firm_cut.dart';
 import '../screens/mst_firm_shape.dart';
 import '../screens/trn_factory_receive.dart';
 import '../screens/user_master.dart';
+import '../screens/utility_factory_rate_update.dart';
+import '../screens/utility_sell_price_list_update.dart';
 
 
 
@@ -124,7 +127,8 @@ class AppRouter {
     '/5.03': (context) => const PacketDeleteScreen(),
     '/5.04': (context) => const PacketEditScreen(),
     '/5.05': (context) => const UtilityClvDepartmentRateUpdate(),
-    '/5.06': (context) => const UtilityClvDepartmentRateUpdate(),
-    '/5.07': (context) => const UtilityClvDepartmentRateUpdate(),
+    '/5.06': (context) => const UtilityFactoryRateUpdate(),
+    '/5.07': (context) => const UtilityJobWorkRateUpdate(),
+    '/5.08': (context) => const UtilitySellPriceListUpdate(),
   });
 }

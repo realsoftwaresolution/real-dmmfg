@@ -57,6 +57,7 @@ import 'package:diam_mfg/providers/party_type_provider.dart';
 import 'package:diam_mfg/providers/pc_provider.dart';
 import 'package:diam_mfg/providers/pkt_type_provider.dart';
 import 'package:diam_mfg/providers/polish_provider.dart';
+import 'package:diam_mfg/providers/production_dashboard_provider.dart';
 import 'package:diam_mfg/providers/purity_group_provider.dart';
 import 'package:diam_mfg/providers/purity_provider.dart';
 import 'package:diam_mfg/providers/purity_rpt_group_provider.dart';
@@ -82,6 +83,9 @@ import 'package:diam_mfg/providers/trn_planning_received_provider.dart';
 import 'package:diam_mfg/providers/trn_process_issue_provider.dart';
 import 'package:diam_mfg/providers/user_visibility_provider.dart';
 import 'package:diam_mfg/providers/utility_clvdepartment_rate_update_provider.dart';
+import 'package:diam_mfg/providers/utility_factory_rate_update_provider.dart';
+import 'package:diam_mfg/providers/utility_jobwork_rate_update_provider.dart';
+import 'package:diam_mfg/providers/utility_sell_price_list_update_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
@@ -92,7 +96,7 @@ import 'providers/factory_man_group_provider.dart';
 
 // String baseUrl = 'http://50.62.183.116:5000/api';
 String baseUrl =
-    'https://pharmacology-celtic-rat-upon.trycloudflare.com/api';
+    'https://ensemble-burst-interpretation-build.trycloudflare.com/api';
 //CU-7,5/6/2026,17:12,0.096,0.049,ROUND,G,MACKABLE,klhkhkhjkkh,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
 
 //CU-7,5/6/2026,17:12,0.096,0.049,S.OVAL,G,VVS2,omjewR-1.50,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
@@ -350,6 +354,18 @@ Future<void> bootstrap({required FutureOr<Widget> Function() fn}) async {
             ),
             ChangeNotifierProvider<UtilityClvDepartmentRateUpdateProvider>(
               create: (_) => UtilityClvDepartmentRateUpdateProvider(),
+            ),
+            ChangeNotifierProvider<UtilityFactoryRateUpdateProvider>(
+              create: (_) => UtilityFactoryRateUpdateProvider(),
+            ),
+            ChangeNotifierProvider<UtilityJobWorkRateUpdateProvider>(
+              create: (_) => UtilityJobWorkRateUpdateProvider(),
+            ),
+            ChangeNotifierProvider<UtilitySellPriceListUpdateProvider>(
+              create: (_) => UtilitySellPriceListUpdateProvider(),
+            ),
+            ChangeNotifierProvider<ProductionDashboardProvider>(
+              create: (_) => ProductionDashboardProvider(),
             ),
           ],
           child: app,

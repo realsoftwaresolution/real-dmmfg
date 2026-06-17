@@ -2680,31 +2680,31 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   String _colLabel(String key) {
     const labels = {
       'srno': 'Sr No',
-      'jno': 'Jno',
-      'qrCode': 'QRCode',
-      'bCode': 'BCode',
+      'jno': 'J No',
+      'qrCode': 'QR Code',
+      'bCode': 'B Code',
       'pktNo': 'Pkt No',
       'mfgCut': 'Mfg Cut',
 
-      'orgPc': 'Org Pc',
-      'orgWt': 'Org Wt',
+      'orgPc': 'Original Pc',
+      'orgWt': 'Original Wt',
 
-      'issPc': 'Iss Pc',
-      'issWt': 'Iss Wt',
+      'issPc': 'Issued Pc',
+      'issWt': 'Issued Wt',
 
-      'recPc': 'Rec Pc',
-      'recWt': 'Rec Wt',
+      'recPc': 'Received Pc',
+      'recWt': 'Received Wt',
 
       'kPc': 'K Pc',
       'kWt': 'K Wt',
 
-      'brPc': 'Br Pc',
-      'brWt': 'Br Wt',
+      'brPc': 'Breakage Pc',
+      'brWt': 'Breakage Wt',
 
       'lossPc': 'Loss Pc',
       'lossWt': 'Loss Wt',
 
-      'diam': 'Diam',
+      'diam': 'Diameter',
       'length': 'Length',
 
       'purityCode': 'Purity',
@@ -2713,14 +2713,42 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       'cutCode': 'Cut',
       'shapeCode': 'Shape',
 
-      'dmWt': 'Dm Wt',
-      'dmPer': 'Dm Per',
+      'dmWt': 'DM Wt',
+      'dmPer': 'DM %',
 
-      'per': 'Per',
-      'diffPer': 'Diff %',
-      'diffWt': 'Diff Wt',
+      'per': 'Percentage',
+      'diffPer': 'Difference %',
+      'diffWt': 'Difference Wt',
 
       'size': 'Size',
+      'pairNo': 'Pair No',
+      'TopSide': 'Top Side',
+      'FcIntentCode': 'Fc Intent Code',
+      'FColorCode1': 'Fc Color Code 1',
+      'FColorCode2': 'Fc Color Code 2',
+      'FcOverCode': 'Fc Over Code',
+      'HA': 'H&A',
+      'height': 'Height',
+      'polishCode': 'Polish',
+      'symmetryCode': 'Symmetry',
+      'fluo': 'Fluo',
+      'tensionCode': 'Tension',
+      'groupType': 'Group Type',
+      'factoryRecDate': 'Date',
+      'factory': 'Factory',
+      'polishChecker': 'Polish Checker',
+      'MarkerMstID': 'Marker',
+      'factoryRecMstID': 'ID',
+      'lotNo': 'LOT NO',
+      // Rate Details
+      'rateID': 'Rate ID',
+      'rateon': 'Rate On',
+      'rate': 'Rate',
+      'amount': 'Amount',
+      // Selling Details
+      'sellCode': 'Sell Code',
+      'sellRate': 'Sell Rate',
+      'sellAmount': 'Sell Amount',
     };
     return labels[key] ?? key;
   }
