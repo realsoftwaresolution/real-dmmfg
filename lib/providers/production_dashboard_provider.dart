@@ -13,73 +13,145 @@ class ProductionDashboardProvider extends BaseProvider {
   int? selectedDeptCode;
   int? selectedRoughMstID;
 
-  Future<void> loadLevel1() async {
+  // ── FILTER STATES ──────────────────────────────────────────────────────────
+  List<int> filterRoughMstIDs = [];
+  List<int> filterArticleCodes = [];
 
-    final result = await request<List<dynamic>>(
-      showLoader: true,
-      call: () => api.post(
-        '/reports/production-report',
-      ),
-      onSuccess: (res) {
-        return res.data['data'];
-      },
-    );
-
-    if (result != null) {
-      _level1 = result;
-      notifyListeners();
-    }
+  void setFilters({List<int>? roughMstIDs, List<int>? articleCodes}) {
+    filterRoughMstIDs = roughMstIDs ?? [];
+    filterArticleCodes = articleCodes ?? [];
+    notifyListeners();
   }
 
-  Future<void> loadLevel2(int deptCode) async {
+  void resetFilters() {
+    filterRoughMstIDs = [];
+    filterArticleCodes = [];
+    notifyListeners();
+  }
 
-    selectedDeptCode = deptCode;
-
-    final result = await request<List<dynamic>>(
+  // ── DYNAMIC FETCH METHODS ──────────────────────────────────────────────────
+  Future<List<dynamic>?> fetchLevel1() async {
+    return await request<List<dynamic>>(
       showLoader: true,
       call: () => api.post(
         '/reports/production-report',
         data: {
-          "DeptCode": deptCode
+          "RoughMstIDs": filterRoughMstIDs,
+          "ArticleCodes": filterArticleCodes,
         },
       ),
       onSuccess: (res) {
-        return res.data['data'];
+        return (res.data['data'] as List<dynamic>?) ?? [];
       },
     );
-
-    if (result != null) {
-      _level2 = result;
-      _level3.clear();
-      notifyListeners();
-    }
   }
 
-  Future<void> loadLevel3({
+  Future<List<dynamic>?> fetchLevel2(int deptCode) async {
+    return await request<List<dynamic>>(
+      showLoader: true,
+      call: () => api.post(
+        '/reports/production-report',
+        data: {
+          "DeptCode": deptCode,
+          "RoughMstIDs": filterRoughMstIDs,
+          "ArticleCodes": filterArticleCodes,
+        },
+      ),
+      onSuccess: (res) {
+        return (res.data['data'] as List<dynamic>?) ?? [];
+      },
+    );
+  }
+
+  Future<List<dynamic>?> fetchLevel3({
     required int deptCode,
     required int roughMstID,
   }) async {
-
-    selectedDeptCode = deptCode;
-    selectedRoughMstID = roughMstID;
-
-    final result = await request<List<dynamic>>(
+    return await request<List<dynamic>>(
       showLoader: true,
       call: () => api.post(
         '/reports/production-report',
         data: {
           "DeptCode": deptCode,
           "RoughMstID": roughMstID,
+          "RoughMstIDs": filterRoughMstIDs,
+          "ArticleCodes": filterArticleCodes,
         },
       ),
       onSuccess: (res) {
-        return res.data['data'];
+        return (res.data['data'] as List<dynamic>?) ?? [];
       },
     );
+  }
 
-    if (result != null) {
-      _level3 = result;
-      notifyListeners();
-    }
+  // ── POLISH STOCK FETCH METHODS ─────────────────────────────────────────────
+  Future<List<dynamic>?> fetchPolishStockLevel1() async {
+    return await request<List<dynamic>>(
+      showLoader: true,
+      call: () => api.post(
+        '/reports/polish-stock-report',
+        data: {
+          "RoughMstIDs": filterRoughMstIDs,
+          "ArticleCodes": filterArticleCodes,
+        },
+      ),
+      onSuccess: (res) {
+        return (res.data['data'] as List<dynamic>?) ?? [];
+      },
+    );
+  }
+
+  Future<List<dynamic>?> fetchPolishStockLevel2(int factoryCode) async {
+    return await request<List<dynamic>>(
+      showLoader: true,
+      call: () => api.post(
+        '/reports/polish-stock-report',
+        data: {
+          "FactoryCode": factoryCode,
+          "RoughMstIDs": filterRoughMstIDs,
+          "ArticleCodes": filterArticleCodes,
+        },
+      ),
+      onSuccess: (res) {
+        return (res.data['data'] as List<dynamic>?) ?? [];
+      },
+    );
+  }
+
+  Future<List<dynamic>?> fetchPolishStockLevel3({
+    required int factoryCode,
+    required int roughMstID,
+  }) async {
+    return await request<List<dynamic>>(
+      showLoader: true,
+      call: () => api.post(
+        '/reports/polish-stock-report',
+        data: {
+          "FactoryCode": factoryCode,
+          "RoughMstID": roughMstID,
+          "RoughMstIDs": filterRoughMstIDs,
+          "ArticleCodes": filterArticleCodes,
+        },
+      ),
+      onSuccess: (res) {
+        return (res.data['data'] as List<dynamic>?) ?? [];
+      },
+    );
+  }
+
+  Future<List<dynamic>?> fetchPairListReport() async {
+    return await request<List<dynamic>>(
+      showLoader: true,
+      call: () => api.post(
+        '/reports/pair-list-report',
+        data: {
+          "RoughMstIDs": filterRoughMstIDs,
+          "ArticleCodes": filterArticleCodes,
+        },
+      ),
+      onSuccess: (res) {
+        return (res.data['data'] as List<dynamic>?) ?? [];
+      },
+    );
   }
 }

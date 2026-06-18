@@ -1,407 +1,51 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:rs_dashboard/rs_dashboard.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:rs_dashboard/core/theme/app_color.dart';
-import 'package:rs_dashboard/rs_dashboard.dart';
+import '../providers/production_dashboard_provider.dart';
+import '../providers/rough_provider.dart';
+import '../providers/article_provider.dart';
+import '../models/rough_model.dart';
+import '../models/article_model.dart';
+import 'expandable_production_table.dart';
+import 'pair_list_report_table.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  List<RoughModel> _selectedRoughs = [];
+  List<ArticleModel> _selectedArticles = [];
+  int _filterVersion = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<RoughProvider>().loadRoughs();
+      context.read<ArticleProvider>().load();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return  SingleChildScrollView(
-      padding: EdgeInsets.all(
-        Responsive.isMobile(context) ? 16 : 24,
-      ),
+    return Padding(
+      padding: EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-
-          _buildWelcomeCard(context),
-
-          const SizedBox(height: 24),
-
-          Responsive(
-            mobile: _buildStatsMobile(context),
-            tablet: _buildStatsTablet(context),
-            desktop: _buildStatsDesktop(context),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Charts Section
-          Responsive(
-            mobile: _buildChartsMobile(context),
-            tablet: _buildChartsTablet(context),
-            desktop: _buildChartsDesktop(context),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Sales Report & Products
-          Responsive(
-            mobile: _buildBottomSectionMobile(context),
-            desktop: _buildBottomSectionDesktop(context),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWelcomeCard(BuildContext context) {
-    return RoundedContainer(
-      gradient: AppColors.blueGradient,
-      child: Row(
-        children: [
+          _buildFilterBar(context),
+          const SizedBox(height: 16),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Iconsax.emoji_happy,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'GOOD DAY,',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withOpacity(0.8),
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Real Soft!',
-                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    const Icon(
-                      Iconsax.calendar,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Feb 16, 2026',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                    const SizedBox(width: 24),
-                    const Icon(
-                      Iconsax.clock,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '11:45:09 AM',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          // if (!Responsive.isMobile(context))
-          //   Image.asset(
-          //     'assets/images/welcome_illustration.png',
-          //     height: 120,
-          //     errorBuilder: (context, error, stackTrace) {
-          //       return Container(
-          //         width: 120,
-          //         height: 120,
-          //         decoration: BoxDecoration(
-          //           color: Colors.white.withOpacity(0.2),
-          //           borderRadius: BorderRadius.circular(12),
-          //         ),
-          //         child: const Icon(
-          //           Iconsax.chart,
-          //           size: 48,
-          //           color: Colors.white,
-          //         ),
-          //       );
-          //     },
-          //   ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsDesktop(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: StatCard(
-            title: 'ORDERS',
-            value: '9,754',
-            change: '1.89%',
-            changeLabel: 'Since last month',
-            isPositive: true,
-            icon: Iconsax.shopping_cart,
-            iconBgColor: AppColors.success,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: StatCard(
-            title: 'REVENUE',
-            value: '\$75.21k',
-            change: '5.23%',
-            changeLabel: 'Since last month',
-            isPositive: false,
-            icon: Iconsax.wallet_2,
-            iconBgColor: AppColors.primaryBlue,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: StatCard(
-            title: 'GROWTH',
-            value: '+ 25.08%',
-            change: '4.87%',
-            changeLabel: 'Since last month',
-            isPositive: true,
-            icon: Iconsax.trend_up,
-            iconBgColor: AppColors.warning,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsTablet(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: StatCard(
-                title: 'ORDERS',
-                value: '9,754',
-                change: '1.89%',
-                icon: Iconsax.shopping_cart,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: StatCard(
-                title: 'REVENUE',
-                value: '\$75.21k',
-                change: '5.23%',
-                isPositive: false,
-                icon: Iconsax.wallet_2,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        StatCard(
-          title: 'GROWTH',
-          value: '+ 25.08%',
-          change: '4.87%',
-          icon: Iconsax.trend_up,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsMobile(BuildContext context) {
-    return Column(
-      children: [
-        StatCard(
-          title: 'ORDERS',
-          value: '9,754',
-          change: '1.89%',
-          icon: Iconsax.shopping_cart,
-        ),
-        const SizedBox(height: 16),
-        StatCard(
-          title: 'REVENUE',
-          value: '\$75.21k',
-          change: '5.23%',
-          isPositive: false,
-          icon: Iconsax.wallet_2,
-        ),
-        const SizedBox(height: 16),
-        StatCard(
-          title: 'GROWTH',
-          value: '+ 25.08%',
-          change: '4.87%',
-          icon: Iconsax.trend_up,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildChartsDesktop(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: LineChartWidget(
-            title: 'Weekly Performance Insights',
-            data: [
-              FlSpot(0, 20),
-              FlSpot(1, 30),
-              FlSpot(2, 25),
-              FlSpot(3, 40),
-              FlSpot(4, 35),
-              FlSpot(5, 50),
-              FlSpot(6, 45),
-            ],
-            xLabels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            maxY: 80,
-          ),
-        ),
-        const SizedBox(width: 24),
-        Expanded(
-          child: DonutChartWidget(
-            title: 'Store Performance Analytics',
-            centerValue: '140',
-            centerLabel: 'Total',
-            data: [
-              ChartData(label: 'Good Sales', value: 60, color: AppColors.success),
-              ChartData(label: 'Poor Sales', value: 40, color: AppColors.warning),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildChartsTablet(BuildContext context) {
-    return Column(
-      children: [
-        DonutChartWidget(
-          title: 'Store Performance Analytics',
-          centerValue: '140',
-          data: [
-            ChartData(label: 'Good Sales', value: 60, color: AppColors.success),
-            ChartData(label: 'Poor Sales', value: 40, color: AppColors.warning),
-          ],
-        ),
-        const SizedBox(height: 24),
-        LineChartWidget(
-          title: 'Weekly Performance Insights',
-          data: [
-            FlSpot(0, 20),
-            FlSpot(1, 30),
-            FlSpot(2, 25),
-            FlSpot(3, 40),
-            FlSpot(4, 35),
-            FlSpot(5, 50),
-            FlSpot(6, 45),
-          ],
-          xLabels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-          maxY: 80,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildChartsMobile(BuildContext context) {
-    return _buildChartsTablet(context);
-  }
-
-  Widget _buildBottomSectionDesktop(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: _buildSalesReport(context),
-        ),
-        const SizedBox(width: 24),
-        Expanded(
-          child: _buildTopProducts(context),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBottomSectionMobile(BuildContext context) {
-    return Column(
-      children: [
-        _buildSalesReport(context),
-        const SizedBox(height: 24),
-        _buildTopProducts(context),
-      ],
-    );
-  }
-
-  Widget _buildSalesReport(BuildContext context) {
-    return RoundedContainer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Sales Report',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  Text(
-                    '(25822 Orders)',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  _buildTabButton('Today', true),
-                  const SizedBox(width: 8),
-                  _buildTabButton('Monthly', false),
-                  const SizedBox(width: 8),
-                  _buildTabButton('Annual', false),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              _buildSalesMetric('Revenue', '\$78,224.68', Iconsax.wallet, AppColors.success),
-              const SizedBox(width: 24),
-              _buildSalesMetric('Orders', '8,541', Iconsax.shopping_cart, AppColors.primaryBlue),
-              const SizedBox(width: 24),
-              _buildSalesMetric('Growth Rate', '25.30%', Iconsax.trend_up, AppColors.warning),
-            ],
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            height: 200,
-            child: LineChartWidget(
-              title: "Today's Earning: \$8,975.30",
-              data: [
-                FlSpot(0, 20),
-                FlSpot(1, 35),
-                FlSpot(2, 30),
-                FlSpot(3, 50),
-                FlSpot(4, 60),
-                FlSpot(5, 70),
-                FlSpot(6, 65),
-              ],
-              maxY: 100,
+            child: Responsive(
+              mobile: _buildMobileLayout(context),
+              tablet: _buildTabletLayout(context),
+              desktop: _buildDesktopLayout(context),
             ),
           ),
         ],
@@ -409,211 +53,487 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTabButton(String label, bool isActive) {
+  Widget _buildFilterBar(BuildContext context) {
+    final roughProvider = context.watch<RoughProvider>();
+    final articleProvider = context.watch<ArticleProvider>();
+
+    final roughs = roughProvider.roughs;
+    final articles = articleProvider.list;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isActive ? AppColors.primaryBlue : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-        border: isActive ? null : Border.all(color: AppColors.textTertiary.withOpacity(0.3)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isActive ? Colors.white : AppColors.textSecondary,
-          fontSize: 13,
-          fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSalesMetric(String label, String value, IconData icon, Color color) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.textTertiary,
+        ],
+      ),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          // Kapan Dropdown
+          MultiSelectDropdownButton<RoughModel>(
+            label: "Kapan No",
+            items: roughs,
+            selectedItems: _selectedRoughs,
+            itemLabel: (item) => item.kapanNo ?? 'N/A',
+            searchMatcher: (item, query) => (item.kapanNo ?? '')
+                .toLowerCase()
+                .contains(query.toLowerCase()),
+            onChanged: (selected) {
+              setState(() {
+                _selectedRoughs = selected;
+              });
+            },
+          ),
+          // Article Dropdown
+          MultiSelectDropdownButton<ArticleModel>(
+            label: "Article",
+            items: articles,
+            selectedItems: _selectedArticles,
+            itemLabel: (item) => item.articalName ?? 'N/A',
+            searchMatcher: (item, query) => (item.articalName ?? '')
+                .toLowerCase()
+                .contains(query.toLowerCase()),
+            onChanged: (selected) {
+              setState(() {
+                _selectedArticles = selected;
+              });
+            },
+          ),
+          // Apply Button
+          ElevatedButton.icon(
+            onPressed: () {
+              final pMstIds = _selectedRoughs
+                  .map((e) => e.roughMstID ?? 0)
+                  .where((id) => id > 0)
+                  .toList()
+                  .cast<int>();
+              final aCodes = _selectedArticles
+                  .map((e) => e.articalCode ?? 0)
+                  .where((c) => c > 0)
+                  .toList()
+                  .cast<int>();
+
+              context.read<ProductionDashboardProvider>().setFilters(
+                roughMstIDs: pMstIds,
+                articleCodes: aCodes,
+              );
+
+              setState(() {
+                _filterVersion++;
+              });
+            },
+            icon: const Icon(Icons.filter_list, size: 16),
+            label: const Text('Apply Filter'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryBlue,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+          ),
+          // Reset Button
+          OutlinedButton.icon(
+            onPressed: () {
+              setState(() {
+                _selectedRoughs = [];
+                _selectedArticles = [];
+              });
+              context.read<ProductionDashboardProvider>().resetFilters();
+              setState(() {
+                _filterVersion++;
+              });
+            },
+            icon: const Icon(Icons.refresh, size: 16),
+            label: const Text('Reset Filter'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.grey.shade700,
+              side: BorderSide(color: Colors.grey.shade300),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildTopProducts(BuildContext context) {
-    return RoundedContainer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildDesktopLayout(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
+    // Fit the screen layout dynamically, ensuring a minimum layout height
+    double layoutHeight = screenHeight > 680 ? screenHeight - 200 : 560;
+
+    return SizedBox(
+      height: layoutHeight,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Top Selling Products',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Iconsax.export_1, size: 20),
-                    onPressed: () {},
+          // Left Section - 50% width
+          Expanded(
+            flex: 1,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Top Left Section (Box 1) - 50% height
+                Expanded(
+                  flex: 1,
+                  child: DashboardBox(
+                    child: ExpandableProductionTable(
+                      key: ValueKey('prod_$_filterVersion'),
+                      title: 'Production Report',
+                      reportType: ReportType.production,
+                    ),
                   ),
-                  IconButton(
-                    icon: const Icon(Iconsax.import, size: 20),
-                    onPressed: () {},
+                ),
+                const SizedBox(height: 24),
+                // Bottom Left Section (Box 2) - 50% height
+                Expanded(
+                  flex: 1,
+                  child: DashboardBox(
+                    child: ExpandableProductionTable(
+                      key: ValueKey('polish_$_filterVersion'),
+                      title: 'Office Polish Stock',
+                      reportType: ReportType.polishStock,
+                    ),
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 24),
+          // Right Section - 50% width
+          Expanded(
+            flex: 1,
+            child: DashboardBox(
+              child: PairListReportTable(key: ValueKey('pair_$_filterVersion')),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabletLayout(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 300,
+            child: DashboardBox(
+              child: ExpandableProductionTable(
+                key: ValueKey('prod_tab_$_filterVersion'),
+                title: 'Production Report',
+                reportType: ReportType.production,
               ),
-            ],
+            ),
           ),
           const SizedBox(height: 16),
-          ...[
-            _buildProductItem(
-              'Modern Fabric Sofa Set',
-              'By Homelake',
-              '\$499.00',
-              '34',
-              '\$16,966.00',
-              'Low Stock',
-              AppColors.warning,
+          SizedBox(
+            height: 300,
+            child: DashboardBox(
+              child: ExpandableProductionTable(
+                key: ValueKey('polish_tab_$_filterVersion'),
+                title: 'Office Polish Stock',
+                reportType: ReportType.polishStock,
+              ),
             ),
-            _buildProductItem(
-              'L-Shaped Sectional Sofa',
-              'By ComfortHub',
-              '\$899.00',
-              '21',
-              '\$18,879.00',
-              'In Stock',
-              AppColors.success,
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 500,
+            child: DashboardBox(
+              child: PairListReportTable(
+                key: ValueKey('pair_tab_$_filterVersion'),
+              ),
             ),
-            _buildProductItem(
-              'Velvet Recliner Chair',
-              'By SoftEase',
-              '\$379.00',
-              '47',
-              '\$17,813.00',
-              'In Stock',
-              AppColors.success,
-            ),
-            _buildProductItem(
-              'Classic Wooden Coffee Table',
-              'By WoodCraft',
-              '\$259.00',
-              '58',
-              '\$15,022.00',
-              'Out of Stock',
-              AppColors.error,
-            ),
-          ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildProductItem(
-      String name,
-      String brand,
-      String price,
-      String quantity,
-      String amount,
-      String status,
-      Color statusColor,
-      ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.bgPrimary,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Iconsax.box, color: AppColors.textSecondary),
+  Widget _buildMobileLayout(BuildContext context) {
+    return _buildTabletLayout(context);
+  }
+}
+
+class DashboardBox extends StatelessWidget {
+  final Widget child;
+
+  const DashboardBox({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: Colors.grey.shade200, width: 1),
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.all(Radius.circular(15)),
+        child: child,
+      ),
+    );
+  }
+}
+
+// ── MULTI SELECT DIALOG & BUTTON ──────────────────────────────────────────────
+class MultiSelectDropdownButton<T> extends StatelessWidget {
+  final String label;
+  final List<T> items;
+  final List<T> selectedItems;
+  final String Function(T) itemLabel;
+  final bool Function(T, String) searchMatcher;
+  final ValueChanged<List<T>> onChanged;
+
+  const MultiSelectDropdownButton({
+    super.key,
+    required this.label,
+    required this.items,
+    required this.selectedItems,
+    required this.itemLabel,
+    required this.searchMatcher,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    String displayText = label;
+    if (selectedItems.isNotEmpty) {
+      if (selectedItems.length == items.length) {
+        displayText = "$label: All";
+      } else if (selectedItems.length <= 2) {
+        displayText =
+            "$label: ${selectedItems.map((e) => itemLabel(e)).join(', ')}";
+      } else {
+        displayText = "$label: ${selectedItems.length} selected";
+      }
+    }
+
+    return InkWell(
+      onTap: () async {
+        final result = await showDialog<List<T>>(
+          context: context,
+          builder: (context) => MultiSelectDialog<T>(
+            title: "Select $label",
+            items: items,
+            selectedItems: selectedItems,
+            itemLabel: itemLabel,
+            searchMatcher: searchMatcher,
+          ),
+        );
+        if (result != null) {
+          onChanged(result);
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300, width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              displayText,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.arrow_drop_down, size: 18, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class MultiSelectDialog<T> extends StatefulWidget {
+  final String title;
+  final List<T> items;
+  final List<T> selectedItems;
+  final String Function(T) itemLabel;
+  final bool Function(T, String) searchMatcher;
+
+  const MultiSelectDialog({
+    super.key,
+    required this.title,
+    required this.items,
+    required this.selectedItems,
+    required this.itemLabel,
+    required this.searchMatcher,
+  });
+
+  @override
+  State<MultiSelectDialog<T>> createState() => _MultiSelectDialogState<T>();
+}
+
+class _MultiSelectDialogState<T> extends State<MultiSelectDialog<T>> {
+  late List<T> _selected;
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = List<T>.from(widget.selectedItems);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filtered = widget.items.where((item) {
+      if (_searchQuery.isEmpty) return true;
+      return widget.searchMatcher(item, _searchQuery);
+    }).toList();
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        width: 400,
+        height: 500,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  name,
+                  widget.title,
                   style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
-                Text(
-                  brand,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textTertiary,
-                  ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                price,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+            const SizedBox(height: 8),
+            // Search Bar
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'Search...',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 0,
+                  horizontal: 12,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              Text(
-                'Price',
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textTertiary,
+              onChanged: (val) {
+                setState(() {
+                  _searchQuery = val;
+                });
+              },
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _selected = List<T>.from(widget.items);
+                    });
+                  },
+                  child: const Text('Select All'),
                 ),
-              ),
-            ],
-          ),
-
-          const SizedBox(width: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _selected.clear();
+                    });
+                  },
+                  child: const Text('Clear All'),
+                ),
+              ],
             ),
-            child: Text(
-              status,
-              style: TextStyle(
-                color: statusColor,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+            const Divider(),
+            Expanded(
+              child: ListView.builder(
+                itemCount: filtered.length,
+                itemBuilder: (context, index) {
+                  final item = filtered[index];
+                  final isChecked = _selected.contains(item);
+                  return CheckboxListTile(
+                    title: Text(widget.itemLabel(item)),
+                    value: isChecked,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    onChanged: (val) {
+                      setState(() {
+                        if (val == true) {
+                          _selected.add(item);
+                        } else {
+                          _selected.remove(item);
+                        }
+                      });
+                    },
+                  );
+                },
               ),
             ),
-          ),
-        ],
+            const Divider(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, _selected),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('Done'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
