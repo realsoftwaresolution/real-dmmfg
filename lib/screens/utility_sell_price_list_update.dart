@@ -133,33 +133,43 @@ class _UtilitySellPriceListUpdateState extends State<UtilitySellPriceListUpdate>
                     ),
 
                   if (_showTable)
-                    SizedBox(
-                      height: 560,
-                      child: ErpDataTable(
-                        isReportRow: false,
-                        token: token ?? '',
-                        url: baseUrl,
-                        showHeader: false,
-                        title: 'JOB WORK RATE UPDATE LIST',
-                        columns: _tableColumns,
-                        data: provider.recalculationData.map((e) {
-                          return {
-                            'FactoryRecDetID': e.factoryRecDetID,
-                            'FactoryRecMstID': e.factoryRecMstID,
-                            'CutNo': e.cutNo,
-                            'ShapeCode': e.shapeCode,
-                            'ColorCode': e.colorCode,
-                            'PurityCode': e.purityCode,
-                            'RecWt': e.recWt,
-                            'GroupType': e.groupType,
-                            'ArticalCode': e.articalCode,
-                            'SellCode': e.sellCode,
-                            'SellRate': e.sellRate,
-                            'SellAmount': e.sellAmount,
-                          };
-                        }).toList(),
-                        showSearch: true,
-                      ),
+                    LayoutBuilder(
+                        builder: (context, constraints) {
+                          final screenHeight = MediaQuery.of(context).size.height;
+                          final isMobile = Responsive.isMobile(context);
+                          final double subtractHeight = isMobile ? 340.0 : 220.0;
+                          final dynamicHeight = (screenHeight - subtractHeight).clamp(450.0, 1500.0);
+                          return SizedBox(
+                            height: constraints.maxHeight.isFinite
+                                ? constraints.maxHeight
+                                : dynamicHeight,
+                          child: ErpDataTable(
+                            isReportRow: false,
+                            token: token ?? '',
+                            url: baseUrl,
+                            showHeader: false,
+                            title: 'JOB WORK RATE UPDATE LIST',
+                            columns: _tableColumns,
+                            data: provider.recalculationData.map((e) {
+                              return {
+                                'FactoryRecDetID': e.factoryRecDetID,
+                                'FactoryRecMstID': e.factoryRecMstID,
+                                'CutNo': e.cutNo,
+                                'ShapeCode': e.shapeCode,
+                                'ColorCode': e.colorCode,
+                                'PurityCode': e.purityCode,
+                                'RecWt': e.recWt,
+                                'GroupType': e.groupType,
+                                'ArticalCode': e.articalCode,
+                                'SellCode': e.sellCode,
+                                'SellRate': e.sellRate,
+                                'SellAmount': e.sellAmount,
+                              };
+                            }).toList(),
+                            showSearch: true,
+                          ),
+                        );
+                      }
                     ),
                 ],
               );

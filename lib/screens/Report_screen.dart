@@ -1225,11 +1225,16 @@ class _ReportScreenState extends State<ReportScreen> {
 
           return LayoutBuilder(
             builder: (context, constraints) {
+              final screenHeight = MediaQuery.of(context).size.height;
+              final isMobile = Responsive.isMobile(context);
+              final double subtractHeight = isMobile ? 360.0 : 250.0;
+              final dynamicHeight = (screenHeight - subtractHeight).clamp(450.0, 1500.0);
+
               return SizedBox(
                 width: constraints.maxWidth,
                 height: constraints.maxHeight.isFinite
                     ? constraints.maxHeight
-                    : 600.0,
+                    : dynamicHeight,
                 child: _PdfReportView(
                   filter: _formValues,
                   pdfBytes: prov.pdfBytes!,
@@ -1243,11 +1248,16 @@ class _ReportScreenState extends State<ReportScreen> {
 
         return LayoutBuilder(
           builder: (context, constraints) {
+            final screenHeight = MediaQuery.of(context).size.height;
+            final isMobile = Responsive.isMobile(context);
+            final double subtractHeight = isMobile ? 360.0 : 250.0;
+            final dynamicHeight = (screenHeight - subtractHeight).clamp(450.0, 1500.0);
+
             return SizedBox(
               width: constraints.maxWidth,
               height: constraints.maxHeight.isFinite
                   ? constraints.maxHeight
-                  : 500,
+                  : dynamicHeight,
               child: prov.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : prov.tableData.isEmpty

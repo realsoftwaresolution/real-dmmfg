@@ -188,11 +188,15 @@ class _PacketDeleteScreenState extends State<PacketDeleteScreen> {
         }
         return LayoutBuilder(
           builder: (context, constraints) {
+            final screenHeight = MediaQuery.of(context).size.height;
+            final isMobile = Responsive.isMobile(context);
+            final double subtractHeight = isMobile ? 340.0 : 160.0;
+            final dynamicHeight = (screenHeight - subtractHeight).clamp(450.0, 1500.0);
             return SizedBox(
               width: constraints.maxWidth,
               height: constraints.maxHeight.isFinite
                   ? constraints.maxHeight
-                  : 620,
+                  : dynamicHeight,
               child: ErpDataTable(
                 key: ValueKey('${prov.tableData.length}'),
                 data: prov.tableData,

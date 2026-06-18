@@ -356,7 +356,7 @@ class MultiSelectDropdownButton<T> extends StatelessWidget {
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -444,25 +444,29 @@ class _MultiSelectDialogState<T> extends State<MultiSelectDialog<T>> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
             // Search Bar
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Search...',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 0,
-                  horizontal: 12,
+            SizedBox(
+              height: 35,
+              child: TextField(
+                cursorHeight: 15,
+                decoration: InputDecoration(
+                  hintText: 'Search...',
+                  hintStyle: TextStyle(fontSize: 14),
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 0,
+                    horizontal: 12,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val;
+                  });
+                },
               ),
-              onChanged: (val) {
-                setState(() {
-                  _searchQuery = val;
-                });
-              },
             ),
             const SizedBox(height: 8),
             Row(
@@ -493,19 +497,26 @@ class _MultiSelectDialogState<T> extends State<MultiSelectDialog<T>> {
                 itemBuilder: (context, index) {
                   final item = filtered[index];
                   final isChecked = _selected.contains(item);
-                  return CheckboxListTile(
-                    title: Text(widget.itemLabel(item)),
-                    value: isChecked,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    onChanged: (val) {
-                      setState(() {
-                        if (val == true) {
-                          _selected.add(item);
-                        } else {
-                          _selected.remove(item);
-                        }
-                      });
-                    },
+                  return SizedBox(
+                    height: 35,
+                    child: CheckboxListTile(
+                      title: Text(
+                        widget.itemLabel(item),
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                      value: isChecked,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      onChanged: (val) {
+                        setState(() {
+                          if (val == true) {
+                            _selected.add(item);
+                          } else {
+                            _selected.remove(item);
+                          }
+                        });
+                      },
+                    ),
                   );
                 },
               ),
