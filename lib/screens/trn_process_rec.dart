@@ -1,8 +1,7 @@
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
-import 'package:diam_mfg/models/process_issue_model.dart';
-import 'package:diam_mfg/providers/charni_provider.dart';
+import 'package:diam_mfg/models/process_Rec_model.dart';
 import 'package:diam_mfg/providers/counter_manager_det_provider.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
 import 'package:diam_mfg/providers/dept_provider.dart';
@@ -10,9 +9,7 @@ import 'package:diam_mfg/providers/dept_group_provider.dart';
 import 'package:diam_mfg/providers/dept_process_provider.dart';
 import 'package:diam_mfg/providers/employee_provider.dart';
 import 'package:diam_mfg/providers/factory_provider.dart';
-import 'package:diam_mfg/providers/remarks_provider.dart';
-import 'package:diam_mfg/providers/tensions_provider.dart';
-import 'package:diam_mfg/providers/trn_process_issue_provider.dart';
+import 'package:diam_mfg/providers/trn_process_rec_provider.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
@@ -24,24 +21,23 @@ import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../providers/auth_provider.dart';
 import '../providers/purity_provider.dart';
-import '../providers/shape_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  WIDGET
 // ─────────────────────────────────────────────────────────────────────────────
 
-class TrnProcessIssueEntry extends StatefulWidget {
-  const TrnProcessIssueEntry({super.key});
+class TrnProcessRecEntry extends StatefulWidget {
+  const TrnProcessRecEntry({super.key});
 
   @override
-  State<TrnProcessIssueEntry> createState() => _TrnProcessIssueEntryState();
+  State<TrnProcessRecEntry> createState() => _TrnProcessRecEntryState();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
+class _TrnProcessRecEntryState extends State<TrnProcessRecEntry> {
   // ── Theme ──────────────────────────────────────────────────────────────────
   final ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
 
@@ -70,7 +66,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
   int? _toCrId;
 
   // ── Detail rows ────────────────────────────────────────────────────────────
-  List<ProcessIssueDetModel> _detRows = [];
+  List<ProcessRecDetModel> _detRows = [];
   List<Map<String, dynamic>> _detDisplay = [];
   List<String> _activeDetColumns = [];
   int? _editingDetIndex;
@@ -112,7 +108,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.wait([
-        context.read<ProcessIssueEntryProvider>().load(),
+        context.read<ProcessRecEntryProvider>().load(),
         context.read<CounterProvider>().load(),
         context.read<CounterManagerDetProvider>().load(),
         context.read<DeptProvider>().load(),
@@ -203,7 +199,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
     if (_isBCodePending) return;
     _isBCodePending = true;
 
-    final rows = await context.read<ProcessIssueEntryProvider>().fetchByBCode(
+    final rows = await context.read<ProcessRecEntryProvider>().fetchByBCode(
       bCode: cleanedBCode,
       toCrId: _toCrId,
     );
@@ -220,7 +216,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
 
     final r = rows.first;
 
-    final newRow = ProcessIssueDetModel(
+    final newRow = ProcessRecDetModel(
       srno: _detRows.length + 1,
       id: r.id,
       jno: r.jno,
@@ -252,7 +248,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
       toCrId: _toCrId,
 
       entryType: r.entryType ?? 'I',
-      formType: 'PROCESS ISSUE',
+      formType: 'PROCESS REC',
       remarks: r.remarks,
       topsPc: r.topsPc,
       qrCode: r.qrCode,
@@ -297,8 +293,8 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
 
     bool success = true;
     if (isSavedRecord) {
-      success = await context.read<ProcessIssueEntryProvider>().deleteRow(
-        (row.spkProcessIssMstID)?.toString(),
+      success = await context.read<ProcessRecEntryProvider>().deleteRow(
+        (row.spkProcessRecMstID)?.toString(),
       );
     }
 
@@ -308,11 +304,11 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
         // Re-number srno
         _detRows = _detRows.asMap().entries.map((e) {
           final v = e.value;
-          return ProcessIssueDetModel(
+          return ProcessRecDetModel(
             srno: e.key + 1,
             spkDeptIssMstID: v.spkDeptIssMstID,
             spkDeptIssDetID: v.spkDeptIssDetID,
-            spkProcessIssMstID: v.spkProcessIssMstID,
+            spkProcessRecMstID: v.spkProcessRecMstID,
             PacketMstID: v.PacketMstID,
             id: v.id,
             jno: v.jno,
@@ -442,6 +438,21 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
 
             'diam': (r.diam ?? 0).toString(),
             'length': (r.length ?? 0).toString(),
+            'shapeCode': r.shapeCode?.toString() ?? '',
+            'cutCode': r.cutCode?.toString() ?? '',
+            'tensionsCode': r.tensionsCode?.toString() ?? '',
+            'signerCode': r.signerCode?.toString() ?? '',
+            'remarksCode': r.remarksCode?.toString() ?? '',
+            'dueDay': r.dueDay?.toString() ?? '',
+            'topsPc': (r.topsPc ?? 0).toString(),
+            'topsWt': fThreeDecimal(r.topsWt ?? 0),
+            'totalPc': (r.totalPc ?? 0).toString(),
+            'totalWt': fThreeDecimal(r.totalWt ?? 0),
+            'repairing': r.repairing ?? 'N',
+            'employeeCode': r.employeeCode?.toString() ?? '',
+            'deptCode': r.deptCode?.toString() ?? '',
+            'deptProcessCode': r.deptProcessCode?.toString() ?? '',
+            'remarks': r.remarks ?? '',
           },
         )
         .toList();
@@ -464,7 +475,8 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
   }
 
   Future<void> _onRowTap(Map<String, dynamic> row) async {
-    final prov = context.read<ProcessIssueEntryProvider>();
+    print(row);
+    final prov = context.read<ProcessRecEntryProvider>();
     final id = int.tryParse(row['id'].toString()) ?? 0;
 
     final details = await prov.loadDetails(id);
@@ -480,11 +492,11 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
       // ✅ SINGLE SOURCE OF TRUTH
       _formValues = {
         'jno': _s(row['jno']),
-        'id': _s(row['spkProcessIssMstID'], '0'),
-        'spkProcessIssMstID': _s(row['spkProcessIssMstID'], '0'),
-        'sPKProcessIssDetID': _s(row['SPKProcessIssDetID'], '0'),
+        'id': _s(row['spkProcessRecMstID'], '0'),
+        'spkProcessRecMstID': _s(row['spkProcessRecMstID'], '0'),
+        'sPKProcessRecDetID': _s(row['SPKProcessRecDetID'], '0'),
         'date': _date(row['date']),
-        'manager': _s(row['manager']),
+        'manager': _s(row['crID']),
         'deptProcessCode': _s(row['deptProcessCode']),
         'deptName': _s(row['deptCode']),
         'employee': _s(row['employeeCode']),
@@ -502,15 +514,14 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _onSave(Map<String, dynamic> values) async {
-    final prov = context.read<ProcessIssueEntryProvider>();
+    final prov = context.read<ProcessRecEntryProvider>();
     // ✅ MASTER PAYLOAD
     final payload = {
-      "SPKProcessIssDate": toUtcIso(_formValues['date']),
+      "SPKProcessRecDate": toUtcIso(_formValues['date']),
       "CrID": int.tryParse(_formValues['manager'] ?? '0') ?? 0,
-      "DeptProcessCode":
-          int.tryParse(_formValues['deptProcessCode'] ?? '0') ?? 0,
-      "DeptCode": int.tryParse(_formValues['deptName'] ?? '0') ?? 0,
-      "EmployeeCode": int.tryParse(_formValues['employee'] ?? '0') ?? 0,
+      "DeptProcessCode": _detRows.first.deptProcessCode ?? 0,
+      "DeptCode": _detRows.first.deptCode ?? 0,
+      "EmployeeCode": _detRows.first.employeeCode ?? 0,
       "EntryType": 'B',
       "MachineCode": 0,
       "details": _detRows.map((r) {
@@ -532,33 +543,28 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
           "PacketDetID": r.PacketMstID ?? 0,
           "EntryType": r.entryType ?? 'P',
           "TopsPc": r.topsPc ?? 0,
-          "EmployeeCode":
-              r.employeeCode ??
-              int.tryParse(_formValues['employee'] ?? '0') ??
-              0,
           "QRCode": r.qrCode ?? '',
         };
       }).toList(),
     };
 
     // 🔍 DEBUG (VERY IMPORTANT)
-    final mstId = int.tryParse(_formValues['spkProcessIssMstID'] ?? '0') ?? 0;
+    final mstId = int.tryParse(_formValues['spkProcessRecMstID'] ?? '0') ?? 0;
 
     bool success;
 
     if (_isEditMode && mstId > 0) {
       final newRows = _detRows.where((e) {
         final belongsToThisMst =
-            e.spkProcessIssMstID != null && e.spkProcessIssMstID != 0;
+            e.spkProcessRecMstID != null && e.spkProcessRecMstID != 0;
         final hasDetId = e.id != null && e.id != 0; // SPKProcessRecDetID
         // a row is "new" only if it's NOT already tied to this master
         // AND doesn't already have a SPKProcessRecDetID
         return !belongsToThisMst && !hasDetId;
       }).toList();
-      print(jsonEncode(newRows));
       if (newRows.isEmpty) return;
       final editPayload = {
-        "SPKProcessIssDate": toUtcIso(_formValues['date']),
+        "SPKProcessRecDate": toUtcIso(_formValues['date']),
         "CrID": int.tryParse(_formValues['manager'] ?? '0') ?? 0,
         "DeptProcessCode": newRows.first.deptProcessCode ?? 0,
         "DeptCode": newRows.first.deptCode ?? 0,
@@ -614,22 +620,22 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _onDelete() async {
-    if (_formValues['spkProcessIssMstID'] == null) return;
+    if (_formValues['spkProcessRecMstID'] == null) return;
 
     final confirm = await ErpDeleteDialog.show(
       context: context,
       theme: _theme,
       title: 'Process Issue',
-      itemName: 'ID: ${_formValues['spkProcessIssMstID'].toString()}',
+      itemName: 'ID: ${_formValues['spkProcessRecMstID'].toString()}',
     );
     if (confirm != true || !mounted) return;
 
-    final success = await context.read<ProcessIssueEntryProvider>().delete(
-      _formValues['spkProcessIssMstID'].toString(),
+    final success = await context.read<ProcessRecEntryProvider>().delete(
+      _formValues['spkProcessRecMstID'].toString(),
     );
 
     if (success && mounted) {
-      final id = _formValues['spkProcessIssMstID'].toString();
+      final id = _formValues['spkProcessRecMstID'].toString();
       _resetForm();
       await ErpResultDialog.showDeleted(
         context: context,
@@ -755,54 +761,25 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
               .toList(),
         ),
         ErpFieldConfig(
-          key: 'deptProcessCode',
-          label: 'PROCESS',
-          required: true,
-          type: ErpFieldType.dropdown,
-          readOnly: _detRows.isNotEmpty || _isEditMode,
-          sectionIndex: 0,
-          dropdownItems: processItems,
-        ),
-        ErpFieldConfig(
-          key: 'employee',
-          label: 'EMPLOYEE',
-          type: ErpFieldType.dropdown,
-          dropdownItems: employeeDropdown,
-          readOnly: _detRows.isNotEmpty || _isEditMode,
-          sectionIndex: 0,
-        ),
-        ErpFieldConfig(
-          key: 'deptName',
-          label: 'DEPT',
-          type: ErpFieldType.dropdown,
-          dropdownItems: deptDropdown,
-          sectionIndex: 0,
-          readOnly: true,
-        ),
-      ],
-
-      // Row 2 — date / time / ID
-      [
-        ErpFieldConfig(
           key: 'date',
           label: 'DATE',
           type: ErpFieldType.date,
           readOnly: true,
-          sectionIndex: 1,
+          sectionIndex: 0,
         ),
         ErpFieldConfig(
           key: 'time',
           label: 'TIME',
           type: ErpFieldType.time,
           readOnly: true,
-          sectionIndex: 1,
+          sectionIndex: 0,
         ),
         ErpFieldConfig(
           key: 'id',
           label: 'ID',
           type: ErpFieldType.number,
           readOnly: true,
-          sectionIndex: 1,
+          sectionIndex: 0,
         ),
       ],
 
@@ -811,7 +788,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
           key: 'scanValue',
           label: 'BCODE',
           type: ErpFieldType.text,
-          sectionIndex: 2,
+          sectionIndex: 1,
           width: 200,
         ),
         ErpFieldConfig(
@@ -819,7 +796,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
           label: 'QRCODE',
           type: ErpFieldType.text,
           readOnly: true,
-          sectionIndex: 2,
+          sectionIndex: 1,
           width: 200,
         ),
       ],
@@ -915,7 +892,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ProcessIssueEntryProvider>(
+    return Consumer<ProcessRecEntryProvider>(
       builder: (ctx, prov, _) => Padding(
         padding: const EdgeInsets.all(8),
         child: Responsive.isMobile(context)
@@ -944,7 +921,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
       autoStartAdding: _isAdding,
       addButtonSections: const {3},
       logo: AppImages.logo,
-      title: 'PROCESS ISSUE ENTRY',
+      title: 'PROCESS REC ENTRY',
       tabBarBackgroundColor: const Color(0xfff2f0ef),
       tabBarSelectedColor: _theme.primaryGradient.first,
       tabBarSelectedTxtColor: Colors.white,
@@ -1035,7 +1012,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
               ErpEntryGrid(
                 data: _detDisplay,
                 columns: _activeDetColumns,
-                title: 'ISSUE DETAILS',
+                title: 'REC DETAILS',
                 theme: t,
                 onDeleteRow: _deleteDetRow,
                 editingIndex: _editingDetIndex,
@@ -1061,10 +1038,10 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
 
   /// Compute footer totals map for ErpEntryGrid.
   Map<String, String> _buildFooterTotals() {
-    double sumDouble(double Function(ProcessIssueDetModel) fn) =>
+    double sumDouble(double Function(ProcessRecDetModel) fn) =>
         _detRows.fold(0.0, (s, r) => s + fn(r));
 
-    int sumInt(int Function(ProcessIssueDetModel) fn) =>
+    int sumInt(int Function(ProcessRecDetModel) fn) =>
         _detRows.fold(0, (s, r) => s + fn(r));
 
     final totPc = sumInt((r) => r.pc ?? 0);
@@ -1112,19 +1089,12 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
     }
   }
 
-  Widget _buildTable(ProcessIssueEntryProvider prov) {
+  Widget _buildTable(ProcessRecEntryProvider prov) {
     final data = prov.list.map((e) {
       return {
-        'id': e.SPKProcessIssMstID,
+        'id': e.id,
         'date': _formatDate(e.date),
         'time': e.time ?? '',
-
-        'manager': e.crID ?? '',
-        'process': e.process ?? '',
-        'department': e.department ?? '',
-        'employee': e.employee ?? '',
-
-        'machine': (e.machineCode ?? 0).toString(),
 
         'jno': e.jno?.toString() ?? '',
         'totPkt': (e.totPkt ?? 0).toString(),
@@ -1138,12 +1108,15 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
         'dmPer': (e.dmPer ?? 0).toStringAsFixed(2),
 
         // Helper fields
-        'spkProcessIssMstID': e.SPKProcessIssMstID,
+        'spkProcessRecMstID': e.id,
         'crID': e.crID ?? 0,
         'deptCode': e.deptCode ?? 0,
         'deptProcessCode': e.deptProcessCode ?? 0,
         'employeeCode': e.employeeCode ?? 0,
-        'machineCode': e.machineCode ?? 0,
+        'employee': e.employeeName ?? 0,
+        'process': e.deptProcessName ?? 0,
+        'department': e.deptName ?? 0,
+        'manager': e.manager ?? 0,
       };
     }).toList();
 
@@ -1151,7 +1124,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
       isReportRow: false,
       token: token ?? '',
       url: '',
-      title: 'PROCESS ISSUE ENTRY LIST',
+      title: 'PROCESS REC ENTRY LIST',
       columns: _tableColumns,
       data: data,
       showSearch: true,

@@ -247,7 +247,7 @@ class PairProvider extends BaseProvider {
       final result = await request<bool>(
         showLoader: true,
 
-        call: () => api.post('/pair/saved', data: payload),
+        call: () => api.post('/pair/save', data: payload),
 
         onSuccess: (_) => true,
       );

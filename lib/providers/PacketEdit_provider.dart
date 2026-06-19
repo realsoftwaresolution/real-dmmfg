@@ -58,7 +58,6 @@ class PacketEditProvider extends BaseProvider {
     ErpColumnConfig(key: 'ToMan', label: 'To Man', width: 180),
     ErpColumnConfig(key: 'Dept', label: 'Dept', width: 140),
     ErpColumnConfig(key: 'DeptProcess', label: 'Dept Process', width: 180),
-    ErpColumnConfig(key: 'Employee', label: 'Employee', width: 160),
   ];
 
   String _d(dynamic value) {
@@ -114,13 +113,31 @@ class PacketEditProvider extends BaseProvider {
     _error = null;
     notifyListeners();
     final result = await request<Map<String, dynamic>?>(
-      call: () => api.get('/packet-history/edit-display/$bCode'),
+      call: () => api.get('/packetEdit?bCode=$bCode'),
       onSuccess: (res) {
         final data = res.data['data'];
         if (data == null) {
           return null;
         }
-        return Map<String, dynamic>.from(data);
+        if (data is List) {
+          final list = data.cast<Map<String, dynamic>>();
+          _tableData = mapRows(list);
+          final Map<String, dynamic> returnMap = {};
+          if (res.data is Map) {
+            returnMap.addAll(Map<String, dynamic>.from(res.data));
+          }
+          if (list.isNotEmpty) {
+            list[0].forEach((key, value) {
+              if (!returnMap.containsKey(key)) {
+                returnMap[key] = value;
+              }
+            });
+          }
+          return returnMap;
+        } else if (data is Map) {
+          return Map<String, dynamic>.from(data);
+        }
+        return null;
       },
     );
     _isLoaded = true;
@@ -129,58 +146,33 @@ class PacketEditProvider extends BaseProvider {
     return result;
   }
 
-  Future<List<Map<String, dynamic>>> loadPacketEditList({
-    required Map<String, dynamic> filter,
+  Future<bool> savePacketEditApi({
+    required List<Map<String, dynamic>> payload,
   }) async {
     _isLoading = true;
     _error = null;
 
     notifyListeners();
 
-    final result = await request<List<Map<String, dynamic>>>(
-      call: () => api.get('/packet-history/edit-display/${filter['bCode']}'),
-
+    final result = await request<bool>(
+      call: () => api.post(
+        '/packetEdit/update-history',
+        data: payload,
+      ),
       onSuccess: (res) {
-        final data = res.data;
-
-        if (data == null || data['data'] == null) {
-          return <Map<String, dynamic>>[];
-        }
-
-        return (data['data'] as List).cast<Map<String, dynamic>>();
+        return res.data['success'] == true;
       },
     );
-    final rawList = result ?? [];
-    _tableData = mapRows(rawList);
-    _isLoaded = true;
+
     _isLoading = false;
     notifyListeners();
-    return _tableData;
+
+    return result ?? false;
   }
 
-  Future<List<Map<String, dynamic>>> deleteBulkPktApi({selectedRows}) async {
-    _isLoading = true;
-    _error = null;
-
+  void updateTableData(List<Map<String, dynamic>> data) {
+    _tableData = data;
     notifyListeners();
-
-    final result = await request<List<Map<String, dynamic>>>(
-      call: () => api.post('/packet-history/bulk-delete', data: selectedRows),
-
-      onSuccess: (res) {
-        final data = res.data;
-
-        if (data == null || data['data'] == null) {
-          return <Map<String, dynamic>>[];
-        }
-
-        return (data['data'] as List).cast<Map<String, dynamic>>();
-      },
-    );
-    _isLoaded = true;
-    _isLoading = false;
-    notifyListeners();
-    return [];
   }
 
   void clear() {

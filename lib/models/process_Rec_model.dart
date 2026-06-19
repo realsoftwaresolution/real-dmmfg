@@ -1,23 +1,12 @@
 import '../utils/constants.dart';
 
-class ProcessIssueMstModel {
+class ProcessRecMstModel {
   final int? id;
-  final int? SPKProcessIssMstID;
-  final int? crID;
-
   final String? date;
   final String? time;
 
-  final int? deptCode;
-  final String? department;
-
-  final int? deptProcessCode;
-  final String? process;
-
-  final int? employeeCode;
-  final String? employee;
-
-  final int? machineCode;
+  final String? manager;
+  final int? crID;
 
   final dynamic jno;
 
@@ -28,60 +17,77 @@ class ProcessIssueMstModel {
   final int? issPc;
   final double? issWt;
 
+  final int? recPc;
+  final double? recWt;
+
+  final double? calcWt;
+
+  final int? kPc;
+  final double? kWt;
+
+  final int? brPc;
+  final double? brWt;
+
+  final int? lossPc;
+  final double? lossWt;
+
   final double? dmWt;
   final double? dmPer;
 
-  final String? manager;
+  final int? employeeCode;
+  final String? employeeName;
 
-  const ProcessIssueMstModel({
+  final int? deptCode;
+  final String? deptName;
+
+  final int? deptProcessCode;
+  final String? deptProcessName;
+
+  const ProcessRecMstModel({
     this.id,
-    this.SPKProcessIssMstID,
-    this.crID,
     this.date,
     this.time,
-    this.deptCode,
-    this.department,
-    this.deptProcessCode,
-    this.process,
-    this.employeeCode,
-    this.employee,
-    this.machineCode,
+    this.manager,
+    this.crID,
     this.jno,
     this.totPkt,
     this.pc,
     this.wt,
     this.issPc,
     this.issWt,
+    this.recPc,
+    this.recWt,
+    this.calcWt,
+    this.kPc,
+    this.kWt,
+    this.brPc,
+    this.brWt,
+    this.lossPc,
+    this.lossWt,
     this.dmWt,
     this.dmPer,
-    this.manager,
+    this.employeeCode,
+    this.employeeName,
+    this.deptCode,
+    this.deptName,
+    this.deptProcessCode,
+    this.deptProcessName,
   });
 
-  factory ProcessIssueMstModel.fromJson(Map<String, dynamic> json) {
+  factory ProcessRecMstModel.fromJson(Map<String, dynamic> json) {
     int? toInt(dynamic value) =>
         value == null ? null : int.tryParse(value.toString());
 
     double? toDouble(dynamic value) =>
         value == null ? null : double.tryParse(value.toString());
 
-    return ProcessIssueMstModel(
+    return ProcessRecMstModel(
       id: toInt(json['ID']),
-      SPKProcessIssMstID: toInt(json['SPKProcessIssMstID']),
-      crID: toInt(json['CrID']),
-
       date: json['Date']?.toString(),
       time: json['Time']?.toString(),
 
-      deptCode: toInt(json['DeptCode']),
-      department: json['Department']?.toString(),
-
-      deptProcessCode: toInt(json['DeptProcessCode']),
-      process: json['Process']?.toString(),
-
-      employeeCode: toInt(json['EmployeeCode']),
-      employee: json['Employee']?.toString(),
-
-      machineCode: toInt(json['MachineCode']),
+      manager: json['Manager']?.toString(),
+      crID: toInt(json['CrID']),
 
       jno: json['Jno'],
 
@@ -92,49 +98,75 @@ class ProcessIssueMstModel {
       issPc: toInt(json['IssPc']),
       issWt: toDouble(json['IssWt']),
 
+      recPc: toInt(json['RecPc']),
+      recWt: toDouble(json['RecWt']),
+
+      calcWt: toDouble(json['CalcWt']),
+
+      kPc: toInt(json['KPc']),
+      kWt: toDouble(json['KWt']),
+
+      brPc: toInt(json['BrPc']),
+      brWt: toDouble(json['BrWt']),
+
+      lossPc: toInt(json['LossPc']),
+      lossWt: toDouble(json['LossWt']),
+
       dmWt: toDouble(json['DmWt']),
       dmPer: toDouble(json['DmPer']),
 
-      manager: json['Manager']?.toString(),
+      employeeCode: toInt(json['EmployeeCode']),
+      employeeName: json['EmployeeName']?.toString(),
+
+      deptCode: toInt(json['DeptCode']),
+      deptName: json['DeptName']?.toString(),
+
+      deptProcessCode: toInt(json['DeptProcessCode']),
+      deptProcessName: json['DeptProcessName']?.toString(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'ID': id,
-      'SPKProcessIssMstID': SPKProcessIssMstID,
-      'CrID': crID,
       'Date': date,
       'Time': time,
-      'DeptCode': deptCode,
-      'Department': department,
-      'DeptProcessCode': deptProcessCode,
-      'Process': process,
-      'EmployeeCode': employeeCode,
-      'Employee': employee,
-      'MachineCode': machineCode,
+      'Manager': manager,
+      'CrID': crID,
       'Jno': jno,
       'TotPkt': totPkt,
       'Pc': pc,
       'Wt': wt,
       'IssPc': issPc,
       'IssWt': issWt,
+      'RecPc': recPc,
+      'RecWt': recWt,
+      'CalcWt': calcWt,
+      'KPc': kPc,
+      'KWt': kWt,
+      'BrPc': brPc,
+      'BrWt': brWt,
+      'LossPc': lossPc,
+      'LossWt': lossWt,
       'DmWt': dmWt,
       'DmPer': dmPer,
-      'Manager': manager,
+      'EmployeeCode': employeeCode,
+      'EmployeeName': employeeName,
+      'DeptCode': deptCode,
+      'DeptName': deptName,
+      'DeptProcessCode': deptProcessCode,
+      'DeptProcessName': deptProcessName,
     };
   }
 }
 
-
-
 // ─────────────────────────────────────────────────────────────────────────────
-//  ProcessIssueDetModel
+//  ProcessRecueDetModel
 // ─────────────────────────────────────────────────────────────────────────────
-class ProcessIssueDetModel {
+class ProcessRecDetModel {
   final int?    spkDeptIssDetID;
   final int?    spkDeptIssMstID;
-  final int?    spkProcessIssMstID;
+  final int?    spkProcessRecMstID;
   final int?    PacketMstID;
   final int?    srno;
   final int?    id;
@@ -255,7 +287,6 @@ class ProcessIssueDetModel {
   final int? fromCrId;
   final int? toCrId;
   final int? deptProcessCode;
-  final int? deptCode;
   final String? inValidReason;
   final bool?   highLightEntry;
   final int?    tensionsCode;
@@ -280,11 +311,12 @@ class ProcessIssueDetModel {
   final dynamic planPurity;
   final dynamic planShape;
   final dynamic orderMstId;
+  final int? deptCode;
 
-  const ProcessIssueDetModel({
+  const ProcessRecDetModel({
     this.spkDeptIssDetID,
     this.spkDeptIssMstID,
-    this.spkProcessIssMstID,
+    this.spkProcessRecMstID,
     this.PacketMstID,
     this.srno,
     this.id,
@@ -300,7 +332,6 @@ class ProcessIssueDetModel {
     this.fromCrId,
     this.toCrId,
     this.deptProcessCode,
-    this.deptCode,
     this.wt,
     this.issPc,
     this.issWt,
@@ -429,16 +460,16 @@ class ProcessIssueDetModel {
     this.orderMstId,
     this.planPurity,
     this.planShape,
-    this.recutEmp,
+    this.recutEmp, this.deptCode,
   });
 
-  factory ProcessIssueDetModel.fromJson(Map<String, dynamic> json) =>
-      ProcessIssueDetModel(
+  factory ProcessRecDetModel.fromJson(Map<String, dynamic> json) =>
+      ProcessRecDetModel(
         spkDeptIssDetID: json['SPKDeptIssDetID'] ,
         spkDeptIssMstID: json['SPKDeptIssMstID'] ,
-        spkProcessIssMstID: json['SPKProcessIssMstID'],
+        spkProcessRecMstID: json['SPKProcessRecMstID'],
 
-        id: json['SPKProcessIssDetID'] ?? json['ID'],
+        id: json['SPKProcessRecDetID'] ?? json['ID'],
         PacketMstID: json['PacketMstID'] ?? json['PacketDetID'],
         srno: json['Srno'],
         jno: json['Jno'],
@@ -461,6 +492,7 @@ class ProcessIssueDetModel {
         dmPer: _d(json['DmPer']),
 
         purityCode: json['PurityCode'],
+        deptCode: json['DeptCode'],
         charniCode: json['CharniCode'],
         colorCode: json['ColorCode'],
 
@@ -476,6 +508,16 @@ class ProcessIssueDetModel {
         repairing: json['Repairing']?.toString()?.trim(),
         remarks: json['DeptRemark']?.toString() ?? json['Remarks']?.toString(),
         topsPc: json['TopsPc'],
+        fromDeptCode: json['FromDeptCode'],
+        toDeptCode: json['ToDeptCode'],
+        fromCrId: json['FromCrID'],
+        toCrId: json['ToCrID'] ?? json['CrID'],
+        deptProcessCode: json['DeptProcessCode'],
+        employeeCode: json['EmployeeCode'],
+        signerCode: json['SignerCode'],
+        remarksCode: json['RemarksCode'],
+        dueDay: json['DueDay'],
+        tensionsCode: json['TensionsCode'],
       );
 
   Map<String, dynamic> toJson() => {
@@ -489,6 +531,7 @@ class ProcessIssueDetModel {
     'PktNo':            pktNo,
     'CutNo':            cutNo,
     'ClvCut':           clvCut,
+    'DeptCode':           deptCode,
     'Pc':               pc,
     'Wt':               wt,
     'IssPc':            issPc,
@@ -505,132 +548,131 @@ class ProcessIssueDetModel {
     if (fromCrId        != null) 'FromCrID':        fromCrId,
     if (toCrId          != null) 'ToCrID':          toCrId,
     if (deptProcessCode != null) 'DeptProcessCode': deptProcessCode,
-    if (deptCode != null) 'DeptCode': deptCode,
 
     // ── FK fields — 0 ya null dono null bhejo ────────────────────────────────
-    'EmployeeCode': (employeeCode == null || employeeCode == 0) ? null : employeeCode,
-    'RemarksCode':  (remarksCode  == null || remarksCode  == 0) ? null : remarksCode,
+    'EmployeeCode': employeeCode,
+    'RemarksCode':  remarksCode,
 
     // ── DEFAULT value fields — sirf tab bhejo jab value ho ───────────────────
-    if (dmWt             != null) 'DmWt':             dmWt,
-    if (dmPer            != null) 'DmPer':            dmPer,
-    if (kPc              != null) 'KPc':              kPc,
-    if (kWt              != null) 'KWt':              kWt,
-    if (brPc             != null) 'BrPc':             brPc,
-    if (brWt             != null) 'BrWt':             brWt,
-    if (lossPc           != null) 'LossPc':           lossPc,
-    if (lossWt           != null) 'LossWt':           lossWt,
-    if (lossPer          != null) 'LossPer':          lossPer,
-    if (topsPc           != null) 'TopsPc':           topsPc,
-    if (topsWt           != null) 'TopsWt':           topsWt,
-    if (signerCode       != null) 'SignerCode':       signerCode,
-    if (dueDay           != null) 'DueDay':           dueDay,
-    if (confDate         != null) 'ConfDate':         confDate,
-    if (confTime         != null) 'ConfTime':         confTime,
-    if (confLogID        != null) 'ConfLogID':        confLogID,
-    if (confPcID         != null) 'ConfPcID':         confPcID,
-    if (confEver         != null) 'ConfEver':         confEver,
-    if (confCrID         != null) 'ConfCrID':         confCrID,
-    if (confRec          != null) 'ConfRec':          confRec,
-    if (recDate          != null) 'RecDate':          recDate,
-    if (recTime          != null) 'RecTime':          recTime,
-    if (lastDetID        != null) 'LastDetID':        lastDetID,
-    if (kachaRec         != null) 'KachaRec':         kachaRec,
-    if (subPktCreate     != null) 'SubPktCreate':     subPktCreate,
-    if (spkPlanningDetID != null) 'SPKPlanningDetID': spkPlanningDetID,
-    if (pktType          != null) 'PktType':          pktType,
-    if (formType         != null) 'FormType':         formType,
-    if (clvRec           != null) 'CLVRec':           clvRec,
-    if (size             != null) 'Size':             size,
-    if (jnoRecPc         != null) 'JnoRecPc':         jnoRecPc,
-    if (partName         != null) 'PartName':         partName,
-    if (shapeCode        != null) 'ShapeCode':        shapeCode,
-    if (cutCode          != null) 'CutCode':          cutCode,
-    if (purityCode       != null) 'PurityCode':       purityCode,
-    if (colorCode        != null) 'ColorCode':        colorCode,
-    if (diam             != null) 'Diam':             diam,
-    if (acuraecy         != null) 'Acuraecy':         acuraecy,
-    if (amt              != null) 'Amt':              amt,
-    if (manualAuto       != null) 'ManualAuto':       manualAuto,
-    if (qrCode           != null) 'QrCode':           qrCode,
-    if (checkerCrId      != null) 'CheckerCrId':      checkerCrId,
-    if (signerCrId       != null) 'SignerCrId':       signerCrId,
-    if (plDmWt           != null) 'PlDmWt':           plDmWt,
-    if (plDmPer          != null) 'PlDmPer':          plDmPer,
-    if (diffDmWt         != null) 'DiffDmWt':         diffDmWt,
-    if (charniCode       != null) 'CharniCode':       charniCode,
-    if (mackRoughWt      != null) 'MackRoughWt':      mackRoughWt,
-    if (rateRs           != null) 'RateRs':           rateRs,
-    if (amountRs         != null) 'AmountRs':         amountRs,
-    if (rateID           != null) 'RateID':           rateID,
-    if (rateon           != null) 'Rateon':           rateon,
-    if (rate             != null) 'Rate':             rate,
-    if (amount           != null) 'Amount':           amount,
-    if (ratio            != null) 'Ratio':            ratio,
-    if (pcName           != null) 'PcName':           pcName,
-    if (machineSrNo      != null) 'MachineSrNo':      machineSrNo,
-    if (userName         != null) 'UserName':         userName,
-    if (crHeightMM       != null) 'CrHeightMM':       crHeightMM,
-    if (crHeightPer      != null) 'CrHeightPer':      crHeightPer,
-    if (crAng            != null) 'CrAng':            crAng,
-    if (totDepthMM       != null) 'TotDepthMM':       totDepthMM,
-    if (totDepthPer      != null) 'TotDepthPer':      totDepthPer,
-    if (pavDepthMM       != null) 'PavDepthMM':       pavDepthMM,
-    if (pavDepthPer      != null) 'PavDepthPer':      pavDepthPer,
-    if (pavAng           != null) 'PavAng':           pavAng,
-    if (gridleMM         != null) 'GridleMM':         gridleMM,
-    if (gridlePer        != null) 'GridlePer':        gridlePer,
-    if (tableMM          != null) 'TableMM':          tableMM,
-    if (tablePer         != null) 'TablePer':         tablePer,
-    if (tilt             != null) 'Tilt':             tilt,
-    if (stoneNo          != null) 'StoneNo':          stoneNo,
-    if (nukDeptCode      != null) 'NukDeptCode':      nukDeptCode,
-    if (nukRemarks       != null) 'NukRemarks':       nukRemarks,
-    if (diffRgPc         != null) 'DiffRgPc':         diffRgPc,
-    if (diffRgWt         != null) 'DiffRgWt':         diffRgWt,
-    if (diffPoWt         != null) 'DiffPoWt':         diffPoWt,
-    if (diffAmt          != null) 'DiffAmt':          diffAmt,
-    if (remarks          != null) 'Remarks':          remarks,
-    if (oldDeptIssMstID  != null) 'OldDeptIssMstID':  oldDeptIssMstID,
-    if (nukTopPc         != null) 'NukTopPc':         nukTopPc,
-    if (nukTopWt         != null) 'NukTopWt':         nukTopWt,
-    if (nukAmt           != null) 'NukAmt':           nukAmt,
-    if (oldShapeCode     != null) 'OldShapeCode':     oldShapeCode,
-    if (oldColorCode     != null) 'OldColorCode':     oldColorCode,
-    if (oldPurityCode    != null) 'OldPurityCode':    oldPurityCode,
-    if (jobJno           != null) 'JobJno':           jobJno,
-    if (jobBCode         != null) 'JobBCode':         jobBCode,
-    if (rRateID          != null) 'RRateID':          rRateID,
-    if (rRateon          != null) 'RRateon':          rRateon,
-    if (rRate            != null) 'RRate':            rRate,
-    if (rAmount          != null) 'RAmount':          rAmount,
-    if (fType            != null) 'FType':            fType,
-    if (pktValid         != null) 'PktValid':         pktValid,
-    if (inValidReason    != null) 'InValidReason':    inValidReason,
-    if (highLightEntry   != null) 'HighLightEntry':   highLightEntry,
-    if (tensionsCode     != null) 'TensionsCode':     tensionsCode,
-    if (planSignerCrID   != null) 'PlanSignerCrID':   planSignerCrID,
-    if (sarinOpt         != null) 'SarinOpt':         sarinOpt,
-    if (sarinMachine     != null) 'SarinMachine':     sarinMachine,
-    if (optDate          != null) 'OptDate':          optDate,
-    if (optStartTime     != null) 'OptStartTime':     optStartTime,
-    if (optEndTime       != null) 'OptEndTime':       optEndTime,
-    if (optDiffTime      != null) 'OptDiffTime':      optDiffTime,
-    if (optEmpCode       != null) 'OptEmpCode':       optEmpCode,
-    if (tableDiam        != null) 'TableDiam':        tableDiam,
-    if (dmDiam           != null) 'DmDiam':           dmDiam,
-    if (optRateOn        != null) 'OptRateOn':        optRateOn,
-    if (optRateID        != null) 'OptRateID':        optRateID,
-    if (optRate          != null) 'OptRate':          optRate,
-    if (optAmount        != null) 'OptAmount':        optAmount,
-    if (lsAmount         != null) 'LsAmount':         lsAmount,
-    if (orderMstID       != null) 'OrderMstID':       orderMstID,
+     'DmWt':             dmWt,
+     'DmPer':            dmPer,
+     'KPc':              kPc,
+     'KWt':              kWt,
+     'BrPc':             brPc,
+     'BrWt':             brWt,
+     'LossPc':           lossPc,
+     'LossWt':           lossWt,
+     'LossPer':          lossPer,
+     'TopsPc':           topsPc,
+     'TopsWt':           topsWt,
+     'SignerCode':       signerCode,
+     'DueDay':           dueDay,
+     'ConfDate':         confDate,
+     'ConfTime':         confTime,
+     'ConfLogID':        confLogID,
+     'ConfPcID':         confPcID,
+     'ConfEver':         confEver,
+     'ConfCrID':         confCrID,
+     'ConfRec':          confRec,
+     'RecDate':          recDate,
+     'RecTime':          recTime,
+     'LastDetID':        lastDetID,
+     'KachaRec':         kachaRec,
+     'SubPktCreate':     subPktCreate,
+     'SPKPlanningDetID': spkPlanningDetID,
+     'PktType':          pktType,
+     'FormType':         formType,
+     'CLVRec':           clvRec,
+     'Size':             size,
+     'JnoRecPc':         jnoRecPc,
+     'PartName':         partName,
+     'ShapeCode':        shapeCode,
+     'CutCode':          cutCode,
+     'PurityCode':       purityCode,
+     'ColorCode':        colorCode,
+     'Diam':             diam,
+     'Acuraecy':         acuraecy,
+     'Amt':              amt,
+     'ManualAuto':       manualAuto,
+     'QrCode':           qrCode,
+     'CheckerCrId':      checkerCrId,
+     'SignerCrId':       signerCrId,
+     'PlDmWt':           plDmWt,
+     'PlDmPer':          plDmPer,
+     'DiffDmWt':         diffDmWt,
+     'CharniCode':       charniCode,
+     'MackRoughWt':      mackRoughWt,
+     'RateRs':           rateRs,
+     'AmountRs':         amountRs,
+     'RateID':           rateID,
+     'Rateon':           rateon,
+     'Rate':             rate,
+     'Amount':           amount,
+     'Ratio':            ratio,
+     'PcName':           pcName,
+     'MachineSrNo':      machineSrNo,
+     'UserName':         userName,
+     'CrHeightMM':       crHeightMM,
+     'CrHeightPer':      crHeightPer,
+     'CrAng':            crAng,
+     'TotDepthMM':       totDepthMM,
+     'TotDepthPer':      totDepthPer,
+     'PavDepthMM':       pavDepthMM,
+     'PavDepthPer':      pavDepthPer,
+     'PavAng':           pavAng,
+     'GridleMM':         gridleMM,
+     'GridlePer':        gridlePer,
+     'TableMM':          tableMM,
+     'TablePer':         tablePer,
+     'Tilt':             tilt,
+     'StoneNo':          stoneNo,
+     'NukDeptCode':      nukDeptCode,
+     'NukRemarks':       nukRemarks,
+     'DiffRgPc':         diffRgPc,
+     'DiffRgWt':         diffRgWt,
+     'DiffPoWt':         diffPoWt,
+     'DiffAmt':          diffAmt,
+     'Remarks':          remarks,
+     'OldDeptIssMstID':  oldDeptIssMstID,
+     'NukTopPc':         nukTopPc,
+     'NukTopWt':         nukTopWt,
+     'NukAmt':           nukAmt,
+     'OldShapeCode':     oldShapeCode,
+     'OldColorCode':     oldColorCode,
+     'OldPurityCode':    oldPurityCode,
+     'JobJno':           jobJno,
+     'JobBCode':         jobBCode,
+     'RRateID':          rRateID,
+     'RRateon':          rRateon,
+     'RRate':            rRate,
+     'RAmount':          rAmount,
+     'FType':            fType,
+     'PktValid':         pktValid,
+     'InValidReason':    inValidReason,
+     'HighLightEntry':   highLightEntry,
+     'TensionsCode':     tensionsCode,
+     'PlanSignerCrID':   planSignerCrID,
+     'SarinOpt':         sarinOpt,
+     'SarinMachine':     sarinMachine,
+     'OptDate':          optDate,
+     'OptStartTime':     optStartTime,
+     'OptEndTime':       optEndTime,
+     'OptDiffTime':      optDiffTime,
+     'OptEmpCode':       optEmpCode,
+     'TableDiam':        tableDiam,
+     'DmDiam':           dmDiam,
+     'OptRateOn':        optRateOn,
+     'OptRateID':        optRateID,
+     'OptRate':          optRate,
+     'OptAmount':        optAmount,
+     'LsAmount':         lsAmount,
+     'OrderMstID':       orderMstID,
 
-    if (planPurity       != null) 'PlanPurity':       planPurity,
-    if (recutEmp       != null) 'RecutEmp':       recutEmp,
-    if (planShape       != null) 'PlanShape':       planShape,
-    if (repairing       != null) 'Repairing':       repairing,
-    if (spkProcessIssMstID != null) 'SPKProcessIssMstID': spkProcessIssMstID,
+     'PlanPurity':       planPurity,
+     'RecutEmp':       recutEmp,
+    'PlanShape':       planShape,
+     'Repairing':       repairing,
+     'SPKProcessRecMstID': spkProcessRecMstID,
   };
 
   static double? _d(dynamic v) {
@@ -640,7 +682,7 @@ class ProcessIssueDetModel {
     return double.tryParse(v.toString());
   }
 }
-extension FactoryIssMstExt on ProcessIssueMstModel {
+extension FactoryIssMstExt on ProcessRecMstModel {
   Map<String, dynamic> toTableRow() => {
     'jno': jno,
 
@@ -658,8 +700,8 @@ extension FactoryIssMstExt on ProcessIssueMstModel {
     'dmPer': (dmPer ?? 0).toStringAsFixed(2),
 
     'manager': manager ?? '',
-    'process': process ?? '',
-    'department': department ?? '',
-    'employee': employee ?? '',
+    'process': deptProcessCode ?? '',
+    'department': deptCode ?? '',
+    'employee': employeeCode ?? '',
   };
 }

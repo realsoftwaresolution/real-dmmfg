@@ -1,34 +1,31 @@
-import 'package:diam_mfg/models/factory_issue_entry_model.dart';
-import 'package:diam_mfg/models/process_issue_model.dart';
+import 'package:diam_mfg/models/process_Rec_model.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 
-class ProcessIssueEntryProvider extends BaseProvider {
-  List<ProcessIssueMstModel> _list = [];
+class ProcessRecEntryProvider extends BaseProvider {
+  List<ProcessRecMstModel> _list = [];
   bool _isLoaded = false;
 
   bool get isLoaded => _isLoaded;
 
-  List<ProcessIssueMstModel> get list => List.unmodifiable(_list);
+  List<ProcessRecMstModel> get list => List.unmodifiable(_list);
 
   List<Map<String, dynamic>> get tableData =>
       _list.map((e) => e.toTableRow()).toList();
 
   // Provider mein ye map maintain karo
   // detMap declare karo (class level)
-  Map<int, List<ProcessIssueDetModel>> detMap = {};
+  Map<int, List<ProcessRecDetModel>> detMap = {};
 
   // SIRF EK loadDetails rakho — dono merge karo:
-  Future<List<ProcessIssueDetModel>> loadDetails(int mstID) async {
-    final result = await request<List<ProcessIssueDetModel>>(
-      call: () => api.get('/spkProcessIss/details/$mstID'),
+  Future<List<ProcessRecDetModel>> loadDetails(int mstID) async {
+    final result = await request<List<ProcessRecDetModel>>(
+      call: () => api.get('/spkProcessRec/details/$mstID'),
       onSuccess: (res) {
         final json = res.data as Map<String, dynamic>;
         final data = json['data'] as List;
 
         return data
-            .map(
-              (e) => ProcessIssueDetModel.fromJson(e as Map<String, dynamic>),
-            )
+            .map((e) => ProcessRecDetModel.fromJson(e as Map<String, dynamic>))
             .toList();
       },
     );
@@ -43,14 +40,12 @@ class ProcessIssueEntryProvider extends BaseProvider {
 
   // ── LOAD ALL ──────────────────────────────────────────────────────────────
   Future<void> load() async {
-    final result = await request<List<ProcessIssueMstModel>>(
-      call: () => api.get('/spkProcessIss'),
+    final result = await request<List<ProcessRecMstModel>>(
+      call: () => api.get('/spkProcessRec'),
       onSuccess: (res) {
         final list = res.data['data'] as List;
         return list
-            .map(
-              (e) => ProcessIssueMstModel.fromJson(e as Map<String, dynamic>),
-            )
+            .map((e) => ProcessRecMstModel.fromJson(e as Map<String, dynamic>))
             .toList();
       },
     );
@@ -61,23 +56,21 @@ class ProcessIssueEntryProvider extends BaseProvider {
     }
   }
 
-  Future<List<ProcessIssueDetModel>> fetchByBCode({
+  Future<List<ProcessRecDetModel>> fetchByBCode({
     required String bCode,
     int? toCrId,
   }) async {
     final queryParams = toCrId != null
-        ? '?BCode=$bCode&ToCrID=$toCrId'
+        ? '?BCode=$bCode&CrID=$toCrId'
         : '?BCode=$bCode';
-    final result = await request<List<ProcessIssueDetModel>>(
+    final result = await request<List<ProcessRecDetModel>>(
       showLoader: false,
-      call: () => api.get('/spkProcessIss/barcode-data$queryParams'),
+      call: () => api.get('/spkProcessRec/barcode-data$queryParams'),
       onSuccess: (res) {
         final data = res.data['data'];
         final list = data is List ? data : [data];
         return list
-            .map(
-              (e) => ProcessIssueDetModel.fromJson(e as Map<String, dynamic>),
-            )
+            .map((e) => ProcessRecDetModel.fromJson(e as Map<String, dynamic>))
             .toList();
       },
     );
@@ -86,9 +79,9 @@ class ProcessIssueEntryProvider extends BaseProvider {
 
   // ── CREATE ────────────────────────────────────────────────────────────────
   Future<bool> create(Map<String, dynamic> payload) async {
-    final result = await request<ProcessIssueMstModel>(
+    final result = await request<ProcessRecMstModel>(
       call: () => api.post(
-        '/spkProcessIss',
+        '/spkProcessRec',
         data: payload, // ✅ DIRECT PAYLOAD
       ),
       onSuccess: (res) => _parseMstResponse(res.data),
@@ -102,9 +95,9 @@ class ProcessIssueEntryProvider extends BaseProvider {
   }
 
   Future<bool> insertInSameMst(Map<String, dynamic> payload, id) async {
-    final result = await request<ProcessIssueMstModel>(
+    final result = await request<ProcessRecMstModel>(
       call: () => api.post(
-        '/spkProcessIss?id=$id',
+        '/spkProcessRec?id=$id',
         data: payload, // ✅ DIRECT PAYLOAD
       ),
       onSuccess: (res) => _parseMstResponse(res.data),
@@ -120,7 +113,7 @@ class ProcessIssueEntryProvider extends BaseProvider {
   // ── DELETE ────────────────────────────────────────────────────────────────
   Future<bool> delete(id) async {
     final result = await request<bool>(
-      call: () => api.delete('/spkProcessIss/$id'),
+      call: () => api.delete('/spkProcessRec/$id'),
       onSuccess: (_) => true,
     );
     if (result == true) {
@@ -132,7 +125,7 @@ class ProcessIssueEntryProvider extends BaseProvider {
 
   Future<bool> deleteRow(id) async {
     final result = await request<bool>(
-      call: () => api.delete('/spkProcessIss/detail/$id'),
+      call: () => api.delete('/spkProcessRec/detail/$id'),
       onSuccess: (_) => true,
     );
     if (result == true) {
@@ -142,7 +135,7 @@ class ProcessIssueEntryProvider extends BaseProvider {
     return false;
   }
 
-  ProcessIssueMstModel _parseMstResponse(dynamic data) {
+  ProcessRecMstModel _parseMstResponse(dynamic data) {
     if (data is Map) {
       Map<String, dynamic> mstJson;
       if (data.containsKey('mst')) {
@@ -163,7 +156,7 @@ class ProcessIssueEntryProvider extends BaseProvider {
       } else {
         mstJson = Map<String, dynamic>.from(data);
       }
-      return ProcessIssueMstModel.fromJson(mstJson);
+      return ProcessRecMstModel.fromJson(mstJson);
     }
     throw Exception('Unexpected response format');
   }

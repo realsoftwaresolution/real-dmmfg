@@ -47,6 +47,7 @@ import 'package:diam_mfg/screens/trn_makable_entry.dart';
 import 'package:diam_mfg/screens/trn_packet_create.dart';
 import 'package:diam_mfg/screens/trn_planning_received.dart';
 import 'package:diam_mfg/screens/trn_process_issue.dart';
+import 'package:diam_mfg/screens/trn_process_rec.dart';
 import 'package:diam_mfg/screens/trn_rough_assort.dart';
 import 'package:diam_mfg/screens/trn_rough_entry.dart';
 import 'package:diam_mfg/screens/trn_spk_dept_iss.dart';
@@ -117,7 +118,7 @@ class AppRouter {
     '/3.09': (context) => const TrnFactoryIssueEntry(),
     '/3.10': (context) => const FactoryReceiveEntry(),
     '/3.11': (context) => const TrnProcessIssueEntry(),
-    '/3.12': (context) => const TrnProcessIssueEntry(),
+    '/3.12': (context) => const TrnProcessRecEntry(),
     '/3.13': (context) => const TrnJobWorkIssueEntry(),
     '/3.14': (context) => const TrnJobWorkRecEntry(),
     '/4': (context) => const AdminMenuCreateScreen(),

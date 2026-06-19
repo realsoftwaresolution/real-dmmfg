@@ -1,36 +1,20 @@
 
-import 'package:diam_mfg/providers/menu_provider.dart';
-import 'package:diam_mfg/screens/splash_screen.dart';
+import 'package:diam_mfg/screens/login_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-
-    return Consumer<MenuProvider>(
-      builder: (context, menuProvider, _) {
-
-        if (menuProvider.isLoading) {
-          return const MaterialApp(
-            home: Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            ),
-          );
-        }
-
-        return MaterialApp(
-          title: 'RS Dashboard',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            fontFamily: 'Roboto',
-            useMaterial3: true,
-          ),
-          home: const SplashScreenV7(), // 🎨 Design 1 (Dark Orbs)
-        );
-      },
+    return MaterialApp(
+      title: 'DIAMOND MFG',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        fontFamily: 'Roboto',
+        useMaterial3: true,
+      ),
+      home: const LoginScreenV7(),
     );
   }
 }

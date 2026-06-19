@@ -81,6 +81,7 @@ import 'package:diam_mfg/providers/test_provider.dart';
 import 'package:diam_mfg/providers/trn_laser_received_provider.dart';
 import 'package:diam_mfg/providers/trn_planning_received_provider.dart';
 import 'package:diam_mfg/providers/trn_process_issue_provider.dart';
+import 'package:diam_mfg/providers/trn_process_rec_provider.dart';
 import 'package:diam_mfg/providers/user_visibility_provider.dart';
 import 'package:diam_mfg/providers/utility_clvdepartment_rate_update_provider.dart';
 import 'package:diam_mfg/providers/utility_factory_rate_update_provider.dart';
@@ -94,9 +95,8 @@ import 'providers/Ls_party_wt_calc_entry_provider.dart';
 import 'providers/Packet_History_provider.dart';
 import 'providers/factory_man_group_provider.dart';
 
-// String baseUrl = 'http://50.62.183.116:5000/api';
-String baseUrl =
-    'https://organ-additionally-brook-determine.trycloudflare.com/api';
+String baseUrl = 'http://50.62.183.116:5000/api';
+// String baseUrl = 'https://legs-duke-relations-threatened.trycloudflare.com/api';
 //CU-7,5/6/2026,17:12,0.096,0.049,ROUND,G,MACKABLE,klhkhkhjkkh,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
 
 //CU-7,5/6/2026,17:12,0.096,0.049,S.OVAL,G,VVS2,omjewR-1.50,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
@@ -366,6 +366,8 @@ Future<void> bootstrap({required FutureOr<Widget> Function() fn}) async {
             ),
             ChangeNotifierProvider<ProductionDashboardProvider>(
               create: (_) => ProductionDashboardProvider(),
+            ),ChangeNotifierProvider<ProcessRecEntryProvider>(
+              create: (_) => ProcessRecEntryProvider(),
             ),
           ],
           child: app,
