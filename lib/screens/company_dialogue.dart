@@ -31,12 +31,30 @@ class _CompanySelectionDialogState extends State<_CompanySelectionDialog> {
   int? _selectedCode;
   String _search = '';
 
-  final FocusNode _searchFocusNode = FocusNode();
+  late final FocusNode _searchFocusNode;
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    _searchFocusNode = FocusNode(
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            _moveSelection(1);
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+            _moveSelection(-1);
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.enter ||
+                     event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+            _done(context);
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      },
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _searchFocusNode.requestFocus();
@@ -234,64 +252,47 @@ class _CompanySelectionDialogState extends State<_CompanySelectionDialog> {
     final companies = context.read<CompanyProvider>().companies;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-      child: Focus(
-        onKeyEvent: (node, event) {
-          if (event is KeyDownEvent) {
-            if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-              _moveSelection(1);
-              return KeyEventResult.handled;
-            } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-              _moveSelection(-1);
-              return KeyEventResult.handled;
-            } else if (event.logicalKey == LogicalKeyboardKey.enter ||
-                       event.logicalKey == LogicalKeyboardKey.numpadEnter) {
-              _done(context);
-              return KeyEventResult.handled;
-            }
-          }
-          return KeyEventResult.ignored;
-        },
-        child: TextField(
-          focusNode: _searchFocusNode,
-          onChanged: (v) {
-            setState(() {
-              _search = v;
-              final filtered = _getFilteredCompanies(companies);
-              if (filtered.isNotEmpty) {
-                if (!filtered.any((c) => c.companyCode == _selectedCode)) {
-                  _selectedCode = filtered.first.companyCode;
-                }
-              } else {
-                _selectedCode = null;
+      child: TextField(
+        focusNode: _searchFocusNode,
+        autofocus: true,
+        onChanged: (v) {
+          setState(() {
+            _search = v;
+            final filtered = _getFilteredCompanies(companies);
+            if (filtered.isNotEmpty) {
+              if (!filtered.any((c) => c.companyCode == _selectedCode)) {
+                _selectedCode = filtered.first.companyCode;
               }
-            });
-          },
-          style: const TextStyle(color: Colors.white, fontSize: 14),
-          cursorColor: const Color(0xFF556EE6),
-          decoration: InputDecoration(
-            hintText: 'Search company...',
-            hintStyle:
-            TextStyle(color: Colors.white.withOpacity(0.25), fontSize: 13),
-            prefixIcon: Icon(Icons.search_rounded,
-                color: Colors.white.withOpacity(0.3), size: 18),
-            filled: true,
-            fillColor: Colors.white.withOpacity(0.05),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide:
-              const BorderSide(color: Color(0xFF556EE6), width: 1.5),
-            ),
-            contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            } else {
+              _selectedCode = null;
+            }
+          });
+        },
+        style: const TextStyle(color: Colors.white, fontSize: 14),
+        cursorColor: const Color(0xFF556EE6),
+        decoration: InputDecoration(
+          hintText: 'Search company...',
+          hintStyle:
+          TextStyle(color: Colors.white.withOpacity(0.25), fontSize: 13),
+          prefixIcon: Icon(Icons.search_rounded,
+              color: Colors.white.withOpacity(0.3), size: 18),
+          filled: true,
+          fillColor: Colors.white.withOpacity(0.05),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
           ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide:
+            const BorderSide(color: Color(0xFF556EE6), width: 1.5),
+          ),
+          contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
     );

@@ -582,7 +582,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
     set('orgPc', r.pc?.toString());
     set('orgWt', fThreeDecimal(r.wt));
-    set('recWt', fThreeDecimal(r.issWt));
+    set('recWt', fThreeDecimal(r.dmWt));
     set('recPc', r.issPc?.toString() ?? '0');
     set('issPc', r.issPc?.toString());
     set('issWt', fThreeDecimal(r.issWt));
@@ -592,8 +592,19 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     set('dmPer', r.dmPer?.toString());
     set('dmWt', r.dmWt?.toString());
     set('size', r.size?.toString());
-    set('size', r.size?.toString());
     set('factoryIssDetID', r.factoryIssDetID?.toString());
+    set('purity', r.purityCode?.toString());
+    set('charni', r.charniCode?.toString());
+    set('color', r.colorCode?.toString());
+    set('shape', r.shapeCode?.toString());
+    set('cutCode', r.cutCode?.toString());
+    set('polishCode', r.polishCode?.toString());
+    set('symmetryCode', r.symmetryCode?.toString());
+    set('fluo', r.fluo?.toString());
+    set('tensionCode', r.tensionsCode?.toString());
+    set('length', r.length?.toString());
+    set('diam', r.diam?.toString());
+    set('height', r.height?.toString());
     setState(() => _scannedDet = r);
   }
 

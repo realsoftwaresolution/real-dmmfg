@@ -135,7 +135,7 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
           key: 'issWt',
           label: 'ISS WT',
           type: ErpFieldType.amount,
-          readOnly: true,
+          readOnly: !_isRowEditMode,
           sectionIndex: 1,
           flex: 1,
         ),
@@ -466,9 +466,11 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
         } else {
           if (isRecWtChanged) {
             row['RecWt'] = d(newRecWt);
+            row['IssWt'] = d(newRecWt);
           }
           if (isIssWtChanged) {
             row['IssWt'] = d(newIssWt);
+            row['RecWt'] = d(newIssWt);
           }
         }
 
