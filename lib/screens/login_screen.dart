@@ -63,6 +63,10 @@ class _LoginScreenV7State extends State<LoginScreenV7> {
 
       // ✅ Bas yahi — Dialog khud navigate karega Done pe
       showCompanySelectionDialog(context);
+    } else {
+      if (mounted) {
+        _emailFocus.requestFocus();
+      }
     }
   }
 
@@ -207,8 +211,8 @@ class _LoginScreenV7State extends State<LoginScreenV7> {
                           const SizedBox(height: 30),
                           _SpaceField(
                             controller: _emailCtrl,
-                            label: 'EMAIL',
-                            hint: 'you@company.com',
+                            label: 'USER NAME',
+                            hint: 'Enter your username',
                             icon: Icons.alternate_email_rounded,
                             validator: (v) =>
                                 v!.isEmpty ? 'Required' : null,
@@ -227,9 +231,7 @@ class _LoginScreenV7State extends State<LoginScreenV7> {
                             obscureText: _obscure,
                             focusNode: _passFocus,
                             textInputAction: TextInputAction.done,
-                            onSubmitted: (_) {
-                              _signInFocus.requestFocus();
-                            },
+                            onSubmitted: (_) => _login(),
                             suffix: GestureDetector(
                               onTap: () =>
                                   setState(() => _obscure = !_obscure),
@@ -368,6 +370,9 @@ class _LoginScreenV7State extends State<LoginScreenV7> {
                       hint: '••••••••',
                       icon: Icons.lock_outline_rounded,
                       obscureText: _obscure,
+                      focusNode: _passFocus,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _login(),
                       suffix: GestureDetector(
                         onTap: () => setState(() => _obscure = !_obscure),
                         child: Icon(

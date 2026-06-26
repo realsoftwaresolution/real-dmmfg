@@ -113,6 +113,10 @@ class _CompanySelectionDialogState extends State<_CompanySelectionDialog> {
     final authProvider = context.read<AuthProvider>();
     final userName = authProvider.user?.crName ?? authProvider.user?.logInName;
 
+    final tabProvider = context.read<TabProvider>();
+    tabProvider.closeAllTabs();
+    tabProvider.openTab('/1', 'Dashboard');
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -324,6 +328,10 @@ class _CompanySelectionDialogState extends State<_CompanySelectionDialog> {
 
           return GestureDetector(
             onTap: () => setState(() => _selectedCode = company.companyCode),
+            onDoubleTap: () {
+              setState(() => _selectedCode = company.companyCode);
+              _done(context);
+            },
             child: Container(
               padding:
               const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
