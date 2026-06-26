@@ -34,22 +34,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildFilterBar(context),
-          const SizedBox(height: 16),
-          Expanded(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 5),
+        _buildFilterBar(context),
+        const SizedBox(height: 5),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
             child: Responsive(
               mobile: _buildMobileLayout(context),
               tablet: _buildTabletLayout(context),
               desktop: _buildDesktopLayout(context),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -64,15 +65,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Wrap(
         spacing: 12,
@@ -199,7 +192,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 5),
                 // Bottom Left Section (Box 2) - 50% height
                 Expanded(
                   flex: 1,
@@ -214,7 +207,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 24),
+          const SizedBox(width: 5),
           // Right Section - 50% width
           Expanded(
             flex: 1,

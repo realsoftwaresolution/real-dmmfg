@@ -15,11 +15,20 @@ class _PairListReportTableState extends State<PairListReportTable> {
   List<dynamic> _items = [];
   bool _isLoading = false;
   String? _errorMessage;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -201,10 +210,14 @@ class _PairListReportTableState extends State<PairListReportTable> {
         // Data List
         Expanded(
           child: Scrollbar(
+            controller: _scrollController,
             interactive: true,
             thickness: 6,
+            trackVisibility: true,
+            thumbVisibility: true,
             radius: const Radius.circular(3),
             child: ListView.builder(
+              controller: _scrollController,
               itemCount: _items.length,
               physics: const BouncingScrollPhysics(),
               itemBuilder: (context, index) {

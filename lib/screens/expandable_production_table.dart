@@ -77,11 +77,20 @@ class _ExpandableProductionTableState extends State<ExpandableProductionTable> {
   List<ProductionNode> _rootNodes = [];
   bool _isLoadingRoot = false;
   String? _errorMessage;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _loadRootData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadRootData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadRootData() async {
@@ -390,10 +399,14 @@ class _ExpandableProductionTableState extends State<ExpandableProductionTable> {
         // List of Tree Nodes
         Expanded(
           child: Scrollbar(
+            controller: _scrollController,
             interactive: true,
+            trackVisibility: true,
+            thumbVisibility: true,
             thickness: 6,
             radius: const Radius.circular(3),
             child: ListView.builder(
+              controller: _scrollController,
               itemCount: flattenedList.length,
               physics: const BouncingScrollPhysics(),
               itemBuilder: (context, index) {
@@ -432,7 +445,7 @@ class _ExpandableProductionTableState extends State<ExpandableProductionTable> {
       child: Row(
         children: [
           Expanded(
-            flex: 3,
+            flex: 2,
             child: Text(
               col1,
               style: const TextStyle(
@@ -516,7 +529,7 @@ class _ExpandableProductionTableState extends State<ExpandableProductionTable> {
     return Text(
       text,
       style: TextStyle(
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
         color: textColor,
       ),
@@ -648,7 +661,7 @@ class _ExpandableProductionTableState extends State<ExpandableProductionTable> {
             children: [
               // Left column with indent tree connectors and type icons
               Expanded(
-                flex: 3,
+                flex: 2,
                 child: Row(
                   children: [
                     _buildTreeConnectors(node.level),
@@ -725,7 +738,7 @@ class _ExpandableProductionTableState extends State<ExpandableProductionTable> {
                       : Text(
                           pcs,
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: Colors.black87,
                             fontWeight: FontWeight.w600,
                           ),
@@ -754,7 +767,7 @@ class _ExpandableProductionTableState extends State<ExpandableProductionTable> {
                       : Text(
                           wt,
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: Colors.black87,
                             fontWeight: FontWeight.w600,
                           ),
