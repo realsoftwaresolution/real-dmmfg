@@ -3,16 +3,16 @@
 import 'package:rs_dashboard/rs_dashboard.dart';
 
 class MenuMstModel {
-  final int?    menuSRNO;
-  final int?    menuMstID;
+  final int? menuSRNO;
+  final int? menuMstID;
   final String? menuName;
-  final int?    mainMenuMstID;
-  final int?    valid;
+  final int? mainMenuMstID;
+  final int? valid;
   final String? formName;
   final String? menuImage; // BLOB — API se base64 string ya null aayega
-  final int?    mainGroupMstID;
-  final int?    imageSize;
-  final int?    sortID;
+  final int? mainGroupMstID;
+  final int? imageSize;
+  final int? sortID;
   final String? dashBoard;
   final String? shortCutKey;
   final String? routeCode;
@@ -34,57 +34,58 @@ class MenuMstModel {
   });
 
   factory MenuMstModel.fromJson(Map<String, dynamic> json) => MenuMstModel(
-    menuSRNO:       json['MenuSRNO'],
-    menuMstID:      json['MenuMstID'],
-    menuName:       json['MenuName'],
-    mainMenuMstID:  json['MainMenuMstID'],
-    valid:          json['Valid'],
-    formName:       json['FormName'],
-    menuImage:      json['MenuImage']?.toString(),
+    menuSRNO: json['MenuSRNO'],
+    menuMstID: json['MenuMstID'],
+    menuName: json['MenuName'],
+    mainMenuMstID: json['MainMenuMstID'],
+    valid: json['Valid'],
+    formName: json['FormName'],
+    menuImage: json['MenuImage']?.toString(),
     mainGroupMstID: json['MainGroupMstID'],
-    imageSize:      json['ImageSize'],
-    sortID:         json['SortID'],
-    dashBoard:      json['DashBoard'],
-    shortCutKey:    json['ShortCutKey'],
-    routeCode:    json['RouteCode'].toString().trim(),
+    imageSize: json['ImageSize'],
+    sortID: json['SortID'],
+    dashBoard: json['DashBoard'],
+    shortCutKey: json['ShortCutKey'],
+    routeCode: json['RouteCode'].toString().trim(),
   );
 
   Map<String, dynamic> toJson() => {
-    'MenuName':       menuName,
-    'MainMenuMstID':  mainMenuMstID,
-    'Valid':          valid,
-    'FormName':       formName,
-    'MenuImage':      menuImage,
+    'MenuName': menuName,
+    'MainMenuMstID': mainMenuMstID,
+    'Valid': valid,
+    'FormName': formName,
+    'MenuImage': menuImage,
     'MainGroupMstID': mainGroupMstID,
-    'ImageSize':      imageSize,
-    'SortID':         sortID,
-    'DashBoard':      dashBoard,
-    'ShortCutKey':    shortCutKey,
-    'RouteCode':    routeCode,
+    'ImageSize': imageSize,
+    'SortID': sortID,
+    'DashBoard': dashBoard,
+    'ShortCutKey': shortCutKey,
+    'RouteCode': routeCode,
   };
 
   Map<String, dynamic> toTableRow() => {
-    'menuMstID':      menuMstID?.toString()      ?? '',
-    'menuName':       menuName                   ?? '',
-    'mainMenuMstID':  mainMenuMstID?.toString()  ?? '',
-    'formName':       formName                   ?? '',
-    'sortID':         sortID?.toString()         ?? '',
-    'valid':          valid?.toString()          ?? '',
-    '_raw':           this,
+    'menuMstID': menuMstID?.toString() ?? '',
+    'menuName': menuName ?? '',
+    'mainMenuMstID': mainMenuMstID?.toString() ?? '',
+    'formName': formName ?? '',
+    'sortID': sortID?.toString() ?? '',
+    'valid': valid?.toString() ?? '',
+    '_raw': this,
   };
 
   static MenuMstModel fromFormValues(Map<String, dynamic> v) => MenuMstModel(
-    menuName:       v['menuName'],
-    mainMenuMstID:  int.tryParse(v['mainMenuMstID']?.toString()  ?? ''),
-    valid:          int.tryParse(v['valid']?.toString()          ?? ''),
-    formName:       v['formName'],
-    menuImage:      v['menuImage']?.toString(),
+    menuName: v['menuName'],
+    mainMenuMstID: int.tryParse(v['mainMenuMstID']?.toString() ?? ''),
+    valid: int.tryParse(v['valid']?.toString() ?? ''),
+    formName: v['formName'],
+    menuImage: v['menuImage']?.toString(),
     mainGroupMstID: int.tryParse(v['mainGroupMstID']?.toString() ?? ''),
-    imageSize:      int.tryParse(v['imageSize']?.toString()      ?? ''),
-    sortID:         int.tryParse(v['sortID']?.toString()         ?? ''),
-    dashBoard:      v['dashBoard'],
-    shortCutKey:    v['shortCutKey'],
+    imageSize: int.tryParse(v['imageSize']?.toString() ?? ''),
+    sortID: int.tryParse(v['sortID']?.toString() ?? ''),
+    dashBoard: v['dashBoard'],
+    shortCutKey: v['shortCutKey'],
   );
+
   RSMenuItem toMenuItem() {
     return RSMenuItem(
       id: menuSRNO.toString(),
@@ -93,6 +94,7 @@ class MenuMstModel {
       route: "/$routeCode",
     );
   }
+
   String get iconPath {
     switch (routeCode) {
       case '2':
@@ -106,10 +108,6 @@ class MenuMstModel {
       case '3.03':
         return 'assets/images/3.3.png';
       case '3.04':
-        return 'assets/images/3.4.png';
-        case '3.05':
-        return 'assets/images/3.4.png';
-        case '3.06':
         return 'assets/images/3.4.png';
       case '2.01':
         return 'assets/images/2.1_black.png';
@@ -163,9 +161,33 @@ class MenuMstModel {
         return 'assets/images/2.25_black.png';
       case '2.26':
         return 'assets/images/2.26.png';
+      case '2.27':
+        return 'assets/images/2.27.png';
+      case '3.05':
+        return 'assets/images/3.5.png';
+      case '3.06':
+        return 'assets/images/3.6.png';
+      case '3.07':
+        return 'assets/images/3.7.png';
+      case '3.08':
+        return 'assets/images/3.8.png';
+      case '3.09':
+        return 'assets/images/3.9.png';
+      case '3.10':
+        return 'assets/images/3.10.png';
+      case '3.11':
+        return 'assets/images/3.11.png';
+      case '3.12':
+        return 'assets/images/3.12.png';
+      case '3.13':
+        return 'assets/images/3.13.png';
+      case '3.14':
+        return 'assets/images/3.14.png';
       default:
-        return 'assets/images/1_black.png';
+        if (routeCode != null && routeCode!.startsWith('2.')) {
+          return 'assets/images/${routeCode}_black.png';
+        }
+        return 'assets/images/$routeCode.png';
     }
   }
-
 }

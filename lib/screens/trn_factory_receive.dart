@@ -758,7 +758,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     // ─────────────────────────────
     if (_isEditMode && _editingDetIndex != null) {
       final prov = context.read<FactoryReceivedEntryProvider>();
-
+      print(jsonEncode(_detRows));
       final payloadData = {
         "FactoryRecMstID":
             int.tryParse(_formValues['factoryRecMstID'] ?? '0') ?? 0,
@@ -1045,6 +1045,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       srno: srno,
       factoryRecMstID: existing.factoryRecMstID,
       factoryIssDetID: existing.factoryIssDetID,
+      FactoryRecDetID: existing.FactoryRecDetID,
       MfgCut: existing.MfgCut,
       size: existing.size,
       // Preserved scan data
