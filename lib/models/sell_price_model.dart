@@ -27,6 +27,9 @@ class SellPriceModel {
   final List<int> purityCodes;
   final String? purities;
 
+  final String? layoutNameField;
+  final String? mm;
+
   SellPriceModel({
     this.sellPriceListMstID,
     this.sellCode,
@@ -47,6 +50,8 @@ class SellPriceModel {
     this.colors,
     this.purityCodes = const [],
     this.purities,
+    this.layoutNameField,
+    this.mm,
   });
 
   factory SellPriceModel.fromJson(Map<String, dynamic> json) {
@@ -76,6 +81,8 @@ class SellPriceModel {
           .map((e) => int.tryParse(e.toString()) ?? 0)
           .toList(),
       purities: json['purities'] as String?,
+      layoutNameField: json['LayoutName'] as String?,
+      mm: json['MM'] as String?,
     );
   }
 
@@ -97,6 +104,27 @@ class SellPriceModel {
         '${d.day.toString().padLeft(2, '0')}';
   }
 
+  String get layoutName {
+    if (layoutNameField != null && layoutNameField!.isNotEmpty) {
+      return layoutNameField!;
+    }
+    final art = articalName ?? '';
+    final col = colors ?? '';
+    final pur = purities ?? '';
+    return '$art $col - $pur';
+  }
+
+  static String _formatMmToDecimal(String val) {
+    if (val.isEmpty) return '';
+    final parts = val.split('*');
+    final formattedParts = <String>[];
+    for (final part in parts) {
+      final numValue = double.tryParse(part.trim()) ?? 0.0;
+      formattedParts.add(numValue.toStringAsFixed(2));
+    }
+    return formattedParts.join('*');
+  }
+
   /// Maps this model to a row for ErpDataTable.
   /// Keys here MUST match the `key` values used in
   /// MstSellPrice._tableColumns.
@@ -105,6 +133,7 @@ class SellPriceModel {
       'sellCode': sellCode ?? '',
       'articalName': articalName ?? '',
       'shapeName': shapeName ?? '',
+      'mm': _formatMmToDecimal(mm ?? (length != null && width != null && height != null ? '${_fmtNum(length)}*${_fmtNum(width)}*${_fmtNum(height)}' : '')),
       'length': _fmtNum(length),
       'width': _fmtNum(width),
       'height': _fmtNum(height),
@@ -112,6 +141,7 @@ class SellPriceModel {
       'companyName': companyName ?? '',
       'colors': colors ?? '',
       'purities': purities ?? '',
+      'layoutName': layoutName,
       'sortID': sortID?.toString() ?? '',
       'active': active == true ? 'Yes' : 'No',
       'sdate': _fmtDate(sdate),

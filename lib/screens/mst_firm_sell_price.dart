@@ -31,82 +31,48 @@ class _MstSellPriceState extends State<MstSellPrice> {
   // to hold a List<String>, which a Map<String, String> can't store.
   Map<String, String> _formValues = {};
 
+  final List<Map<String, dynamic>> _entryGridRows = [];
+  int? _editingGridIndex;
+
+  List<String> get _gridColumns => [
+    'sortID',
+    'article',
+    'color',
+    'purity',
+    'layoutName',
+    'shape',
+    'mm',
+    'length',
+    'diam',
+    'height',
+    'rate',
+    'code',
+    'active',
+  ];
+
+  Map<String, String> get _gridColumnLabels => {
+    'sortID': 'SORT ID',
+    'article': 'ARTICLE',
+    'color': 'COLOR',
+    'purity': 'PURITY',
+    'layoutName': 'LAYOUT NAME',
+    'shape': 'SHAPE',
+    'mm': 'MM',
+    'length': 'LENGTH',
+    'diam': 'DIAM',
+    'height': 'HEIGHT',
+    'rate': 'PRICE',
+    'code': 'CODE',
+    'active': 'ACTIVE',
+  };
+
   final String? token = AppStorage.getString("token");
 
   // Table columns matching SellPriceModel.toTableRow() keys.
   List<ErpColumnConfig> get _tableColumns => [
-    ErpColumnConfig(
-      key: 'sellCode',
-      label: 'SELL CODE',
-      width: 160,
-      align: ColumnAlign.center,
-    ),
-    ErpColumnConfig(
-      key: 'articalName',
-      label: 'ARTICLE',
-      width: 150,
-      align: ColumnAlign.center,
-    ),
-    ErpColumnConfig(
-      key: 'shapeName',
-      label: 'SHAPE',
-      width: 150,
-      align: ColumnAlign.center,
-    ),
-    ErpColumnConfig(
-      key: 'length',
-      label: 'LENGTH',
-      width: 150,
-      align: ColumnAlign.center,
-    ),
-    ErpColumnConfig(
-      key: 'width',
-      label: 'DIAM',
-      width: 130,
-      align: ColumnAlign.center,
-    ),
-    ErpColumnConfig(
-      key: 'height',
-      label: 'HEIGHT',
-      width: 150,
-      align: ColumnAlign.center,
-    ),
-    ErpColumnConfig(
-      key: 'rate',
-      label: 'RATE',
-      width: 130,
-      align: ColumnAlign.center,
-    ),
-    ErpColumnConfig(
-      key: 'companyName',
-      label: 'COMPANY',
-      width: 160,
-      align: ColumnAlign.center,
-    ),
-    ErpColumnConfig(
-      key: 'colors',
-      label: 'COLOR',
-      width: 200,
-      align: ColumnAlign.center,
-    ),
-    ErpColumnConfig(
-      key: 'purities',
-      label: 'PURITY',
-      width: 200,
-      align: ColumnAlign.center,
-    ),
-    ErpColumnConfig(
-      key: 'sortID',
-      label: 'SORT ID',
-      width: 150,
-      align: ColumnAlign.center,
-    ),
-    ErpColumnConfig(
-      key: 'active',
-      label: 'ACTIVE',
-      width: 150,
-      align: ColumnAlign.center,
-    ),
+    ErpColumnConfig(key: 'articalName', label: 'ARTICLE', width: 160),
+    ErpColumnConfig(key: 'shapeName', label: 'SHAPE', width: 160),
+    ErpColumnConfig(key: 'layoutName', label: 'LAYOUT NAME', width: 200),
   ];
 
   // Form fields
@@ -122,15 +88,55 @@ class _MstSellPriceState extends State<MstSellPrice> {
           key: 'articleCode',
           label: 'ARTICLE',
           type: ErpFieldType.dropdown,
+          readOnly: _entryGridRows.isNotEmpty,
           dropdownItems: articleProvider.list
               .where((e) => e.active == true)
               .map(
                 (e) => ErpDropdownItem(
-              label: e.articalName ?? '',
-              value: e.articalCode?.toString() ?? '',
-            ),
-          )
+                  label: e.articalName ?? '',
+                  value: e.articalCode?.toString() ?? '',
+                ),
+              )
               .toList(),
+          sectionIndex: 0,
+        ),
+        ErpFieldConfig(
+          key: 'colorCode',
+          label: 'COLOR',
+          readOnly: _entryGridRows.isNotEmpty,
+          type: ErpFieldType.multiselectDropdown,
+          dropdownItems: colorProv.list
+              .where((e) => e.active == true)
+              .map(
+                (e) => ErpDropdownItem(
+                  label: e.colorName ?? '',
+                  value: e.colorCode?.toString() ?? '',
+                ),
+              )
+              .toList(),
+          sectionIndex: 0,
+        ),
+        ErpFieldConfig(
+          key: 'purityCode',
+          label: 'PURITY',
+          readOnly: _entryGridRows.isNotEmpty,
+          type: ErpFieldType.multiselectDropdown,
+          dropdownItems: purityProv.list
+              .where((e) => e.active == true)
+              .map(
+                (e) => ErpDropdownItem(
+                  label: e.purityName ?? '',
+                  value: e.purityCode?.toString() ?? '',
+                ),
+              )
+              .toList(),
+          sectionIndex: 0,
+        ),
+        ErpFieldConfig(
+          key: 'layoutName',
+          label: 'LAYOUT NAME',
+          type: ErpFieldType.text,
+          readOnly: true,
           sectionIndex: 0,
         ),
         ErpFieldConfig(
@@ -138,51 +144,16 @@ class _MstSellPriceState extends State<MstSellPrice> {
           label: 'SHAPE',
           type: ErpFieldType.dropdown,
           sectionIndex: 0,
+          readOnly: _entryGridRows.isNotEmpty,
           dropdownItems: shapeProvider.list
               .where((e) => e.active == true)
               .map(
                 (e) => ErpDropdownItem(
-              label: e.shapeName ?? '',
-              value: e.shapeCode?.toString() ?? '',
-            ),
-          )
+                  label: e.shapeName ?? '',
+                  value: e.shapeCode?.toString() ?? '',
+                ),
+              )
               .toList(),
-        ),
-        ErpFieldConfig(
-          key: 'colorCode',
-          label: 'COLOR',
-          type: ErpFieldType.multiselectDropdown,
-          dropdownItems: colorProv.list
-              .where((e) => e.active == true)
-              .map(
-                (e) => ErpDropdownItem(
-              label: e.colorName ?? '',
-              value: e.colorCode?.toString() ?? '',
-            ),
-          )
-              .toList(),
-          sectionIndex: 0,
-        ),
-        ErpFieldConfig(
-          key: 'purityCode',
-          label: 'PURITY',
-          type: ErpFieldType.multiselectDropdown,
-          dropdownItems: purityProv.list
-              .where((e) => e.active == true)
-              .map(
-                (e) => ErpDropdownItem(
-              label: e.purityName ?? '',
-              value: e.purityCode?.toString() ?? '',
-            ),
-          )
-              .toList(),
-          sectionIndex: 0,
-        ),
-        ErpFieldConfig(
-          key: 'rate',
-          label: 'RATE',
-          type: ErpFieldType.amount,
-          sectionIndex: 0,
         ),
       ],
       [
@@ -208,28 +179,40 @@ class _MstSellPriceState extends State<MstSellPrice> {
           flex: 1,
         ),
         ErpFieldConfig(
+          key: 'rate',
+          label: 'PRICE',
+          type: ErpFieldType.amount,
+          sectionIndex: 0,
+        ),
+        ErpFieldConfig(
           key: 'code',
           label: 'CODE',
           type: ErpFieldType.text,
           sectionIndex: 1,
           flex: 1,
         ),
+      ],
+      [
+        ErpFieldConfig(
+          key: 'active',
+          label: 'ACTIVE',
+          type: ErpFieldType.checkbox,
+          checkboxDbType: 'BIT',
+          skipFocus: true,
+          sectionIndex: 2,
+          initialBoolValue: true,
+          width: 160,
+        ),
         ErpFieldConfig(
           key: 'sortID',
           label: 'SORT ID',
           type: ErpFieldType.number,
-          sectionIndex: 1,
-        ),
-      ],
-      [
-        ErpFieldConfig(
-            key: 'active',
-            label: 'ACTIVE',
-            type: ErpFieldType.checkbox,
-            checkboxDbType: 'BIT',
-            sectionIndex: 2,
-            initialBoolValue: true,
-            width: 160
+          sectionIndex: 2,
+          width: 160,
+          readOnly: true,
+          showAddButton: true,
+           isEntryRequired: true,
+          isEntryField: true
         ),
       ],
     ];
@@ -246,6 +229,7 @@ class _MstSellPriceState extends State<MstSellPrice> {
         context.read<ArticleProvider>().load(),
         context.read<ShapeProvider>().load(),
       ]);
+      _setDefaultSortId();
     });
   }
 
@@ -268,6 +252,12 @@ class _MstSellPriceState extends State<MstSellPrice> {
         'active': raw.active == true ? 'true' : 'false',
         'colorCode': raw.colorCodes.join(','),
         'purityCode': raw.purityCodes.join(','),
+        'layOutName': raw.layoutName,
+        'mm':
+            raw.mm ??
+            (raw.length != null && raw.width != null && raw.height != null
+                ? '${raw.length?.toDouble()}*${raw.width?.toDouble()}*${raw.height?.toDouble()}'
+                : ''),
       };
     });
 
@@ -292,45 +282,300 @@ class _MstSellPriceState extends State<MstSellPrice> {
     if (articleCode == null || shapeCode == null) return;
 
     final article = articleProvider.list.firstWhere(
-          (e) => e.articalCode.toString() == articleCode,
+      (e) => e.articalCode.toString() == articleCode,
       orElse: () => throw Exception(),
     );
 
     final shape = shapeProvider.list.firstWhere(
-          (e) => e.shapeCode.toString() == shapeCode,
+      (e) => e.shapeCode.toString() == shapeCode,
       orElse: () => throw Exception(),
     );
 
     // First letter from Article
-    final articleLetter =
-    (article.articalName?.isNotEmpty ?? false)
+    final articleLetter = (article.articalName?.isNotEmpty ?? false)
         ? article.articalName![0].toUpperCase()
         : '';
 
     // First 2 letters from Shape
-    final shapeLetters =
-    (shape.shapeName?.length ?? 0) >= 2
+    final shapeLetters = (shape.shapeName?.length ?? 0) >= 2
         ? shape.shapeName!.substring(0, 2).toUpperCase()
         : (shape.shapeName ?? '').toUpperCase();
 
-    final length =
-        double.tryParse(_formValues['length'] ?? '') ?? 0;
+    final length = double.tryParse(_formValues['length'] ?? '') ?? 0;
 
-    final width =
-        double.tryParse(_formValues['diam'] ?? '') ?? 0;
+    final width = double.tryParse(_formValues['diam'] ?? '') ?? 0;
 
     final lengthPart = getTwoDigitValue(length);
     final widthPart = getTwoDigitValue(width);
 
-    final code =
-        '$articleLetter$shapeLetters$lengthPart$widthPart';
+    final code = '$articleLetter$shapeLetters$lengthPart$widthPart';
 
     _formValues['code'] = code;
 
-    _erpFormKey.currentState?.updateFieldValue(
-      'code',
-      code,
+    _erpFormKey.currentState?.updateFieldValue('code', code);
+  }
+
+  String _formatMmToDecimal(String val) {
+    if (val.isEmpty) return '';
+    final parts = val.split('*');
+    final formattedParts = <String>[];
+    for (final part in parts) {
+      final numValue = double.tryParse(part.trim()) ?? 0.0;
+      formattedParts.add(numValue.toStringAsFixed(2));
+    }
+    return formattedParts.join('*');
+  }
+
+  void _generateLayoutName() {
+    final articleProvider = context.read<ArticleProvider>();
+    final colorProv = context.read<ColorProvider>();
+    final purityProv = context.read<PurityProvider>();
+
+    final articleCode = _formValues['articleCode'];
+    final colorCodesStr = _formValues['colorCode'] ?? '';
+    final purityCodesStr = _formValues['purityCode'] ?? '';
+
+    String articleName = '';
+    if (articleCode != null && articleCode.isNotEmpty) {
+      for (final item in articleProvider.list) {
+        if (item.articalCode?.toString() == articleCode) {
+          articleName = item.articalName ?? '';
+          break;
+        }
+      }
+    }
+
+    String colorsStr = '';
+    if (colorCodesStr.isNotEmpty) {
+      final ids = colorCodesStr.split(',').where((e) => e.isNotEmpty);
+      final names = <String>[];
+      for (final id in ids) {
+        for (final item in colorProv.list) {
+          if (item.colorCode?.toString() == id) {
+            names.add(item.colorName ?? '');
+            break;
+          }
+        }
+      }
+      colorsStr = names.join('/');
+    }
+
+    String puritiesStr = '';
+    if (purityCodesStr.isNotEmpty) {
+      final ids = purityCodesStr.split(',').where((e) => e.isNotEmpty);
+      final names = <String>[];
+      for (final id in ids) {
+        for (final item in purityProv.list) {
+          if (item.purityCode?.toString() == id) {
+            names.add(item.purityName ?? '');
+            break;
+          }
+        }
+      }
+      puritiesStr = names.join('/');
+    }
+
+    final layOutName = '$articleName $colorsStr - $puritiesStr';
+    _formValues['layoutName'] = layOutName;
+    _erpFormKey.currentState?.updateFieldValue('layoutName', layOutName);
+  }
+
+  void _addEntry() {
+    final articleProvider = context.read<ArticleProvider>();
+    final shapeProvider = context.read<ShapeProvider>();
+    final colorProv = context.read<ColorProvider>();
+    final purityProv = context.read<PurityProvider>();
+
+    final articleCode = _formValues['articleCode'];
+    final shapeCode = _formValues['shapeCode'];
+    final colorCodesStr = _formValues['colorCode'] ?? '';
+    final purityCodesStr = _formValues['purityCode'] ?? '';
+    final code = _formValues['code'] ?? '';
+    final rateStr = _formValues['rate'] ?? '';
+    final lengthStr = _formValues['length'] ?? '';
+    final diamStr = _formValues['diam'] ?? '';
+    final heightStr = _formValues['height'] ?? '';
+    final sortIDStr = _formValues['sortID'] ?? '';
+    final activeStr = _formValues['active'] ?? 'true';
+    final mmStr = _formValues['mm'] ?? '';
+
+    if (articleCode == null || articleCode.isEmpty) {
+      _showSnack('Please select an Article');
+      return;
+    }
+    if (shapeCode == null || shapeCode.isEmpty) {
+      _showSnack('Please select a Shape');
+      return;
+    }
+    if (colorCodesStr.isEmpty) {
+      _showSnack('Please select at least one Color');
+      return;
+    }
+    if (purityCodesStr.isEmpty) {
+      _showSnack('Please select at least one Purity');
+      return;
+    }
+    final rate = double.tryParse(rateStr) ?? 0;
+    if (rate <= 0) {
+      _showSnack('Rate must be greater than 0');
+      return;
+    }
+
+    String articleName = '';
+    for (final item in articleProvider.list) {
+      if (item.articalCode?.toString() == articleCode) {
+        articleName = item.articalName ?? '';
+        break;
+      }
+    }
+
+    String shapeName = '';
+    for (final item in shapeProvider.list) {
+      if (item.shapeCode?.toString() == shapeCode) {
+        shapeName = item.shapeName ?? '';
+        break;
+      }
+    }
+
+    String colorsStr = '';
+    final colorIds = colorCodesStr
+        .split(',')
+        .where((e) => e.isNotEmpty)
+        .toList();
+    final colorNames = <String>[];
+    for (final id in colorIds) {
+      for (final item in colorProv.list) {
+        if (item.colorCode?.toString() == id) {
+          colorNames.add(item.colorName ?? '');
+          break;
+        }
+      }
+    }
+    colorsStr = colorNames.join('/');
+
+    String puritiesStr = '';
+    final purityIds = purityCodesStr
+        .split(',')
+        .where((e) => e.isNotEmpty)
+        .toList();
+    final purityNames = <String>[];
+    for (final id in purityIds) {
+      for (final item in purityProv.list) {
+        if (item.purityCode?.toString() == id) {
+          purityNames.add(item.purityName ?? '');
+          break;
+        }
+      }
+    }
+    puritiesStr = purityNames.join('/');
+
+    final layOutName = '$articleName $colorsStr - $puritiesStr';
+    final computedMm = _formatMmToDecimal(
+      mmStr.isNotEmpty
+          ? mmStr
+          : (lengthStr.isNotEmpty && diamStr.isNotEmpty && heightStr.isNotEmpty
+              ? '$lengthStr*$diamStr*$heightStr'
+              : ''),
     );
+
+    final newRow = {
+      'article': articleName,
+      'color': colorsStr,
+      'purity': puritiesStr,
+      'layoutName': layOutName,
+      'shape': shapeName,
+      'mm': computedMm,
+      'length': lengthStr,
+      'diam': diamStr,
+      'height': heightStr,
+      'rate': rateStr,
+      'code': code,
+      'sortID': sortIDStr,
+      'active': activeStr == 'true' ? 'Yes' : 'No',
+
+      '_articleCode': articleCode,
+      '_shapeCode': shapeCode,
+      '_colorCodes': colorIds.map(int.parse).toList(),
+      '_purityCodes': purityIds.map(int.parse).toList(),
+      '_length': double.tryParse(lengthStr) ?? 0,
+      '_diam': double.tryParse(diamStr) ?? 0,
+      '_height': double.tryParse(heightStr) ?? 0,
+      '_rate': rate,
+      '_sortID': int.tryParse(sortIDStr) ?? 0,
+      '_active': activeStr == 'true' || activeStr == '1',
+      '_mm': computedMm,
+    };
+
+    setState(() {
+      if (_editingGridIndex != null) {
+        _entryGridRows[_editingGridIndex!] = newRow;
+        _editingGridIndex = null;
+      } else {
+        _entryGridRows.add(newRow);
+      }
+
+      // Reset entry fields for next addition
+      _formValues['mm'] = '';
+      _formValues['length'] = '';
+      _formValues['diam'] = '';
+      _formValues['height'] = '';
+      _formValues['rate'] = '';
+      _formValues['code'] = '';
+    });
+
+    _erpFormKey.currentState?.updateFieldValue('mm', '');
+    _erpFormKey.currentState?.updateFieldValue('length', '');
+    _erpFormKey.currentState?.updateFieldValue('diam', '');
+    _erpFormKey.currentState?.updateFieldValue('height', '');
+    _erpFormKey.currentState?.updateFieldValue('rate', '');
+    _erpFormKey.currentState?.updateFieldValue('code', '');
+
+    _setDefaultSortId();
+
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.focusField('length');
+    });
+  }
+
+  void _deleteGridRow(int index) {
+    setState(() {
+      _entryGridRows.removeAt(index);
+      if (_editingGridIndex == index) {
+        _editingGridIndex = null;
+      }
+    });
+  }
+
+  void _editGridRow(int index) {
+    final row = _entryGridRows[index];
+    setState(() {
+      _editingGridIndex = index;
+      _formValues['articleCode'] = row['_articleCode']?.toString() ?? '';
+      _formValues['shapeCode'] = row['_shapeCode']?.toString() ?? '';
+      _formValues['colorCode'] = (row['_colorCodes'] as List).join(',');
+      _formValues['purityCode'] = (row['_purityCodes'] as List).join(',');
+      _formValues['layOutName'] = row['layoutName'] ?? '';
+      _formValues['mm'] = row['_mm'] ?? row['mm'] ?? '';
+      _formValues['length'] = row['length'] ?? '';
+      _formValues['diam'] = row['diam'] ?? '';
+      _formValues['height'] = row['height'] ?? '';
+      _formValues['rate'] = row['rate'] ?? '';
+      _formValues['code'] = row['code'] ?? '';
+      _formValues['sortID'] = row['sortID'] ?? '';
+      _formValues['active'] = row['_active'] == true ? 'true' : 'false';
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      for (final entry in _formValues.entries) {
+        _erpFormKey.currentState?.updateFieldValue(entry.key, entry.value);
+      }
+    });
+  }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   String getTwoDigitValue(double value) {
@@ -342,81 +587,119 @@ class _MstSellPriceState extends State<MstSellPrice> {
   Future<void> _onSave(Map<String, dynamic> values) async {
     final provider = context.read<SellPriceProvider>();
 
-    final payload = {
-      "SellCode": values['code']?.toString() ?? '',
-
-      "ArticalCode":
-      int.tryParse(values['articleCode']?.toString() ?? '') ?? 0,
-
-      "ShapeCode": int.tryParse(values['shapeCode']?.toString() ?? '') ?? 0,
-
-      "Length": double.tryParse(values['length']?.toString() ?? '') ?? 0,
-
-      "Width": double.tryParse(values['diam']?.toString() ?? '') ?? 0,
-
-      "Height": double.tryParse(values['height']?.toString() ?? '') ?? 0,
-
-      "Rate": double.tryParse(values['rate']?.toString() ?? '') ?? 0,
-
-      "CompanyCode": context.read<CompanyProvider>().selectedCompanyCode ?? 0,
-
-      "SortID": int.tryParse(values['sortID']?.toString() ?? '') ?? 0,
-
-      "Active":
-      values['active'] == 'true' ||
-          values['active'] == true ||
-          values['active'] == '1'
-          ? 1
-          : 0,
-
-      "colors": (_formValues['colorCode'] ?? '')
-          .split(',')
-          .where((e) => e.isNotEmpty)
-          .map(int.parse)
-          .toList(),
-
-      "purities": (_formValues['purityCode'] ?? '')
-          .split(',')
-          .where((e) => e.isNotEmpty)
-          .map(int.parse)
-          .toList(),
-    };
-
-    bool success = false;
-
     if (_isEditMode && _selectedRow != null) {
       final raw = _selectedRow!['_raw'] as SellPriceModel;
+      final payload = {
+        "SellCode": values['code']?.toString() ?? '',
+        "ArticalCode":
+            int.tryParse(values['articleCode']?.toString() ?? '') ?? 0,
+        "ShapeCode": int.tryParse(values['shapeCode']?.toString() ?? '') ?? 0,
+        "Length": double.tryParse(values['length']?.toString() ?? '') ?? 0,
+        "Width": double.tryParse(values['diam']?.toString() ?? '') ?? 0,
+        "Height": double.tryParse(values['height']?.toString() ?? '') ?? 0,
+        "Rate": double.tryParse(values['rate']?.toString() ?? '') ?? 0,
+        "CompanyCode": context.read<CompanyProvider>().selectedCompanyCode ?? 0,
+        "SortID": int.tryParse(values['sortID']?.toString() ?? '') ?? 0,
+        "Active":
+            values['active'] == 'true' ||
+                values['active'] == true ||
+                values['active'] == '1'
+            ? 1
+            : 0,
+        "LayoutName": values['layoutName']?.toString() ?? '',
+        "MM": values['mm']?.toString() ?? '',
+        "colors": (_formValues['colorCode'] ?? '')
+            .split(',')
+            .where((e) => e.isNotEmpty)
+            .map(int.parse)
+            .toList(),
+        "purities": (_formValues['purityCode'] ?? '')
+            .split(',')
+            .where((e) => e.isNotEmpty)
+            .map(int.parse)
+            .toList(),
+      };
 
-      success = await provider.updateSellPrice(
+      final success = await provider.updateSellPrice(
         raw.sellPriceListMstID!,
         payload,
       );
+      if (!mounted) return;
+      if (success) {
+        _resetForm();
+        await ErpResultDialog.showSuccess(
+          context: context,
+          theme: context.erpTheme,
+          title: 'Updated',
+          message: 'Sell Price updated successfully.',
+        );
+      } else {
+        await ErpResultDialog.showError(
+          context: context,
+          theme: context.erpTheme,
+          title: 'Error',
+          message: 'Failed to update Sell Price.',
+        );
+      }
     } else {
-      success = await provider.createSellPrice(payload);
-    }
+      if (_entryGridRows.isEmpty) {
+        _showSnack('Entry grid is empty. Please add items to the grid first.');
+        return;
+      }
 
-    if (!mounted) return;
+      int successCount = 0;
+      for (final row in _entryGridRows) {
+        final payload = {
+          "SellCode": row['code']?.toString() ?? '',
+          "ArticalCode":
+              int.tryParse(row['_articleCode']?.toString() ?? '') ?? 0,
+          "ShapeCode": int.tryParse(row['_shapeCode']?.toString() ?? '') ?? 0,
+          "Length": row['_length'] as double,
+          "Width": row['_diam'] as double,
+          "Height": row['_height'] as double,
+          "Rate": row['_rate'] as double,
+          "CompanyCode":
+              context.read<CompanyProvider>().selectedCompanyCode ?? 0,
+          "SortID": row['_sortID'] as int,
+          "Active": row['_active'] == true ? 1 : 0,
+          "LayoutName": row['layoutName']?.toString() ?? '',
+          "MM": row['_mm']?.toString() ?? '',
+          "colors": row['_colorCodes'] as List<int>,
+          "purities": row['_purityCodes'] as List<int>,
+        };
 
-    if (success) {
-      _resetForm();
+        final success = await provider.createSellPrice(payload);
+        if (success) {
+          successCount++;
+        }
+      }
 
-      await ErpResultDialog.showSuccess(
-        context: context,
-        theme: context.erpTheme,
-        title: _isEditMode ? 'Updated' : 'Saved',
-        message: _isEditMode
-            ? 'Sell Price updated successfully.'
-            : 'Sell Price saved successfully.',
-      );
-    } else {
-      await ErpResultDialog.showError(
-        context: context,
-        theme: context.erpTheme,
-        title: 'Error',
-        message: _isEditMode
-            ? 'Failed to update Sell Price.'
-            : 'Failed to save Sell Price.',
-      );
+      if (!mounted) return;
+      if (successCount == _entryGridRows.length) {
+        setState(() {
+          _entryGridRows.clear();
+        });
+        _resetForm();
+        await ErpResultDialog.showSuccess(
+          context: context,
+          theme: context.erpTheme,
+          title: 'Saved',
+          message: 'All $successCount items saved successfully.',
+        );
+      } else {
+        setState(() {
+          if (successCount > 0) {
+            _entryGridRows.removeRange(0, successCount);
+          }
+        });
+        await ErpResultDialog.showError(
+          context: context,
+          theme: context.erpTheme,
+          title: 'Partial Save',
+          message:
+              'Saved $successCount out of ${_entryGridRows.length + successCount} items.',
+        );
+      }
     }
   }
 
@@ -434,9 +717,9 @@ class _MstSellPriceState extends State<MstSellPrice> {
 
     if (confirm != true || !mounted) return;
 
-    final success = await context
-        .read<SellPriceProvider>()
-        .deleteSellPrice(raw.sellPriceListMstID!);
+    final success = await context.read<SellPriceProvider>().deleteSellPrice(
+      raw.sellPriceListMstID!,
+    );
 
     if (success && mounted) {
       await ErpResultDialog.showDeleted(
@@ -455,10 +738,40 @@ class _MstSellPriceState extends State<MstSellPrice> {
       _isEditMode = false;
       _formValues = {};
       _showTableOnMobile = false;
+      _entryGridRows.clear();
+      _editingGridIndex = null;
     });
     _erpFormKey.currentState?.resetForm();
-    _formValues['active'] = 'true';
-    _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    _setDefaultSortId();
+  }
+
+  void _setDefaultSortId() {
+    final provider = context.read<SellPriceProvider>();
+
+    int nextSortId = 1;
+    if (provider.list.isNotEmpty) {
+      nextSortId = provider.list
+          .map((e) => e.sortID ?? 0)
+          .reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    for (final row in _entryGridRows) {
+      final gridSortVal = int.tryParse(row['sortID']?.toString() ?? '') ?? 0;
+      if (gridSortVal >= nextSortId) {
+        nextSortId = gridSortVal + 1;
+      }
+    }
+
+    final value = nextSortId.toString();
+
+    setState(() {
+      _formValues['sortID'] = value;
+      _formValues['active'] = 'true';
+    });
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _erpFormKey.currentState?.updateFieldValue('sortID', value);
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
   }
 
   bool _showTableOnMobile = false;
@@ -471,55 +784,138 @@ class _MstSellPriceState extends State<MstSellPrice> {
           padding: const EdgeInsets.all(8),
           child: Responsive.isMobile(context)
               ? _showTableOnMobile
-              ? buildErpDataTable(provider)
-              : ErpForm(
-            logo: AppImages.logo,
-            key: _erpFormKey,
-            title: 'SELL PRICE MASTER',
-            subtitle: 'Sell Price configuration',
-            initialTabIndex: 0,
-            onSearch: () =>
-                setState(() => _showTableOnMobile = true),
-            tabBarBackgroundColor: const Color(0xfff2f0ef),
-            tabBarSelectedColor:
-            context.erpTheme.primaryGradient.first,
-            tabBarSelectedTxtColor: Colors.white,
-            rows: _buildFormRows(),
-            initialValues: _formValues,
-            isEditMode: _isEditMode,
-            onFieldChanged: _onFieldChanged,
-            onSave: _onSave,
-            onCancel: _resetForm,
-            onDelete: _isEditMode ? _onDelete : null,
-          )
+                    ? buildErpDataTable(provider)
+                    : ErpForm(
+                        logo: AppImages.logo,
+                        key: _erpFormKey,
+                        title: 'SELL PRICE MASTER',
+                        subtitle: 'Sell Price configuration',
+                        initialTabIndex: 0,
+                        addButtonSections: const {2},
+                        onFieldSubmitted: (value, key) {
+                          if (key == 'code') {
+                            _addEntry();
+                          }
+                        },
+                        onEntryAdd: (sectionIndex) {
+                          if (sectionIndex == 2) {
+                            _addEntry();
+                          }
+                        },
+
+                        onSearch: () =>
+                            setState(() => _showTableOnMobile = true),
+                        tabBarBackgroundColor: const Color(0xfff2f0ef),
+                        tabBarSelectedColor:
+                            context.erpTheme.primaryGradient.first,
+                        tabBarSelectedTxtColor: Colors.white,
+                        rows: _buildFormRows(),
+                        initialValues: _formValues,
+                        isEditMode: _isEditMode,
+                        onFieldChanged: _onFieldChanged,
+                        onSave: _onSave,
+                        onCancel: _resetForm,
+                        onDelete: _isEditMode ? _onDelete : null,
+                        detailBuilder: (ctx) {
+                          if (_entryGridRows.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: 12),
+                              ErpEntryGrid(
+                                data: _entryGridRows,
+                                columns: _gridColumns,
+                                title: '',
+                                showTitleBar: false,
+                                theme: ctx.erpTheme,
+                                onDeleteRow: _deleteGridRow,
+                                onEditRow: _editGridRow,
+                                editingIndex: _editingGridIndex,
+                                columnLabels: _gridColumnLabels,
+                                allowCheckBoxOnTable: false,
+                                columnWidths: {
+                                  'layoutName': 160,
+                                  'purity': 80,
+                                  'shape': 150,
+                                  'sortID': 40,
+                                  'mm':110
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      )
               : Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 2,
-                child: ErpForm(
-                  logo: AppImages.logo,
-                  key: _erpFormKey,
-                  title: 'SELL PRICE MASTER',
-                  subtitle: 'Sell Price configuration',
-                  initialTabIndex: 0,
-                  tabBarBackgroundColor: const Color(0xfff2f0ef),
-                  tabBarSelectedColor:
-                  context.erpTheme.primaryGradient.first,
-                  tabBarSelectedTxtColor: Colors.white,
-                  rows: _buildFormRows(),
-                  initialValues: _formValues,
-                  isEditMode: _isEditMode,
-                  onFieldChanged: _onFieldChanged,
-                  onSave: _onSave,
-                  onCancel: _resetForm,
-                  onDelete: _isEditMode ? _onDelete : null,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: ErpForm(
+                        logo: AppImages.logo,
+                        key: _erpFormKey,
+                        title: 'SELL PRICE MASTER',
+                        subtitle: 'Sell Price configuration',
+                        initialTabIndex: 0,
+                        addButtonSections: const {2},
+                        onEntryAdd: (sectionIndex) {
+                          if (sectionIndex == 2) {
+                            _addEntry();
+                          }
+                        },
+                        onFieldSubmitted: (value, key) {
+                          if (key == 'code') {
+                            _addEntry();
+                          }
+                        },
+                        tabBarBackgroundColor: const Color(0xfff2f0ef),
+                        tabBarSelectedColor:
+                            context.erpTheme.primaryGradient.first,
+                        tabBarSelectedTxtColor: Colors.white,
+                        rows: _buildFormRows(),
+                        initialValues: _formValues,
+                        isEditMode: _isEditMode,
+                        onFieldChanged: _onFieldChanged,
+                        onSave: _onSave,
+                        onCancel: _resetForm,
+                        onDelete: _isEditMode ? _onDelete : null,
+                        detailBuilder: (ctx) {
+                          if (_entryGridRows.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: 12),
+                              ErpEntryGrid(
+                                data: _entryGridRows,
+                                columns: _gridColumns,
+                                title: '',
+                                showTitleBar: false,
+                                theme: ctx.erpTheme,
+                                onDeleteRow: _deleteGridRow,
+                                onEditRow: _editGridRow,
+                                editingIndex: _editingGridIndex,
+                                columnLabels: _gridColumnLabels,
+                                columnWidths: {
+                                  'layoutName': 160,
+                                  'purity': 80,
+                                  'shape': 150,
+                                  'sortID': 40,
+                                  'mm':110
+                                },
+                                allowCheckBoxOnTable: false,
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(flex: 1, child: buildErpDataTable(provider)),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(flex: 2, child: buildErpDataTable(provider)),
-            ],
-          ),
         );
       },
     );
@@ -532,25 +928,46 @@ class _MstSellPriceState extends State<MstSellPrice> {
       _formValues[key] = value?.toString() ?? '';
     }
 
-    if ([
-      'articleCode',
-      'shapeCode',
-      'length',
-      'diam',
-    ].contains(key)) {
+    if (key == 'mm') {
+      final val = value?.toString() ?? '';
+      if (val.isNotEmpty) {
+        final parts = val.split('*');
+        if (parts.length >= 3) {
+          final len = parts[0].trim();
+          final dia = parts[1].trim();
+          final hei = parts[2].trim();
+
+          _formValues['length'] = len;
+          _formValues['diam'] = dia;
+          _formValues['height'] = hei;
+
+          _erpFormKey.currentState?.updateFieldValue('length', len);
+          _erpFormKey.currentState?.updateFieldValue('diam', dia);
+          _erpFormKey.currentState?.updateFieldValue('height', hei);
+
+          _generateCode();
+        }
+      }
+    }
+
+    if (['articleCode', 'shapeCode', 'length', 'diam'].contains(key)) {
       _generateCode();
+    }
+
+    if (['articleCode', 'colorCode', 'purityCode'].contains(key)) {
+      _generateLayoutName();
     }
 
     // Auto-advance focus through the form in entry order.
     if (key == 'articleCode') {
       Future.delayed(const Duration(milliseconds: 50), () {
-        _erpFormKey.currentState?.focusField('shapeCode');
+        _erpFormKey.currentState?.focusField('colorCode');
       });
     }
 
     if (key == 'shapeCode') {
       Future.delayed(const Duration(milliseconds: 50), () {
-        _erpFormKey.currentState?.focusField('colorCode');
+        _erpFormKey.currentState?.focusField('length');
       });
     }
   }

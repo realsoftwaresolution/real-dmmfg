@@ -14,6 +14,14 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Roboto',
         useMaterial3: true,
       ),
+      actions: <Type, Action<Intent>>{
+        DismissIntent: CallbackAction<DismissIntent>(
+          onInvoke: (intent) {
+            FocusManager.instance.primaryFocus?.unfocus();
+            return null;
+          },
+        ),
+      },
       home: const LoginScreenV7(),
     );
   }
