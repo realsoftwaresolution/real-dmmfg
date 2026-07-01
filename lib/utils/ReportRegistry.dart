@@ -3486,6 +3486,20 @@ class ReportRegistry {
       },
     ),
 
+    // ── SELL_PRICE ─────────────────────────────────────────────────────── 61
+    'SELL_PRICE': ReportConfig(
+      reportTypeCode: 'SELL_PRICE',
+      endpoint: '/reports/sell-price-report',
+      isPdf: true, // 🔥 ADD THIS
+      columns: const [],
+      mapper: (raw) => [],
+      queryBuilder: (filter) => {
+        'kapanNos': filter['kNo'],
+        'shapecodes': filter['shapeCode'],
+        'colors': filter['colorCode'],
+        'purities': filter['purityCode'],
+      },
+    ),
   };
 
   static ReportConfig? of(String? code) => code == null ? null : _configs[code];

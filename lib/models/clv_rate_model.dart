@@ -1,6 +1,4 @@
 // lib/models/clv_rate_model.dart
-import '../utils/helper_functions.dart';
-
 class ClvRateModel {
   final int? clvRateMstID;
   final int? clvRateCode;
@@ -139,7 +137,7 @@ class ClvRateModel {
       'shapeName': shapeName ?? '',
       'type': type ?? '',
       'rateOn': rateOn ?? '',
-      'rateSizeOn': rateSizeOn.toString().trim() ?? '',
+      'rateSizeOn': rateSizeOn.toString().trim(),
       'fromWt': fromWt != null ? fromWt!.toStringAsFixed(3) : '',
       'toWt': toWt != null ? toWt!.toStringAsFixed(3) : '',
       'rate': rate != null ? rate!.toStringAsFixed(2) : '',

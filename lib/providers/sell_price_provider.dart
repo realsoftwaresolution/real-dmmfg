@@ -30,6 +30,19 @@ class SellPriceProvider extends BaseProvider {
     }
   }
 
+  Future<List<SellPriceModel>?> loadSellPriceDetail(id) async {
+    final result = await request<List<SellPriceModel>>(
+      showLoader: true,
+      call: () => api.get('/sell-price-list/$id/details'),
+      onSuccess: (res) {
+        final list = res.data['data'] as List;
+        return list.map((e) => SellPriceModel.fromJson(e)).toList();
+      },
+    );
+
+    return result;
+  }
+
   // ── CREATE ───────────────────────────────────────────────────────────────
   Future<bool> createSellPrice(Map<String, dynamic> formValues) async {
     final result = await request(

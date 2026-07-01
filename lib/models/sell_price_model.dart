@@ -1,3 +1,5 @@
+import 'package:diam_mfg/utils/constants.dart';
+
 class SellPriceModel {
   final int? sellPriceListMstID;
   final String? sellCode;
@@ -56,33 +58,33 @@ class SellPriceModel {
 
   factory SellPriceModel.fromJson(Map<String, dynamic> json) {
     return SellPriceModel(
-      sellPriceListMstID: json['SellPriceListMstID'] as int?,
-      sellCode: json['SellCode'] as String?,
-      articalCode: json['ArticalCode'] as int?,
-      articalName: json['ArticalName'] as String?,
-      shapeCode: json['ShapeCode'] as int?,
-      shapeName: json['ShapeName'] as String?,
-      length: _toDouble(json['Length']),
-      width: _toDouble(json['Width']),
-      height: _toDouble(json['Height']),
-      rate: _toDouble(json['Rate']),
-      sdate: json['Sdate'] != null
-          ? DateTime.tryParse(json['Sdate'].toString())
+      sellPriceListMstID: (json['SellPriceListMstID'] ?? json['sellPriceListMstID'] ?? json['sellPriceListDetID'] ?? json['SellPriceListDetID']) as int?,
+      sellCode: (json['SellCode'] ?? json['sellCode']) as String?,
+      articalCode: (json['ArticalCode'] ?? json['articalCode']) as int?,
+      articalName: (json['ArticalName'] ?? json['articalName']) as String?,
+      shapeCode: (json['ShapeCode'] ?? json['shapeCode']) as int?,
+      shapeName: (json['ShapeName'] ?? json['shapeName']) as String?,
+      length: _toDouble(json['Length'] ?? json['length']),
+      width: _toDouble(json['Width'] ?? json['width']),
+      height: _toDouble(json['Height'] ?? json['height']),
+      rate: _toDouble(json['Rate'] ?? json['rate']),
+      sdate: json['Sdate'] != null || json['sdate'] != null
+          ? DateTime.tryParse((json['Sdate'] ?? json['sdate']).toString())
           : null,
-      companyCode: json['CompanyCode'] as int?,
-      companyName: json['CompanyName'] as String?,
-      sortID: json['SortID'] as int?,
-      active: json['Active'] == 1 || json['Active'] == true,
+      companyCode: (json['CompanyCode'] ?? json['companyCode']) as int?,
+      companyName: (json['CompanyName'] ?? json['companyName']) as String?,
+      sortID: (json['SortID'] ?? json['sortID']) as int?,
+      active: json['Active'] == 1 || json['Active'] == true || json['active'] == 1 || json['active'] == true,
       colorCodes: (json['colorCodes'] as List<dynamic>? ?? [])
           .map((e) => int.tryParse(e.toString()) ?? 0)
           .toList(),
-      colors: json['colors'] as String?,
+      colors: (json['colors'] ?? json['Colors']) as String?,
       purityCodes: (json['purityCodes'] as List<dynamic>? ?? [])
           .map((e) => int.tryParse(e.toString()) ?? 0)
           .toList(),
-      purities: json['purities'] as String?,
-      layoutNameField: json['LayoutName'] as String?,
-      mm: json['MM'] as String?,
+      purities: (json['purities'] ?? json['Purities']) as String?,
+      layoutNameField: (json['LayoutName'] ?? json['layoutname'] ?? json['layoutName']) as String?,
+      mm: (json['MM'] ?? json['mm']) as String?,
     );
   }
 
@@ -144,7 +146,7 @@ class SellPriceModel {
       'layoutName': layoutName,
       'sortID': sortID?.toString() ?? '',
       'active': active == true ? 'Yes' : 'No',
-      'sdate': _fmtDate(sdate),
+      'sdate': formatDisplayDate(sdate),
       '_raw': this,
     };
   }

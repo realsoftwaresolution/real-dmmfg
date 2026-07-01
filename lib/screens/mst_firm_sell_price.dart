@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:diam_mfg/models/sell_price_model.dart';
 import 'package:diam_mfg/providers/article_provider.dart';
 import 'package:diam_mfg/providers/color_provider.dart';
@@ -71,7 +73,7 @@ class _MstSellPriceState extends State<MstSellPrice> {
   // Table columns matching SellPriceModel.toTableRow() keys.
   List<ErpColumnConfig> get _tableColumns => [
     ErpColumnConfig(key: 'articalName', label: 'ARTICLE', width: 160),
-    ErpColumnConfig(key: 'shapeName', label: 'SHAPE', width: 160),
+    ErpColumnConfig(key: 'sdate', label: 'DATE', width: 160),
     ErpColumnConfig(key: 'layoutName', label: 'LAYOUT NAME', width: 200),
   ];
 
@@ -144,7 +146,6 @@ class _MstSellPriceState extends State<MstSellPrice> {
           label: 'SHAPE',
           type: ErpFieldType.dropdown,
           sectionIndex: 0,
-          readOnly: _entryGridRows.isNotEmpty,
           dropdownItems: shapeProvider.list
               .where((e) => e.active == true)
               .map(
@@ -233,31 +234,19 @@ class _MstSellPriceState extends State<MstSellPrice> {
     });
   }
 
-  void _onRowTap(Map<String, dynamic> row) {
+  Future<void> _onRowTap(Map<String, dynamic> row) async {
     final raw = row['_raw'] as SellPriceModel;
-
+    print(raw.sortID);
     setState(() {
       _selectedRow = row;
       _isEditMode = true;
+      _entryGridRows.clear();
 
       _formValues = {
-        'code': raw.sellCode ?? '',
         'articleCode': raw.articalCode?.toString() ?? '',
-        'shapeCode': raw.shapeCode?.toString() ?? '',
-        'rate': raw.rate?.toString() ?? '',
-        'length': raw.length?.toString() ?? '',
-        'diam': raw.width?.toString() ?? '',
-        'height': raw.height?.toString() ?? '',
-        'sortID': raw.sortID?.toString() ?? '',
-        'active': raw.active == true ? 'true' : 'false',
         'colorCode': raw.colorCodes.join(','),
         'purityCode': raw.purityCodes.join(','),
-        'layOutName': raw.layoutName,
-        'mm':
-            raw.mm ??
-            (raw.length != null && raw.width != null && raw.height != null
-                ? '${raw.length?.toDouble()}*${raw.width?.toDouble()}*${raw.height?.toDouble()}'
-                : ''),
+        'layoutName': raw.layoutName,
       };
     });
 
@@ -269,6 +258,50 @@ class _MstSellPriceState extends State<MstSellPrice> {
 
     if (Responsive.isMobile(context)) {
       setState(() => _showTableOnMobile = false);
+    }
+
+    if (raw.sellPriceListMstID != null) {
+      final details = await context
+          .read<SellPriceProvider>()
+          .loadSellPriceDetail(raw.sellPriceListMstID!);
+      if (details != null && mounted) {
+        setState(() {
+          _entryGridRows.clear();
+          for (final detail in details) {
+            _entryGridRows.add({
+              'article': detail.articalName ?? raw.articalName ?? '',
+              'color': detail.colors ?? raw.colors ?? '',
+              'purity': detail.purities ?? raw.purities ?? '',
+              'layoutName': detail.layoutNameField != null && detail.layoutNameField!.isNotEmpty
+                  ? detail.layoutName
+                  : raw.layoutName,
+              'shape': detail.shapeName ?? '',
+              'mm': detail.mm ?? '',
+              'length': detail.length?.toString() ?? '',
+              'diam': detail.width?.toString() ?? '',
+              'height': detail.height?.toString() ?? '',
+              'rate': detail.rate?.toString() ?? '',
+              'code': detail.sellCode ?? '',
+              'sortID': detail.sortID?.toString() ?? '',
+              'active': detail.active == true ? 'Yes' : 'No',
+
+              '_articleCode': (detail.articalCode ?? raw.articalCode)?.toString() ?? '',
+              '_shapeCode': detail.shapeCode?.toString() ?? '',
+              '_colorCodes': detail.colorCodes.isNotEmpty ? detail.colorCodes : raw.colorCodes,
+              '_purityCodes': detail.purityCodes.isNotEmpty ? detail.purityCodes : raw.purityCodes,
+              '_length': detail.length ?? 0.0,
+              '_diam': detail.width ?? 0.0,
+              '_height': detail.height ?? 0.0,
+              '_rate': detail.rate ?? 0.0,
+              '_sortID': detail.sortID ?? 0,
+              '_active': detail.active == true,
+              '_mm': detail.mm ?? '',
+            });
+          }
+        });
+      }
+      _formValues['sortID'] = (_entryGridRows.length + 1).toString();
+      _erpFormKey.currentState?.updateFieldValue('sortID', (_entryGridRows.length + 1).toString());
     }
   }
 
@@ -326,6 +359,21 @@ class _MstSellPriceState extends State<MstSellPrice> {
     return formattedParts.join('*');
   }
 
+  void _generateMm() {
+    final lengthStr = _formValues['length'] ?? '';
+    final diamStr = _formValues['diam'] ?? '';
+    final heightStr = _formValues['height'] ?? '';
+
+    if (lengthStr.isNotEmpty && diamStr.isNotEmpty && heightStr.isNotEmpty) {
+      final computedMm = _formatMmToDecimal('$lengthStr*$diamStr*$heightStr');
+      _formValues['mm'] = computedMm;
+      _erpFormKey.currentState?.updateFieldValue('mm', computedMm);
+    } else {
+      _formValues['mm'] = '';
+      _erpFormKey.currentState?.updateFieldValue('mm', '');
+    }
+  }
+
   void _generateLayoutName() {
     final articleProvider = context.read<ArticleProvider>();
     final colorProv = context.read<ColorProvider>();
@@ -375,7 +423,7 @@ class _MstSellPriceState extends State<MstSellPrice> {
       puritiesStr = names.join('/');
     }
 
-    final layOutName = '$articleName $colorsStr - $puritiesStr';
+    final layOutName = '$articleName-$colorsStr-$puritiesStr';
     _formValues['layoutName'] = layOutName;
     _erpFormKey.currentState?.updateFieldValue('layoutName', layOutName);
   }
@@ -469,7 +517,7 @@ class _MstSellPriceState extends State<MstSellPrice> {
     }
     puritiesStr = purityNames.join('/');
 
-    final layOutName = '$articleName $colorsStr - $puritiesStr';
+    final layOutName = '$articleName-$colorsStr-$puritiesStr';
     final computedMm = _formatMmToDecimal(
       mmStr.isNotEmpty
           ? mmStr
@@ -477,6 +525,40 @@ class _MstSellPriceState extends State<MstSellPrice> {
               ? '$lengthStr*$diamStr*$heightStr'
               : ''),
     );
+
+    if (computedMm.isNotEmpty) {
+      final isDuplicate = _entryGridRows.asMap().entries.any((entry) {
+        final index = entry.key;
+        final row = entry.value;
+        if (index == _editingGridIndex) return false;
+        
+        final existingMm = row['mm']?.toString().trim().toLowerCase();
+        final existingShapeCode = row['_shapeCode']?.toString().trim();
+        
+        return existingMm == computedMm.trim().toLowerCase() &&
+            existingShapeCode == shapeCode.trim();
+      });
+      if (isDuplicate) {
+        _showSnack('Duplicate entry with same MM ($computedMm) and Shape is not allowed.');
+        return;
+      }
+    }
+
+    if (code.isNotEmpty) {
+      final isDuplicateCode = _entryGridRows.asMap().entries.any((entry) {
+        final index = entry.key;
+        final row = entry.value;
+        if (index == _editingGridIndex) return false;
+        
+        final existingCode = row['code']?.toString().trim().toLowerCase();
+        return existingCode == code.trim().toLowerCase();
+      });
+      if (isDuplicateCode) {
+        _showSnack('Duplicate entry with same Sell Code ($code) is not allowed.');
+        return;
+      }
+    }
+
 
     final newRow = {
       'article': articleName,
@@ -590,24 +672,15 @@ class _MstSellPriceState extends State<MstSellPrice> {
     if (_isEditMode && _selectedRow != null) {
       final raw = _selectedRow!['_raw'] as SellPriceModel;
       final payload = {
-        "SellCode": values['code']?.toString() ?? '',
         "ArticalCode":
             int.tryParse(values['articleCode']?.toString() ?? '') ?? 0,
-        "ShapeCode": int.tryParse(values['shapeCode']?.toString() ?? '') ?? 0,
-        "Length": double.tryParse(values['length']?.toString() ?? '') ?? 0,
-        "Width": double.tryParse(values['diam']?.toString() ?? '') ?? 0,
-        "Height": double.tryParse(values['height']?.toString() ?? '') ?? 0,
-        "Rate": double.tryParse(values['rate']?.toString() ?? '') ?? 0,
+        "layoutname": values['layoutName']?.toString() ?? '',
         "CompanyCode": context.read<CompanyProvider>().selectedCompanyCode ?? 0,
-        "SortID": int.tryParse(values['sortID']?.toString() ?? '') ?? 0,
-        "Active":
-            values['active'] == 'true' ||
+        "Active": values['active'] == 'true' ||
                 values['active'] == true ||
                 values['active'] == '1'
             ? 1
             : 0,
-        "LayoutName": values['layoutName']?.toString() ?? '',
-        "MM": values['mm']?.toString() ?? '',
         "colors": (_formValues['colorCode'] ?? '')
             .split(',')
             .where((e) => e.isNotEmpty)
@@ -618,6 +691,37 @@ class _MstSellPriceState extends State<MstSellPrice> {
             .where((e) => e.isNotEmpty)
             .map(int.parse)
             .toList(),
+        "details": _entryGridRows.isNotEmpty
+            ? _entryGridRows.map((row) {
+                return {
+                  "ShapeCode": int.tryParse(row['_shapeCode']?.toString() ?? '') ?? 0,
+                  "SellCode": row['code']?.toString() ?? '',
+                  "mm": row['_mm']?.toString() ?? '',
+                  "Length": row['_length'] as double,
+                  "Width": row['_diam'] as double,
+                  "Height": row['_height'] as double,
+                  "Rate": row['_rate'] as double,
+                  "SortID": int.tryParse(row['_sortID']?.toString() ?? '') ?? 0,
+                  "Active": row['_active'] == true ? 1 : 0,
+                };
+              }).toList()
+            : [
+                {
+                  "ShapeCode": int.tryParse(values['shapeCode']?.toString() ?? '') ?? 0,
+                  "SellCode": values['code']?.toString() ?? '',
+                  "mm": values['mm']?.toString() ?? '',
+                  "Length": double.tryParse(values['length']?.toString() ?? '') ?? 0,
+                  "Width": double.tryParse(values['diam']?.toString() ?? '') ?? 0,
+                  "Height": double.tryParse(values['height']?.toString() ?? '') ?? 0,
+                  "Rate": double.tryParse(values['rate']?.toString() ?? '') ?? 0,
+                  "SortID": int.tryParse(values['sortID']?.toString() ?? '') ?? 0,
+                  "Active": values['active'] == 'true' ||
+                          values['active'] == true ||
+                          values['active'] == '1'
+                      ? 1
+                      : 0,
+                }
+              ],
       };
 
       final success = await provider.updateSellPrice(
@@ -647,35 +751,33 @@ class _MstSellPriceState extends State<MstSellPrice> {
         return;
       }
 
-      int successCount = 0;
-      for (final row in _entryGridRows) {
-        final payload = {
-          "SellCode": row['code']?.toString() ?? '',
-          "ArticalCode":
-              int.tryParse(row['_articleCode']?.toString() ?? '') ?? 0,
-          "ShapeCode": int.tryParse(row['_shapeCode']?.toString() ?? '') ?? 0,
-          "Length": row['_length'] as double,
-          "Width": row['_diam'] as double,
-          "Height": row['_height'] as double,
-          "Rate": row['_rate'] as double,
-          "CompanyCode":
-              context.read<CompanyProvider>().selectedCompanyCode ?? 0,
-          "SortID": row['_sortID'] as int,
-          "Active": row['_active'] == true ? 1 : 0,
-          "LayoutName": row['layoutName']?.toString() ?? '',
-          "MM": row['_mm']?.toString() ?? '',
-          "colors": row['_colorCodes'] as List<int>,
-          "purities": row['_purityCodes'] as List<int>,
-        };
+      final firstRow = _entryGridRows.first;
+      final payload = {
+        "ArticalCode":
+            int.tryParse(firstRow['_articleCode']?.toString() ?? '') ?? 0,
+        "layoutname": firstRow['layoutName']?.toString() ?? '',
+        "CompanyCode": context.read<CompanyProvider>().selectedCompanyCode ?? 0,
+        "Active": firstRow['_active'] == true ? 1 : 0,
+        "colors": firstRow['_colorCodes'] as List<int>,
+        "purities": firstRow['_purityCodes'] as List<int>,
+        "details": _entryGridRows.map((row) {
+          return {
+            "ShapeCode": int.tryParse(row['_shapeCode']?.toString() ?? '') ?? 0,
+            "SellCode": row['code']?.toString() ?? '',
+            "mm": row['_mm']?.toString() ?? '',
+            "Length": row['_length'] as double,
+            "Width": row['_diam'] as double,
+            "Height": row['_height'] as double,
+            "Rate": row['_rate'] as double,
+            "Active": row['_active'] == true ? 1 : 0,
+            "SortID": int.tryParse(row['sortID']?.toString() ?? '') ?? 0,
+          };
+        }).toList(),
+      };
 
-        final success = await provider.createSellPrice(payload);
-        if (success) {
-          successCount++;
-        }
-      }
-
+      final success = await provider.createSellPrice(payload);
       if (!mounted) return;
-      if (successCount == _entryGridRows.length) {
+      if (success) {
         setState(() {
           _entryGridRows.clear();
         });
@@ -684,20 +786,14 @@ class _MstSellPriceState extends State<MstSellPrice> {
           context: context,
           theme: context.erpTheme,
           title: 'Saved',
-          message: 'All $successCount items saved successfully.',
+          message: 'Sell Price saved successfully.',
         );
       } else {
-        setState(() {
-          if (successCount > 0) {
-            _entryGridRows.removeRange(0, successCount);
-          }
-        });
         await ErpResultDialog.showError(
           context: context,
           theme: context.erpTheme,
-          title: 'Partial Save',
-          message:
-              'Saved $successCount out of ${_entryGridRows.length + successCount} items.',
+          title: 'Error',
+          message: 'Failed to save Sell Price.',
         );
       }
     }
@@ -746,15 +842,7 @@ class _MstSellPriceState extends State<MstSellPrice> {
   }
 
   void _setDefaultSortId() {
-    final provider = context.read<SellPriceProvider>();
-
     int nextSortId = 1;
-    if (provider.list.isNotEmpty) {
-      nextSortId = provider.list
-          .map((e) => e.sortID ?? 0)
-          .reduce((a, b) => a > b ? a : b) + 1;
-    }
-
     for (final row in _entryGridRows) {
       final gridSortVal = int.tryParse(row['sortID']?.toString() ?? '') ?? 0;
       if (gridSortVal >= nextSortId) {
@@ -792,7 +880,7 @@ class _MstSellPriceState extends State<MstSellPrice> {
                         subtitle: 'Sell Price configuration',
                         initialTabIndex: 0,
                         addButtonSections: const {2},
-                        onFieldSubmitted: (value, key) {
+                        onFieldSubmitted: (key, value) {
                           if (key == 'code') {
                             _addEntry();
                           }
@@ -864,7 +952,7 @@ class _MstSellPriceState extends State<MstSellPrice> {
                             _addEntry();
                           }
                         },
-                        onFieldSubmitted: (value, key) {
+                        onFieldSubmitted: (key, value) {
                           if (key == 'code') {
                             _addEntry();
                           }
@@ -898,13 +986,13 @@ class _MstSellPriceState extends State<MstSellPrice> {
                                 onEditRow: _editGridRow,
                                 editingIndex: _editingGridIndex,
                                 columnLabels: _gridColumnLabels,
-                                columnWidths: {
-                                  'layoutName': 160,
-                                  'purity': 80,
-                                  'shape': 150,
-                                  'sortID': 40,
-                                  'mm':110
-                                },
+                                // columnWidths: {
+                                //   'layoutName': 160,
+                                //   'purity': 80,
+                                //   'shape': 150,
+                                //   'sortID': 40,
+                                //   'mm':110
+                                // },
                                 allowCheckBoxOnTable: false,
                               ),
                             ],
@@ -928,34 +1016,16 @@ class _MstSellPriceState extends State<MstSellPrice> {
       _formValues[key] = value?.toString() ?? '';
     }
 
-    if (key == 'mm') {
-      final val = value?.toString() ?? '';
-      if (val.isNotEmpty) {
-        final parts = val.split('*');
-        if (parts.length >= 3) {
-          final len = parts[0].trim();
-          final dia = parts[1].trim();
-          final hei = parts[2].trim();
-
-          _formValues['length'] = len;
-          _formValues['diam'] = dia;
-          _formValues['height'] = hei;
-
-          _erpFormKey.currentState?.updateFieldValue('length', len);
-          _erpFormKey.currentState?.updateFieldValue('diam', dia);
-          _erpFormKey.currentState?.updateFieldValue('height', hei);
-
-          _generateCode();
-        }
-      }
-    }
-
     if (['articleCode', 'shapeCode', 'length', 'diam'].contains(key)) {
       _generateCode();
     }
 
     if (['articleCode', 'colorCode', 'purityCode'].contains(key)) {
       _generateLayoutName();
+    }
+
+    if (['length', 'diam', 'height'].contains(key)) {
+      _generateMm();
     }
 
     // Auto-advance focus through the form in entry order.

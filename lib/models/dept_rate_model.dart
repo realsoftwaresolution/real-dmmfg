@@ -1,6 +1,4 @@
 // lib/models/dept_rate_model.dart
-import '../utils/helper_functions.dart';
-
 class DeptRateModel {
   final int? clvDeptRateMstID;
   final String? deptRateCode;
