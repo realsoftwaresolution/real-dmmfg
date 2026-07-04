@@ -37,7 +37,7 @@ class PurityProvider extends BaseProvider {
       onSuccess: (res) {
         final data = res.data as List;
         final list = data.map((e) => PurityModel.fromJson(e)).toList();
-        list.sort((a, b) => a.sortID!.compareTo(b.sortID!.toInt()));
+        list.sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
         return list;
       },
     );
