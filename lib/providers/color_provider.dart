@@ -36,7 +36,9 @@ class ColorProvider extends BaseProvider {
       call: () => api.get('/color'),
       onSuccess: (res) {
         final data = res.data as List;
-        return data.map((e) => ColorModel.fromJson(e)).toList();
+        final list = data.map((e) => ColorModel.fromJson(e)).toList();
+        list.sort((a, b) => a.sortID!.compareTo(b.sortID!.toInt()));
+        return list;
       },
     );
 

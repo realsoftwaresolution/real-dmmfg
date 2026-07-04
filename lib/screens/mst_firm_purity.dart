@@ -38,13 +38,13 @@ class _MstPurityState extends State<MstPurity> {
 
   // ── TABLE COLUMNS ─────────────────────────────────────────────────────────
   List<ErpColumnConfig> get _tableColumns => [
+    ErpColumnConfig(key: 'sortID', label: 'SORT ID', width: 160),
     ErpColumnConfig(key: 'purityCode', label: 'CODE', width: 130),
     ErpColumnConfig(key: 'purityName', label: 'NAME', width: 180),
     ErpColumnConfig(key: 'PurityGroupName', label: 'GROUP', width: 140),
     ErpColumnConfig(key: 'PurityRptGroupName', label: 'RPT GROUP', width: 180),
     ErpColumnConfig(key: 'labourRate', label: 'LABOUR RATE', width: 200),
     ErpColumnConfig(key: 'companyCode', label: 'COMPANY', width: 160),
-    ErpColumnConfig(key: 'sortID', label: 'SORT ID', width: 160),
     ErpColumnConfig(key: 'active', label: 'ACTIVE', width: 140),
   ];
 

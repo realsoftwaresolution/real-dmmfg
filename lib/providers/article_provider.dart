@@ -37,7 +37,9 @@ class ArticleProvider extends BaseProvider {
       call: () => api.get('/article'),
       onSuccess: (res) {
         final data = res.data as List;
-        return data.map((e) => ArticleModel.fromJson(e)).toList();
+        final list = data.map((e) => ArticleModel.fromJson(e)).toList();
+        list.sort((a, b) => a.sortID!.compareTo(b.sortID!.toInt()));
+        return list;
       },
     );
 

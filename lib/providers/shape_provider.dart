@@ -36,7 +36,9 @@ class ShapeProvider extends BaseProvider {
       call: () => api.get('/shape'),
       onSuccess: (res) {
         final data = res.data as List;
-        return data.map((e) => ShapeModel.fromJson(e)).toList();
+        final list = data.map((e) => ShapeModel.fromJson(e)).toList();
+        list.sort((a, b) => a.sortID!.compareTo(b.sortID!.toInt()));
+        return list;
       },
     );
 
