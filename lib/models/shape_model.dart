@@ -17,6 +17,7 @@ class ShapeModel {
   final String? rateOn;
   final String? rapCode;
   final bool? pg;
+  final dynamic certiCode;
 
   ShapeModel({
     this.shapeMstID,
@@ -35,6 +36,7 @@ class ShapeModel {
     this.rateOn,
     this.rapCode,
     this.pg,
+    this.certiCode,
   });
 
   factory ShapeModel.fromJson(Map<String, dynamic> json) {
@@ -55,6 +57,7 @@ class ShapeModel {
       rateOn: json['RateOn'],
       rapCode: json['RAPCODE'],
       pg: json['PG'],
+      certiCode: json['CertiCode']?.toString() ?? json['CertiCode']?.toString(),
     );
   }
 
@@ -70,6 +73,7 @@ class ShapeModel {
       'RateOn': rateOn,
       'RAPCODE': rapCode,
       'PG': pg,
+      'CertiCode': certiCode,
     };
   }
 
@@ -84,6 +88,7 @@ class ShapeModel {
       'companyCode': companyName??companyCode?.toString() ?? '',
       'sortID': sortID?.toString() ?? '',
       'active': active == true ? 'Yes' : 'No',
+      'CertiCode': certiCode ?? '',
       '_raw': this,
     };
   }
@@ -102,6 +107,7 @@ class ShapeModel {
       rapCode: v['rapCode'],
       pg: parseBool(v['pg']),
       // pg: v['pg'] == 'Y',
+      certiCode: v['CertiCode'],
     );
   }
 }

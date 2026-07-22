@@ -108,7 +108,7 @@ class _MstSellPriceState extends State<MstSellPrice> {
           readOnly: _entryGridRows.isNotEmpty,
           type: ErpFieldType.multiselectDropdown,
           dropdownItems: colorProv.list
-              .where((e) => e.active == true)
+              .where((e) => e.active == true && [1].contains(e.colorRptGroupCode))
               .map(
                 (e) => ErpDropdownItem(
                   label: e.colorName ?? '',
@@ -124,7 +124,7 @@ class _MstSellPriceState extends State<MstSellPrice> {
           readOnly: _entryGridRows.isNotEmpty,
           type: ErpFieldType.multiselectDropdown,
           dropdownItems: purityProv.list
-              .where((e) => e.active == true)
+              .where((e) => e.active == true && [1].contains(e.purityGroupCode))
               .map(
                 (e) => ErpDropdownItem(
                   label: e.purityName ?? '',
@@ -330,9 +330,9 @@ class _MstSellPriceState extends State<MstSellPrice> {
         : '';
 
     // First 2 letters from Shape
-    final shapeLetters = (shape.shapeName?.length ?? 0) >= 2
+    final shapeLetters = shape.certiCode ?? ((shape.shapeName?.length ?? 0) >= 2
         ? shape.shapeName!.substring(0, 2).toUpperCase()
-        : (shape.shapeName ?? '').toUpperCase();
+        : (shape.shapeName ?? '').toUpperCase());
 
     final length = double.tryParse(_formValues['length'] ?? '') ?? 0;
 

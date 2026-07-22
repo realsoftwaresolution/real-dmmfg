@@ -38,6 +38,7 @@ class _MstShapeState extends State<MstShape> {
   // ── TABLE COLUMNS ─────────────────────────────────────────────────────────
   List<ErpColumnConfig> get _tableColumns => [
     ErpColumnConfig(key: 'shapeCode', label: 'CODE', width: 130),
+    ErpColumnConfig(key: 'CertiCode', label: 'CERTI CODE', width: 130),
     ErpColumnConfig(key: 'shapeName', label: 'NAME', width: 180),
     ErpColumnConfig(key: 'ShapeGroupName', label: 'GROUP', width: 160),
     ErpColumnConfig(key: 'rateOn', label: 'RATE ON', width: 180),
@@ -87,6 +88,12 @@ class _MstShapeState extends State<MstShape> {
                 },
               );
             },
+          ),
+          ErpFieldConfig(
+            key: 'CertiCode',
+            label: 'CERTI CODE',
+            required: true,
+            sectionIndex: 0,
           ),
           ErpFieldConfig(
             key: 'shapeGroupCode',
@@ -288,6 +295,7 @@ class _MstShapeState extends State<MstShape> {
         'sortID': raw.sortID?.toString() ?? '',
         'rateOn': raw.rateOn ?? '',
         'rapCode': raw.rapCode ?? '',
+        'CertiCode': raw.certiCode ?? '',
         'active': raw.active == true ? 'true' : 'false',
         'pg': raw.pg == true ? 'true' : 'false',
       };

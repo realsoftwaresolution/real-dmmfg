@@ -758,7 +758,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     // ─────────────────────────────
     if (_isEditMode && _editingDetIndex != null) {
       final prov = context.read<FactoryReceivedEntryProvider>();
-      print(jsonEncode(_detRows));
       final payloadData = {
         "FactoryRecMstID":
             int.tryParse(_formValues['factoryRecMstID'] ?? '0') ?? 0,
@@ -771,7 +770,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         "RecWt": recWt,
 
         "KPc": kPc,
-        "KWt": kWt ?? 0.000,
+        "KWt": kWt,
 
         "BrPc": brPc,
         "BrWt": brWt,
@@ -848,54 +847,56 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
       try {
         /// STEP 1 : RATE CALC
+        final factoryVal = _formValues['factory'] ?? '0';
         final rateResult = await prov.rateCallApi(
-          _formValues['factory']!,
+          factoryVal,
           updatedRow,
         );
 
-        if (rateResult.isEmpty || rateResult.first.bCode == null) {
-          return;
-        }
+        if (rateResult.isNotEmpty && rateResult.first.bCode != null) {
+          final rateRow = rateResult.first;
 
-        final rateRow = rateResult.first;
-
-        updatedRowData = updatedRow.copyWith(
-          rateID: rateRow.rateID?.toString(),
-          rateon: rateRow.rateon,
-          rate: rateRow.rate,
-          amount: rateRow.amount,
-        );
-
-        /// STEP 2 : SELL RATE CALC
-        final sellResult = await prov.saleRateCallApi(updatedRowData);
-
-        if (sellResult.isNotEmpty && sellResult.first.bCode != null) {
-          final sellRow = sellResult.first;
-
-          updatedRowData = updatedRowData.copyWith(
-            SellCode: sellRow.SellCode,
-            SellRate: sellRow.SellRate,
-            SellAmount: sellRow.SellAmount,
+          updatedRowData = updatedRow.copyWith(
+            rateID: rateRow.rateID?.toString(),
+            rateon: rateRow.rateon,
+            rate: rateRow.rate,
+            amount: rateRow.amount,
           );
+
+          /// STEP 2 : SELL RATE CALC
+          final sellResult = await prov.saleRateCallApi(updatedRowData);
+
+          if (sellResult.isNotEmpty && sellResult.first.bCode != null) {
+            final sellRow = sellResult.first;
+
+            updatedRowData = updatedRowData.copyWith(
+              SellCode: sellRow.SellCode,
+              SellRate: sellRow.SellRate,
+              SellAmount: sellRow.SellAmount,
+            );
+          }
         }
 
-        /// STEP 3 : UPDATE API
-        final payload = {
-          ...payloadData,
+        final detID = _detRows[_editingDetIndex!].FactoryRecDetID;
+        if (detID != null && detID != 0) {
+          /// STEP 3 : UPDATE API
+          final payload = {
+            ...payloadData,
 
-          "RateID": updatedRowData.rateID,
-          "Rateon": updatedRowData.rateon,
-          "Rate": updatedRowData.rate,
-          "Amount": updatedRowData.amount,
+            "RateID": updatedRowData.rateID,
+            "Rateon": updatedRowData.rateon,
+            "Rate": updatedRowData.rate,
+            "Amount": updatedRowData.amount,
 
-          "SellCode": updatedRowData.SellCode,
-          "SellRate": updatedRowData.SellRate,
-          "SellAmount": updatedRowData.SellAmount,
-        };
+            "SellCode": updatedRowData.SellCode,
+            "SellRate": updatedRowData.SellRate,
+            "SellAmount": updatedRowData.SellAmount?.toDouble(),
+          };
 
-        final success = await prov.update(payload, _theme, context);
+          final success = await prov.update(payload, _theme, context);
 
-        if (!mounted || !success) return;
+          if (!mounted || !success) return;
+        }
 
         /// STEP 4 : UPDATE LOCAL GRID
         setState(() {
@@ -907,14 +908,16 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
         _clearEntryFields();
 
-        await ErpResultDialog.showSuccess(
-          context: context,
-          theme: _theme,
-          title: 'Updated',
-          message: 'Factory Receive Entry Updated.',
-        );
+        if (detID != null && detID != 0) {
+          await ErpResultDialog.showSuccess(
+            context: context,
+            theme: _theme,
+            title: 'Updated',
+            message: 'Factory Receive Entry Updated.',
+          );
 
-        context.read<FactoryReceivedEntryProvider>().load();
+          context.read<FactoryReceivedEntryProvider>().load();
+        }
       } catch (e) {
         debugPrint('Edit Error => $e');
       }
@@ -1046,19 +1049,19 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       factoryRecMstID: existing.factoryRecMstID,
       factoryIssDetID: existing.factoryIssDetID,
       FactoryRecDetID: existing.FactoryRecDetID,
-      MfgCut: existing.MfgCut,
-      size: existing.size,
+      MfgCut: _entryVals['mfgCut'] ?? existing.MfgCut,
+      size: double.tryParse(_entryVals['size'] ?? '') ?? existing.size,
       // Preserved scan data
       id: existing.id,
-      jno: existing.jno,
-      bCode: existing.bCode,
-      pktNo: existing.pktNo,
+      jno: int.tryParse(_entryVals['jno'] ?? '') ?? existing.jno,
+      bCode: _entryVals['scanValue'] ?? existing.bCode,
+      pktNo: _entryVals['lotNo'] ?? existing.pktNo,
       cutNo: existing.cutNo,
       ArticalCode: existing.ArticalCode,
       clvCut: existing.clvCut,
-      shapeCode: existing.shapeCode,
-      purityCode: existing.purityCode,
-      colorCode: existing.colorCode,
+      shapeCode: int.tryParse(_entryVals['shape'] ?? '') ?? existing.shapeCode,
+      purityCode: int.tryParse(_entryVals['purity'] ?? '') ?? existing.purityCode,
+      colorCode: int.tryParse(_entryVals['color'] ?? '') ?? existing.colorCode,
       kachaRec: existing.kachaRec,
       qrCode: existing.qrCode,
       entryType: existing.entryType,
@@ -1072,73 +1075,66 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       // User-entered fields
       pc: int.tryParse(_entryVals['orgPc'] ?? '') ?? existing.pc,
       wt: double.tryParse(_entryVals['orgWt'] ?? '') ?? existing.wt,
-      issPc: int.tryParse(issPcStr),
-      issWt: double.tryParse(issWtStr),
+      issPc: int.tryParse(issPcStr) ?? existing.issPc,
+      issWt: double.tryParse(issWtStr) ?? existing.issWt,
       recPc: recPc,
       recWt: recWt,
       totalPc: recPc,
       totalWt: recWt,
-      dmWt: double.tryParse(_entryVals['dmWt'] ?? ''),
-      dmPer: double.tryParse(_entryVals['dmPer'] ?? ''),
-      kPc: int.tryParse(_entryVals['kPc'] ?? ''),
-      kWt: double.tryParse(_entryVals['kWt'] ?? ''),
-      brPc: int.tryParse(_entryVals['brPc'] ?? ''),
-      brWt: double.tryParse(_entryVals['brWt'] ?? ''),
-      lossPc: int.tryParse(_entryVals['lossPc'] ?? ''),
-      lossWt: double.tryParse(_entryVals['lossWt'] ?? ''),
-      topsPc: int.tryParse(_entryVals['topsPc'] ?? ''),
-      topsWt: double.tryParse(_entryVals['topsWt'] ?? ''),
-      charniCode: existing.charniCode,
-      employeeCode: int.tryParse(_entryVals['employee'] ?? ''),
-      signerCode: int.tryParse(_entryVals['signer'] ?? ''),
-      remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
-      dueDay: int.tryParse(_entryVals['dueDay'] ?? ''),
-      diffDmWt: double.tryParse(_entryVals['diffDmWt'] ?? ''),
-      recutEmp: double.tryParse(_entryVals['recutEmp'] ?? '0.000'),
-      ratio: double.tryParse(_entryVals['ratio'] ?? ''),
-      planShape: _entryVals['shape'] ?? '',
-      planPurity: _entryVals['planPurity'] ?? '',
+      dmWt: double.tryParse(_entryVals['dmWt'] ?? '') ?? existing.dmWt,
+      dmPer: double.tryParse(_entryVals['dmPer'] ?? '') ?? existing.dmPer,
+      kPc: int.tryParse(_entryVals['kPc'] ?? '') ?? existing.kPc,
+      kWt: double.tryParse(_entryVals['kWt'] ?? '') ?? existing.kWt,
+      brPc: int.tryParse(_entryVals['brPc'] ?? '') ?? existing.brPc,
+      brWt: double.tryParse(_entryVals['brWt'] ?? '') ?? existing.brWt,
+      lossPc: int.tryParse(_entryVals['lossPc'] ?? '') ?? existing.lossPc,
+      lossWt: double.tryParse(_entryVals['lossWt'] ?? '') ?? existing.lossWt,
+      topsPc: int.tryParse(_entryVals['topsPc'] ?? '') ?? existing.topsPc,
+      topsWt: double.tryParse(_entryVals['topsWt'] ?? '') ?? existing.topsWt,
+      charniCode: int.tryParse(_entryVals['charni'] ?? '') ?? existing.charniCode,
+      employeeCode: int.tryParse(_entryVals['employee'] ?? '') ?? existing.employeeCode,
+      signerCode: int.tryParse(_entryVals['signer'] ?? '') ?? existing.signerCode,
+      remarksCode: int.tryParse(_entryVals['remarks'] ?? '') ?? existing.remarksCode,
+      dueDay: int.tryParse(_entryVals['dueDay'] ?? '') ?? existing.dueDay,
+      diffDmWt: double.tryParse(_entryVals['diffDmWt'] ?? '') ?? existing.diffDmWt,
+      recutEmp: double.tryParse(_entryVals['recutEmp'] ?? '') ?? existing.recutEmp,
+      ratio: double.tryParse(_entryVals['ratio'] ?? '') ?? existing.ratio,
+      planShape: _entryVals['shape'] ?? existing.planShape,
+      planPurity: _entryVals['planPurity'] ?? existing.planPurity,
       groupType: _entryVals['groupType'] ?? existing.groupType,
-      partName: int.tryParse(_entryVals['partName'].toString()),
-      orderMstID: int.tryParse(_entryVals['orderMstId'] ?? ''),
-      amountRs: double.tryParse(_entryVals['amount'] ?? '0.000'),
-      amount: double.tryParse(_entryVals['amount'] ?? '0.000'),
-      remarks: _entryVals['remarks'] ?? '',
-      cutCode: int.tryParse(_entryVals['cutCode'] ?? ''),
-      plDmWt: double.tryParse(_entryVals['dmWt'] ?? '0.000'),
-      plDmPer: double.tryParse(_entryVals['dmPer'] ?? '0.00'),
+      partName: int.tryParse(_entryVals['partName']?.toString() ?? '') ?? existing.partName,
+      orderMstID: int.tryParse(_entryVals['orderMstId'] ?? '') ?? existing.orderMstID,
+      amountRs: double.tryParse(_entryVals['amount'] ?? '') ?? existing.amountRs,
+      amount: double.tryParse(_entryVals['amount'] ?? '') ?? existing.amount,
+      remarks: _entryVals['remarks'] ?? existing.remarks,
+      cutCode: int.tryParse(_entryVals['cutCode'] ?? '') ?? existing.cutCode,
+      plDmWt: double.tryParse(_entryVals['dmWt'] ?? '') ?? existing.plDmWt,
+      plDmPer: double.tryParse(_entryVals['dmPer'] ?? '') ?? existing.plDmPer,
       fluo: _isFieldVisible('FLUO')
-          ? int.tryParse(_entryVals['fluo'] ?? '')
-          : 0,
-
+          ? (int.tryParse(_entryVals['fluo'] ?? '') ?? existing.fluo)
+          : existing.fluo,
       symmetryCode: _isFieldVisible('SYMMETRY')
-          ? int.tryParse(_entryVals['symmetryCode'] ?? '')
-          : 0,
-
+          ? (int.tryParse(_entryVals['symmetryCode'] ?? '') ?? existing.symmetryCode)
+          : existing.symmetryCode,
       polishCode: _isFieldVisible('POLISH')
-          ? int.tryParse(_entryVals['polishCode'] ?? '')
-          : 0,
-
+          ? (int.tryParse(_entryVals['polishCode'] ?? '') ?? existing.polishCode)
+          : existing.polishCode,
       tensionsCode: _isFieldVisible('TENSIONS')
-          ? int.tryParse(_entryVals['tensionCode'] ?? '')
-          : 0,
-
+          ? (int.tryParse(_entryVals['tensionCode'] ?? '') ?? existing.tensionsCode)
+          : existing.tensionsCode,
       length: _isFieldVisible('LENGTH')
-          ? double.tryParse(_entryVals['length'] ?? '')
-          : 0,
-
+          ? (double.tryParse(_entryVals['length'] ?? '') ?? existing.length)
+          : existing.length,
       diam: _isFieldVisible('DIAM')
-          ? double.tryParse(_entryVals['diam'] ?? '')
-          : 0,
-
+          ? (double.tryParse(_entryVals['diam'] ?? '') ?? existing.diam)
+          : existing.diam,
       height: _isFieldVisible('HEIGHT')
-          ? double.tryParse(_entryVals['height'] ?? '')
-          : 0,
-
-      pairNo: _entryVals['pairNo'],
+          ? (double.tryParse(_entryVals['height'] ?? '') ?? existing.height)
+          : existing.height,
+      pairNo: _entryVals['pairNo'] ?? existing.pairNo,
       topSide: _entryVals['TopSide'] ?? existing.topSide,
       fcIntentCode:
-          _isFieldVisible('FC INTENT CODE') // optional conditional
+          _isFieldVisible('FC INTENT CODE')
           ? int.tryParse(_entryVals['FcIntentCode'] ?? '') ??
                 existing.fcIntentCode
           : existing.fcIntentCode,
@@ -1677,15 +1673,20 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       _isAdding = false;
       _showTableOnMobile = false;
 
+      final mstModel = row['_raw'] as FactoryReceiveMstModel?;
+      final fCode = mstModel?.factoryCode ??
+          int.tryParse(row['factoryCode']?.toString() ?? '') ??
+          int.tryParse(row['factory']?.toString() ?? '');
+
       // ✅ CLEAN FORM VALUES (ONLY REQUIRED FIELDS)
       _formValues = {
-        'factoryRecMstID': _s(_detRows.first.factoryRecMstID, '0'),
+        'factoryRecMstID': _s(_detRows.isNotEmpty ? _detRows.first.factoryRecMstID : row['id'], '0'),
         'factoryRecDate': _date(row['date']),
         'time': _s(row['time']),
-        'factory': _s(row['factory']),
+        'factory': _s(fCode ?? row['factory']),
         'type': _s(row['type']),
-        "polishChecker": _s(details.first.LastCrID ?? 0),
-        "MarkerMstID": _s(details.first.markerMstID ?? 0),
+        "polishChecker": _s(details.isNotEmpty ? (details.first.LastCrID ?? 0) : 0),
+        "MarkerMstID": _s(details.isNotEmpty ? (details.first.markerMstID ?? 0) : 0),
       };
       _syncDetGrid();
     });
@@ -3103,6 +3104,11 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
     final size = sumD((r) => r.size);
 
+    final rate = sumD((r) => r.rate);
+    final amount = sumD((r) => r.amount);
+    final sellRate = sumD((r) => r.SellRate);
+    final sellAmount = sumD((r) => r.SellAmount);
+
     // 🔹 Percentage Calculation (IMPORTANT)
     final baseWt = recWt > 0 ? recWt : issWt;
 
@@ -3150,6 +3156,12 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
       // 🔹 SIZE
       'size': fThreeDecimal(size),
+
+      // 🔹 RATE & AMOUNT & SELL DETAILS
+      'rate': fThreeDecimal(rate),
+      'amount': fThreeDecimal(amount),
+      'sellRate': fThreeDecimal(sellRate),
+      'sellAmount': fThreeDecimal(sellAmount),
     };
   }
 
