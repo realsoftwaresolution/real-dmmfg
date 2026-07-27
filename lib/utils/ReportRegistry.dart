@@ -3500,6 +3500,20 @@ class ReportRegistry {
         'purities': filter['purityCode'],
       },
     ),
+    // ── FACTORY_REC_SELL_PRICE ─────────────────────────────────────────────────────── 62
+    'FACTORY_REC_SELL_PRICE': ReportConfig(
+      reportTypeCode: 'FACTORY_REC_SELL_PRICE',
+      endpoint: '/reports/sell-price-report/factory-rec',
+      isPdf: true, // 🔥 ADD THIS
+      columns: const [],
+      mapper: (raw) => [],
+      queryBuilder: (filter) => {
+        'kapanNos': filter['kNo'],
+        'shapecodes': filter['shapeCode'],
+        'colors': filter['colorCode'],
+        'purities': filter['purityCode'],
+      },
+    ),
   };
 
   static ReportConfig? of(String? code) => code == null ? null : _configs[code];

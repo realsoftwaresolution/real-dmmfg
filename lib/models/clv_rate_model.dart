@@ -5,6 +5,8 @@ class ClvRateModel {
   final int? crId;
   final int? deptCode;
   final int? deptProcessCode;
+  final List<int> deptProcessCodes;
+  final String? deptProcesses;
   final dynamic rateID;
   final String? rateOn;
   final String? rateSizeOn;
@@ -21,6 +23,10 @@ class ClvRateModel {
   final bool? active;
   final int? remarksCode;
   final int? shapeCode;
+  final List<int> shapeCodes;
+  final String? shapes;
+  final String? articles;
+  final List<int> articlesIds;
   final String? type;
   final int? companyCode;
   final String? companyName;
@@ -36,6 +42,8 @@ class ClvRateModel {
     this.crId,
     this.deptCode,
     this.deptProcessCode,
+    this.deptProcessCodes = const [],
+    this.deptProcesses,
     this.rateID,
     this.rateOn,
     this.rateSizeOn,
@@ -52,6 +60,10 @@ class ClvRateModel {
     this.active,
     this.remarksCode,
     this.shapeCode,
+    this.shapeCodes = const [],
+    this.shapes,
+    this.articles,
+    this.articlesIds = const [],
     this.type,
     this.companyCode,
     this.companyName,
@@ -63,12 +75,36 @@ class ClvRateModel {
   });
 
   factory ClvRateModel.fromJson(Map<String, dynamic> json) {
+    List<int> parseIds(dynamic val) {
+      if (val == null) return [];
+      if (val is List) {
+        return val.map((e) => int.tryParse(e.toString()) ?? 0).where((e) => e != 0).toList();
+      }
+      if (val is int) return [val];
+      if (val is String) {
+        return val.split(',').map((e) => int.tryParse(e.trim()) ?? 0).where((e) => e != 0).toList();
+      }
+      return [];
+    }
+
+    final parsedProcessCodes = parseIds(json['deptProcessCodes'] ?? json['DeptProcessCode']);
+    final parsedShapeCodes = parseIds(json['shapeCodes'] ?? json['ShapeCode']);
+    final parsedArticlesIds = parseIds(json['articalCodes'] ?? json['articlesIds']);
+
+    final deptProcessesStr = json['deptProcesses']?.toString() ?? json['DeptProcessName']?.toString() ?? '';
+    final shapesStr = json['shapes']?.toString() ?? json['ShapeName']?.toString() ?? '';
+    final articlesStr = json['articles']?.toString() ?? '';
+
     return ClvRateModel(
       clvRateMstID: json['ClvProcessRateMstID'],
       clvRateCode: json['ClvProcessRateCode'],
       crId: json['CrId'],
       deptCode: json['DeptCode'],
-      deptProcessCode: json['DeptProcessCode'],
+      deptProcessCode: json['DeptProcessCode'] is int
+          ? json['DeptProcessCode']
+          : (parsedProcessCodes.isNotEmpty ? parsedProcessCodes.first : null),
+      deptProcessCodes: parsedProcessCodes,
+      deptProcesses: deptProcessesStr,
       rateID: json['RateID'],
       rateOn: json['Rateon'] ?? json['RateOn'],
       rateSizeOn: json['RateSizeOn'],
@@ -84,14 +120,20 @@ class ClvRateModel {
       sortID: json['SortID'],
       active: json['Active'] == true,
       remarksCode: json['RemarksCode'],
-      shapeCode: json['ShapeCode'],
+      shapeCode: json['ShapeCode'] is int
+          ? json['ShapeCode']
+          : (parsedShapeCodes.isNotEmpty ? parsedShapeCodes.first : null),
+      shapeCodes: parsedShapeCodes,
+      shapes: shapesStr,
+      articles: articlesStr,
+      articlesIds: parsedArticlesIds,
       type: json['Type'],
       companyCode: json['CompanyCode'],
       companyName: json['CompanyName'],
       crName: json['CrName'],
       deptName: json['DeptName'],
-      deptProcessName: json['DeptProcessName'],
-      shapeName: json['ShapeName'],
+      deptProcessName: deptProcessesStr.isNotEmpty ? deptProcessesStr : json['DeptProcessName']?.toString(),
+      shapeName: shapesStr.isNotEmpty ? shapesStr : json['ShapeName']?.toString(),
       remarksName: json['RemarksName'],
     );
   }
@@ -103,6 +145,8 @@ class ClvRateModel {
       'CrId': crId,
       'DeptCode': deptCode,
       'DeptProcessCode': deptProcessCode,
+      'deptProcessCodes': deptProcessCodes,
+      'deptProcesses': deptProcesses,
       'RateID': rateID,
       'Rateon': rateOn,
       'RateSizeOn': rateSizeOn,
@@ -119,6 +163,10 @@ class ClvRateModel {
       'Active': active,
       'RemarksCode': remarksCode,
       'ShapeCode': shapeCode,
+      'shapeCodes': shapeCodes,
+      'shapes': shapes,
+      'articles': articles,
+      'articalCodes': articlesIds,
       'Type': type,
       'CompanyCode': companyCode,
     };
@@ -133,11 +181,18 @@ class ClvRateModel {
       'companyName': companyName ?? '',
       'crName': crName ?? '',
       'deptName': deptName ?? '',
-      'deptProcessName': deptProcessName ?? '',
-      'shapeName': shapeName ?? '',
+      'deptProcessName': (deptProcesses != null && deptProcesses!.isNotEmpty)
+          ? deptProcesses!
+          : (deptProcessName ?? ''),
+      'shapeName': (shapes != null && shapes!.isNotEmpty)
+          ? shapes!
+          : (shapeName ?? ''),
+      'articles': (articles != null && articles!.isNotEmpty)
+          ? articles!
+          : articlesIds.join(','),
       'type': type ?? '',
-      'rateOn': rateOn ?? '',
-      'rateSizeOn': rateSizeOn.toString().trim(),
+      'rateOn': rateOn?.trim() ?? '',
+      'rateSizeOn': rateSizeOn?.trim() ?? '',
       'fromWt': fromWt != null ? fromWt!.toStringAsFixed(3) : '',
       'toWt': toWt != null ? toWt!.toStringAsFixed(3) : '',
       'rate': rate != null ? rate!.toStringAsFixed(2) : '',

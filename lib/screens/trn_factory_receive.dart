@@ -703,6 +703,18 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     // ─────────────────────────────
     // ✅ VALIDATIONS
     // ─────────────────────────────
+    if (recPc > 0 && recWt <= 0) {
+      _showSnack('Rec WT cannot be 0 or empty when Rec PC is entered');
+      _erpFormKey.currentState?.focusField('recWt');
+      return;
+    }
+
+    if (recPc <= 0 && kPc <= 0) {
+      _showSnack('K PC must be greater than 0 when Rec PC is 0');
+      _erpFormKey.currentState?.focusField('kPc');
+      return;
+    }
+
     if (recWt > issWt) {
       _showSnack('Rec WT cannot be greater than Iss WT');
       _erpFormKey.currentState?.focusField('recWt');

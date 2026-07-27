@@ -734,8 +734,10 @@ class FactoryIssueSummaryRow {
       articalName: json['ArticalName']?.toString() ?? '',
       size: json['Size']?.toString() ?? '',
       totalPkt: json['TotalPkt'] as int?,
-      totalPc: _toInt(json['TotalPc']),
-      totalWt: _toDouble(json['TotalWt']),
+      // totalPc: _toInt(json['TotalPc']),
+      // totalWt: _toDouble(json['TotalWt']),
+      totalPc: _toInt(json['TotalIssPc']),
+      totalWt: _toDouble(json['TotalIssWt']),
     );
   }
 

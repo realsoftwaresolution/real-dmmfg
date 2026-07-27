@@ -5,6 +5,7 @@ class DepartmentRateModel {
   final String deptRateCode;
   final int crId;
   final int deptProcessCode;
+  final List<int> deptProcessCodes;
   final String deptProcessName;
   final int deptCode;
   final String deptName;
@@ -34,6 +35,7 @@ class DepartmentRateModel {
     required this.deptRateCode,
     required this.crId,
     required this.deptProcessCode,
+    this.deptProcessCodes = const [],
     required this.deptProcessName,
     required this.deptCode,
     required this.deptName,
@@ -60,12 +62,20 @@ class DepartmentRateModel {
   });
 
   factory DepartmentRateModel.fromJson(Map<String, dynamic> json) {
+    final parsedProcessCodes = (json['deptProcessCodes'] as List<dynamic>?)
+            ?.map((e) => _toInt(e))
+            .toList() ??
+        (json['DeptProcessCode'] != null ? [_toInt(json['DeptProcessCode'])] : []);
+
+    final deptProcessesStr = json['deptProcesses']?.toString() ?? json['DeptProcessName']?.toString() ?? '';
+
     return DepartmentRateModel(
       clvDeptRateMstID: _toInt(json['ClvDeptRateMstID']),
       deptRateCode: json['DeptRateCode']?.toString() ?? '',
       crId: _toInt(json['CrId']),
       deptProcessCode: _toInt(json['DeptProcessCode']),
-      deptProcessName: json['DeptProcessName']?.toString() ?? '',
+      deptProcessCodes: parsedProcessCodes,
+      deptProcessName: deptProcessesStr,
       deptCode: _toInt(json['DeptCode']),
       deptName: json['DeptName']?.toString() ?? '',
       rateID: json['RateID'] ?? '',
@@ -110,6 +120,8 @@ class DepartmentRateModel {
     'DeptRateCode': deptRateCode,
     'CrId': crId,
     'DeptProcessCode': deptProcessCode,
+    'deptProcessCodes': deptProcessCodes,
+    'deptProcesses': deptProcessName,
     'DeptProcessName': deptProcessName,
     'DeptCode': deptCode,
     'DeptName': deptName,
@@ -134,6 +146,7 @@ class DepartmentRateModel {
     'cutCodes': cutsIds,
     'shapeCodes': shapesIds,
   };
+
 
   DepartmentRateModel copyWith({
     int? clvDeptRateMstID,

@@ -1,4 +1,4 @@
-// lib/screens/mst_firm_clv_rate.dart
+// lib/screens/mst_firm_department_rate.dart
 import 'package:diam_mfg/models/department_rate_model.dart';
 import 'package:diam_mfg/models/dept_process_model.dart';
 import 'package:diam_mfg/providers/article_provider.dart';
@@ -17,8 +17,6 @@ import 'package:rs_dashboard/rs_dashboard.dart';
 import '../bootstrap.dart';
 import '../providers/dept_provider.dart';
 import '../providers/dept_process_provider.dart';
-import '../providers/party_provider.dart';
-import '../providers/remarks_provider.dart';
 import '../providers/shape_provider.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
@@ -44,7 +42,6 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
 
   // ── Track selected department ──────────────────────────────────────────────
   int? _selectedDeptCode;
-  String? _selectedDeptRateOn; // Will store 'Y' or 'N'
 
   final String? token = AppStorage.getString("token");
 
@@ -117,20 +114,19 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
     ),
   ];
 
-  // ── Helper: Get rateOn for selected department ──────────────────────────
-  String _getRateOnForDept(int? deptCode) {
-    if (deptCode == null) return 'N';
+  String _deptNameFor(int? deptCode) {
+    if (deptCode == null) return '';
     try {
-      final dept = context.read<DeptProvider>().list.firstWhere(
-        (d) => d.deptCode == deptCode,
-      );
-      // Adjust based on your actual model field
-      return 'Y'; // Default to 'Y' if field doesn't exist
+      return context
+          .read<DeptProvider>()
+          .list
+          .firstWhere((d) => d.deptCode == deptCode)
+          .deptName ??
+          '';
     } catch (_) {
-      return 'N';
+      return '';
     }
   }
-
   // Form fields - DYNAMIC based on selected department
   List<List<ErpFieldConfig>> _buildFormRows() {
     final deptProvider = context.read<DeptProvider>();
@@ -163,7 +159,7 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
               .where((e) => e.active == true)
               .map(
                 (e) => ErpDropdownItem(
-                  label: e.crName ?? '',
+                  label:  '${e.crName ?? ''}  |  ${_deptNameFor(e.deptCode)}',
                   value: e.crId?.toString() ?? '',
                 ),
               )
@@ -173,6 +169,7 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
           key: 'deptCode',
           label: 'DEPARTMENT',
           type: ErpFieldType.dropdown,
+          readOnly: true,
           sectionIndex: 0,
           dropdownItems: deptProvider.list
               .where((e) => e.active == true)
@@ -187,7 +184,7 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
         ErpFieldConfig(
           key: 'deptProcessCode',
           label: 'PROCESS',
-          type: ErpFieldType.dropdown,
+          type: ErpFieldType.multiselectDropdown,
           sectionIndex: 0,
           dropdownItems: processItems,
         ),
@@ -283,9 +280,12 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
   }
 
   void _onRowTap(Map<String, dynamic> row) {
-    print(row);
     final raw = row['_raw'] as DepartmentRateModel?;  // ← correct cast
     if (raw == null) return;
+
+    final deptProcessStr = raw.deptProcessCodes.isNotEmpty
+        ? raw.deptProcessCodes.join(',')
+        : (raw.deptProcessCode != 0 ? raw.deptProcessCode.toString() : '');
 
     setState(() {
       _selectedRow = row;
@@ -296,11 +296,10 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
           .list
           .where((e) => e.deptCode == raw.deptCode)
           .firstOrNull;
-      _selectedDeptRateOn = _getRateOnForDept(raw.deptCode);
       _formValues = {
         'crId': raw.crId.toString(),
         'deptCode': raw.deptCode.toString(),
-        'deptProcessCode': raw.deptProcessCode.toString(),
+        'deptProcessCode': deptProcessStr,
         'rateID': raw.rateID.toString(),
         'rateOn': raw.rateon,
         'rateSizeOn': raw.sizeon,
@@ -363,11 +362,19 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
 
     final provider = context.read<DepartmentRateProvider>();
 
+    final deptProcessStr = _formValues['deptProcessCode'] ?? values['deptProcessCode']?.toString() ?? '';
+    final deptProcessList = deptProcessStr
+        .split(',')
+        .where((e) => e.isNotEmpty)
+        .map((e) => int.tryParse(e) ?? 0)
+        .where((e) => e != 0)
+        .toList();
+
     // Map form values to API payload
     final payload = {
       'DeptCode': int.tryParse(_formValues['deptCode'] ?? values['deptCode']?.toString() ?? '') ?? 0,
       'CrId': int.tryParse(_formValues['crId'] ?? values['crId']?.toString() ?? '') ?? 0,
-      'DeptProcessCode': int.tryParse(_formValues['deptProcessCode'] ?? values['deptProcessCode']?.toString() ?? '') ?? 0,
+      'deptProcesses': deptProcessList,
       'RateID': _formValues['rateID'] ?? values['rateID']?.toString() ?? 0,
       'Rateon': _formValues['rateOn'] ?? values['rateOn']?.toString() ?? '',
       'Sizeon': _formValues['rateSizeOn'] ?? values['rateSizeOn']?.toString() ?? '',
@@ -394,15 +401,23 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
 
     if (!mounted) return;
     if (success) {
-      _resetForm();
+      final wasEditMode = _isEditMode;
+      if (wasEditMode) {
+        _resetForm();
+      } else {
+        _resetRateFieldsOnly();
+      }
       await ErpResultDialog.showSuccess(
         context: context,
         theme: context.erpTheme,
-        title: _isEditMode ? 'Updated' : 'Saved',
-        message: _isEditMode
+        title: wasEditMode ? 'Updated' : 'Saved',
+        message: wasEditMode
             ? 'CLV Department Rate updated.'
             : 'CLV Department Rate saved.',
       );
+      if (!wasEditMode) {
+        _focusRateIdField();
+      }
     } else {
       await ErpResultDialog.showError(
         context: context,
@@ -411,6 +426,21 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
         message: 'Save failed.',
       );
     }
+  }
+
+  void _focusRateIdField() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (mounted) {
+          _erpFormKey.currentState?.focusField('rateID');
+        }
+      });
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (mounted) {
+          _erpFormKey.currentState?.focusField('rateID');
+        }
+      });
+    });
   }
 
   Future<void> _onDelete() async {
@@ -436,6 +466,33 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
     }
   }
 
+  void _resetRateFieldsOnly() {
+    setState(() {
+      _selectedRow = null;
+      _isEditMode = false;
+
+      // Reset sectionIndex 1 & 2 fields in _formValues and UI
+      const section1And2Keys = [
+        'rateID',
+        'rateOn',
+        'rateSizeOn',
+        'fromWt',
+        'toWt',
+        'rate',
+        'sortID',
+      ];
+
+      for (final key in section1And2Keys) {
+        _formValues.remove(key);
+        _erpFormKey.currentState?.updateFieldValue(key, '');
+      }
+
+      _formValues['active'] = 'true';
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+    _focusRateIdField();
+  }
+
   void _resetForm() {
     setState(() {
       _selectedRow = null;
@@ -443,7 +500,6 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
       _formValues = {};
       _showTableOnMobile = false;
       _selectedDeptCode = null;
-      _selectedDeptRateOn = null;
       // ── clear panel selections ──
       _selectedShapes = {};
       _selectedCuts = {};
@@ -595,7 +651,58 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
   }
 
   void _onFieldChanged(String key, dynamic value) {
-    _formValues[key] = value.toString();
+    if (value is List) {
+      _formValues[key] = value.join(',');
+    } else {
+      _formValues[key] = value?.toString() ?? '';
+    }
+
+    // When manager (crId) is selected, set deptCode automatically from counter
+    if (key == 'crId') {
+      final crId = int.tryParse(value.toString());
+      final counterProvider = context.read<CounterProvider>();
+      final selectedCounter = counterProvider.list
+          .where((c) => c.crId == crId)
+          .firstOrNull;
+
+      final deptCode = selectedCounter?.deptCode;
+
+      if (deptCode != null) {
+        final deptProcessList = context.read<DeptProcessProvider>().list;
+        final dept = deptProcessList
+            .where((e) => e.deptCode == deptCode)
+            .firstOrNull;
+
+        setState(() {
+          _selectedDept = dept;
+          _selectedDeptCode = deptCode;
+          _formValues['deptCode'] = deptCode.toString();
+
+          if (dept?.rateOnShape != 'Y') {
+            _selectedShapes.clear();
+          }
+
+          if (dept?.rateOnCut != 'Y') {
+            _selectedCuts.clear();
+          }
+
+          if (dept?.rateOnArticle != 'Y') {
+            _selectedArticles.clear();
+          }
+
+          _formValues['deptProcessCode'] = '';
+        });
+
+        _erpFormKey.currentState?.updateFieldValue(
+          'deptCode',
+          deptCode.toString(),
+        );
+        _erpFormKey.currentState?.updateFieldValue(
+          'deptProcessCode',
+          '',
+        );
+      }
+    }
 
     // When department is selected, update the tracking state
     if (key == 'deptCode') {
@@ -648,3 +755,4 @@ class _MstDepartmentRateState extends State<MstDepartmentRate> {
     );
   }
 }
+

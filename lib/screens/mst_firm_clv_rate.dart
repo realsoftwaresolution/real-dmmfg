@@ -1,7 +1,9 @@
 // lib/screens/mst_firm_clv_rate.dart
-import 'dart:convert';
-
+import 'package:diam_mfg/models/dept_process_model.dart';
+import 'package:diam_mfg/providers/article_provider.dart';
 import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/providers/counter_provider.dart';
+import 'package:diam_mfg/utils/panel.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +33,10 @@ class _MstClvRateState extends State<MstClvRate> {
   Map<String, dynamic>? _selectedRow;
   bool _isEditMode = false;
   Map<String, String> _formValues = {};
+  DeptProcessModel? _selectedDept;
+
+  // selection arrays for detail panels (persisted to API on save)
+  Set<int> _selectedArticles = {};
 
   // ── Track selected department ──────────────────────────────────────────────
   int? _selectedDeptCode;
@@ -67,6 +73,12 @@ class _MstClvRateState extends State<MstClvRate> {
     ErpColumnConfig(
       key: 'shapeName',
       label: 'SHAPE',
+      width: 150,
+      align: ColumnAlign.center,
+    ),
+    ErpColumnConfig(
+      key: 'articles',
+      label: 'ARTICALS',
       width: 150,
       align: ColumnAlign.center,
     ),
@@ -154,20 +166,33 @@ class _MstClvRateState extends State<MstClvRate> {
   String _getRateOnForDept(int? deptCode) {
     if (deptCode == null) return 'N';
     try {
-      final dept = context.read<DeptProvider>().list.firstWhere(
+      final exists = context.read<DeptProvider>().list.any(
         (d) => d.deptCode == deptCode,
       );
-      // Adjust based on your actual model field
-      return 'Y'; // Default to 'Y' if field doesn't exist
+      return exists ? 'Y' : 'N';
     } catch (_) {
       return 'N';
+    }
+  }
+
+  String _deptNameFor(int? deptCode) {
+    if (deptCode == null) return '';
+    try {
+      return context
+          .read<DeptProvider>()
+          .list
+          .firstWhere((d) => d.deptCode == deptCode)
+          .deptName ??
+          '';
+    } catch (_) {
+      return '';
     }
   }
 
   // Form fields - DYNAMIC based on selected department
   List<List<ErpFieldConfig>> _buildFormRows() {
     final deptProvider = context.read<DeptProvider>();
-    final partyProvider = context.read<PartyProvider>();
+    final counterProvider = context.read<CounterProvider>();
     final deptProcessProvider = context.read<DeptProcessProvider>();
     final remarksProvider = context.read<RemarksProvider>();
     final shapeProvider = context.read<ShapeProvider>();
@@ -193,21 +218,6 @@ class _MstClvRateState extends State<MstClvRate> {
     return [
       [
         ErpFieldConfig(
-          key: 'deptCode',
-          label: 'DEPARTMENT',
-          type: ErpFieldType.dropdown,
-          sectionIndex: 0,
-          dropdownItems: deptProvider.list
-              .where((e) => e.active == true)
-              .map(
-                (e) => ErpDropdownItem(
-                  label: e.deptName ?? '',
-                  value: e.deptCode?.toString() ?? '',
-                ),
-              )
-              .toList(),
-        ),
-        ErpFieldConfig(
           key: 'crId',
           label: 'PARTY',
           type: ErpFieldType.dropdown,
@@ -216,27 +226,43 @@ class _MstClvRateState extends State<MstClvRate> {
           readOnly: isPartyDisabled,
           dropdownItems: isPartyDisabled
               ? []
-              : partyProvider.list
+              : counterProvider.list
                     .where((e) => e.active == true)
                     .map(
                       (e) => ErpDropdownItem(
-                        label: e.partyName ?? '',
-                        value: e.partyCode?.toString() ?? '',
+                        label:  '${e.crName ?? ''}  |  ${_deptNameFor(e.deptCode)}',
+                        value: e.crId?.toString() ?? '',
                       ),
                     )
                     .toList(),
         ),
         ErpFieldConfig(
+          key: 'deptCode',
+          label: 'DEPARTMENT',
+          type: ErpFieldType.dropdown,
+          readOnly: true,
+          sectionIndex: 0,
+          dropdownItems: deptProvider.list
+              .where((e) => e.active == true)
+              .map(
+                (e) => ErpDropdownItem(
+              label: e.deptName ?? '',
+              value: e.deptCode?.toString() ?? '',
+            ),
+          )
+              .toList(),
+        ),
+        ErpFieldConfig(
           key: 'deptProcessCode',
           label: 'PROCESS',
-          type: ErpFieldType.dropdown,
+          type: ErpFieldType.multiselectDropdown,
           sectionIndex: 0,
           dropdownItems: processItems,
         ),
         ErpFieldConfig(
           key: 'shapeCode',
           label: 'SHAPE',
-          type: ErpFieldType.dropdown,
+          type: ErpFieldType.multiselectDropdown,
           sectionIndex: 0,
           dropdownItems: shapeProvider.list
               .where((e) => e.active == true)
@@ -343,10 +369,12 @@ class _MstClvRateState extends State<MstClvRate> {
       await Future.wait([
         context.read<ClvRateProvider>().loadClvRates(),
         context.read<DeptProvider>().load(),
+        context.read<CounterProvider>().load(),
         context.read<PartyProvider>().loadParties(),
         context.read<DeptProcessProvider>().load(),
         context.read<RemarksProvider>().load(),
         context.read<ShapeProvider>().load(),
+        context.read<ArticleProvider>().load(),
       ]);
     });
   }
@@ -357,7 +385,21 @@ class _MstClvRateState extends State<MstClvRate> {
       _selectedRow = row;
       _isEditMode = true;
       _selectedDeptCode = raw.deptCode;
+      _selectedDept = context
+          .read<DeptProcessProvider>()
+          .list
+          .where((e) => e.deptCode == raw.deptCode)
+          .firstOrNull;
       _selectedDeptRateOn = _getRateOnForDept(raw.deptCode);
+
+      final deptProcessStr = raw.deptProcessCodes.isNotEmpty
+          ? raw.deptProcessCodes.join(',')
+          : (raw.deptProcessCode?.toString() ?? '');
+
+      final shapeStr = raw.shapeCodes.isNotEmpty
+          ? raw.shapeCodes.join(',')
+          : (raw.shapeCode?.toString() ?? '');
+
       _formValues = {
         'type': raw.type ?? '',
         'clvRateCode': raw.clvRateCode?.toString() ?? '',
@@ -366,8 +408,8 @@ class _MstClvRateState extends State<MstClvRate> {
         'companyCode': raw.companyCode?.toString() ?? '',
         'deptCode': raw.deptCode?.toString() ?? '',
         'crId': raw.crId?.toString() ?? '',
-        'deptProcessCode': raw.deptProcessCode?.toString() ?? '',
-        'shapeCode': raw.shapeCode?.toString() ?? '',
+        'deptProcessCode': deptProcessStr,
+        'shapeCode': shapeStr,
         'rateID': raw.rateID?.toString() ?? '',
         'rateOn': raw.rateOn?.trim() ?? '',
         'rateSizeOn': raw.rateSizeOn?.trim() ?? '',
@@ -382,41 +424,74 @@ class _MstClvRateState extends State<MstClvRate> {
         'ever': raw.ever?.toString() ?? '',
         'remarksCode': raw.remarksCode?.toString() ?? '',
       };
+      _selectedArticles = raw.articlesIds.toSet();
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _formValues.forEach((key, value) {
+        _erpFormKey.currentState?.updateFieldValue(key, value);
+      });
+    });
+
     if (Responsive.isMobile(context)) {
       setState(() => _showTableOnMobile = false);
     }
   }
 
   Future<void> _onSave(Map<String, dynamic> values) async {
-    print(values);
+    if (_selectedDept?.rateOnArticle == 'Y' && _selectedArticles.isEmpty) {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: context.erpTheme,
+        title: 'Validation Error',
+        message: 'Please select at least one Article.',
+      );
+      return;
+    }
+
     final provider = context.read<ClvRateProvider>();
+
+    final deptProcessStr = _formValues['deptProcessCode'] ?? values['deptProcessCode']?.toString() ?? '';
+    final deptProcessList = deptProcessStr
+        .split(',')
+        .where((e) => e.isNotEmpty)
+        .map((e) => int.tryParse(e) ?? 0)
+        .where((e) => e != 0)
+        .toList();
+
+    final shapeStr = _formValues['shapeCode'] ?? values['shapeCode']?.toString() ?? '';
+    final shapeList = shapeStr
+        .split(',')
+        .where((e) => e.isNotEmpty)
+        .map((e) => int.tryParse(e) ?? 0)
+        .where((e) => e != 0)
+        .toList();
+
+    final articleList = _selectedArticles.isEmpty ? [] : _selectedArticles.toList();
 
     // Map form values to API payload
     final payload = {
-      'DeptCode': int.tryParse(values['deptCode']?.toString() ?? '') ?? 0,
-      'CrId': int.tryParse(values['crId']?.toString() ?? '') ?? 0,
-      'DeptProcessCode':
-          int.tryParse(values['deptProcessCode']?.toString() ?? '') ?? 0,
-      'RateID': values['rateID']?.toString() ?? 0,
-      'ShapeCode': int.tryParse(values['shapeCode']?.toString() ?? '') ?? 0,
-      'Type': values['type']?.toString() ?? 'SPK',
-      'Rateon': values['rateOn']?.toString() ?? '',
-      'RateSizeOn': values['rateSizeOn']?.toString() ?? '',
-      'FromWt': double.tryParse(values['fromWt']?.toString() ?? '') ?? 0.0,
-      'ToWt': double.tryParse(values['toWt']?.toString() ?? '') ?? 0.0,
-      'Rate': double.tryParse(values['rate']?.toString() ?? '') ?? 0.0,
-      'RepairRate':
-          double.tryParse(values['repairRate']?.toString() ?? '') ?? 0.0,
-      'PieRate': double.tryParse(values['pieRate']?.toString() ?? '') ?? 0.0,
-      'LSRate': double.tryParse(values['lsRate']?.toString() ?? '') ?? 0.0,
-      'Bonus': double.tryParse(values['bonus']?.toString() ?? '') ?? 0.0,
-      'RepairBonus':
-          double.tryParse(values['repairBonus']?.toString() ?? '') ?? 0.0,
-      'Ever': double.tryParse(values['ever']?.toString() ?? '') ?? 0.0,
-      'RemarksCode': int.tryParse(values['remarksCode']?.toString() ?? '') ?? 0,
-      'SortID': int.tryParse(values['sortID']?.toString() ?? '') ?? 0,
-      'Active': values['active'] == '1' ? true : false,
+      'DeptCode': int.tryParse(_formValues['deptCode'] ?? values['deptCode']?.toString() ?? '') ?? 0,
+      'CrId': int.tryParse(_formValues['crId'] ?? values['crId']?.toString() ?? '') ?? 0,
+      'deptProcesses': deptProcessList,
+      'RateID': _formValues['rateID'] ?? values['rateID']?.toString() ?? 0,
+      'shapes': shapeList,
+      'articles': articleList,
+      'Type': _formValues['type'] ?? values['type']?.toString() ?? 'SPK',
+      'Rateon': _formValues['rateOn'] ?? values['rateOn']?.toString() ?? '',
+      'RateSizeOn': _formValues['rateSizeOn'] ?? values['rateSizeOn']?.toString() ?? '',
+      'FromWt': double.tryParse(_formValues['fromWt'] ?? values['fromWt']?.toString() ?? '') ?? 0.0,
+      'ToWt': double.tryParse(_formValues['toWt'] ?? values['toWt']?.toString() ?? '') ?? 0.0,
+      'Rate': double.tryParse(_formValues['rate'] ?? values['rate']?.toString() ?? '') ?? 0.0,
+      'RepairRate': double.tryParse(_formValues['repairRate'] ?? values['repairRate']?.toString() ?? '') ?? 0.0,
+      'PieRate': double.tryParse(_formValues['pieRate'] ?? values['pieRate']?.toString() ?? '') ?? 0.0,
+      'LSRate': double.tryParse(_formValues['lsRate'] ?? values['lsRate']?.toString() ?? '') ?? 0.0,
+      'Bonus': double.tryParse(_formValues['bonus'] ?? values['bonus']?.toString() ?? '') ?? 0.0,
+      'RepairBonus': double.tryParse(_formValues['repairBonus'] ?? values['repairBonus']?.toString() ?? '') ?? 0.0,
+      'Ever': double.tryParse(_formValues['ever'] ?? values['ever']?.toString() ?? '') ?? 0.0,
+      'RemarksCode': int.tryParse(_formValues['remarksCode'] ?? values['remarksCode']?.toString() ?? '') ?? 0,
+      'SortID': int.tryParse(_formValues['sortID'] ?? values['sortID']?.toString() ?? '') ?? 0,
+      'Active': (values['active'] == '1' || values['active'] == 'true' || values['active'] == true) ? true : false,
       'CompanyCode': context
           .read<CompanyProvider>()
           .selectedCompanyCode
@@ -434,13 +509,21 @@ class _MstClvRateState extends State<MstClvRate> {
 
     if (!mounted) return;
     if (success) {
-      _resetForm();
+      final wasEditMode = _isEditMode;
+      if (wasEditMode) {
+        _resetForm();
+      } else {
+        _resetRateFieldsOnly();
+      }
       await ErpResultDialog.showSuccess(
         context: context,
         theme: context.erpTheme,
-        title: _isEditMode ? 'Updated' : 'Saved',
-        message: _isEditMode ? 'CLV Process Rate updated.' : 'CLV Process Rate saved.',
+        title: wasEditMode ? 'Updated' : 'Saved',
+        message: wasEditMode ? 'CLV Process Rate updated.' : 'CLV Process Rate saved.',
       );
+      if (!wasEditMode) {
+        _focusRateIdField();
+      }
     } else {
       await ErpResultDialog.showError(
         context: context,
@@ -449,6 +532,21 @@ class _MstClvRateState extends State<MstClvRate> {
         message: 'Save failed.',
       );
     }
+  }
+
+  void _focusRateIdField() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (mounted) {
+          _erpFormKey.currentState?.focusField('rateID');
+        }
+      });
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (mounted) {
+          _erpFormKey.currentState?.focusField('rateID');
+        }
+      });
+    });
   }
 
   Future<void> _onDelete() async {
@@ -474,6 +572,39 @@ class _MstClvRateState extends State<MstClvRate> {
     }
   }
 
+  void _resetRateFieldsOnly() {
+    setState(() {
+      _selectedRow = null;
+      _isEditMode = false;
+
+      // Reset sectionIndex 1 & 2 fields in _formValues and UI
+      const section1And2Keys = [
+        'rateID',
+        'rateOn',
+        'rateSizeOn',
+        'fromWt',
+        'toWt',
+        'rate',
+        'repairRate',
+        'pieRate',
+        'lsRate',
+        'bonus',
+        'repairBonus',
+        'ever',
+        'sortID',
+      ];
+
+      for (final key in section1And2Keys) {
+        _formValues.remove(key);
+        _erpFormKey.currentState?.updateFieldValue(key, '');
+      }
+
+      _formValues['active'] = 'true';
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+    _focusRateIdField();
+  }
+
   void _resetForm() {
     setState(() {
       _selectedRow = null;
@@ -482,6 +613,8 @@ class _MstClvRateState extends State<MstClvRate> {
       _showTableOnMobile = false;
       _selectedDeptCode = null;
       _selectedDeptRateOn = null;
+      _selectedDept = null;
+      _selectedArticles = {};
     });
     _erpFormKey.currentState?.resetForm();
     _formValues['active'] = 'true';
@@ -518,6 +651,7 @@ class _MstClvRateState extends State<MstClvRate> {
                         onSave: _onSave,
                         onCancel: _resetForm,
                         onDelete: _isEditMode ? _onDelete : null,
+                        detailBuilder: _buildDetailPanels,
                       )
               : Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -541,6 +675,7 @@ class _MstClvRateState extends State<MstClvRate> {
                         onSave: _onSave,
                         onCancel: _resetForm,
                         onDelete: _isEditMode ? _onDelete : null,
+                        detailBuilder: _buildDetailPanels,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -552,15 +687,86 @@ class _MstClvRateState extends State<MstClvRate> {
     );
   }
 
+  Widget _buildDetailPanels(BuildContext ctx) {
+    final articleProv = context.watch<ArticleProvider>();
+    final deptProcessList = context.watch<DeptProcessProvider>().list;
+    final panels = <PanelConfig>[];
+
+    final selectedProcessIds = (_formValues['deptProcessCode'] ?? '')
+        .split(',')
+        .where((e) => e.isNotEmpty)
+        .map((e) => int.tryParse(e) ?? 0)
+        .where((e) => e != 0)
+        .toList();
+
+    bool isArticleAllowed = false;
+
+    if (selectedProcessIds.isNotEmpty) {
+      isArticleAllowed = deptProcessList.any(
+        (p) => selectedProcessIds.contains(p.deptProcessCode) && p.rateOnArticle == 'Y',
+      );
+    }
+
+    if (!isArticleAllowed && _selectedDeptCode != null) {
+      final deptProcesses = deptProcessList.where((p) => p.deptCode == _selectedDeptCode);
+      if (deptProcesses.isEmpty || deptProcesses.any((p) => p.rateOnArticle != 'N')) {
+        isArticleAllowed = true;
+      }
+    }
+
+    if (_selectedDept?.rateOnArticle == 'Y' || _selectedArticles.isNotEmpty) {
+      isArticleAllowed = true;
+    }
+
+    if (isArticleAllowed && articleProv.list.isNotEmpty) {
+      panels.add(
+        PanelConfig(
+          title: 'ARTICLE',
+          items: articleProv.list
+              .map(
+                (e) => PanelItem(
+                  id: e.articalCode ?? 0,
+                  name: e.articalName ?? '',
+                ),
+              )
+              .toList(),
+          selectedIds: _selectedArticles,
+          onChanged: (set) {
+            setState(() {
+              _selectedArticles = set;
+            });
+          },
+        ),
+      );
+    }
+
+    return DetailPanels(panels: panels, childAspectRatio: 210 / 400);
+  }
+
   void _onFieldChanged(String key, dynamic value) {
-    _formValues[key] = value.toString();
+    if (value is List) {
+      _formValues[key] = value.join(',');
+    } else {
+      _formValues[key] = value?.toString() ?? '';
+    }
 
     // When department is selected, update the tracking state
     if (key == 'deptCode') {
       final deptCode = int.tryParse(value.toString());
+      final deptProcessList = context.read<DeptProcessProvider>().list;
+      final matching = deptProcessList.where((e) => e.deptCode == deptCode);
+      final dept = matching.isEmpty
+          ? null
+          : matching.firstWhere(
+              (e) => e.rateOnArticle == 'Y',
+              orElse: () => matching.first,
+            );
+
       setState(() {
+        _selectedDept = dept;
         _selectedDeptCode = deptCode;
         _selectedDeptRateOn = _getRateOnForDept(deptCode);
+
         // Clear dependent fields
         _formValues['deptProcessCode'] = '';
         _formValues['crId'] = '';
@@ -574,24 +780,78 @@ class _MstClvRateState extends State<MstClvRate> {
       });
     }
 
-    // ✅ ADD FOCUS MANAGEMENT FOR OTHER FIELDS
+    if (key == 'deptProcessCode') {
+      final selectedProcessIds = (value is List ? value.join(',') : value.toString())
+          .split(',')
+          .where((e) => e.isNotEmpty)
+          .map((e) => int.tryParse(e) ?? 0)
+          .where((e) => e != 0)
+          .toList();
+
+      final deptProcessList = context.read<DeptProcessProvider>().list;
+      final matchedProcess = deptProcessList.isEmpty
+          ? null
+          : deptProcessList.firstWhere(
+              (e) => selectedProcessIds.contains(e.deptProcessCode) && e.rateOnArticle == 'Y',
+              orElse: () => deptProcessList.firstWhere(
+                (e) => selectedProcessIds.contains(e.deptProcessCode),
+                orElse: () => _selectedDept ?? deptProcessList.first,
+              ),
+            );
+
+      if (matchedProcess != null) {
+        setState(() {
+          _selectedDept = matchedProcess;
+        });
+      }
+    }
+
+    // When Party (crId) is selected, auto-set department (deptCode) from counter
     if (key == 'crId') {
+      final crId = int.tryParse(value.toString());
+      final partyObj = context
+          .read<CounterProvider>()
+          .list
+          .where((e) => e.crId == crId)
+          .firstOrNull;
+
+      final deptCode = partyObj?.deptCode;
+
+      if (deptCode != null) {
+        final deptProcessList = context.read<DeptProcessProvider>().list;
+        final matching = deptProcessList.where((e) => e.deptCode == deptCode);
+        final dept = matching.isEmpty
+            ? null
+            : matching.firstWhere(
+                (e) => e.rateOnArticle == 'Y',
+                orElse: () => matching.first,
+              );
+
+        setState(() {
+          _selectedDept = dept;
+          _selectedDeptCode = deptCode;
+          _selectedDeptRateOn = _getRateOnForDept(deptCode);
+          _formValues['deptCode'] = deptCode.toString();
+
+          // Clear dependent fields
+          _formValues['deptProcessCode'] = '';
+        });
+
+        _erpFormKey.currentState?.updateFieldValue(
+          'deptCode',
+          deptCode.toString(),
+        );
+        _erpFormKey.currentState?.updateFieldValue(
+          'deptProcessCode',
+          '',
+        );
+      }
+
       Future.delayed(const Duration(milliseconds: 50), () {
         _erpFormKey.currentState?.focusField('deptProcessCode');
       });
     }
 
-    if (key == 'deptProcessCode') {
-      Future.delayed(const Duration(milliseconds: 50), () {
-        _erpFormKey.currentState?.focusField('shapeCode');
-      });
-    }
-
-    if (key == 'shapeCode') {
-      Future.delayed(const Duration(milliseconds: 50), () {
-        _erpFormKey.currentState?.focusField('remarksCode');
-      });
-    }
     if (key == 'remarksCode') {
       Future.delayed(const Duration(milliseconds: 50), () {
         _erpFormKey.currentState?.focusField('rateID');
@@ -614,3 +874,4 @@ class _MstClvRateState extends State<MstClvRate> {
     );
   }
 }
+

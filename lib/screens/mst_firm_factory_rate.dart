@@ -15,7 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../bootstrap.dart';
-import '../providers/dept_provider.dart';
 import '../providers/shape_provider.dart';
 import '../utils/app_images.dart';
 import '../utils/delete_dialogue.dart';
@@ -41,10 +40,6 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
   Set<int> _selectedPolish = {};
   Set<int> _selectedSymentry = {};
   Set<int> _selectedCertificate = {};
-
-  // ── Track selected department ──────────────────────────────────────────────
-  int? _selectedDeptCode;
-  String? _selectedDeptRateOn; // Will store 'Y' or 'N'
 
   final String? token = AppStorage.getString("token");
 
@@ -75,20 +70,6 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
     ErpColumnConfig(key: 'certificate', label: 'CERTIFICATE', width: 150),
     ErpColumnConfig(key: 'active', label: 'ACTIVE', width: 200),
   ];
-
-  // ── Helper: Get rateOn for selected department ──────────────────────────
-  String _getRateOnForDept(int? deptCode) {
-    if (deptCode == null) return 'N';
-    try {
-      final dept = context.read<DeptProvider>().list.firstWhere(
-        (d) => d.deptCode == deptCode,
-      );
-      // Adjust based on your actual model field
-      return 'Y'; // Default to 'Y' if field doesn't exist
-    } catch (_) {
-      return 'N';
-    }
-  }
 
   // Form fields - DYNAMIC based on selected department
   List<List<ErpFieldConfig>> _buildFormRows() {
@@ -204,7 +185,6 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
   }
 
   void _onRowTap(Map<String, dynamic> row) {
-    print(row);
     final raw = row['_raw'] as FactoryRateModel?; // ← correct cast
     if (raw == null) return;
 
@@ -373,13 +353,21 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
 
     if (!mounted) return;
     if (success) {
-      _resetForm();
+      final wasEditMode = _isEditMode;
+      if (wasEditMode) {
+        _resetForm();
+      } else {
+        _resetRateFieldsOnly();
+      }
       await ErpResultDialog.showSuccess(
         context: context,
         theme: context.erpTheme,
-        title: _isEditMode ? 'Updated' : 'Saved',
-        message: _isEditMode ? 'Factory Rate updated.' : 'Factory Rate saved.',
+        title: wasEditMode ? 'Updated' : 'Saved',
+        message: wasEditMode ? 'Factory Rate updated.' : 'Factory Rate saved.',
       );
+      if (!wasEditMode) {
+        _focusRateIdField();
+      }
     } else {
       await ErpResultDialog.showError(
         context: context,
@@ -390,27 +378,69 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
     }
   }
 
+  void _focusRateIdField() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (mounted) {
+          _erpFormKey.currentState?.focusField('rateID');
+        }
+      });
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (mounted) {
+          _erpFormKey.currentState?.focusField('rateID');
+        }
+      });
+    });
+  }
+
   Future<void> _onDelete() async {
     final raw = _selectedRow?['_raw'] as FactoryRateModel?;
-    if (raw?.factRateMstID == null) return;
+    if (raw == null) return;
     final confirm = await ErpDeleteDialog.show(
       context: context,
       theme: context.erpTheme,
       title: 'Factory Rate',
-      itemName: raw!.factRateCode?.toString() ?? 'Rate',
+      itemName: raw.factRateCode.toString(),
     );
     if (confirm != true || !mounted) return;
     final success = await context.read<FactoryRateProvider>().deleteFactoryRate(
-      raw.factRateMstID!,
+      raw.factRateMstID,
     );
     if (success && mounted) {
       await ErpResultDialog.showDeleted(
         context: context,
         theme: context.erpTheme,
-        itemName: raw.factRateCode?.toString() ?? '',
+        itemName: raw.factRateCode.toString(),
       );
       _resetForm();
     }
+  }
+
+  void _resetRateFieldsOnly() {
+    setState(() {
+      _selectedRow = null;
+      _isEditMode = false;
+
+      // Reset sectionIndex 1 & 2 fields in _formValues and UI
+      const section1And2Keys = [
+        'rateID',
+        'rateOn',
+        'rateSizeOn',
+        'fromWt',
+        'toWt',
+        'rate',
+        'sortID',
+      ];
+
+      for (final key in section1And2Keys) {
+        _formValues.remove(key);
+        _erpFormKey.currentState?.updateFieldValue(key, '');
+      }
+
+      _formValues['active'] = 'true';
+      _erpFormKey.currentState?.updateFieldValue('active', 'true');
+    });
+    _focusRateIdField();
   }
 
   void _resetForm() {
@@ -419,8 +449,6 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
       _isEditMode = false;
       _formValues = {};
       _showTableOnMobile = false;
-      _selectedDeptCode = null;
-      _selectedDeptRateOn = null;
       // ── clear panel selections ──
       _selectedShapes = {};
       _selectedCuts = {};
@@ -685,17 +713,6 @@ class _MstFactoryRateState extends State<MstFactoryRate> {
           _selectedCertificate.clear();
         }
       });
-    }
-    // When department is selected, update the tracking state
-    if (key == 'deptCode') {
-      final deptCode = int.tryParse(value.toString());
-      setState(() {
-        _selectedDeptCode = deptCode;
-        _selectedDeptRateOn = _getRateOnForDept(deptCode);
-        // Clear dependent fields
-        _formValues['deptProcessCode'] = '';
-      });
-      _erpFormKey.currentState?.updateFieldValue('deptProcessCode', '');
     }
   }
 
