@@ -1571,7 +1571,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       ErpFieldConfig(
         key: 'recWt',
         label: 'REC WT',
-        type: ErpFieldType.text,
+        type: ErpFieldType.wt,
         isEntryField: true,
         sectionIndex: 3,
         flex: 1,
@@ -1590,7 +1590,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       ErpFieldConfig(
         key: 'dmWt',
         label: 'DM WT',
-        type: ErpFieldType.amount,
+        type: ErpFieldType.wt,
         readOnly: true,
         isEntryField: true,
         sectionIndex: 3,
@@ -1601,7 +1601,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       ErpFieldConfig(
         key: 'lossWt',
         label: 'LOSS WT',
-        type: ErpFieldType.amount,
+        type: ErpFieldType.wt,
         readOnly: true,
         isEntryField: true,
         sectionIndex: 3,
@@ -1623,7 +1623,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       ErpFieldConfig(
         key: 'topsWt',
         label: 'TOPS WT',
-        type: ErpFieldType.amount,
+        type: ErpFieldType.wt,
         isEntryField: true,
         sectionIndex: 3,
         readOnly: !isFirstRow,
