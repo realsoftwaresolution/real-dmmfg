@@ -3,6 +3,7 @@ import 'package:collection/collection.dart';
 import 'package:diam_mfg/models/factory_issue_entry_model.dart';
 import 'package:diam_mfg/models/factory_model.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
+import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/counter_manager_det_provider.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
 import 'package:diam_mfg/providers/cut_provider.dart';
@@ -24,6 +25,7 @@ import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
+import '../models/company_model.dart';
 import '../models/user_visibility_model.dart';
 import '../providers/auth_provider.dart';
 import '../providers/counter_display_det_provider.dart';
@@ -155,6 +157,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         context.read<ShapeProvider>().load(),
         context.read<PurityProvider>().load(),
         context.read<FactoryProvider>().loadFactories(),
+        context.read<CompanyProvider>().loadCompanies(),
       ]);
       if (!mounted) return;
       _setDefaultFormValues();
@@ -1140,6 +1143,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   }
 
   // CREATE PDF
+  CompanyModel? _selectedCompany;
 
   Future<void> printJobWorkPdf() async {
     if (_detRows.isEmpty) return;
@@ -1149,6 +1153,14 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         (_detRows.first.spkDeptIssMstID ?? prov.list.first.factoryIssMstID ?? 0)
             .toInt();
     final summaryModel = await prov.loadSummaryReport(masterId);
+    final companies = context.read<CompanyProvider>().companies;
+    final selectedCompany = context.read<CompanyProvider>().selectedCompanyCode;
+    print(selectedCompany);
+    final company = companies.firstWhereOrNull(
+          (e) => e.companyCode.toString() == selectedCompany.toString(),
+    );
+    print(jsonEncode(company));
+    _selectedCompany = company;
     if (!mounted) return;
 
     if (summaryModel == null) {
@@ -1158,8 +1170,8 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     // ── DETAIL REPORT — unchanged ─────────────────────────────────────────
     if (_entryVals['report'] == 'REPORT') {
       final pdfData = JobWorkPdfModel(
-        headerInfo: _selectedFactory,
-        partyName: summaryModel.counterName,
+        headerInfo: _selectedCompany,
+        partyName: _selectedFactory!.factoryName ?? '',
         partyType: _selectedFactory?.factoryType ?? '',
         jobNo: masterId.toString(),
         date: _formValues['date']?.toString() ?? '',
@@ -1215,8 +1227,8 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       }).toList();
 
       final summaryPdfData = JobWorkPdfModel(
-        headerInfo: _selectedFactory,
-        partyName: summaryModel.counterName,
+        headerInfo: _selectedCompany,
+        partyName: _selectedFactory!.factoryName ?? '',
         partyType: _selectedFactory?.factoryType ?? '',
         jobNo: masterId.toString(),
         date: _formValues['date']?.toString() ?? '',

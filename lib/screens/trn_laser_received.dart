@@ -1571,7 +1571,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       ErpFieldConfig(
         key: 'recWt',
         label: 'REC WT',
-        type: ErpFieldType.wt,
+        type: ErpFieldType.text,
         isEntryField: true,
         sectionIndex: 3,
         flex: 1,
