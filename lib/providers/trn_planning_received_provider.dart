@@ -256,6 +256,7 @@ class TrnPlanningReceivedProvider extends BaseProvider {
   Future<List<PlanningReceivedDetModel>> fetchByBCodePlanningList({
     required String bCode,
     required String fromCrId,
+    required bool isReplanning,
   }) async {
     final result = await request<List<PlanningReceivedDetModel>>(
       showLoader: false,
@@ -266,6 +267,7 @@ class TrnPlanningReceivedProvider extends BaseProvider {
           'bCode': bCode,
           'lastCrId': fromCrId,
           'screenName': 'PLANNING_RECEIVED',
+          'isReplanning': isReplanning,
         },
       ),
 
@@ -307,6 +309,7 @@ class TrnPlanningReceivedProvider extends BaseProvider {
     required String bCode,
     required String fromCrId,
     required BuildContext context,
+    required bool isReplanning,
   }) async {
     final result = await request<List<PlanningReceivedDetModel>>(
       call: () => api.get(
@@ -315,6 +318,7 @@ class TrnPlanningReceivedProvider extends BaseProvider {
           'bCode': bCode,
           'lastCrId': fromCrId.toString(),
           'screenName': 'SARIN_PLANNING_RECEIVED',
+          'isReplanning': isReplanning,
         },
       ),
 
@@ -376,6 +380,46 @@ class TrnPlanningReceivedProvider extends BaseProvider {
     final result = await request<PlanningReceivedMstModel>(
       call: () => api.post(
         '/spkPlanning/save-planning-details',
+        data: {
+          'spk': {
+            ...modelMap, // ✅ cleaned
+            'details': details.map((e) {
+              final map = Map<String, dynamic>.from(e.toJson())
+                ..remove('LastDmWt')
+                ..remove('LastDmPer');
+
+              return map;
+            }).toList(),
+          },
+          'planning': scannedDetList.map((e) => e.toJson()).toList(),
+        },
+      ),
+      onSuccess: (res) => _parseMstResponse(res.data),
+    );
+    if (result != null) {
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> saveRePlanningDetails(
+      Map<String, dynamic> values,
+      List<PlanningReceivedDetModel> details,
+      List<SpkPlanningSaveModel> scannedDetList,
+      ) async {
+    final model = _buildModel(values);
+    // ✅ Convert model → map and remove BCode
+    final modelMap = Map<String, dynamic>.from(model.toJson())
+      ..remove('DeptCode')
+      ..remove('DeptCode')
+      ..remove('DeptProcessCode')
+      ..remove('ToCrID')
+      ..remove('FromCrID');
+    // 🔥 REMOVE HERE
+    final result = await request<PlanningReceivedMstModel>(
+      call: () => api.post(
+        '/spkPlanning/replan-details',
         data: {
           'spk': {
             ...modelMap, // ✅ cleaned

@@ -723,21 +723,21 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
   }
 
   List<ErpColumnConfig> get _tableColumns => [
-    ErpColumnConfig(key: 'jobWorkIssMstID', label: 'ID', width: 120),
-    ErpColumnConfig(key: 'date', label: 'DATE', width: 140, isDate: true),
+    ErpColumnConfig(key: 'jobWorkIssMstID', label: 'ID', width: 70),
+    ErpColumnConfig(key: 'date', label: 'DATE', width: 100, isDate: true),
     ErpColumnConfig(key: 'partyName', label: 'PARTY', width: 140),
-    ErpColumnConfig(key: 'deptProcessName', label: 'PROCESS', width: 150),
+    ErpColumnConfig(key: 'deptProcessName', label: 'PROCESS', width: 140),
     ErpColumnConfig(
       key: 'totalPc',
       label: 'PC',
-      width: 140,
-      align: ColumnAlign.right,
+      width: 70,
+      align: ColumnAlign.center,
     ),
     ErpColumnConfig(
       key: 'totalWt',
       label: 'WT',
-      width: 120,
-      align: ColumnAlign.right,
+      width: 100,
+      align: ColumnAlign.center,
     ),
   ];
 

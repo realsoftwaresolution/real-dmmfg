@@ -176,6 +176,31 @@ class FactoryReceivedEntryProvider extends BaseProvider {
     return false;
   }
 
+  Future<bool> updateFactoryRecPairData(Map<String, dynamic> values, theme,
+      context,) async {
+    final result = await request<FactoryReceiveMstModel>(
+      call: () => api.put('/factoryRec/pair-data', data: values),
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+          return data;
+        }
+        return _parseMstResponse(data);
+      },
+    );
+    if (result != null) {
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
   // ── DELETE ────────────────────────────────────────────────────────────────
 
   Future<bool> delete(id, theme, context, bCodeArray) async {

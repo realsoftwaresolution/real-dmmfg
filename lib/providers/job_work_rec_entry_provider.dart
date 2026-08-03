@@ -109,28 +109,31 @@ class JobWorkRecEntryProvider extends BaseProvider {
     return false;
   }
 
-  // ── UPDATE ─────────────────────────────────────────────────────────────────
-  Future<bool> update(int mstID, Map<String, dynamic> payload) async {
+// ── UPDATE ────────────────────────────────────────────────────────────────
+  Future<bool> update(Map<String, dynamic> values, theme,
+      context,) async {
     final result = await request<JobWorkRecMstModel>(
-      call: () => api.put(
-        '/jobWorkRec/$mstID',
-        data: payload,
-      ),
-      onSuccess: (res) => _parseMstResponse(res.data),
+      call: () => api.put('/jobWorkRec/update', data: values),
+      onSuccess: (res) {
+        final data = res.data;
+        print(data);
+        if (data['success'] == false) {
+          ErpResultDialog.showError(
+            context: context,
+            theme: theme,
+            message: data['message'],
+          );
+          return data;
+        }
+        return _parseMstResponse(data);
+      },
     );
-
     if (result != null) {
-      final idx = _list.indexWhere((e) => e.jobWorkRecMstID == mstID);
-      if (idx >= 0) {
-        _list[idx] = result;
-      }
-      detMap.remove(mstID);
       notifyListeners();
       return true;
     }
     return false;
   }
-
   // ── DELETE ROW ─────────────────────────────────────────────────────────────
   Future<bool> deleteRow(
       int mstID,

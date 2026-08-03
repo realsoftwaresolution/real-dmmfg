@@ -212,8 +212,10 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
       'spkDeptIssMstID': '0',
       'time': DateFormat('hh:mm a').format(now),
       'report': 'REPORT',
+      'entryType': 'planning',
     };
     _entryVals['report'] = 'REPORT';
+    _entryVals['entryType'] = 'planning';
     if (mounted) setState(() {});
   }
 
@@ -396,10 +398,14 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
     // CLEAR OLD TEMP DATA
     prov.clearTempScanData();
 
+    final isReplanning =
+        (_entryVals['entryType'] ?? _formValues['entryType'] ?? 'planning') ==
+            'replanning';
+
     final planningData = await prov.fetchByBCodePlanningList(
       bCode: bCode,
-
       fromCrId: _fromCrId!.toString(),
+      isReplanning: isReplanning,
     );
 
     // ─────────────────────────────
@@ -411,9 +417,9 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
     try {
       sarinData = await prov.fetchByBCode(
         bCode: bCode,
-
         fromCrId: _fromCrId!.toString(),
         context: context,
+        isReplanning: isReplanning,
       );
     } catch (e) {
       if (!mounted) return;
@@ -731,10 +737,13 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
   //  BUILD FORM ROWS
   // ─────────────────────────────────────────────────────────────────────────
 
-  List<List<ErpFieldConfig>> _buildFormRows() {
+  List<List<ErpFieldConfig>> _buildFormRows([TrnPlanningReceivedProvider? prov]) {
     final counterProv = context.read<CounterProvider>();
     final mgDetProv = context.read<CounterManagerDetProvider>();
     final procProv = context.read<DeptProcessProvider>();
+    final planningProv = prov ?? context.read<TrnPlanningReceivedProvider>();
+
+    final hasTableDefaultData = planningProv.planningDetList.isNotEmpty;
 
     final isFromSelected = _fromCrId != null;
     final isToSelected = _toCrId != null;
@@ -881,6 +890,20 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
         ),
       ],
       [
+        ErpFieldConfig(
+          key: 'entryType',
+          label: 'Entry Type',
+          type: ErpFieldType.dropdown,
+          readOnly: hasTableDefaultData || _lockMasterFields || _isEditMode,
+          initialDropValue: true,
+          skipFocus: true,
+          dropdownItems: [
+            ErpDropdownItem(label: 'Planning', value: 'planning'),
+            ErpDropdownItem(label: 'Replanning', value: 'replanning'),
+          ],
+          sectionIndex: 3,
+          width: 200,
+        ),
         ErpFieldConfig(
           key: 'scanValue',
           label: 'BCODE',
@@ -1084,7 +1107,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
     ErpColumnConfig(
       key: 'spkDeptIssDate',
       label: 'DATE',
-      width: 160,
+      width: 120,
       isDate: true,
     ),
     ErpColumnConfig(key: 'spkDeptIssTime', label: 'TIME', width: 140),
@@ -1221,7 +1244,7 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
       tabBarBackgroundColor: const Color(0xfff2f0ef),
       tabBarSelectedColor: _theme.primaryGradient.first,
       tabBarSelectedTxtColor: Colors.white,
-      rows: _buildFormRows(),
+      rows: _buildFormRows(prov),
       initialValues: _formValues,
       isEditMode: _isEditMode,
       printOnPress: printJobWorkPdf,
@@ -1459,11 +1482,21 @@ class _TrnPlanningReceivedEntryState extends State<TrnPlanningReceivedEntry> {
         }).toList();
 
         if (rows.isNotEmpty && scannedDetList.isNotEmpty) {
-          final success = await prov.savePlanningDetails(
-            merged,
-            rows,
-            scannedDetList,
-          );
+          final isReplanning =
+              (_entryVals['entryType'] ?? _formValues['entryType'] ?? 'planning') ==
+                  'replanning';
+
+          final success = isReplanning
+              ? await prov.saveRePlanningDetails(
+                  merged,
+                  rows,
+                  scannedDetList,
+                )
+              : await prov.savePlanningDetails(
+                  merged,
+                  rows,
+                  scannedDetList,
+                );
 
           if (rows.isEmpty) {
             ErpResultDialog.showError(

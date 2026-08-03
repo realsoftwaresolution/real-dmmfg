@@ -78,12 +78,12 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
     ErpColumnConfig(
       key: 'roughAssortDate',
       label: 'DATE',
-      width: 110,
+      width: 100,
       required: true,
       isDate: true,
     ),
-    ErpColumnConfig(key: 'kapanNo', label: 'KAPAN', width: 140),
-    ErpColumnConfig(key: 'jno', label: 'JNO', width: 130),
+    ErpColumnConfig(key: 'kapanNo', label: 'KAPAN', width: 120),
+    ErpColumnConfig(key: 'jno', label: 'JNO', width: 80),
     ErpColumnConfig(key: 'remarks', label: 'REMARKS', width: 200),
   ];
 

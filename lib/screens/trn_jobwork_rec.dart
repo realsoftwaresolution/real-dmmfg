@@ -1,17 +1,29 @@
 import 'package:diam_mfg/models/job_work_rec_model.dart';
+import 'package:diam_mfg/providers/charni_provider.dart';
+import 'package:diam_mfg/providers/color_provider.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
+import 'package:diam_mfg/providers/cut_provider.dart';
 import 'package:diam_mfg/providers/dept_process_provider.dart';
+import 'package:diam_mfg/providers/fColor_provider.dart';
+import 'package:diam_mfg/providers/fluo_provider.dart';
+import 'package:diam_mfg/providers/intent_provider.dart';
 import 'package:diam_mfg/providers/job_work_rec_entry_provider.dart';
+import 'package:diam_mfg/providers/over_provider.dart';
+import 'package:diam_mfg/providers/polish_provider.dart';
+import 'package:diam_mfg/providers/purity_provider.dart';
+import 'package:diam_mfg/providers/shape_provider.dart';
+import 'package:diam_mfg/providers/symmetry_provider.dart';
+import 'package:diam_mfg/providers/tensions_provider.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
 import 'package:diam_mfg/utils/msg_dialogue.dart';
+import 'package:diam_mfg/utils/process_constants.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
-import '../models/user_visibility_model.dart';
 
 class TrnJobWorkRecEntry extends StatefulWidget {
   const TrnJobWorkRecEntry({super.key});
@@ -27,7 +39,7 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
   ErpTheme get _theme => ErpTheme(_themeVariant);
 
   // ── Form ───────────────────────────────────────────────────────────────────
-  GlobalKey<ErpFormState> _erpFormKey = GlobalKey<ErpFormState>();
+  final GlobalKey<ErpFormState> _erpFormKey = GlobalKey<ErpFormState>();
   Map<String, String> _formValues = {};
   final Map<String, String> _entryVals = {};
 
@@ -45,16 +57,118 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
 
   // ── Master form fields ─────────────────────────────────────────────────────
   int? _selectedPartyMstID;
-  int? _selectedDeptProcessCode;
+  int? _selectedDeptCode;
 
   // ── Detail rows ────────────────────────────────────────────────────────────
   List<JobWorkRecDetModel> _detRows = [];
   List<Map<String, dynamic>> _detDisplay = [];
   List<String> _activeDetColumns = [];
+  int? _editingDetIndex;
 
-  // ── Display fields ────────────────────────────────────────────────────────
-  List<UserVisibilityModel> _displayFields = [];
-  int? _selectedDeptCode;
+  // ── LOOKUP HELPERS ─────────────────────────────────────────────────────────
+  String? _purityNameFor(int? code) {
+    if (code == null) return null;
+    try {
+      return context
+          .read<PurityProvider>()
+          .list
+          .firstWhere((p) => p.purityCode.toString() == code.toString())
+          .purityName;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _charniNameFor(int? code) {
+    if (code == null) return null;
+    try {
+      return context
+          .read<CharniProvider>()
+          .list
+          .firstWhere((p) => p.charniCode.toString() == code.toString())
+          .charniName;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _colorNameFor(int? code) {
+    if (code == null) return null;
+    try {
+      return context
+          .read<ColorProvider>()
+          .list
+          .firstWhere((p) => p.colorCode.toString() == code.toString())
+          .colorName;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _shapeNameFor(int? code) {
+    if (code == null) return null;
+    try {
+      return context
+          .read<ShapeProvider>()
+          .list
+          .firstWhere((p) => p.shapeCode.toString() == code.toString())
+          .shapeName;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _cutNameFor(int? code) {
+    if (code == null) return null;
+    try {
+      return context
+          .read<CutProvider>()
+          .cuts
+          .firstWhere((p) => p.cutCode.toString() == code.toString())
+          .cutName;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _polishNameFor(int? code) {
+    if (code == null) return null;
+    try {
+      return context
+          .read<PolishProvider>()
+          .polishs
+          .firstWhere((p) => p.polishCode.toString() == code.toString())
+          .polishName;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _symmetryNameFor(int? code) {
+    if (code == null) return null;
+    try {
+      return context
+          .read<SymmetryProvider>()
+          .symmetrys
+          .firstWhere((p) => p.symmetryCode.toString() == code.toString())
+          .symmetryName;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _fluoNameFor(int? code) {
+    if (code == null) return null;
+    try {
+      return context
+          .read<FluoProvider>()
+          .list
+          .firstWhere((p) => p.fluoCode.toString() == code.toString())
+          .fluoName;
+    } catch (_) {
+      return null;
+    }
+  }
 
   @override
   void initState() {
@@ -65,6 +179,18 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
         context.read<JobWorkRecEntryProvider>().load(),
         context.read<DeptProcessProvider>().load(),
         context.read<CounterProvider>().load(),
+        context.read<CharniProvider>().load(),
+        context.read<TensionsProvider>().load(),
+        context.read<ShapeProvider>().load(),
+        context.read<PurityProvider>().load(),
+        context.read<ColorProvider>().load(),
+        context.read<CutProvider>().loadCuts(),
+        context.read<FluoProvider>().load(),
+        context.read<SymmetryProvider>().loadSymmetry(),
+        context.read<PolishProvider>().loadPolish(),
+        context.read<FColorProvider>().loadColors(),
+        context.read<OverProvider>().loadOvers(),
+        context.read<IntentProvider>().loadIntents(),
       ]);
       if (!mounted) return;
       _setDefaultFormValues();
@@ -85,6 +211,35 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
         _erpFormKey.currentState?.focusField('scanValue');
       } catch (_) {}
     });
+  }
+
+  void _calcLoss() {
+    final issWt = double.tryParse(_entryVals['issWt'] ?? '') ?? 0;
+    final recWt = double.tryParse(_entryVals['recWt'] ?? '') ?? 0;
+    final kWt = double.tryParse(_entryVals['kWt'] ?? '') ?? 0;
+    final brWt = double.tryParse(_entryVals['brWt'] ?? '') ?? 0;
+
+    final issPc = int.tryParse(_entryVals['issPc'] ?? '') ?? 0;
+    final recPc = int.tryParse(_entryVals['recPc'] ?? '') ?? 0;
+    final kPc = int.tryParse(_entryVals['kPc'] ?? '') ?? 0;
+    final brPc = int.tryParse(_entryVals['brPc'] ?? '') ?? 0;
+
+    final lossWt = issWt - (recWt + kWt + brWt);
+    final lossPc = issPc - (recPc + kPc + brPc);
+
+    final double safeLossWt = lossWt < 0 ? 0.0 : lossWt;
+    final safeLossPc = lossPc < 0 ? 0 : lossPc;
+
+    _entryVals['lossWt'] = fThreeDecimal(safeLossWt);
+    _entryVals['lossPc'] = '$safeLossPc';
+
+    try {
+      _erpFormKey.currentState?.updateFieldValue(
+        'lossWt',
+        fThreeDecimal(safeLossWt),
+      );
+      _erpFormKey.currentState?.updateFieldValue('lossPc', '$safeLossPc');
+    } catch (_) {}
   }
 
   Future<void> _onBCodeScanned(String bCode) async {
@@ -109,9 +264,9 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
 
     final r = rows.first;
 
-    // ✅ Duplicate check
+    // Duplicate check
     final exists = _detRows.any(
-      (e) => e.bCode?.toString() == r.bCode?.toString(),
+      (e) => e.bCode.toString() == r.bCode.toString(),
     );
 
     if (exists) {
@@ -127,17 +282,17 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       srno: _detRows.length + 1,
 
       // Cut & Package Info
-      cutNo: r.cutNo ?? '',
-      mfgCut: r.mfgCut ,
-      bCode: r.bCode ?? 0,
-      pktNo: r.pktNo ?? '',
+      cutNo: r.cutNo,
+      mfgCut: r.mfgCut,
+      bCode: r.bCode,
+      pktNo: r.pktNo,
       pairNo: r.pairNo,
 
       // Pieces & Weight
-      pc: r.pc ?? 0,
-      wt: r.wt ?? 0.0,
-      issPc: r.issPc ?? r.pc ?? 0,
-      issWt: r.issWt ?? r.wt ?? 0.0,
+      pc: r.pc,
+      wt: r.wt,
+      issPc: r.issPc != 0 ? r.issPc : r.pc,
+      issWt: r.issWt != 0.0 ? r.issWt : r.wt,
       recPc: r.recPc,
       recWt: r.recWt,
 
@@ -160,8 +315,8 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       colorName: r.colorName,
       shapeName: r.shapeName,
 
-      dmWt: r.dmWt ?? 0.0,
-      dmPer: r.dmPer ?? 0.0,
+      dmWt: r.dmWt,
+      dmPer: r.dmPer,
 
       // Percentages
       recPer: r.recPer,
@@ -169,11 +324,11 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       diffWt: r.diffWt,
 
       // Dimensions
-      size: r.size ?? 0.0,
+      size: r.size,
       cutCode: r.cutCode,
-      diam: r.diam ?? 0.0,
+      diam: r.diam,
       height: r.height,
-      length: r.length ?? 0.0,
+      length: r.length,
 
       // Quality
       polishCode: r.polishCode,
@@ -181,7 +336,7 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       fluoCode: r.fluoCode,
       tensionsCode: r.tensionsCode,
 
-      qrCode: r.qrCode ?? '',
+      qrCode: r.qrCode,
 
       cutName: r.cutName,
       polishName: r.polishName,
@@ -260,6 +415,308 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
     });
   }
 
+  void _editDetRow(int idx) {
+    final actualIdx = _detRows.length - 1 - idx;
+    if (actualIdx < 0 || actualIdx >= _detRows.length) return;
+    final r = _detRows[actualIdx];
+
+    setState(() => _editingDetIndex = actualIdx);
+
+    void set(String k, String? v) {
+      _entryVals[k] = v ?? '';
+      _formValues[k] = v ?? '';
+      try {
+        _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
+      } catch (_) {}
+    }
+
+    set('scanValue', r.bCode.toString());
+    set('qrCode', r.qrCode);
+    set('jno', r.jno?.toString());
+    set('mfgCut', r.mfgCut);
+    set('pktNo', r.pktNo);
+    set('orgPc', r.pc.toString());
+    set('orgWt', fThreeDecimal(r.wt));
+    set('issPc', r.issPc.toString());
+    set('issWt', fThreeDecimal(r.issWt));
+    set('recPc', r.recPc?.toString());
+    set('recWt', r.recWt != null ? fThreeDecimal(r.recWt!) : '');
+    set('kPc', r.kPc?.toString());
+    set('kWt', r.kWt != null ? fThreeDecimal(r.kWt!) : '');
+    set('brPc', r.brPc?.toString());
+    set('brWt', r.brWt != null ? fThreeDecimal(r.brWt!) : '');
+    set('lossPc', r.lossPc?.toString());
+    set('lossWt', r.lossWt != null ? fThreeDecimal(r.lossWt!) : '');
+    set('dmWt', fThreeDecimal(r.dmWt));
+    set('dmPer', r.dmPer.toStringAsFixed(2));
+    set('size', fThreeDecimal(r.size));
+    set('purity', r.purityCode?.toString());
+    set('charni', r.charniCode?.toString());
+    set('color', r.colorCode?.toString());
+    set('shapeCode', r.shapeCode?.toString());
+    set('cutCode', r.cutCode?.toString());
+    set('polishCode', r.polishCode?.toString());
+    set('symmetryCode', r.symmetryCode?.toString());
+    set('fluo', r.fluoCode?.toString());
+    set('tensionCode', r.tensionsCode?.toString());
+    set('FcIntentCode', r.fcIntentCode?.toString());
+    set('FColorCode1', r.fColorCode1?.toString());
+    set('FColorCode2', r.fColorCode2?.toString());
+    set('FcOverCode', r.fcOverCode?.toString());
+    set('TopSide', r.topSide);
+    set('HA', r.ha);
+    set('diam', r.diam.toString());
+    set('height', r.height?.toString());
+    set('length', r.length.toString());
+    set('pairNo', r.pairNo?.toString());
+  }
+
+  void _updateEditedRow() {
+    if (_editingDetIndex == null ||
+        _editingDetIndex! < 0 ||
+        _editingDetIndex! >= _detRows.length) {
+      return;
+    }
+
+    final existing = _detRows[_editingDetIndex!];
+
+    final purityCode = int.tryParse(_entryVals['purity'] ?? '');
+    final charniCode = int.tryParse(_entryVals['charni'] ?? '');
+    final colorCode = int.tryParse(_entryVals['color'] ?? '');
+    final shapeCode = int.tryParse(_entryVals['shapeCode'] ?? '');
+    final cutCode = int.tryParse(_entryVals['cutCode'] ?? '');
+    final polishCode = int.tryParse(_entryVals['polishCode'] ?? '');
+    final symmetryCode = int.tryParse(_entryVals['symmetryCode'] ?? '');
+    final fluoCode = int.tryParse(_entryVals['fluo'] ?? '');
+    final tensionsCode = int.tryParse(_entryVals['tensionCode'] ?? '');
+
+    final updated = existing.copyWith(
+      recPc: int.tryParse(_entryVals['recPc'] ?? ''),
+      recWt: double.tryParse(_entryVals['recWt'] ?? ''),
+      kPc: int.tryParse(_entryVals['kPc'] ?? ''),
+      kWt: double.tryParse(_entryVals['kWt'] ?? ''),
+      brPc: int.tryParse(_entryVals['brPc'] ?? ''),
+      brWt: double.tryParse(_entryVals['brWt'] ?? ''),
+      lossPc: int.tryParse(_entryVals['lossPc'] ?? ''),
+      lossWt: double.tryParse(_entryVals['lossWt'] ?? ''),
+      dmWt: double.tryParse(_entryVals['dmWt'] ?? ''),
+      dmPer: double.tryParse(_entryVals['dmPer'] ?? ''),
+      size: double.tryParse(_entryVals['size'] ?? ''),
+      diam: double.tryParse(_entryVals['diam'] ?? ''),
+      height: double.tryParse(_entryVals['height'] ?? ''),
+      length: double.tryParse(_entryVals['length'] ?? ''),
+      pairNo: int.tryParse(_entryVals['pairNo'] ?? ''),
+      purityCode: purityCode,
+      charniCode: charniCode,
+      colorCode: colorCode,
+      shapeCode: shapeCode,
+      cutCode: cutCode,
+      polishCode: polishCode,
+      symmetryCode: symmetryCode,
+      fluoCode: fluoCode,
+      tensionsCode: tensionsCode,
+      topSide: _entryVals['TopSide'],
+      fcIntentCode: int.tryParse(_entryVals['FcIntentCode'] ?? ''),
+      fcOverCode: int.tryParse(_entryVals['FcOverCode'] ?? ''),
+      fColorCode1: int.tryParse(_entryVals['FColorCode1'] ?? ''),
+      fColorCode2: int.tryParse(_entryVals['FColorCode2'] ?? ''),
+      ha: _entryVals['HA'],
+      rate: double.tryParse(_entryVals['rate'] ?? ''),
+      amount: double.tryParse(_entryVals['amount'] ?? ''),
+      purityName: _purityNameFor(purityCode) ?? existing.purityName,
+      charniName: _charniNameFor(charniCode) ?? existing.charniName,
+      colorName: _colorNameFor(colorCode) ?? existing.colorName,
+      shapeName: _shapeNameFor(shapeCode) ?? existing.shapeName,
+      cutName: _cutNameFor(cutCode) ?? existing.cutName,
+      polishName: _polishNameFor(polishCode) ?? existing.polishName,
+      symmetryName: _symmetryNameFor(symmetryCode) ?? existing.symmetryName,
+      fluoName: _fluoNameFor(fluoCode) ?? existing.fluoName,
+    );
+
+    setState(() {
+      _detRows[_editingDetIndex!] = updated;
+      _syncDetGrid();
+    });
+  }
+
+  void _clearEntryFields() {
+    const keys = [
+      'scanValue',
+      'qrCode',
+      'jno',
+      'mfgCut',
+      'pktNo',
+      'orgPc',
+      'orgWt',
+      'issPc',
+      'issWt',
+      'recPc',
+      'recWt',
+      'kPc',
+      'kWt',
+      'brPc',
+      'brWt',
+      'lossPc',
+      'lossWt',
+      'dmWt',
+      'dmPer',
+      'size',
+      'purity',
+      'charni',
+      'color',
+      'shapeCode',
+      'cutCode',
+      'polishCode',
+      'symmetryCode',
+      'fluo',
+      'tensionCode',
+      'FcIntentCode',
+      'FColorCode1',
+      'FColorCode2',
+      'FcOverCode',
+      'TopSide',
+      'HA',
+      'diam',
+      'height',
+      'length',
+      'pairNo',
+      'rate',
+      'amount',
+    ];
+
+    for (final k in keys) {
+      _entryVals.remove(k);
+      _formValues.remove(k);
+      try {
+        _erpFormKey.currentState?.updateFieldValue(k, '');
+      } catch (_) {}
+    }
+
+    setState(() {
+      _editingDetIndex = null;
+    });
+
+    _focusScan();
+  }
+
+  Future<void> _onAddEntry() async {
+    if (_editingDetIndex != null &&
+        _editingDetIndex! >= 0 &&
+        _editingDetIndex! < _detRows.length) {
+      _updateEditedRow();
+
+      final r = _detRows[_editingDetIndex!];
+      final detID = r.jobWorkRecDetID;
+      final mstID = r.jobWorkRecMstID ??
+          int.tryParse(_formValues['jobWorkRecMstID'] ?? '0') ??
+          0;
+
+      if (detID != null && detID != 0) {
+        final prov = context.read<JobWorkRecEntryProvider>();
+
+        final singleRowPayload = {
+          "JobWorkRecMstID": mstID,
+          "JobWorkRecDetID": detID,
+          "JobWorkRecDate": toUtcIso(_formValues['date']),
+          "PartyMstID":
+              int.tryParse(_formValues['partyMstID'] ?? '') ?? r.partyMstID ?? 0,
+          "DeptCode": _selectedDeptCode ?? r.deptCode ?? 0,
+          "DeptProcessCode": r.deptProcessCode ?? 0,
+          "Jno": r.jno ?? 0,
+          "Srno": r.srno ?? 0,
+          "CutNo": r.cutNo,
+          "MfgCut": r.mfgCut,
+          "BCode": r.bCode,
+          "PktNo": r.pktNo,
+          "PairNo": r.pairNo ?? 0,
+          "Pc": r.pc,
+          "Wt": r.wt,
+          "IssPc": r.issPc,
+          "IssWt": r.issWt,
+          "RecPc": r.recPc ?? 0,
+          "RecWt": r.recWt ?? 0.0,
+          "KPc": r.kPc ?? 0,
+          "KWt": r.kWt ?? 0.0,
+          "BrPc": r.brPc ?? 0,
+          "BrWt": r.brWt ?? 0.0,
+          "LossPc": r.lossPc ?? 0,
+          "LossWt": r.lossWt ?? 0.0,
+          "PurityCode": r.purityCode ?? 0,
+          "CharniCode": r.charniCode ?? 0,
+          "ColorCode": r.colorCode ?? 0,
+          "ShapeCode": r.shapeCode ?? 0,
+          "DmWt": r.dmWt,
+          "DmPer": r.dmPer,
+          "Size": r.size,
+          "CutCode": r.cutCode ?? 0,
+          "Diam": r.diam,
+          "Height": r.height ?? 0.0,
+          "Length": r.length,
+          "PolishCode": r.polishCode ?? 0,
+          "SymmetryCode": r.symmetryCode ?? 0,
+          "FluoCode": r.fluoCode ?? 0,
+          "TensionsCode": r.tensionsCode ?? 0,
+          "QRCode": r.qrCode,
+          "RecPer": r.recPer ?? 0.0,
+          "DiffPer": r.diffPer ?? 0.0,
+          "DiffWt": r.diffWt ?? 0.0,
+          "JobRec": r.jobRec ?? 'N',
+          "PolishCheckerRecMstID": r.polishCheckerRecMstID ?? 0,
+          "OrderMstID": r.orderMstID ?? 0,
+          "MarkerMstID": r.markerMstID ?? 0,
+          "FromCrID": r.fromCrID ?? 0,
+          "LastCrID": r.lastCrID ?? 0,
+          "CrID": r.crID ?? 0,
+          "TopSide": r.topSide,
+          "FcIntentCode": r.fcIntentCode ?? 0,
+          "FcOverCode": r.fcOverCode ?? 0,
+          "FColorCode1": r.fColorCode1 ?? 0,
+          "FColorCode2": r.fColorCode2 ?? 0,
+          "HA": r.ha ?? 'N',
+          "Rate": r.rate ?? 0.0,
+          "Amount": r.amount ?? 0.0,
+          "RateID": r.rateID,
+          "Rateon": r.rateon,
+          "expectedProcess": ProcessConstants.jobWorkRec,
+        };
+
+        final success = await prov.update(singleRowPayload, _theme, context);
+
+        if (!mounted || !success) return;
+
+        setState(() {
+          _editingDetIndex = null;
+          _syncDetGrid();
+        });
+
+        _clearEntryFields();
+
+        await ErpResultDialog.showSuccess(
+          context: context,
+          theme: _theme,
+          title: 'Updated',
+          message: 'Job Work Rec entry updated successfully.',
+        );
+
+        if (mstID != 0) {
+          final updatedDetails = await prov.loadDetails(mstID);
+          if (mounted) {
+            setState(() {
+              _detRows = updatedDetails;
+              _syncDetGrid();
+            });
+          }
+        }
+      } else {
+        setState(() {
+          _editingDetIndex = null;
+          _syncDetGrid();
+        });
+        _clearEntryFields();
+      }
+    }
+  }
+
   dynamic _deleteDetRow(int idx) async {
     final actualIdx = _detRows.length - 1 - idx;
 
@@ -275,13 +732,14 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       final success = await context.read<JobWorkRecEntryProvider>().deleteRow(
         _detRows[actualIdx].jobWorkRecMstID ?? 0,
         _detRows[actualIdx].jobWorkRecDetID ?? 0,
-        _detRows[actualIdx].bCode ?? 0,
+        _detRows[actualIdx].bCode,
         theme: _theme,
         context: context,
       );
 
       if (success && mounted) {
         setState(() {
+          if (_editingDetIndex == actualIdx) _editingDetIndex = null;
           _detRows.removeAt(actualIdx);
 
           _detRows = _detRows.asMap().entries.map((e) {
@@ -299,6 +757,7 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       }
     } else {
       setState(() {
+        if (_editingDetIndex == actualIdx) _editingDetIndex = null;
         _detRows.removeAt(actualIdx);
 
         _detRows = _detRows.asMap().entries.map((e) {
@@ -325,50 +784,66 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       'wt',
       'issPc',
       'issWt',
+      'recPc',
+      'recWt',
+      'kPc',
+      'kWt',
+      'brPc',
+      'brWt',
+      'lossPc',
+      'lossWt',
       'purityCode',
       'charniCode',
       'colorCode',
       'shapeCode',
-      'dmWt',
-      'dmPer',
-      'size',
       'cutCode',
-      'diam',
-      'height',
-      'length',
       'polishCode',
       'symmetryCode',
       'fluoCode',
+      'dmWt',
+      'dmPer',
+      'size',
+      'diam',
+      'height',
+      'length',
     ];
 
     _detDisplay = _detRows.reversed
         .map(
           (r) => {
             'srno': r.srno?.toString() ?? '',
-            'mfgCut': r.mfgCut ?? '',
-            'qrCode': r.qrCode ?? '',
-            'bCode': r.bCode?.toString() ?? '',
-            'pktNo': r.pktNo ?? '',
+            'mfgCut': r.mfgCut,
+            'qrCode': r.qrCode,
+            'bCode': r.bCode.toString(),
+            'pktNo': r.pktNo,
             'pairNo': r.pairNo?.toString() ?? '',
-            'pc': (r.pc ?? 0).toString(),
-            'wt': fThreeDecimal(r.wt ?? 0),
-            'issPc': (r.issPc ?? 0).toString(),
-            'issWt': fThreeDecimal(r.issWt ?? 0),
-            'purityCode': r.purityName ?? '',
-            'charniCode': r.charniName ?? '',
-            'colorCode': r.colorName ?? '',
-            'shapeCode': r.shapeName ?? '',
-
-            'cutCode': r.cutName ?? '',
-            'polishCode': r.polishName ?? '',
-            'symmetryCode': r.symmetryName ?? '',
-            'fluoCode': r.fluoName ?? '',
-            'dmWt': fThreeDecimal(r.dmWt ?? 0),
-            'dmPer': (r.dmPer ?? 0).toStringAsFixed(2),
-            'size': fThreeDecimal(r.size ?? 0),
-            'diam': (r.diam ?? 0).toStringAsFixed(2),
+            'pc': r.pc.toString(),
+            'wt': fThreeDecimal(r.wt),
+            'issPc': r.issPc.toString(),
+            'issWt': fThreeDecimal(r.issWt),
+            'recPc': (r.recPc ?? 0).toString(),
+            'recWt': fThreeDecimal(r.recWt ?? 0),
+            'kPc': (r.kPc ?? 0).toString(),
+            'kWt': fThreeDecimal(r.kWt ?? 0),
+            'brPc': (r.brPc ?? 0).toString(),
+            'brWt': fThreeDecimal(r.brWt ?? 0),
+            'lossPc': (r.lossPc ?? 0).toString(),
+            'lossWt': fThreeDecimal(r.lossWt ?? 0),
+            'purityCode': r.purityName ?? _purityNameFor(r.purityCode) ?? '',
+            'charniCode': r.charniName ?? _charniNameFor(r.charniCode) ?? '',
+            'colorCode': r.colorName ?? _colorNameFor(r.colorCode) ?? '',
+            'shapeCode': r.shapeName ?? _shapeNameFor(r.shapeCode) ?? '',
+            'cutCode': r.cutName ?? _cutNameFor(r.cutCode) ?? '',
+            'polishCode': r.polishName ?? _polishNameFor(r.polishCode) ?? '',
+            'symmetryCode':
+                r.symmetryName ?? _symmetryNameFor(r.symmetryCode) ?? '',
+            'fluoCode': r.fluoName ?? _fluoNameFor(r.fluoCode) ?? '',
+            'dmWt': fThreeDecimal(r.dmWt),
+            'dmPer': r.dmPer.toStringAsFixed(2),
+            'size': fThreeDecimal(r.size),
+            'diam': r.diam.toStringAsFixed(2),
             'height': (r.height ?? 0).toStringAsFixed(2),
-            'length': (r.length ?? 0).toStringAsFixed(2),
+            'length': r.length.toStringAsFixed(2),
           },
         )
         .toList();
@@ -390,7 +865,6 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
   Future<void> _onRowTap(Map<String, dynamic> row) async {
     final prov = context.read<JobWorkRecEntryProvider>();
     final id = int.tryParse(row['jobWorkRecMstID'].toString()) ?? 0;
-    print(row);
     final details = await prov.loadDetails(id);
 
     if (!mounted) return;
@@ -399,6 +873,7 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       _selectedRow = row;
       _isEditMode = true;
       _detRows = details;
+      _editingDetIndex = null;
       _isAdding = false;
       _showTableOnMobile = false;
 
@@ -421,9 +896,6 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       } catch (_) {
         _selectedDeptCode = null;
       }
-      _selectedDeptProcessCode = int.tryParse(
-        _formValues['deptProcessCode'] ?? '0',
-      );
       _syncDetGrid();
     });
 
@@ -449,7 +921,6 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       return;
     }
 
-    // ✅ BUILD PAYLOAD MATCHING NEW API STRUCTURE
     final payload = {
       "JobWorkRecDate": toUtcIso(_formValues['date']),
       "PartyMstID": int.tryParse(_formValues['partyMstID'] ?? '') ?? 0,
@@ -536,12 +1007,7 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
     };
 
     bool success;
-    if (_isEditMode) {
-      final mstID = int.tryParse(_formValues['jobWorkRecMstID'] ?? '0') ?? 0;
-      success = await prov.update(mstID, payload);
-    } else {
-      success = await prov.create(payload);
-    }
+    success = await prov.create(payload);
 
     if (!mounted) return;
 
@@ -562,8 +1028,9 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
 
   Future<void> _onDelete() async {
     if (_formValues['jobWorkRecMstID'] == null ||
-        _formValues['jobWorkRecMstID'] == '0')
+        _formValues['jobWorkRecMstID'] == '0') {
       return;
+    }
 
     final confirm = await ErpDeleteDialog.show(
       context: context,
@@ -608,15 +1075,13 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       _isEditMode = false;
       _showTableOnMobile = false;
       _isAdding = false;
+      _editingDetIndex = null;
 
       _detRows = [];
       _detDisplay = [];
 
       _selectedPartyMstID = null;
-      _selectedDeptProcessCode = null;
       _selectedDeptCode = null;
-
-      _displayFields.clear();
 
       _formValues.clear();
     });
@@ -633,9 +1098,141 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
 
   List<List<ErpFieldConfig>> _buildFormRows() {
-    final counterProvider = context.read<CounterProvider>();
+    final counterProvider = context.watch<CounterProvider>();
+    final colorProv = context.watch<ColorProvider>();
+    final purityProv = context.watch<PurityProvider>();
+    final cutProv = context.watch<CutProvider>();
+    final charniProv = context.watch<CharniProvider>();
+    final polishProv = context.watch<PolishProvider>();
+    final symmetryProv = context.watch<SymmetryProvider>();
+    final fluoProv = context.watch<FluoProvider>();
+    final tensionProv = context.watch<TensionsProvider>();
+    final fcIntentProv = context.watch<IntentProvider>();
+    final fColorProv = context.watch<FColorProvider>();
+    final fcOverProv = context.watch<OverProvider>();
+
+    final colorDropdown = colorProv.list
+        .where((e) => e.active == true)
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.colorName ?? '',
+            value: e.colorCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+
+    final purityDropdown = purityProv.list
+        .where((e) => e.active == true)
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.purityName ?? '',
+            value: e.purityCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+
+    final cutDropdown = cutProv.cuts
+        .where((e) => e.active == true)
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.cutName ?? '',
+            value: e.cutCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+
+    final charniDropdown = charniProv.list
+        .where((e) => e.active == true)
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.charniName ?? '',
+            value: e.charniCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+
+    final polishDropdown = polishProv.polishs
+        .where((e) => e.active == true)
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.polishName ?? '',
+            value: e.polishCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+
+    final symmetryDropdown = symmetryProv.symmetrys
+        .where((e) => e.active == true)
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.symmetryName ?? '',
+            value: e.symmetryCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+
+    final fluoDropdown = fluoProv.list
+        .where((e) => e.active == true)
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.fluoName ?? '',
+            value: e.fluoCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+
+    final tensionDropdown = tensionProv.list
+        .where((e) => e.active == true)
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.tensionsName ?? '',
+            value: e.tensionsCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+
+    final fcIntentDropdown = fcIntentProv.cuts
+        .where((e) => e.active == true)
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.fcIntentName ?? '',
+            value: e.fcIntentCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+
+    final fColor1Dropdown = fColorProv.cuts
+        .where((e) => e.active == true && e.type == 'color1')
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.fColorName ?? '',
+            value: e.fColorCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+
+    final fColor2Dropdown = fColorProv.cuts
+        .where((e) => e.active == true && e.type == 'color2')
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.fColorName ?? '',
+            value: e.fColorCode?.toString() ?? '',
+          ),
+        )
+        .toList();
+
+    final fcOverDropdown = fcOverProv.cuts
+        .where((e) => e.active == true)
+        .map(
+          (e) => ErpDropdownItem(
+            label: e.fcOverName ?? '',
+            value: e.fcOverCode?.toString() ?? '',
+          ),
+        )
+        .toList();
 
     final List<List<ErpFieldConfig>> rows = [
+      // Section 0: Master & Scan
       [
         ErpFieldConfig(
           key: 'date',
@@ -643,7 +1240,6 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
           type: ErpFieldType.date,
           readOnly: true,
           sectionIndex: 0,
-          width: 250,
         ),
         ErpFieldConfig(
           key: 'partyMstID',
@@ -661,14 +1257,262 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
                 ),
               )
               .toList(),
-          width: 250,
         ),
         ErpFieldConfig(
           key: 'scanValue',
           label: 'BCODE',
           type: ErpFieldType.text,
           sectionIndex: 0,
-          width: 250,
+        ),
+        ErpFieldConfig(
+          key: 'qrCode',
+          label: 'QRCODE',
+          type: ErpFieldType.text,
+          readOnly: true,
+          sectionIndex: 0,
+        ),
+        ErpFieldConfig(
+          key: 'jno',
+          label: 'JNO',
+          type: ErpFieldType.number,
+          readOnly: true,
+          sectionIndex: 0,
+        ),
+        ErpFieldConfig(
+          key: 'mfgCut',
+          label: 'MFG CUT',
+          type: ErpFieldType.text,
+          readOnly: true,
+          sectionIndex: 0,
+        ),
+        ErpFieldConfig(
+          key: 'pktNo',
+          label: 'PKT NO',
+          type: ErpFieldType.text,
+          readOnly: true,
+          sectionIndex: 0,
+        ),
+      ],
+      // Section 1: PC & Weight & Core Details
+      [
+        ErpFieldConfig(
+          key: 'orgPc',
+          label: 'ORG PC',
+          type: ErpFieldType.number,
+          readOnly: true,
+          isEntryField: true,
+          sectionIndex: 1,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'orgWt',
+          label: 'ORG WT',
+          type: ErpFieldType.amount,
+          readOnly: true,
+          isEntryField: true,
+          sectionIndex: 1,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'issPc',
+          label: 'ISS PC',
+          type: ErpFieldType.number,
+          readOnly: true,
+          sectionIndex: 1,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'issWt',
+          label: 'ISS WT',
+          type: ErpFieldType.amount,
+          readOnly: true,
+          sectionIndex: 1,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'recPc',
+          label: 'REC PC',
+          type: ErpFieldType.number,
+          readOnly: true,
+          sectionIndex: 1,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'recWt',
+          label: 'REC WT',
+          type: ErpFieldType.amount,
+          sectionIndex: 1,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'dmWt',
+          label: 'DM WT',
+          type: ErpFieldType.amount,
+          sectionIndex: 1,
+          readOnly: true,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'dmPer',
+          label: 'DM PER',
+          type: ErpFieldType.number,
+          readOnly: true,
+          sectionIndex: 1,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'size',
+          label: 'SIZE',
+          type: ErpFieldType.number,
+          readOnly: true,
+          sectionIndex: 1,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'purity',
+          label: 'PURITY',
+          type: ErpFieldType.dropdown,
+          dropdownItems: purityDropdown,
+          sectionIndex: 1,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'charni',
+          label: 'CHARNI',
+          type: ErpFieldType.dropdown,
+          dropdownItems: charniDropdown,
+          sectionIndex: 1,
+          flex: 1,
+        ),
+      ],
+      // Section 2: Quality Attributes
+      [
+        ErpFieldConfig(
+          key: 'color',
+          label: 'COLOR',
+          type: ErpFieldType.dropdown,
+          dropdownItems: colorDropdown,
+          sectionIndex: 2,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'cutCode',
+          label: 'CUT',
+          type: ErpFieldType.dropdown,
+          dropdownItems: cutDropdown,
+          sectionIndex: 2,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'polishCode',
+          label: 'POLISH',
+          type: ErpFieldType.dropdown,
+          dropdownItems: polishDropdown,
+          sectionIndex: 2,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'symmetryCode',
+          label: 'SYMMETRY',
+          type: ErpFieldType.dropdown,
+          dropdownItems: symmetryDropdown,
+          sectionIndex: 2,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'fluo',
+          label: 'FLUO',
+          type: ErpFieldType.dropdown,
+          dropdownItems: fluoDropdown,
+          sectionIndex: 2,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'tensionCode',
+          label: 'TENSIONS',
+          type: ErpFieldType.dropdown,
+          dropdownItems: tensionDropdown,
+          sectionIndex: 2,
+          flex: 1,
+        ),
+      ],
+      // Section 3: FC & Extended Attributes
+      [
+        ErpFieldConfig(
+          key: 'FcIntentCode',
+          label: 'FC INTENT CODE',
+          type: ErpFieldType.dropdown,
+          dropdownItems: fcIntentDropdown,
+          sectionIndex: 3,
+        ),
+        ErpFieldConfig(
+          key: 'FColorCode1',
+          label: 'FC COLOR CODE 1',
+          type: ErpFieldType.dropdown,
+          dropdownItems: fColor1Dropdown,
+          sectionIndex: 3,
+        ),
+        ErpFieldConfig(
+          key: 'FColorCode2',
+          label: 'FC COLOR CODE 2',
+          type: ErpFieldType.dropdown,
+          dropdownItems: fColor2Dropdown,
+          sectionIndex: 3,
+        ),
+        ErpFieldConfig(
+          key: 'FcOverCode',
+          label: 'FC OVER CODE',
+          type: ErpFieldType.dropdown,
+          dropdownItems: fcOverDropdown,
+          sectionIndex: 3,
+        ),
+        ErpFieldConfig(
+          key: 'HA',
+          label: 'H&A',
+          sectionIndex: 3,
+          type: ErpFieldType.dropdown,
+          initialDropValue: true,
+          dropdownItems: const [
+            ErpDropdownItem(label: 'N', value: 'N'),
+            ErpDropdownItem(label: 'Y', value: 'Y'),
+          ],
+        ),
+        ErpFieldConfig(
+          key: 'length',
+          label: 'LENGTH',
+          type: ErpFieldType.amount,
+          sectionIndex: 3,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'diam',
+          label: 'DIAM',
+          type: ErpFieldType.amount,
+          sectionIndex: 3,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'height',
+          label: 'HEIGHT',
+          type: ErpFieldType.amount,
+          sectionIndex: 3,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'TopSide',
+          label: 'TOP SIDE',
+          type: ErpFieldType.text,
+          sectionIndex: 3,
+          flex: 1,
+        ),
+        ErpFieldConfig(
+          key: 'pairNo',
+          label: 'PAIR NO',
+          type: ErpFieldType.number,
+          sectionIndex: 3,
+          showAddButton: true,
+          isEntryField: true,
+          flex: 1,
         ),
       ],
     ];
@@ -706,22 +1550,22 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
   }
 
   List<ErpColumnConfig> get _tableColumns => [
-    ErpColumnConfig(key: 'jobWorkRecMstID', label: 'ID', width: 120),
-    ErpColumnConfig(key: 'date', label: 'DATE', width: 140, isDate: true),
-    ErpColumnConfig(key: 'partyName', label: 'PARTY', width: 140),
-    ErpColumnConfig(
-      key: 'totalPc',
-      label: 'PC',
-      width: 140,
-      align: ColumnAlign.right,
-    ),
-    ErpColumnConfig(
-      key: 'totalWt',
-      label: 'WT',
-      width: 120,
-      align: ColumnAlign.right,
-    ),
-  ];
+        ErpColumnConfig(key: 'jobWorkRecMstID', label: 'ID', width: 70),
+        ErpColumnConfig(key: 'date', label: 'DATE', width: 100, isDate: true),
+        ErpColumnConfig(key: 'partyName', label: 'PARTY', width: 140),
+        ErpColumnConfig(
+          key: 'totalPc',
+          label: 'PC',
+          width: 70,
+          align: ColumnAlign.center,
+        ),
+        ErpColumnConfig(
+          key: 'totalWt',
+          label: 'WT',
+          width: 100,
+          align: ColumnAlign.center,
+        ),
+      ];
 
   String _colLabel(String key) {
     const labels = {
@@ -735,6 +1579,14 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       'wt': 'WT',
       'issPc': 'ISS PC',
       'issWt': 'ISS WT',
+      'recPc': 'REC PC',
+      'recWt': 'REC WT',
+      'kPc': 'K PC',
+      'kWt': 'K WT',
+      'brPc': 'BR PC',
+      'brWt': 'BR WT',
+      'lossPc': 'LOSS PC',
+      'lossWt': 'LOSS WT',
       'purityCode': 'PURITY',
       'charniCode': 'CHARNI',
       'colorCode': 'COLOR',
@@ -784,43 +1636,48 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       tabBarSelectedColor: _theme.primaryGradient.first,
       tabBarSelectedTxtColor: Colors.white,
       rows: _buildFormRows(),
+      addButtonSections: const {3},
+      onEntryAdd: (sectionIndex) async {
+        await _onAddEntry();
+      },
       initialValues: _formValues,
       isEditMode: _isEditMode,
       onFieldChanged: (key, value) {
-        _formValues[key] = value.toString();
+        final val = value.toString();
+        _formValues[key] = val;
+        _entryVals[key] = val;
+
         switch (key) {
-          case 'deptProcessCode':
-            _selectedDeptProcessCode = int.tryParse(value.toString());
-            break;
           case 'partyMstID':
-            _selectedPartyMstID = int.tryParse(value.toString());
+            _selectedPartyMstID = int.tryParse(val);
 
             final counterProvider = context.read<CounterProvider>();
 
-            final party = counterProvider.list.firstWhere(
-              (e) => e.crId == _selectedPartyMstID,
-            );
+            try {
+              final party = counterProvider.list.firstWhere(
+                (e) => e.crId == _selectedPartyMstID,
+              );
 
-            setState(() {
-              _selectedDeptCode = party.deptCode;
-
-              _selectedDeptProcessCode = null;
-
-              _formValues['deptProcessCode'] = '';
-            });
-
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-
-              try {
-                _erpFormKey.currentState?.updateFieldValue(
-                  'deptProcessCode',
-                  '',
-                );
-              } catch (_) {}
-            });
+              setState(() {
+                _selectedDeptCode = party.deptCode;
+              });
+            } catch (_) {}
+            break;
+          case 'recWt':
+          case 'kWt':
+          case 'brWt':
+          case 'recPc':
+          case 'kPc':
+          case 'brPc':
+            _calcLoss();
+            if (_editingDetIndex != null) {
+              _updateEditedRow();
+            }
             break;
           default:
+            if (_editingDetIndex != null) {
+              _updateEditedRow();
+            }
             break;
         }
       },
@@ -857,6 +1714,10 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
                 title: 'JOB WORK DETAILS',
                 theme: t,
                 onDeleteRow: _deleteDetRow,
+                onEditRow: _editDetRow,
+                editingIndex: _editingDetIndex != null
+                    ? (_detRows.length - 1 - _editingDetIndex!)
+                    : null,
                 columnLabels: {
                   for (final c in _activeDetColumns) c: _colLabel(c),
                 },
@@ -877,12 +1738,12 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
     int sumInt(int Function(JobWorkRecDetModel) fn) =>
         _detRows.fold(0, (s, r) => s + fn(r));
 
-    final totPc = sumInt((r) => r.pc ?? 0);
-    final totWt = sumDouble((r) => r.wt ?? 0);
-    final totIssPc = sumInt((r) => r.issPc ?? 0);
-    final totIssWt = sumDouble((r) => r.issWt ?? 0);
-    final totDmWt = sumDouble((r) => r.dmWt ?? 0);
-    final dmPer = sumDouble((r) => r.dmPer ?? 0);
+    final totPc = sumInt((r) => r.pc);
+    final totWt = sumDouble((r) => r.wt);
+    final totIssPc = sumInt((r) => r.issPc);
+    final totIssWt = sumDouble((r) => r.issWt);
+    final totDmWt = sumDouble((r) => r.dmWt);
+    final dmPer = sumDouble((r) => r.dmPer);
 
     return {
       'srno': 'Tot...',

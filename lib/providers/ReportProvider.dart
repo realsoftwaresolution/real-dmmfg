@@ -48,6 +48,8 @@ class ReportProvider extends BaseProvider {
     _tableData = []; // 🔥 reset table
     notifyListeners();
 
+    final queryParams = config.queryBuilder?.call(filter) ?? filter;
+    // print('queryParams $queryParams');
     // 🔥 PDF branch
     if (config.isPdf) {
       try {
@@ -56,7 +58,7 @@ class ReportProvider extends BaseProvider {
 
         final response = await dio.get(
           '$baseUrl${config.endpoint}',
-          queryParameters: _normalizeQueryParams(filter),
+          queryParameters: _normalizeQueryParams(queryParams),
           options: Options(
             responseType: ResponseType.bytes,
             headers: {
@@ -122,7 +124,7 @@ class ReportProvider extends BaseProvider {
     final result = await request<List<Map<String, dynamic>>>(
       call: () => api.get(
         config.endpoint,
-        query: _normalizeQueryParams(filter),
+        query: _normalizeQueryParams(queryParams),
       ),
       onSuccess: (res) {
         final data = res.data;
@@ -139,6 +141,23 @@ class ReportProvider extends BaseProvider {
     _isLoading = false;
     notifyListeners();
     return _tableData;
+  }
+
+  void updateRow(int index, Map<String, dynamic> row) {
+    if (index >= 0 && index < _tableData.length) {
+      _tableData[index] = Map<String, dynamic>.from(row);
+      notifyListeners();
+    }
+  }
+
+  void addRow(Map<String, dynamic> row) {
+    _tableData.add(Map<String, dynamic>.from(row));
+    notifyListeners();
+  }
+
+  void setTableData(List<Map<String, dynamic>> newData) {
+    _tableData = List<Map<String, dynamic>>.from(newData);
+    notifyListeners();
   }
 
   Map<String, dynamic> _normalizeQueryParams(

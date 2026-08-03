@@ -22,6 +22,7 @@ class _LoginScreenV7State extends State<LoginScreenV7> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _obscure = true;
+  bool _isLoading = false;
 
   final _emailFocus = FocusNode();
   final _passFocus = FocusNode();
@@ -46,26 +47,42 @@ class _LoginScreenV7State extends State<LoginScreenV7> {
   }
 
   Future<void> _login() async {
+    if (_isLoading) return;
     if (!_formKey.currentState!.validate()) return;
-    final auth = context.read<AuthProvider>();
-    final ok = await auth.login(
-      username: _emailCtrl.text.trim(),
-      password: _passCtrl.text,
-    );
-    if (ok && mounted) {
-      final companyProvider = context.read<CompanyProvider>();
-      final prov = context.read<MenuProvider>();
-      await prov.loadMenus();
-      if (!mounted) return;
-      setState(() {});
-      await companyProvider.loadCompanies();
-      if (!mounted) return;
 
-      // ✅ Bas yahi — Dialog khud navigate karega Done pe
-      showCompanySelectionDialog(context);
-    } else {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final auth = context.read<AuthProvider>();
+      final ok = await auth.login(
+        username: _emailCtrl.text.trim(),
+        password: _passCtrl.text,
+      );
+      if (ok && mounted) {
+        final companyProvider = context.read<CompanyProvider>();
+        final prov = context.read<MenuProvider>();
+        await prov.loadMenus();
+        if (!mounted) return;
+        await companyProvider.loadCompanies();
+        if (!mounted) return;
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        await showCompanySelectionDialog(context);
+      } else {
+        if (mounted) {
+          _emailFocus.requestFocus();
+        }
+      }
+    } finally {
       if (mounted) {
-        _emailFocus.requestFocus();
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -252,8 +269,11 @@ class _LoginScreenV7State extends State<LoginScreenV7> {
                               children: [
                                 _SpaceButton(
                                   focusNode: _signInFocus,
-                                  isLoading: auth.isLoading,
-                                  onPressed: auth.isLoading ? null : _login,
+                                  isLoading: _isLoading || auth.isLoading,
+                                  onPressed:
+                                      (_isLoading || auth.isLoading)
+                                          ? null
+                                          : _login,
                                 ),
                                 if (auth.errorMessage != null) ...[
                                   const SizedBox(height: 14),
@@ -389,8 +409,9 @@ class _LoginScreenV7State extends State<LoginScreenV7> {
                     Consumer<AuthProvider>(
                       builder: (_, auth, __) => _SpaceButton(
                         focusNode: _signInFocus,
-                        isLoading: auth.isLoading,
-                        onPressed: auth.isLoading ? null : _login,
+                        isLoading: _isLoading || auth.isLoading,
+                        onPressed:
+                            (_isLoading || auth.isLoading) ? null : _login,
                       ),
                     ),
                     const SizedBox(height: 16),

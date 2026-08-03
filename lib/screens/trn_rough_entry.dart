@@ -64,21 +64,21 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
   //  TABLE COLUMNS
   // ══════════════════════════════════════════════════════════════════════════
   List<ErpColumnConfig> get _tableColumns => [
-    ErpColumnConfig(key: 'roughMstID', label: 'ID', width: 90, required: true),
+    ErpColumnConfig(key: 'roughMstID', label: 'ID', width: 70, required: true),
     ErpColumnConfig(
       key: 'roughDate',
       label: 'DATE',
-      width: 130,
+      width: 100,
       required: true,
       isDate: true,
     ),
-    ErpColumnConfig(key: 'jno', label: 'JNO', width: 130),
-    ErpColumnConfig(key: 'kapanNo', label: 'KNO', width: 130), // ✅ ADD
-    ErpColumnConfig(key: 'partyCode', label: 'PARTY', width: 160),
-    ErpColumnConfig(key: 'amtDollar', label: 'AMT \$', width: 160),
-    ErpColumnConfig(key: 'amtRs', label: 'AMT RS', width: 180),
-    ErpColumnConfig(key: 'totPc', label: 'TOT PC', width: 160), // ✅ ADD
-    ErpColumnConfig(key: 'totWt', label: 'TOT WT', width: 160), // ✅ ADD
+    ErpColumnConfig(key: 'jno', label: 'JNO', width: 80),
+    ErpColumnConfig(key: 'kapanNo', label: 'KNO', width: 120), // ✅ ADD
+    ErpColumnConfig(key: 'partyCode', label: 'PARTY', width: 140),
+    ErpColumnConfig(key: 'amtDollar', label: 'AMT \$', width: 100),
+    ErpColumnConfig(key: 'amtRs', label: 'AMT RS', width: 100),
+    ErpColumnConfig(key: 'totPc', label: 'TOT PC', width: 100), // ✅ ADD
+    ErpColumnConfig(key: 'totWt', label: 'TOT WT', width: 100), // ✅ ADD
   ];
 
   // ══════════════════════════════════════════════════════════════════════════

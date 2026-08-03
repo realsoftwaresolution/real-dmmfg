@@ -38,6 +38,7 @@ class ReportConfig {
   final String endpoint;
   final List<ReportColumnDef> columns;
   final ReportMapper mapper;
+  final List<String>? defaultGroupBy;
   final bool isPdf; // 🔥 ADD THIS
   final Map<String, dynamic> Function(Map<String, dynamic>)? queryBuilder;
 
@@ -48,7 +49,7 @@ class ReportConfig {
     required this.columns,
     required this.mapper,
     this.isPdf = false, // default false
-    this.queryBuilder,
+    this.queryBuilder, this.defaultGroupBy,
 
   });
 }
