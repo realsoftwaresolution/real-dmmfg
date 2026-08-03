@@ -1955,7 +1955,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
           ErpFieldConfig(
             key: 'orgWt',
             label: 'ORG WT',
-            type: ErpFieldType.amount,
+            type: ErpFieldType.wt,
             readOnly: true,
             isEntryField: true,
             sectionIndex: 3,
@@ -1973,7 +1973,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
           ErpFieldConfig(
             key: 'issWt',
             label: 'ISS WT',
-            type: ErpFieldType.amount,
+            type: ErpFieldType.wt,
             readOnly: true,
             isEntryField: true,
             showAddButton: true,
