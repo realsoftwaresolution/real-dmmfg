@@ -1898,7 +1898,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       ErpFieldConfig(
         key: 'recWt',
         label: 'REC WT',
-        type: ErpFieldType.text,
+        type: ErpFieldType.wt,
         readOnly: true,
         sectionIndex: 3,
         flex: 1,
@@ -1909,7 +1909,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         ErpFieldConfig(
           key: 'dmWt',
           label: 'DM WT',
-          type: ErpFieldType.amount,
+          type: ErpFieldType.wt,
           sectionIndex: 3,
           flex: 1,
         ),
@@ -2012,7 +2012,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       ErpFieldConfig(
         key: 'plDmWt',
         label: 'PL DM WT',
-        type: ErpFieldType.amount,
+        type: ErpFieldType.wt,
         readOnly: true,
         sectionIndex: 3,
         flex: 1,
@@ -2020,7 +2020,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       ErpFieldConfig(
         key: 'diffDmWt',
         label: 'DIFF DM WT',
-        type: ErpFieldType.amount,
+        type: ErpFieldType.wt,
         readOnly: true,
         sectionIndex: 3,
         flex: 1,

@@ -2216,7 +2216,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         ErpFieldConfig(
           key: 'orgWt',
           label: 'ORG WT',
-          type: ErpFieldType.amount,
+          type: ErpFieldType.wt,
           readOnly: true,
           isEntryField: true,
           sectionIndex: 2,
@@ -2235,7 +2235,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         ErpFieldConfig(
           key: 'issWt',
           label: 'ISS WT',
-          type: ErpFieldType.amount,
+          type: ErpFieldType.wt,
           readOnly: true,
           sectionIndex: 2,
           flex: 1,
@@ -2254,7 +2254,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           ErpFieldConfig(
             key: 'recWt',
             label: 'REC WT',
-            type: ErpFieldType.amount,
+            type: ErpFieldType.wt,
             sectionIndex: 2,
             flex: 1,
           ),
@@ -2270,7 +2270,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           ErpFieldConfig(
             key: 'kWt',
             label: 'K WT',
-            type: ErpFieldType.amount,
+            type: ErpFieldType.wt,
             sectionIndex: 2,
             flex: 1,
           ),
@@ -2310,7 +2310,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         ErpFieldConfig(
           key: 'dmWt',
           label: 'DM WT',
-          type: ErpFieldType.amount,
+          type: ErpFieldType.wt,
           sectionIndex: 2,
           readOnly: true,
           flex: 1,
