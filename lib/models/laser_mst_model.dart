@@ -276,6 +276,9 @@ class LaserDetModel {
   final double? lsAmount;
   final int? orderMstID;
   final dynamic ArticalName;
+  final int? fluoCode;
+  final int? symmetryCode;
+  final int? polishCode;
 
   const LaserDetModel({
     this.spkDeptIssDetID,
@@ -417,7 +420,11 @@ class LaserDetModel {
     this.optAmount,
     this.lsAmount,
     this.orderMstID,
-    this.deptCode, this.ArticalName,
+    this.deptCode,
+    this.ArticalName,
+    this.fluoCode,
+    this.symmetryCode,
+    this.polishCode,
   });
 
   factory LaserDetModel.fromJson(Map<String, dynamic> json) => LaserDetModel(
@@ -562,6 +569,27 @@ class LaserDetModel {
     lsAmount: _d(json['LsAmount']),
     orderMstID: json['OrderMstID'],
     ArticalName: json['ArticalName'],
+    fluoCode: json['FluoCode'] != null
+        ? (json['FluoCode'] as num).toInt()
+        : (json['fluoCode'] != null
+            ? (json['fluoCode'] as num).toInt()
+            : (json['Fluo'] != null
+                ? (json['Fluo'] as num).toInt()
+                : (json['fluo'] != null ? (json['fluo'] as num).toInt() : null))),
+    symmetryCode: json['SymmetryCode'] != null
+        ? (json['SymmetryCode'] as num).toInt()
+        : (json['symmetryCode'] != null
+            ? (json['symmetryCode'] as num).toInt()
+            : (json['Symmetry'] != null
+                ? (json['Symmetry'] as num).toInt()
+                : (json['symmetry'] != null ? (json['symmetry'] as num).toInt() : null))),
+    polishCode: json['PolishCode'] != null
+        ? (json['PolishCode'] as num).toInt()
+        : (json['polishCode'] != null
+            ? (json['polishCode'] as num).toInt()
+            : (json['Polish'] != null
+                ? (json['Polish'] as num).toInt()
+                : (json['polish'] != null ? (json['polish'] as num).toInt() : null))),
   );
 
   Map<String, dynamic> toJson() => {
@@ -778,9 +806,9 @@ class LaserDetModel {
 
     'OrderMstID': orderMstID ?? 0,
     "Height": 0,
-    "PolishCode": 0,
-    "SymmetryCode": 0,
-    "FluoCode": 0,
+    "PolishCode": polishCode ?? 0,
+    "SymmetryCode": symmetryCode ?? 0,
+    "FluoCode": fluoCode ?? 0,
     "ArticalName": ArticalName ?? '',
   };
 
@@ -793,6 +821,9 @@ class LaserDetModel {
     int? jno,
     String? bCode,
     String? MainBCode,
+    int? fluoCode,
+    int? symmetryCode,
+    int? polishCode,
     String? pktNo,
     int? fromDeptCode,
     int? toDeptCode,
@@ -1070,6 +1101,9 @@ class LaserDetModel {
         lsAmount: lsAmount ?? this.lsAmount,
         orderMstID: orderMstID ?? this.orderMstID,
         ArticalName: ArticalName ?? this.ArticalName,
+        fluoCode: fluoCode ?? this.fluoCode,
+        symmetryCode: symmetryCode ?? this.symmetryCode,
+        polishCode: polishCode ?? this.polishCode,
       );
 
   static double? _d(dynamic v) {

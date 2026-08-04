@@ -869,16 +869,16 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       plDmWt: double.tryParse(_entryVals['dmWt'] ?? '0.000'),
       plDmPer: double.tryParse(_entryVals['dmPer'] ?? '0.00'),
       fluo: _isFieldVisible('FLUO')
-          ? int.tryParse(_formValues['fluo'] ?? '')
+          ? int.tryParse(_entryVals['fluo'] ?? '')
           : 0,
       symmetryCode: _isFieldVisible('SYMMETRY')
-          ? int.tryParse(_formValues['symmetryCode'] ?? '')
+          ? int.tryParse(_entryVals['symmetryCode'] ?? '')
           : 0,
       polishCode: _isFieldVisible('POLISH')
-          ? int.tryParse(_formValues['polishCode'] ?? '')
+          ? int.tryParse(_entryVals['polishCode'] ?? '')
           : 0,
       tensionsCode: _isFieldVisible('TENSIONS')
-          ? int.tryParse(_formValues['tensionCode'] ?? '')
+          ? int.tryParse(_entryVals['tensionCode'] ?? '')
           : 0,
       length: _isFieldVisible('LENGTH')
           ? double.tryParse(_entryVals['length'].toString())
@@ -977,16 +977,16 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
           ? int.tryParse(_entryVals['cutCode'] ?? '')
           : 0,
       fluo: _isFieldVisible('FLUO')
-          ? int.tryParse(_formValues['fluo'] ?? '')
+          ? int.tryParse(_entryVals['fluo'] ?? '')
           : 0,
       symmetryCode: _isFieldVisible('SYMMETRY')
-          ? int.tryParse(_formValues['symmetryCode'] ?? '')
+          ? int.tryParse(_entryVals['symmetryCode'] ?? '')
           : 0,
       polishCode: _isFieldVisible('POLISH')
-          ? int.tryParse(_formValues['polishCode'] ?? '')
+          ? int.tryParse(_entryVals['polishCode'] ?? '')
           : 0,
       tensionsCode: _isFieldVisible('TENSIONS')
-          ? int.tryParse(_formValues['tensionCode'] ?? '')
+          ? int.tryParse(_entryVals['tensionCode'] ?? '')
           : 0,
       length: _isFieldVisible('LENGTH')
           ? double.tryParse(_entryVals['length'].toString())

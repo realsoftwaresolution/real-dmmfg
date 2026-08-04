@@ -605,6 +605,11 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     set('length', r.length?.toString());
     set('diam', r.diam?.toString());
     set('height', r.height?.toString());
+    if (r.markerMstID != null && r.markerMstID != 0) {
+      set('MarkerMstID', r.markerMstID?.toString());
+    } else if (_formValues['MarkerMstID'] != null && _formValues['MarkerMstID'] != '0') {
+      set('MarkerMstID', _formValues['MarkerMstID']);
+    }
     setState(() => _scannedDet = r);
   }
 
@@ -842,7 +847,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         "FColorCode1": int.tryParse(_entryVals['FColorCode1'] ?? '0') ?? 0,
         "FColorCode2": int.tryParse(_entryVals['FColorCode2'] ?? '0') ?? 0,
         "HA": _entryVals['HA'] ?? '',
-        "MarkerMstID": _entryVals['MarkerMstID'] ?? '',
+        "MarkerMstID": int.tryParse(_entryVals['MarkerMstID']?.toString() ?? _formValues['MarkerMstID']?.toString() ?? '') ?? _detRows[_editingDetIndex!].markerMstID ?? 0,
         "GroupType": _entryVals['groupType'] ?? '',
       };
 
@@ -1157,9 +1162,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       fColorCode2:
           int.tryParse(_entryVals['FColorCode2'] ?? '') ?? existing.fColorCode2,
       ha: _entryVals['HA'] ?? existing.ha,
-      markerMstID:
-          existing.markerMstID ??
-          (int.tryParse(_formValues['MarkerMstID'] ?? '') ?? 0),
+      markerMstID: int.tryParse(_entryVals['MarkerMstID'] ?? '') ??
+          ((existing.markerMstID != null && existing.markerMstID != 0)
+              ? existing.markerMstID
+              : (int.tryParse(_formValues['MarkerMstID'] ?? '') ?? 0)),
     );
   }
 
@@ -1264,7 +1270,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       fColorCode1: int.tryParse(_entryVals['FColorCode1'] ?? '') ?? 0,
       fColorCode2: int.tryParse(_entryVals['FColorCode2'] ?? '') ?? 0,
       ha: _entryVals['HA'] ?? '',
-      markerMstID: int.tryParse(_entryVals['MarkerMstID'] ?? '') ?? 0,
+      markerMstID: int.tryParse(_entryVals['MarkerMstID'] ?? _formValues['MarkerMstID'] ?? '') ?? 0,
     );
   }
 
@@ -1334,7 +1340,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     set('FcOverCode', r.fcOverCode?.toString());
     set('FColorCode1', r.fColorCode1?.toString());
     set('FColorCode2', r.fColorCode2?.toString());
-    set('MarkerMstID', r.markerMstID?.toString());
+    set('MarkerMstID', (r.markerMstID != null && r.markerMstID != 0) ? r.markerMstID.toString() : _formValues['MarkerMstID']);
     set('HA', r.ha?.toString());
     set('groupType', r.groupType?.toString());
   }
@@ -1639,7 +1645,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         'FColorCode1': _fColorCode1NameFor(r.fColorCode1),
         'FColorCode2': _fColorCode1NameFor(r.fColorCode2),
         'HA': r.ha ?? '',
-        'MarkerMstID': r.markerMstID ?? 0,
+        'MarkerMstID': (r.markerMstID != null && r.markerMstID != 0)
+            ? r.markerMstID!
+            : (int.tryParse(_formValues['MarkerMstID']?.toString() ?? '') ?? 0),
         'groupType': r.groupType ?? '',
         'rateID': r.rateID ?? '',
         'rateon': r.rateon ?? '',
@@ -1690,6 +1698,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           int.tryParse(row['factoryCode']?.toString() ?? '') ??
           int.tryParse(row['factory']?.toString() ?? '');
 
+      final markerId = (details.isNotEmpty && details.first.markerMstID != null && details.first.markerMstID != 0)
+          ? details.first.markerMstID
+          : (int.tryParse(row['MarkerMstID']?.toString() ?? row['markerMstID']?.toString() ?? '') ?? 0);
+
       // ✅ CLEAN FORM VALUES (ONLY REQUIRED FIELDS)
       _formValues = {
         'factoryRecMstID': _s(_detRows.isNotEmpty ? _detRows.first.factoryRecMstID : row['id'], '0'),
@@ -1698,7 +1710,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         'factory': _s(fCode ?? row['factory']),
         'type': _s(row['type']),
         "polishChecker": _s(details.isNotEmpty ? (details.first.LastCrID ?? 0) : 0),
-        "MarkerMstID": _s(details.isNotEmpty ? (details.first.markerMstID ?? 0) : 0),
+        "MarkerMstID": _s(markerId),
       };
       _syncDetGrid();
     });
@@ -1790,9 +1802,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       "FColorCode2": r.fColorCode2 ?? 0,
       "TopSide": r.topSide ?? '',
       "HA": r.ha ?? '',
-      "MarkerMstID":
-          r.markerMstID ??
-          (int.tryParse(_formValues['MarkerMstID'] ?? '0') ?? 0),
+      "MarkerMstID": (r.markerMstID != null && r.markerMstID != 0)
+          ? r.markerMstID!
+          : (int.tryParse(_formValues['MarkerMstID']?.toString() ?? '0') ?? 0),
       "GroupType": r.groupType ?? '',
     };
   }
@@ -2339,8 +2351,12 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           type: ErpFieldType.dropdown,
           dropdownItems: const [
             ErpDropdownItem(label: 'Layout', value: 'Layout'),
-            ErpDropdownItem(label: 'Pair', value: 'Pair'),
-            ErpDropdownItem(label: 'Fency', value: 'Fency'),
+            ErpDropdownItem(label: 'Matching Pair', value: 'Pair'),
+            ErpDropdownItem(label: 'Fancy Shape', value: 'Fency'),
+
+            // ErpDropdownItem(label: 'Salt & Paper', value: 'saltAndPaper'),
+            // ErpDropdownItem(label: 'Black Diamond', value: 'blackDiamond'),
+            // ErpDropdownItem(label: 'Loos Diamond', value: 'loosDiamond'),
           ],
         ),
       ],
@@ -3025,7 +3041,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
                 columnLabels: {
                   for (final c in _activeDetColumns) c: _colLabel(c),
                 },
-                columnWidths: const {'srno': 50},
+                columnWidths: const {'srno': 40, 'mfgCut': 120},
                 columnAlignments: const {
                   'srno': TextAlign.center,
                   'jno': TextAlign.center,

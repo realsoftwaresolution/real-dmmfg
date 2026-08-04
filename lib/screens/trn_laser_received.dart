@@ -546,6 +546,12 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     set('jnoRecPc', r.jnoRecPc?.toString());
     set('shapeCode', r.shapeCode?.toString());
     set('purityCode', r.purityCode?.toString());
+    set('fluoCode', r.fluoCode?.toString());
+    set('fluo', r.fluoCode?.toString());
+    set('symmetryCode', r.symmetryCode?.toString());
+    set('symmetry', r.symmetryCode?.toString());
+    set('polishCode', r.polishCode?.toString());
+    set('polish', r.polishCode?.toString());
 
     setState(() => _scannedDet = r);
 
@@ -554,6 +560,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       () => _erpFormKey.currentState?.focusField('recWt'),
     );
   }
+
 
   // ─────────────────────────────────────────────────────────────────────────
   //  CALCULATIONS
@@ -641,6 +648,9 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         rateon: responseRow.rateon,
         rate: responseRow.rate,
         amount: responseRow.amount,
+        fluoCode: responseRow.fluoCode ?? newRow.fluoCode,
+        symmetryCode: responseRow.symmetryCode ?? newRow.symmetryCode,
+        polishCode: responseRow.polishCode ?? newRow.polishCode,
       );
     } else {
       return;
@@ -703,6 +713,9 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       id: existing.id,
       jno: existing.jno,
       bCode: existing.bCode,
+      fluoCode: int.tryParse(_entryVals['fluoCode'] ?? _entryVals['fluo'] ?? '') ?? existing.fluoCode,
+      symmetryCode: int.tryParse(_entryVals['symmetryCode'] ?? _entryVals['symmetry'] ?? '') ?? existing.symmetryCode,
+      polishCode: int.tryParse(_entryVals['polishCode'] ?? _entryVals['polish'] ?? '') ?? existing.polishCode,
       pktNo: existing.pktNo,
       cutNo: existing.cutNo,
       clvCut: existing.clvCut,
@@ -780,6 +793,9 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       jno: _scannedDet?.jno,
       jnoRecPc: _scannedDet?.jnoRecPc,
       bCode: isFirstRow ? (_scannedDet?.bCode ?? _entryVals['scanValue']) : '0',
+      fluoCode: int.tryParse(_entryVals['fluoCode'] ?? _entryVals['fluo'] ?? '') ?? _scannedDet?.fluoCode,
+      symmetryCode: int.tryParse(_entryVals['symmetryCode'] ?? _entryVals['symmetry'] ?? '') ?? _scannedDet?.symmetryCode,
+      polishCode: int.tryParse(_entryVals['polishCode'] ?? _entryVals['polish'] ?? '') ?? _scannedDet?.polishCode,
       ArticalName: _scannedDet?.ArticalName,
       pktNo: isFirstRow ? _scannedDet?.pktNo : '',
       cutNo: _scannedDet?.cutNo,
@@ -863,6 +879,12 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     set('remarks', r.remarksCode?.toString());
     set('dueDay', r.dueDay?.toString());
     set('partName', r.partName?.toString());
+    set('fluoCode', r.fluoCode?.toString());
+    set('fluo', r.fluoCode?.toString());
+    set('symmetryCode', r.symmetryCode?.toString());
+    set('symmetry', r.symmetryCode?.toString());
+    set('polishCode', r.polishCode?.toString());
+    set('polish', r.polishCode?.toString());
   }
 
   Future<void> _deleteDetRow(int idx) async {
@@ -986,6 +1008,12 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       'topsWt',
 
       'partName',
+      'fluoCode',
+      'fluo',
+      'symmetryCode',
+      'symmetry',
+      'polishCode',
+      'polish',
     ];
 
     for (final key in fields) {
@@ -1098,6 +1126,12 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         'ToCrID': _toCrId,
         'confRec': 'Y',
         'clvRec': 'N',
+        'FluoCode': r.fluoCode ?? 0,
+        'fluoCode': r.fluoCode?.toString() ?? '',
+        'SymmetryCode': r.symmetryCode ?? 0,
+        'symmetryCode': r.symmetryCode?.toString() ?? '',
+        'PolishCode': r.polishCode ?? 0,
+        'polishCode': r.polishCode?.toString() ?? '',
       };
     }).toList();
   }

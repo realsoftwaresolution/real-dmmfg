@@ -458,7 +458,7 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
       // ✅ DETAILS ARRAY - EXACT PAYLOAD STRUCTURE
       "details": _detRows.map((r) {
         return {
-          "Jno": r.jno ?? 0,
+          // "Jno": r.jno ?? 0,
           "Srno": r.srno ?? 0,
 
           "CutNo": r.cutNo,
@@ -511,9 +511,9 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
           "DiffPer": r.diffPer ?? 0.0,
           "DiffWt": r.diffWt ?? 0.0,
 
-          "JobIss": r.jobIss ?? 'N',
+          // "JobIss": r.jobIss ?? 'N',
 
-          "PolishCheckerIssMstID": r.polishCheckerIssMstID ?? 0,
+          // "PolishCheckerIssMstID": r.polishCheckerIssMstID ?? 0,
           "OrderMstID": r.orderMstID ?? 0,
           "MarkerMstID": r.markerMstID ?? 0,
           "FromCrID": r.fromCrID ?? 0,
@@ -528,10 +528,10 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
 
           "HA": r.ha ?? 'N',
 
-          "Rate": r.rate ?? 0.0,
-          "Amount": r.amount ?? 0.0,
-          "RateID": r.rateID,
-          "Rateon": r.rateon,
+          // "Rate": r.rate ?? 0.0,
+          // "Amount": r.amount ?? 0.0,
+          // "RateID": r.rateID,
+          // "Rateon": r.rateon,
         };
       }).toList(),
     };

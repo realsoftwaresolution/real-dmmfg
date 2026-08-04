@@ -617,22 +617,8 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
         final singleRowPayload = {
           "JobWorkRecMstID": mstID,
           "JobWorkRecDetID": detID,
-          "JobWorkRecDate": toUtcIso(_formValues['date']),
-          "PartyMstID":
-              int.tryParse(_formValues['partyMstID'] ?? '') ?? r.partyMstID ?? 0,
-          "DeptCode": _selectedDeptCode ?? r.deptCode ?? 0,
-          "DeptProcessCode": r.deptProcessCode ?? 0,
-          "Jno": r.jno ?? 0,
-          "Srno": r.srno ?? 0,
-          "CutNo": r.cutNo,
-          "MfgCut": r.mfgCut,
           "BCode": r.bCode,
-          "PktNo": r.pktNo,
           "PairNo": r.pairNo ?? 0,
-          "Pc": r.pc,
-          "Wt": r.wt,
-          "IssPc": r.issPc,
-          "IssWt": r.issWt,
           "RecPc": r.recPc ?? 0,
           "RecWt": r.recWt ?? 0.0,
           "KPc": r.kPc ?? 0,
@@ -656,17 +642,8 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
           "SymmetryCode": r.symmetryCode ?? 0,
           "FluoCode": r.fluoCode ?? 0,
           "TensionsCode": r.tensionsCode ?? 0,
-          "QRCode": r.qrCode,
-          "RecPer": r.recPer ?? 0.0,
-          "DiffPer": r.diffPer ?? 0.0,
-          "DiffWt": r.diffWt ?? 0.0,
-          "JobRec": r.jobRec ?? 'N',
           "PolishCheckerRecMstID": r.polishCheckerRecMstID ?? 0,
-          "OrderMstID": r.orderMstID ?? 0,
           "MarkerMstID": r.markerMstID ?? 0,
-          "FromCrID": r.fromCrID ?? 0,
-          "LastCrID": r.lastCrID ?? 0,
-          "CrID": r.crID ?? 0,
           "TopSide": r.topSide,
           "FcIntentCode": r.fcIntentCode ?? 0,
           "FcOverCode": r.fcOverCode ?? 0,
@@ -1240,6 +1217,7 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
           type: ErpFieldType.date,
           readOnly: true,
           sectionIndex: 0,
+          width: 120,
         ),
         ErpFieldConfig(
           key: 'partyMstID',
@@ -1247,6 +1225,7 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
           type: ErpFieldType.dropdown,
           sectionIndex: 0,
           required: true,
+          width: 200,
           readOnly: _detRows.isNotEmpty,
           dropdownItems: counterProvider.list
               .where((e) => e.active == true)
@@ -1292,17 +1271,13 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
           readOnly: true,
           sectionIndex: 0,
         ),
-      ],
-      // Section 1: PC & Weight & Core Details
-      [
         ErpFieldConfig(
           key: 'orgPc',
           label: 'ORG PC',
           type: ErpFieldType.number,
           readOnly: true,
           isEntryField: true,
-          sectionIndex: 1,
-          flex: 1,
+          sectionIndex: 0,
         ),
         ErpFieldConfig(
           key: 'orgWt',
@@ -1310,39 +1285,38 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
           type: ErpFieldType.amount,
           readOnly: true,
           isEntryField: true,
-          sectionIndex: 1,
-          flex: 1,
+          sectionIndex: 0,
         ),
         ErpFieldConfig(
           key: 'issPc',
           label: 'ISS PC',
           type: ErpFieldType.number,
           readOnly: true,
-          sectionIndex: 1,
-          flex: 1,
+          sectionIndex: 0,
         ),
         ErpFieldConfig(
           key: 'issWt',
           label: 'ISS WT',
           type: ErpFieldType.amount,
           readOnly: true,
-          sectionIndex: 1,
-          flex: 1,
+          sectionIndex: 0,
         ),
+
+      ],
+      // Section 1: Quality Attributes
+      [
         ErpFieldConfig(
           key: 'recPc',
           label: 'REC PC',
           type: ErpFieldType.number,
           readOnly: true,
           sectionIndex: 1,
-          flex: 1,
         ),
         ErpFieldConfig(
           key: 'recWt',
           label: 'REC WT',
           type: ErpFieldType.amount,
           sectionIndex: 1,
-          flex: 1,
         ),
         ErpFieldConfig(
           key: 'dmWt',
@@ -1350,7 +1324,6 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
           type: ErpFieldType.amount,
           sectionIndex: 1,
           readOnly: true,
-          flex: 1,
         ),
         ErpFieldConfig(
           key: 'dmPer',
@@ -1358,7 +1331,6 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
           type: ErpFieldType.number,
           readOnly: true,
           sectionIndex: 1,
-          flex: 1,
         ),
         ErpFieldConfig(
           key: 'size',
@@ -1366,7 +1338,6 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
           type: ErpFieldType.number,
           readOnly: true,
           sectionIndex: 1,
-          flex: 1,
         ),
         ErpFieldConfig(
           key: 'purity',
@@ -1384,15 +1355,12 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
           sectionIndex: 1,
           flex: 1,
         ),
-      ],
-      // Section 2: Quality Attributes
-      [
         ErpFieldConfig(
           key: 'color',
           label: 'COLOR',
           type: ErpFieldType.dropdown,
           dropdownItems: colorDropdown,
-          sectionIndex: 2,
+          sectionIndex: 1,
           flex: 1,
         ),
         ErpFieldConfig(
@@ -1400,7 +1368,7 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
           label: 'CUT',
           type: ErpFieldType.dropdown,
           dropdownItems: cutDropdown,
-          sectionIndex: 2,
+          sectionIndex: 1,
           flex: 1,
         ),
         ErpFieldConfig(
@@ -1408,7 +1376,7 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
           label: 'POLISH',
           type: ErpFieldType.dropdown,
           dropdownItems: polishDropdown,
-          sectionIndex: 2,
+          sectionIndex: 1,
           flex: 1,
         ),
         ErpFieldConfig(
@@ -1416,9 +1384,12 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
           label: 'SYMMETRY',
           type: ErpFieldType.dropdown,
           dropdownItems: symmetryDropdown,
-          sectionIndex: 2,
+          sectionIndex: 1,
           flex: 1,
         ),
+      ],
+      // Section 2: FC & Extended Attributes
+      [
         ErpFieldConfig(
           key: 'fluo',
           label: 'FLUO',
@@ -1435,41 +1406,38 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
           sectionIndex: 2,
           flex: 1,
         ),
-      ],
-      // Section 3: FC & Extended Attributes
-      [
         ErpFieldConfig(
           key: 'FcIntentCode',
           label: 'FC INTENT CODE',
           type: ErpFieldType.dropdown,
           dropdownItems: fcIntentDropdown,
-          sectionIndex: 3,
+          sectionIndex: 2,
         ),
         ErpFieldConfig(
           key: 'FColorCode1',
           label: 'FC COLOR CODE 1',
           type: ErpFieldType.dropdown,
           dropdownItems: fColor1Dropdown,
-          sectionIndex: 3,
+          sectionIndex: 2,
         ),
         ErpFieldConfig(
           key: 'FColorCode2',
           label: 'FC COLOR CODE 2',
           type: ErpFieldType.dropdown,
           dropdownItems: fColor2Dropdown,
-          sectionIndex: 3,
+          sectionIndex: 2,
         ),
         ErpFieldConfig(
           key: 'FcOverCode',
           label: 'FC OVER CODE',
           type: ErpFieldType.dropdown,
           dropdownItems: fcOverDropdown,
-          sectionIndex: 3,
+          sectionIndex: 2,
         ),
         ErpFieldConfig(
           key: 'HA',
           label: 'H&A',
-          sectionIndex: 3,
+          sectionIndex: 2,
           type: ErpFieldType.dropdown,
           initialDropValue: true,
           dropdownItems: const [
@@ -1481,38 +1449,69 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
           key: 'length',
           label: 'LENGTH',
           type: ErpFieldType.amount,
-          sectionIndex: 3,
+          sectionIndex: 2,
           flex: 1,
         ),
         ErpFieldConfig(
           key: 'diam',
           label: 'DIAM',
           type: ErpFieldType.amount,
-          sectionIndex: 3,
+          sectionIndex: 2,
           flex: 1,
         ),
         ErpFieldConfig(
           key: 'height',
           label: 'HEIGHT',
           type: ErpFieldType.amount,
-          sectionIndex: 3,
+          sectionIndex: 2,
           flex: 1,
         ),
         ErpFieldConfig(
           key: 'TopSide',
           label: 'TOP SIDE',
           type: ErpFieldType.text,
-          sectionIndex: 3,
+          sectionIndex: 2,
           flex: 1,
         ),
         ErpFieldConfig(
           key: 'pairNo',
           label: 'PAIR NO',
           type: ErpFieldType.number,
+          sectionIndex: 2,
+          flex: 1,
+        ),
+      ],
+      // Section 3: Attachment
+      [
+        ErpFieldConfig(
+          key: 'certificate',
+          label: 'CERTIFICATE',
+          type: ErpFieldType.attachment,
+          hint: 'Select document',
+          allowMultiple: false,
+          allowExtension: ['pdf', 'png', 'jpg', 'jpeg'], // or 'pdf, png, jpg', jpeg'
+          sectionIndex: 3,
+        ),
+        ErpFieldConfig(
+          key: 'images',
+          label: 'IMAGES',
+          type: ErpFieldType.attachment,
+          hint: 'Select images',
+          maxFileSizeMB: 10,
+          allowMultiple: true,
+          allowExtension: ['pdf', 'png', 'jpg', 'jpeg'], // or 'pdf, png, jpg', jpeg'
+          sectionIndex: 3,
+        ),
+        ErpFieldConfig(
+          key: 'videoAttachment',
+          label: 'VIDEO',
+          type: ErpFieldType.attachment,
+          hint: 'Select Video File',
+          allowMultiple: false,
+          allowExtension: ['AVI', 'WMV', 'MP4', 'MOV', 'MKV','OGG'],
           sectionIndex: 3,
           showAddButton: true,
           isEntryField: true,
-          flex: 1,
         ),
       ],
     ];

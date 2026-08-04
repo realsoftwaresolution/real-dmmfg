@@ -603,7 +603,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
             'dmWt': fThreeDecimal(r.dmWt ?? 0),
             'dmPer': (r.dmPer ?? 0).toStringAsFixed(2),
 
-            'size': '',
+            'size': r.size ?? 0.0,
 
             'diam': (r.diam ?? 0).toString(),
             'length': (r.length ?? 0).toString(),
@@ -725,9 +725,9 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
             "DmWt": r.dmWt ?? 0.000,
             "DmPer": r.dmPer ?? 0,
 
-            "RateID": "R1",
-            "Rateon": "WT",
-            "Rate": 0,
+            "RateID": '',
+            "Rateon": '',
+            "Rate":  0,
             "Amount": r.amountRs ?? 0.00,
 
             "Diam": r.diam ?? 0,
@@ -1377,7 +1377,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     final dmPer = baseWt > 0 ? (totDmWt / baseWt * 100) : 0;
 
     final avgSize = _detRows.isNotEmpty
-        ? sumDouble((r) => (r.diam ?? 0)) / _detRows.length
+        ? sumDouble((r) => (r.size ?? 0)) / _detRows.length
         : 0;
 
     return {

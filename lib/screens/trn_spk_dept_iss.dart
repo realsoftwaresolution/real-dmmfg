@@ -558,6 +558,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     set('jnoRecPc', r.jnoRecPc?.toString());
     set('shapeCode', r.shapeCode?.toString());
     set('purityCode', r.purityCode?.toString());
+    set('fluoCode', r.fluo?.toString());
+    set('tensionsCode', r.tensionsCode?.toString());
 
     setState(() => _scannedDet = r);
 
@@ -996,8 +998,9 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       lossWt: double.tryParse(_entryVals['losswt'] ?? ''),
       topsPc: int.tryParse(_entryVals['topspc'] ?? ''),
       topsWt: double.tryParse(_entryVals['topswt'] ?? ''),
-      charniCode: int.tryParse(_formValues['charniCode'] ?? ''),
-      tensionsCode: int.tryParse(_formValues['tensionsCode'] ?? ''),
+      charniCode: int.tryParse(_entryVals['charniCode'] ?? ''),
+      tensionsCode: int.tryParse(_entryVals['tensionsCode'] ?? ''),
+      fluo:int.tryParse(_entryVals['fluoCode'] ?? ''),
       employeeCode: int.tryParse(_entryVals['employee'] ?? ''),
       signerCode: int.tryParse(_entryVals['signer'] ?? ''),
       remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
@@ -1039,8 +1042,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       toCrId: _toCrId,
       deptCode: _toDeptCodeVal,
       deptProcessCode: int.tryParse(_formValues['deptProcessCode'] ?? ''),
-      charniCode: int.tryParse(_formValues['charniCode'] ?? ''),
-      tensionsCode: int.tryParse(_formValues['tensionsCode'] ?? ''),
+      charniCode: int.tryParse(_entryVals['charniCode'] ?? ''),
+      tensionsCode: int.tryParse(_entryVals['tensionsCode'] ?? ''),
       pc: int.tryParse(_entryVals['orgPc'] ?? ''),
       wt: double.tryParse(_entryVals['orgWt'] ?? ''),
       issPc: int.tryParse(issPcStr),
@@ -1069,6 +1072,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       confRec: _autoRec,
       clvRec: 'S',
       confCrID: _toCrId,
+      fluo:int.tryParse(_entryVals['fluoCode'] ?? ''),
     );
   }
 
