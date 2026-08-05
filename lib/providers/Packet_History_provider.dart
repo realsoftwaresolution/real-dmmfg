@@ -29,6 +29,7 @@ class PacketHistoryProvider extends BaseProvider {
 
     ErpColumnConfig(key: 'LastProcess', label: 'Last Process', width: 180),
     ErpColumnConfig(key: 'Pro', label: 'Pro'),
+    ErpColumnConfig(key: 'FormName', label: 'Form Name'),
 
     ErpColumnConfig(key: 'ID', label: 'ID'),
     ErpColumnConfig(key: 'Jno', label: 'Jno'),
@@ -84,6 +85,7 @@ class PacketHistoryProvider extends BaseProvider {
         'LastProcess': e['LastProcess'] ?? '',
 
         'Pro': e['Pro'] ?? '',
+        'FormName': e['FormName'] ?? '',
 
         'ID': e['ID'] ?? 0,
 

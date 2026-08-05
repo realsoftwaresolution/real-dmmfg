@@ -1000,7 +1000,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       topsWt: double.tryParse(_entryVals['topswt'] ?? ''),
       charniCode: int.tryParse(_entryVals['charniCode'] ?? ''),
       tensionsCode: int.tryParse(_entryVals['tensionsCode'] ?? ''),
-      fluo:int.tryParse(_entryVals['fluoCode'] ?? ''),
       employeeCode: int.tryParse(_entryVals['employee'] ?? ''),
       signerCode: int.tryParse(_entryVals['signer'] ?? ''),
       remarksCode: int.tryParse(_entryVals['remarks'] ?? ''),
@@ -1008,6 +1007,11 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       confRec: _autoRec,
       clvRec: 'S',
       confCrID: _toCrId,
+      length: existing.length,
+      height: existing.height,
+      polishCode: existing.polishCode,
+      fluo: existing.fluo,
+      symmetryCode: existing.symmetryCode,
     );
   }
 
@@ -1034,7 +1038,12 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       shapeCode: _scannedDet?.shapeCode,
       purityCode: _scannedDet?.purityCode,
       colorCode: _scannedDet?.colorCode,
+      length: _scannedDet?.length,
+      height: _scannedDet?.height,
       diam: _scannedDet?.diam,
+      polishCode: _scannedDet?.polishCode,
+      fluo: _scannedDet?.fluo,
+      symmetryCode: _scannedDet?.symmetryCode,
       kachaRec: _scannedDet?.kachaRec ?? 'Y',
       fromDeptCode: _fromDeptCode,
       toDeptCode: _toDeptCodeVal,
@@ -1072,7 +1081,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       confRec: _autoRec,
       clvRec: 'S',
       confCrID: _toCrId,
-      fluo:int.tryParse(_entryVals['fluoCode'] ?? ''),
     );
   }
 

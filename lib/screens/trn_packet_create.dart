@@ -273,7 +273,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         ErpFieldConfig(
           key: 'entryPlusWt',
           label: 'PLUS WT',
-          type: ErpFieldType.amount,
+          type: ErpFieldType.wt,
           readOnly: true,
           flex: 1,
           sectionIndex: 1,
@@ -291,7 +291,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
         ErpFieldConfig(
           key: 'entryWt',
           label: 'WT',
-          type: ErpFieldType.amount,
+          type: ErpFieldType.wt,
           flex: 1,
           sectionIndex: 1,
           isEntryField: true,

@@ -2550,7 +2550,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           ErpFieldConfig(
             key: 'pairNo',
             label: 'PAIR NO',
-            type: ErpFieldType.number,
+            type: ErpFieldType.text,
             sectionIndex: 4,
             showAddButton: true,
             isEntryField: true,
@@ -2952,6 +2952,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         }
       },
       onFieldSubmitted: (key, value) {
+        final isPairGroup =
+            _entryVals['groupType']?.toString().toLowerCase() == 'pair' ||
+                _entryVals['groupType'] == 'Pair';
         if (key == 'pairNo') {
           // VALIDATION
           if (value == null || value.toString().isEmpty) {
@@ -2969,8 +2972,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           }
 
           // ADD ENTRY
-          _addEntry();
-
+          if(!isPairGroup){
+            _addEntry();
+          }
           return;
         }
 
