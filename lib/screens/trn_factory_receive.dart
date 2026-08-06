@@ -64,6 +64,11 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   Map<String, String> _formValues = {};
   final Map<String, String> _entryVals = {};
 
+  bool get _isPairGroup {
+    final gt = (_entryVals['groupType'] ?? _formValues['groupType'] ?? '').toString().toLowerCase();
+    return gt == 'pair' || gt.contains('pair');
+  }
+
   // ── Auth ───────────────────────────────────────────────────────────────────
   final String? token = AppStorage.getString('token');
 
@@ -2354,9 +2359,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             ErpDropdownItem(label: 'Matching Pair', value: 'Pair'),
             ErpDropdownItem(label: 'Fancy Shape', value: 'Fency'),
 
-            // ErpDropdownItem(label: 'Salt & Paper', value: 'saltAndPaper'),
-            // ErpDropdownItem(label: 'Black Diamond', value: 'blackDiamond'),
-            // ErpDropdownItem(label: 'Loos Diamond', value: 'loosDiamond'),
+            ErpDropdownItem(label: 'Salt & Paper', value: 'saltAndPaper'),
+            ErpDropdownItem(label: 'Black Diamond', value: 'blackDiamond'),
+            ErpDropdownItem(label: 'Loos Diamond', value: 'loosDiamond'),
           ],
         ),
       ],
@@ -2542,16 +2547,17 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           label: 'TOP SIDE',
           type: ErpFieldType.text,
           sectionIndex: 4,
-          isEntryField: _entryVals['groupType'] != 'Pair' ? true : false,
-          showAddButton: _entryVals['groupType'] != 'Pair' ? true : false,
+          isEntryField: !_isPairGroup,
+          showAddButton: !_isPairGroup,
           flex: 1,
         ),
-        if (_entryVals['groupType'] == 'Pair')
+        if (_isPairGroup)
           ErpFieldConfig(
             key: 'pairNo',
             label: 'PAIR NO',
             type: ErpFieldType.text,
             sectionIndex: 4,
+            skipFocus: true,
             showAddButton: true,
             isEntryField: true,
             flex: 1,
@@ -2900,7 +2906,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
               _entryVals['groupType'] = value ?? '';
 
               // clear pair no if not pair
-              if (value != 'Pair') {
+              if (!_isPairGroup) {
                 _entryVals['pairNo'] = '';
                 _erpFormKey.currentState?.updateFieldValue('pairNo', '');
               }
@@ -2952,9 +2958,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         }
       },
       onFieldSubmitted: (key, value) {
-        final isPairGroup =
-            _entryVals['groupType']?.toString().toLowerCase() == 'pair' ||
-                _entryVals['groupType'] == 'Pair';
         if (key == 'pairNo') {
           // VALIDATION
           if (value == null || value.toString().isEmpty) {
@@ -2966,14 +2969,18 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
           return;
         } else if (key == 'TopSide') {
-          // VALIDATION
-          if (value == null || value.toString().isEmpty) {
-            return;
-          }
-
-          // ADD ENTRY
-          if(!isPairGroup){
+          if (!_isPairGroup) {
+            // VALIDATION FOR NON-PAIR MODE
+            if (value == null || value.toString().isEmpty) {
+              return;
+            }
             _addEntry();
+          } else {
+            // PAIR MODE -> FOCUS pairNo
+            Future.delayed(
+              const Duration(milliseconds: 100),
+              () => _erpFormKey.currentState?.focusField('pairNo'),
+            );
           }
           return;
         }
