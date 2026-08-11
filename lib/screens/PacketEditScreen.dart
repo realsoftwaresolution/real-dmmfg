@@ -100,7 +100,7 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
         ErpFieldConfig(
           key: 'ghatWt',
           label: 'GHAT WT',
-          type: ErpFieldType.amount,
+          type: ErpFieldType.wt,
           readOnly: true,
           isEntryField: true,
           sectionIndex: 1,
@@ -118,7 +118,7 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
         ErpFieldConfig(
           key: 'wt',
           label: 'WT',
-          type: ErpFieldType.amount,
+          type: ErpFieldType.wt,
           readOnly: true,
           sectionIndex: 1,
           flex: 1,
@@ -134,7 +134,7 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
         ErpFieldConfig(
           key: 'issWt',
           label: 'ISS WT',
-          type: ErpFieldType.amount,
+          type: ErpFieldType.wt,
           readOnly: !_isRowEditMode,
           sectionIndex: 1,
           flex: 1,
@@ -150,7 +150,7 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
         ErpFieldConfig(
           key: 'recWt',
           label: 'REC WT',
-          type: ErpFieldType.amount,
+          type: ErpFieldType.wt,
           readOnly: !_isRowEditMode,
           sectionIndex: 1,
           flex: 1,
@@ -158,7 +158,7 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
         ErpFieldConfig(
           key: 'dmWt',
           label: 'DM WT',
-          type: ErpFieldType.amount,
+          type: ErpFieldType.wt,
           sectionIndex: 1,
           flex: 1,
           readOnly: true,
@@ -183,7 +183,7 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
           key: 'topsWt',
           label: 'TOPS WT',
           readOnly: true,
-          type: ErpFieldType.amount,
+          type: ErpFieldType.wt,
           sectionIndex: 1,
           flex: 1,
         ),
@@ -198,25 +198,28 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
         ErpFieldConfig(
           key: 'kWt',
           label: 'K WT',
-          type: ErpFieldType.amount,
+          type: ErpFieldType.wt,
           readOnly: !_isRowEditMode,
           sectionIndex: 1,
           flex: 1,
         ),
+
+      ],
+      [
         ErpFieldConfig(
           key: 'brPc',
           label: 'BR PC',
           readOnly: !_isRowEditMode,
           type: ErpFieldType.number,
-          sectionIndex: 1,
+          sectionIndex: 2,
           flex: 1,
         ),
         ErpFieldConfig(
           key: 'brWt',
           label: 'BR WT',
           readOnly: !_isRowEditMode,
-          type: ErpFieldType.amount,
-          sectionIndex: 1,
+          type: ErpFieldType.wt,
+          sectionIndex: 2,
           flex: 1,
         ),
         ErpFieldConfig(
@@ -224,15 +227,15 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
           label: 'LOSS PC',
           type: ErpFieldType.number,
           readOnly: true,
-          sectionIndex: 1,
+          sectionIndex: 2,
           flex: 1,
         ),
         ErpFieldConfig(
           key: 'lossWt',
           label: 'LOSS WT',
-          type: ErpFieldType.amount,
+          type: ErpFieldType.wt,
           readOnly: true,
-          sectionIndex: 1,
+          sectionIndex: 2,
           flex: 1,
         ),
         ErpFieldConfig(
@@ -240,7 +243,7 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
           label: 'CROSS PC',
           type: ErpFieldType.number,
           readOnly: !_isRowEditMode,
-          sectionIndex: 1,
+          sectionIndex: 2,
           flex: 1,
         ),
         ErpFieldConfig(
@@ -248,7 +251,7 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
           label: 'PEL PC',
           type: ErpFieldType.number,
           readOnly: !_isRowEditMode,
-          sectionIndex: 1,
+          sectionIndex: 2,
           flex: 1,
         ),
         ErpFieldConfig(
@@ -256,7 +259,7 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
           label: 'REP PC',
           type: ErpFieldType.number,
           readOnly: !_isRowEditMode,
-          sectionIndex: 1,
+          sectionIndex: 2,
           flex: 1,
         ),
         ErpFieldConfig(
@@ -264,7 +267,7 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
           label: 'SARIN MIST',
           type: ErpFieldType.number,
           readOnly: !_isRowEditMode,
-          sectionIndex: 1,
+          sectionIndex: 2,
           flex: 1,
         ),
         ErpFieldConfig(
@@ -272,19 +275,21 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
           label: 'TOTAL PC',
           type: ErpFieldType.number,
           readOnly: true,
-          sectionIndex: 1,
+          sectionIndex: 2,
           flex: 1,
         ),
         ErpFieldConfig(
           key: 'totalWt',
           label: 'TOTAL WT',
-          type: ErpFieldType.number,
+          type: ErpFieldType.wt,
           readOnly: true,
-          sectionIndex: 1,
+          sectionIndex: 2,
           flex: 1,
           showAddButton: true,
+          isEntryField: true,
+          isEntryRequired: true,
         ),
-      ],
+      ]
     ];
 
     return _sanitizeRows(rows);
@@ -462,7 +467,18 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
           row['RepPc'] = int.tryParse(_formValues['repPc']?.toString() ?? '') ?? int.tryParse(originalRow['RepPc']?.toString() ?? '') ?? 0;
           row['SarinMistake'] = d(double.tryParse(_formValues['sarinMistake']?.toString() ?? '') ?? double.tryParse(originalRow['SarinMistake']?.toString() ?? '') ?? 0.0);
           row['TotalPc'] = int.tryParse(_formValues['totalPc']?.toString() ?? '') ?? int.tryParse(originalRow['TotalPc']?.toString() ?? '') ?? 0;
-          row['TotalWt'] = d(double.tryParse(_formValues['totalWt']?.toString() ?? '') ?? double.tryParse(originalRow['TotalWt']?.toString() ?? '') ?? 0.0);
+          if (originalRow.containsKey('PrevSPKDeptIssDetID') &&
+              originalRow['PrevSPKDeptIssDetID'] != null) {
+            row['PrevSPKDeptIssDetID'] =
+                int.tryParse(originalRow['PrevSPKDeptIssDetID']?.toString() ?? '') ??
+                    originalRow['PrevSPKDeptIssDetID'];
+          }
+          if (originalRow.containsKey('JobWorkIssMstID') &&
+              originalRow['JobWorkIssMstID'] != null) {
+            row['JobWorkIssMstID'] =
+                int.tryParse(originalRow['JobWorkIssMstID']?.toString() ?? '') ??
+                    originalRow['JobWorkIssMstID'];
+          }
         } else {
           if (isRecWtChanged) {
             row['RecWt'] = d(newRecWt);
@@ -527,7 +543,7 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
       key: _erpFormKey,
       title: 'PACKET EDIT',
       rows: _buildFormRows(),
-      addButtonSections: const {1},
+      addButtonSections: const {2},
       initialValues: _formValues,
       autoStartAdding: true,
       onCancel: _resetForm,
@@ -536,7 +552,7 @@ class _PacketEditScreenState extends State<PacketEditScreen> {
       isShowSaveButton: true,
       onSave: _onSave,
       onEntryAdd: (sectionIndex) {
-        if (sectionIndex == 1) {
+        if (sectionIndex == 2) {
           _onAddEntry();
         }
       },

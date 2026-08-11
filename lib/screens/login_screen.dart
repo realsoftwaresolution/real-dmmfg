@@ -563,6 +563,11 @@ class _SpaceField extends StatelessWidget {
           validator: validator,
           focusNode: focusNode,
           textInputAction: textInputAction,
+          onEditingComplete: () {
+            if (onSubmitted != null) {
+              onSubmitted!(controller.text);
+            }
+          },
           onFieldSubmitted: onSubmitted,
           style: const TextStyle(color: Colors.white, fontSize: 15),
           cursorColor: const Color(0xFF556EE6),

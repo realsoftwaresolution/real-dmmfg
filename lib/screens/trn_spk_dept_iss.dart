@@ -637,6 +637,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       final newRow = SpkDeptIssDetModel(
         srno: srno,
         id: r.id,
+        preSpkDeptIssID: r.preSpkDeptIssID,
         jno: r.jno,
         jnoRecPc: r.jnoRecPc,
         bCode: r.bCode,
@@ -958,6 +959,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       spkDeptIssMstID: existing.spkDeptIssMstID,
       // Preserved scan data
       id: existing.id,
+      preSpkDeptIssID: existing.preSpkDeptIssID,
       jno: existing.jno,
       bCode: existing.bCode,
       pktNo: existing.pktNo,
@@ -1028,6 +1030,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     return SpkDeptIssDetModel(
       srno: srno,
       id: _scannedDet?.id,
+      preSpkDeptIssID: _scannedDet?.preSpkDeptIssID,
       jno: _scannedDet?.jno,
       jnoRecPc: _scannedDet?.jnoRecPc,
       bCode: _scannedDet?.bCode ?? _entryVals['scanValue'],
@@ -1132,6 +1135,7 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
           spkDeptIssMstID: v.spkDeptIssMstID,
           spkDeptIssDetID: v.spkDeptIssDetID,
           id: v.id,
+          preSpkDeptIssID: v.preSpkDeptIssID,
           jno: v.jno,
           bCode: v.bCode,
           pktNo: v.pktNo,

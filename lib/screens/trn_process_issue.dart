@@ -516,6 +516,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
       "details": _detRows.map((r) {
         return {
           "Jno": r.jno ?? 0,
+          // "ID": r.id ?? 0,
           "BCode": int.tryParse(r.bCode ?? '0') ?? 0,
           "PktNo": r.pktNo ?? '',
           "CutNo": r.cutNo ?? '',
@@ -545,7 +546,6 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
     final mstId = int.tryParse(_formValues['spkProcessIssMstID'] ?? '0') ?? 0;
 
     bool success;
-
     if (_isEditMode && mstId > 0) {
       final newRows = _detRows.where((e) {
         final belongsToThisMst =
@@ -567,6 +567,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
         "MachineCode": 0,
         "details": newRows.map((r) {
           return {
+            // "ID": r.id ?? 0,
             "Jno": r.jno ?? 0,
             "BCode": int.tryParse(r.bCode ?? '0') ?? 0,
             "PktNo": r.pktNo ?? '',
@@ -738,6 +739,33 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
     final List<List<ErpFieldConfig>> rows = [
       [
         ErpFieldConfig(
+          key: 'date',
+          label: 'DATE',
+          type: ErpFieldType.date,
+          readOnly: true,
+          skipFocus: true,
+          sectionIndex: 0,
+          width: 130,
+        ),
+        ErpFieldConfig(
+          key: 'time',
+          label: 'TIME',
+          skipFocus: true,
+          type: ErpFieldType.time,
+          readOnly: true,
+          sectionIndex: 0,
+          width: 110,
+        ),
+        ErpFieldConfig(
+          key: 'id',
+          label: 'ID',
+          type: ErpFieldType.number,
+          readOnly: true,
+          skipFocus: true,
+          sectionIndex: 0,
+          width: 110,
+        ),
+        ErpFieldConfig(
           key: 'manager',
           label: 'MANAGER',
           type: ErpFieldType.dropdown,
@@ -748,7 +776,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
               .where((e) => e.active == true)
               .map(
                 (e) => ErpDropdownItem(
-                  label: e.crName ?? '',
+                  label: '${e.crName ?? ''}  |  ${_deptNameFor(e.deptCode)}',
                   value: e.crId?.toString() ?? '',
                 ),
               )
@@ -780,32 +808,6 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
           readOnly: true,
         ),
       ],
-
-      // Row 2 — date / time / ID
-      [
-        ErpFieldConfig(
-          key: 'date',
-          label: 'DATE',
-          type: ErpFieldType.date,
-          readOnly: true,
-          sectionIndex: 1,
-        ),
-        ErpFieldConfig(
-          key: 'time',
-          label: 'TIME',
-          type: ErpFieldType.time,
-          readOnly: true,
-          sectionIndex: 1,
-        ),
-        ErpFieldConfig(
-          key: 'id',
-          label: 'ID',
-          type: ErpFieldType.number,
-          readOnly: true,
-          sectionIndex: 1,
-        ),
-      ],
-
       [
         ErpFieldConfig(
           key: 'scanValue',

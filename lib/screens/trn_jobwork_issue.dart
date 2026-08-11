@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:diam_mfg/models/job_work_issue_model.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
 import 'package:diam_mfg/providers/dept_process_provider.dart';
+import 'package:diam_mfg/providers/dept_provider.dart';
 import 'package:diam_mfg/providers/job_work_issue_entry_provider.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/constants.dart';
@@ -68,6 +69,7 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
         context.read<JobWorkIssueEntryProvider>().load(),
         context.read<DeptProcessProvider>().load(),
         context.read<CounterProvider>().load(),
+        context.read<DeptProvider>().load(),
       ]);
       if (!mounted) return;
       _setDefaultFormValues();
@@ -112,7 +114,7 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
 
     // ✅ Duplicate check
     final exists = _detRows.any(
-      (e) => e.bCode?.toString() == r.bCode?.toString(),
+          (e) => e.bCode?.toString() == r.bCode?.toString(),
     );
 
     if (exists) {
@@ -120,6 +122,7 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
       _focusScan();
       return;
     }
+
 
     final newRow = JobWorkIssueDetModel(
       jobWorkIssDetID: r.jobWorkIssDetID,
@@ -632,7 +635,19 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
 
   void _showSnack(String msg) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-
+  String _deptNameFor(int? deptCode) {
+    if (deptCode == null) return '';
+    try {
+      return context
+          .read<DeptProvider>()
+          .list
+          .firstWhere((d) => d.deptCode == deptCode)
+          .deptName ??
+          '';
+    } catch (_) {
+      return '';
+    }
+  }
   List<List<ErpFieldConfig>> _buildFormRows() {
     final deptProcessProvider = context.read<DeptProcessProvider>();
     final counterProvider = context.read<CounterProvider>();
@@ -666,7 +681,7 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
               .where((e) => e.active == true)
               .map(
                 (e) => ErpDropdownItem(
-                  label: e.crName ?? '',
+                  label:  '${e.crName ?? ''}  |  ${_deptNameFor(e.deptCode)}',
                   value: e.crId?.toString() ?? '',
                 ),
               )

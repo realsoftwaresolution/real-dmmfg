@@ -530,92 +530,101 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _onBCodeScanned(String bCode, String fCode) async {
-    final rows = await context
-        .read<FactoryReceivedEntryProvider>()
-        .fetchByBCode(bCode: bCode, fCode: fCode);
+    if (_isBCodePending) return;
+    _isBCodePending = true;
+    try {
+      print('step---1');
+      final rows = await context
+          .read<FactoryReceivedEntryProvider>()
+          .fetchByBCode(bCode: bCode, fCode: fCode);
+      print('step---3');
+      if (!mounted) return;
+      if (rows.isNotEmpty && rows.first.bCode == null) {
+        print('step---4');
+        ErpResultDialog.showError(
+          context: context,
+          theme: _theme,
+          title: 'BCode',
+          message: 'BCode "$bCode" not found!',
+        );
+        _entryVals['scanValue'] = '';
+        _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
 
-    if (!mounted) return;
-    _isBCodePending = false;
-    if (rows.isNotEmpty && rows.first.bCode == null) {
-      ErpResultDialog.showError(
-        context: context,
-        theme: _theme,
-        title: 'BCode',
-        message: 'BCode "$bCode" not found!',
-      );
-      _entryVals['scanValue'] = '';
-      _erpFormKey.currentState?.updateFieldValue('scanValue', '');
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
+          try {
+            _erpFormKey.currentState?.focusField('scanValue');
+          } catch (_) {}
+        });
+        return;
+      }
+      if (rows.isEmpty) {
+        print('step---5');
+        ErpResultDialog.showError(
+          context: context,
+          theme: _theme,
+          title: 'BCode',
+          message: 'BCode "$bCode" not found!',
+        );
+        _entryVals['scanValue'] = '';
+        _erpFormKey.currentState?.updateFieldValue('scanValue', '');
+        Future.delayed(
+          const Duration(milliseconds: 100),
+          () => _erpFormKey.currentState?.focusField('scanValue'),
+        );
+        return;
+      } else {
+        print('step---6');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
 
-        try {
-          _erpFormKey.currentState?.focusField('scanValue');
-        } catch (_) {}
-      });
-      return;
+          try {
+            _erpFormKey.currentState?.focusField('dmWt');
+          } catch (_) {}
+        });
+      }
+      print('step---7');
+      final r = rows.first;
+
+      void set(String k, String? v) {
+        _entryVals[k] = v ?? '';
+        _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
+      }
+
+      set('orgPc', r.pc?.toString());
+      set('orgWt', fThreeDecimal(r.wt));
+      set('recWt', fThreeDecimal(r.dmWt));
+      set('recPc', r.issPc?.toString() ?? '0');
+      set('issPc', r.issPc?.toString());
+      set('issWt', fThreeDecimal(r.issWt));
+      set('jno', r.jno?.toString());
+      set('mfgCut', r.MfgCut?.toString());
+      set('lotNo', r.pktNo?.toString());
+      set('dmPer', r.dmPer?.toString());
+      set('dmWt', r.dmWt?.toString());
+      set('size', r.size?.toString());
+      set('factoryIssDetID', r.factoryIssDetID?.toString());
+      set('purity', r.purityCode?.toString());
+      set('charni', r.charniCode?.toString());
+      set('color', r.colorCode?.toString());
+      set('shape', r.shapeCode?.toString());
+      set('cutCode', r.cutCode?.toString());
+      set('polishCode', r.polishCode?.toString());
+      set('symmetryCode', r.symmetryCode?.toString());
+      set('fluo', r.fluo?.toString());
+      set('tensionCode', r.tensionsCode?.toString());
+      set('length', r.length?.toString());
+      set('diam', r.diam?.toString());
+      set('height', r.height?.toString());
+      if (r.markerMstID != null && r.markerMstID != 0) {
+        set('MarkerMstID', r.markerMstID?.toString());
+      } else if (_formValues['MarkerMstID'] != null && _formValues['MarkerMstID'] != '0') {
+        set('MarkerMstID', _formValues['MarkerMstID']);
+      }
+      setState(() => _scannedDet = r);
+    } finally {
+      _isBCodePending = false;
     }
-    if (rows.isEmpty) {
-      ErpResultDialog.showError(
-        context: context,
-        theme: _theme,
-        title: 'BCode',
-        message: 'BCode "$bCode" not found!',
-      );
-      _entryVals['scanValue'] = '';
-      _erpFormKey.currentState?.updateFieldValue('scanValue', '');
-      Future.delayed(
-        const Duration(milliseconds: 100),
-        () => _erpFormKey.currentState?.focusField('scanValue'),
-      );
-      return;
-    } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-
-        try {
-          _erpFormKey.currentState?.focusField('dmWt');
-        } catch (_) {}
-      });
-    }
-
-    final r = rows.first;
-
-    void set(String k, String? v) {
-      _entryVals[k] = v ?? '';
-      _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
-    }
-
-    set('orgPc', r.pc?.toString());
-    set('orgWt', fThreeDecimal(r.wt));
-    set('recWt', fThreeDecimal(r.dmWt));
-    set('recPc', r.issPc?.toString() ?? '0');
-    set('issPc', r.issPc?.toString());
-    set('issWt', fThreeDecimal(r.issWt));
-    set('jno', r.jno?.toString());
-    set('mfgCut', r.MfgCut?.toString());
-    set('lotNo', r.pktNo?.toString());
-    set('dmPer', r.dmPer?.toString());
-    set('dmWt', r.dmWt?.toString());
-    set('size', r.size?.toString());
-    set('factoryIssDetID', r.factoryIssDetID?.toString());
-    set('purity', r.purityCode?.toString());
-    set('charni', r.charniCode?.toString());
-    set('color', r.colorCode?.toString());
-    set('shape', r.shapeCode?.toString());
-    set('cutCode', r.cutCode?.toString());
-    set('polishCode', r.polishCode?.toString());
-    set('symmetryCode', r.symmetryCode?.toString());
-    set('fluo', r.fluo?.toString());
-    set('tensionCode', r.tensionsCode?.toString());
-    set('length', r.length?.toString());
-    set('diam', r.diam?.toString());
-    set('height', r.height?.toString());
-    if (r.markerMstID != null && r.markerMstID != 0) {
-      set('MarkerMstID', r.markerMstID?.toString());
-    } else if (_formValues['MarkerMstID'] != null && _formValues['MarkerMstID'] != '0') {
-      set('MarkerMstID', _formValues['MarkerMstID']);
-    }
-    setState(() => _scannedDet = r);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -2957,7 +2966,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             break;
         }
       },
-      onFieldSubmitted: (key, value) {
+      onFieldSubmitted: (key, value) async {
         if (key == 'pairNo') {
           // VALIDATION
           if (value == null || value.toString().isEmpty) {
@@ -3024,8 +3033,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         }
 
         // 🚀 MAIN API CALL
-        _isBCodePending = true;
-        _onBCodeScanned(scanVal, _formValues['factory']!);
+        await _onBCodeScanned(scanVal, _formValues['factory']!);
       },
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
       onSave: _isEditMode ? null : _onSave,

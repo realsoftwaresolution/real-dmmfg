@@ -69,6 +69,7 @@ class FactoryReceivedEntryProvider extends BaseProvider {
       onSuccess: (res) {
         final data = res.data['data'];
         final list = data is List ? data : [data];
+        print('step---2');
         return list
             .map(
               (e) => FactoryReceiveDetModel.fromJson(e as Map<String, dynamic>),

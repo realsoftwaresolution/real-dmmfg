@@ -754,7 +754,7 @@ class _TrnProcessRecEntryState extends State<TrnProcessRecEntry> {
               .where((e) => e.active == true)
               .map(
                 (e) => ErpDropdownItem(
-                  label: e.crName ?? '',
+                  label:  '${e.crName ?? ''}  |  ${_deptNameFor(e.deptCode)}',
                   value: e.crId?.toString() ?? '',
                 ),
               )
@@ -781,22 +781,18 @@ class _TrnProcessRecEntryState extends State<TrnProcessRecEntry> {
           readOnly: true,
           sectionIndex: 0,
         ),
-      ],
-
-      [
         ErpFieldConfig(
           key: 'scanValue',
           label: 'BCODE',
           type: ErpFieldType.text,
-          sectionIndex: 1,
-          width: 200,
+          sectionIndex: 0,
         ),
         ErpFieldConfig(
           key: 'qrCode',
           label: 'QRCODE',
           type: ErpFieldType.text,
           readOnly: true,
-          sectionIndex: 1,
+          sectionIndex: 0,
           width: 200,
         ),
       ],

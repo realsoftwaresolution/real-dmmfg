@@ -711,6 +711,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       spkDeptIssMstID: existing.spkDeptIssMstID,
       // Preserved scan data
       id: existing.id,
+      preSpkDeptIssID: existing.preSpkDeptIssID,
       jno: existing.jno,
       bCode: existing.bCode,
       fluoCode: int.tryParse(_entryVals['fluoCode'] ?? _entryVals['fluo'] ?? '') ?? existing.fluoCode,
@@ -790,6 +791,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
     return LaserDetModel(
       srno: srno,
       id: _scannedDet?.id,
+      preSpkDeptIssID: _scannedDet?.preSpkDeptIssID,
       jno: _scannedDet?.jno,
       jnoRecPc: _scannedDet?.jnoRecPc,
       bCode: isFirstRow ? (_scannedDet?.bCode ?? _entryVals['scanValue']) : '0',

@@ -142,6 +142,7 @@ class PlanningReceivedDetModel {
   final int? spkDeptIssMstID;
   final int? srno;
   final int? id;
+  final int? preSpkDeptIssID;
   final int? jno;
   final String? bCode;
   final String? pktNo;
@@ -297,6 +298,7 @@ class PlanningReceivedDetModel {
     this.spkDeptIssMstID,
     this.srno,
     this.id,
+    this.preSpkDeptIssID,
     this.jno,
     this.bCode,
     this.pktNo,
@@ -454,6 +456,7 @@ class PlanningReceivedDetModel {
         spkDeptIssMstID: _i(json['SPKDeptIssMstID']),
         srno: _i(json['Srno']),
         id: _i(json['ID']),
+        preSpkDeptIssID: _i(json['PrevSPKDeptIssDetID']),
         fromDeptCode: _i(json['FromDeptCode']),
         toDeptCode: _i(json['ToDeptCode']),
         deptCode: _i(json['DeptCode']),
@@ -610,6 +613,7 @@ class PlanningReceivedDetModel {
     'SPKDeptIssMstID': spkDeptIssMstID ?? 0,
     'Srno': srno ?? 0,
     'ID': id ?? 0,
+    'PrevSPKDeptIssDetID': preSpkDeptIssID ?? 0,
     'Jno': jno ?? 0,
     'BCode': bCode ?? '',
     'PktNo': pktNo ?? '',
@@ -766,6 +770,7 @@ class PlanningReceivedDetModel {
     int? spkDeptIssMstID,
     int? srno,
     int? id,
+    int? preSpkDeptIssID,
     int? jno,
     String? bCode,
     String? pktNo,
@@ -919,6 +924,7 @@ class PlanningReceivedDetModel {
     spkDeptIssMstID: spkDeptIssMstID ?? this.spkDeptIssMstID,
     srno: srno ?? this.srno,
     id: id ?? this.id,
+    preSpkDeptIssID: id ?? this.preSpkDeptIssID,
     jno: jno ?? this.jno,
     bCode: bCode ?? this.bCode,
     pktNo: pktNo ?? this.pktNo,

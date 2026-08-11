@@ -83,14 +83,15 @@ class JobWorkRecMstModel {
 class JobWorkRecDetModel {
   final int? jobWorkRecDetID;
   final int? jobWorkRecMstID;
-  final int? srno;
+  final int? jobWorkIssMstID;
+  final dynamic srno;
 
   // Cut & Package Info
   final String cutNo;
   final String mfgCut;
   final int bCode;
   final String pktNo;
-  final int? pairNo;
+  final dynamic pairNo;
 
   // Pieces & Weight
   final int pc;
@@ -293,125 +294,127 @@ class JobWorkRecDetModel {
     this.amount,
     this.rateID,
     this.rateon,
-    this.message,
+    this.message, this.jobWorkIssMstID,
   });
 
   factory JobWorkRecDetModel.fromJson(Map<String, dynamic> json) {
     return JobWorkRecDetModel(
-      jobWorkRecDetID: json['JobWorkRecDetID'],
-      jobWorkRecMstID: json['JobWorkRecMstID'],
-      srno: json['Srno'],
-      cutNo: json['CutNo'] ?? '',
-      mfgCut: json['MfgCut'] ?? '',
-      bCode: json['BCode'] ?? 0,
-      pktNo: json['PktNo'] ?? '',
+      jobWorkRecDetID: _toInt(json['JobWorkRecDetID']),
+      jobWorkRecMstID: _toInt(json['JobWorkRecMstID']),
+      jobWorkIssMstID: _toInt(json['JobWorkIssMstID']),
+      srno: _toInt(json['Srno']) ?? json['Srno'] ?? json['srno'],
+      cutNo: json['CutNo']?.toString() ?? '',
+      mfgCut: json['MfgCut']?.toString() ?? '',
+      bCode: _toInt(json['BCode']) ?? 0,
+      pktNo: json['PktNo']?.toString() ?? '',
       pairNo: json['PairNo'],
-      pc: json['Pc'] ?? 0,
+      pc: _toInt(json['Pc']) ?? 0,
       wt: _toDouble(json['Wt']) ?? 0.0,
-      issPc: json['IssPc'] ?? 0,
+      issPc: _toInt(json['IssPc']) ?? 0,
       issWt: _toDouble(json['IssWt']) ?? 0.0,
-      purityCode: json['PurityCode'],
-      charniCode: json['CharniCode'],
-      colorCode: json['ColorCode'],
-      shapeCode: json['ShapeCode'],
+      purityCode: _toInt(json['PurityCode']),
+      charniCode: _toInt(json['CharniCode']),
+      colorCode: _toInt(json['ColorCode']),
+      shapeCode: _toInt(json['ShapeCode']),
       dmWt: _toDouble(json['DmWt']) ?? 0.0,
       dmPer: _toDouble(json['DmPer']) ?? 0.0,
       size: _toDouble(json['Size']) ?? 0.0,
-      cutCode: json['CutCode'],
+      cutCode: _toInt(json['CutCode']),
       diam: _toDouble(json['Diam']) ?? 0.0,
       height: _toDouble(json['Height']),
       length: _toDouble(json['Length']) ?? 0.0,
-      polishCode: json['PolishCode'],
-      symmetryCode: json['SymmetryCode'],
-      fluoCode: json['FluoCode'],
-      qrCode: json['QRCode'] ?? '',
-      purityName: json['PurityName'],
-      charniName: json['CharniName'],
-      colorName: json['ColorName'],
-      shapeName: json['ShapeName'],
-      cutName: json['CutName'],
-      polishName: json['PolishName'],
-      symmetryName: json['SymmetryName'],
-      fluoName: json['FluoName'],
-      jno: json['Jno'],
+      polishCode: _toInt(json['PolishCode']),
+      symmetryCode: _toInt(json['SymmetryCode']),
+      fluoCode: _toInt(json['FluoCode']),
+      qrCode: json['QRCode']?.toString() ?? '',
+      purityName: json['PurityName']?.toString(),
+      charniName: json['CharniName']?.toString(),
+      colorName: json['ColorName']?.toString(),
+      shapeName: json['ShapeName']?.toString(),
+      cutName: json['CutName']?.toString(),
+      polishName: json['PolishName']?.toString(),
+      symmetryName: json['SymmetryName']?.toString(),
+      fluoName: json['FluoName']?.toString(),
+      jno: _toInt(json['Jno']),
 
-      recPc: json['RecPc'],
+      recPc: _toInt(json['RecPc']),
       recWt: _toDouble(json['RecWt']),
 
-      kPc: json['KPc'],
+      kPc: _toInt(json['KPc']),
       kWt: _toDouble(json['KWt']),
 
-      brPc: json['BrPc'],
+      brPc: _toInt(json['BrPc']),
       brWt: _toDouble(json['BrWt']),
 
-      lossPc: json['LossPc'],
+      lossPc: _toInt(json['LossPc']),
       lossWt: _toDouble(json['LossWt']),
 
       recPer: _toDouble(json['RecPer']),
       diffPer: _toDouble(json['DiffPer']),
       diffWt: _toDouble(json['DiffWt']),
 
-      jobRec: json['JobRec'],
+      jobRec: json['JobRec']?.toString(),
 
-      polishCheckerRecMstID: json['PolishCheckerRecMstID'],
-      orderMstID: json['OrderMstID'],
-      markerMstID: json['MarkerMstID'],
-      fromCrID: json['FromCrID'],
-      lastCrID: json['LastCrID'],
-      crID: json['CrID'],
+      polishCheckerRecMstID: _toInt(json['PolishCheckerRecMstID']),
+      orderMstID: _toInt(json['OrderMstID']),
+      markerMstID: _toInt(json['MarkerMstID']),
+      fromCrID: _toInt(json['FromCrID']),
+      lastCrID: _toInt(json['LastCrID']),
+      crID: _toInt(json['CrID']),
 
-      tensionsCode: json['TensionsCode'],
+      tensionsCode: _toInt(json['TensionsCode']),
 
-      topSide: json['TopSide'],
-      fcIntentCode: json['FcIntentCode'],
-      fcOverCode: json['FcOverCode'],
-      fColorCode1: json['FColorCode1'],
-      fColorCode2: json['FColorCode2'],
+      topSide: json['TopSide']?.toString(),
+      fcIntentCode: _toInt(json['FcIntentCode']),
+      fcOverCode: _toInt(json['FcOverCode']),
+      fColorCode1: _toInt(json['FColorCode1']),
+      fColorCode2: _toInt(json['FColorCode2']),
 
-      ha: json['HA'],
+      ha: json['HA']?.toString(),
 
-      jobWorkRecDate: json['JobWorkRecDate'],
-      partyMstID: json['PartyMstID'],
-      deptCode: json['DeptCode'],
-      deptProcessCode: json['DeptProcessCode'],
-      sflag: json['Sflag'],
-      sdate: json['Sdate'],
-      logID: json['LogID'],
-      pcID: json['PcID'],
-      ever: json['Ever'],
-      time: json['Time'],
+      jobWorkRecDate: json['JobWorkRecDate']?.toString(),
+      partyMstID: _toInt(json['PartyMstID']),
+      deptCode: _toInt(json['DeptCode']),
+      deptProcessCode: _toInt(json['DeptProcessCode']),
+      sflag: json['Sflag']?.toString(),
+      sdate: json['Sdate']?.toString(),
+      logID: _toInt(json['LogID']),
+      pcID: json['PcID']?.toString(),
+      ever: _toInt(json['Ever']),
+      time: json['Time']?.toString(),
 
-      purity: json['Purity'],
-      charni: json['Charni'],
-      color: json['Color'],
-      shape: json['Shape'],
-      cut: json['Cut'],
-      polish: json['Polish'],
-      symmetry: json['Symmetry'],
-      fluo: json['Fluo'],
+      purity: json['Purity']?.toString(),
+      charni: json['Charni']?.toString(),
+      color: json['Color']?.toString(),
+      shape: json['Shape']?.toString(),
+      cut: json['Cut']?.toString(),
+      polish: json['Polish']?.toString(),
+      symmetry: json['Symmetry']?.toString(),
+      fluo: json['Fluo']?.toString(),
 
-      articalName: json['ArticalName'],
-      articalCode: json['ArticalCode'],
+      articalName: json['ArticalName']?.toString(),
+      articalCode: _toInt(json['ArticalCode']),
 
       rate: _toDouble(json['Rate']),
       amount: _toDouble(json['Amount']),
 
       rateID: json['RateID']?.toString(),
-      rateon: json['Rateon'],
+      rateon: json['Rateon']?.toString(),
 
-      message: json['message'],
+      message: json['message']?.toString(),
     );
   }
 
   Map<String, dynamic> toJson() => {
     'JobWorkRecDetID': jobWorkRecDetID,
     'JobWorkRecMstID': jobWorkRecMstID,
+    'JobWorkIssMstID': jobWorkIssMstID,
     'Srno': srno,
     'CutNo': cutNo,
     'MfgCut': mfgCut,
     'BCode': bCode,
     'PktNo': pktNo,
-    'PairNo': pairNo ?? 0,
+    'PairNo': pairNo ?? '',
     'Pc': pc,
     'Wt': wt,
     'IssPc': issPc,
@@ -530,7 +533,7 @@ class JobWorkRecDetModel {
 
   };
   JobWorkRecDetModel copyWith({
-    int? srno,
+    dynamic srno,
     int? recPc,
     double? recWt,
     int? kPc,
@@ -562,7 +565,7 @@ class JobWorkRecDetModel {
     double? diam,
     double? height,
     double? length,
-    int? pairNo,
+    dynamic pairNo,
     String? topSide,
     int? fcIntentCode,
     int? fcOverCode,
@@ -575,6 +578,7 @@ class JobWorkRecDetModel {
     return JobWorkRecDetModel(
       jobWorkRecDetID: jobWorkRecDetID,
       jobWorkRecMstID: jobWorkRecMstID,
+      jobWorkIssMstID: jobWorkIssMstID,
       jno: jno,
       srno: srno ?? this.srno,
 
@@ -772,11 +776,11 @@ class JobWorkRecSummaryRow {
 
   factory JobWorkRecSummaryRow.fromJson(Map<String, dynamic> json) {
     return JobWorkRecSummaryRow(
-      srno: json['Srno'] ?? 0,
+      srno: _toInt(json['Srno']) ?? 0,
       cutNo: json['CutNo']?.toString() ?? '',
       mfgCut: json['MfgCut']?.toString() ?? '',
-      pairNo: json['PairNo'] ?? 0,
-      pc: json['Pc'] ?? 0,
+      pairNo: _toInt(json['PairNo']) ?? 0,
+      pc: _toInt(json['Pc']) ?? 0,
       wt: _toDouble(json['Wt']) ?? 0.0,
       dmWt: _toDouble(json['DmWt']) ?? 0.0,
       dmPer: _toDouble(json['DmPer']) ?? 0.0,
@@ -785,10 +789,21 @@ class JobWorkRecSummaryRow {
 }
 
 // Helper functions
+int? _toInt(dynamic v) {
+  if (v == null) return null;
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  final s = v.toString().trim();
+  if (s.isEmpty) return null;
+  return int.tryParse(s);
+}
+
 double? _toDouble(dynamic v) {
   if (v == null) return null;
   if (v is double) return v;
   if (v is int) return v.toDouble();
   if (v is num) return v.toDouble();
-  return double.tryParse(v.toString());
+  final s = v.toString().trim();
+  if (s.isEmpty) return null;
+  return double.tryParse(s);
 }

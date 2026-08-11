@@ -335,7 +335,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
       purityCode: r.purityCode,
       colorCode: r.colorCode,
-      charniCode: r.charniCode,
+      charniCode: r.charniCode ?? 0,
       diam: r.diam ?? 0,
 
       // ✅ IMPORTANT (for GHAT WT)

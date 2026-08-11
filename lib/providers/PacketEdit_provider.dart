@@ -66,7 +66,7 @@ class PacketEditProvider extends BaseProvider {
 
   List<Map<String, dynamic>> mapRows(List<Map<String, dynamic>> raw) {
     return raw.map((e) {
-      return {
+      final map = <String, dynamic>{
         'Process': e['Process'] ?? '-',
         'Pro': e['Pro'] ?? '-',
         'GhatWt': _d(e['GhatWt']),
@@ -103,6 +103,17 @@ class PacketEditProvider extends BaseProvider {
         'DeptProcess': e['DeptProcess'] ?? '-',
         'Employee': e['Employee'] ?? '-',
       };
+      if (e.containsKey('PrevSPKDeptIssDetID') && e['PrevSPKDeptIssDetID'] != null) {
+        map['PrevSPKDeptIssDetID'] =
+            int.tryParse(e['PrevSPKDeptIssDetID'].toString()) ??
+                e['PrevSPKDeptIssDetID'];
+      }
+      if (e.containsKey('JobWorkIssMstID') && e['JobWorkIssMstID'] != null) {
+        map['JobWorkIssMstID'] =
+            int.tryParse(e['JobWorkIssMstID'].toString()) ??
+                e['JobWorkIssMstID'];
+      }
+      return map;
     }).toList();
   }
 

@@ -139,6 +139,7 @@ class SpkDeptIssDetModel {
   final int? spkDeptIssMstID;
   final int? srno;
   final int? id;
+  final int? preSpkDeptIssID;
   final int? jno;
   final String? bCode;
   final String? pktNo;
@@ -293,6 +294,7 @@ class SpkDeptIssDetModel {
     this.spkDeptIssMstID,
     this.srno,
     this.id,
+    this.preSpkDeptIssID,
     this.jno,
     this.bCode,
     this.pktNo,
@@ -451,6 +453,7 @@ class SpkDeptIssDetModel {
         spkDeptIssMstID: json['SPKDeptIssMstID'],
         srno: json['Srno'],
         id: json['ID'],
+        preSpkDeptIssID: json['PrevSPKDeptIssDetID'],
         fromDeptCode: json['FromDeptCode'],
         toDeptCode: json['ToDeptCode'],
         deptCode: json['DeptCode'],
@@ -599,6 +602,7 @@ class SpkDeptIssDetModel {
     'SPKDeptIssMstID': spkDeptIssMstID ?? 0,
     'Srno': srno ?? 0,
     'ID': id ?? 0,
+    'PrevSPKDeptIssDetID': preSpkDeptIssID ?? 0,
     'Jno': jno ?? 0,
     'BCode': bCode ?? '',
     'PktNo': pktNo ?? '',
@@ -753,6 +757,7 @@ class SpkDeptIssDetModel {
     int? spkDeptIssMstID,
     int? srno,
     int? id,
+    int? preSpkDeptIssID,
     int? jno,
     String? bCode,
     String? pktNo,
@@ -905,6 +910,7 @@ class SpkDeptIssDetModel {
     spkDeptIssMstID: spkDeptIssMstID ?? this.spkDeptIssMstID,
     srno: srno ?? this.srno,
     id: id ?? this.id,
+    preSpkDeptIssID: preSpkDeptIssID ?? this.preSpkDeptIssID,
     jno: jno ?? this.jno,
     bCode: bCode ?? this.bCode,
     pktNo: pktNo ?? this.pktNo,
