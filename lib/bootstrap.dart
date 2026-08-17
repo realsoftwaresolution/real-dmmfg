@@ -36,6 +36,7 @@ import 'package:diam_mfg/providers/employee_manager_det_provider.dart';
 import 'package:diam_mfg/providers/employee_provider.dart';
 import 'package:diam_mfg/providers/fColor_provider.dart';
 import 'package:diam_mfg/providers/factory_issue_entry_provider.dart';
+import 'package:diam_mfg/providers/repair_issue_entry_provider.dart';
 import 'package:diam_mfg/providers/factory_provider.dart';
 import 'package:diam_mfg/providers/factory_rate_provider.dart';
 import 'package:diam_mfg/providers/factory_receive_provider.dart';
@@ -63,6 +64,7 @@ import 'package:diam_mfg/providers/purity_provider.dart';
 import 'package:diam_mfg/providers/purity_rpt_group_provider.dart';
 import 'package:diam_mfg/providers/purity_type_provider.dart';
 import 'package:diam_mfg/providers/remarks_provider.dart';
+import 'package:diam_mfg/providers/repair_receive_provider.dart';
 import 'package:diam_mfg/providers/report_mst_provider.dart';
 import 'package:diam_mfg/providers/report_type_provider.dart';
 import 'package:diam_mfg/providers/rough_assort_provider.dart';
@@ -96,7 +98,7 @@ import 'providers/Packet_History_provider.dart';
 import 'providers/factory_man_group_provider.dart';
 
 String baseUrl = 'http://50.62.183.116:5000/api';
-// String baseUrl = 'https://res-auction-expression-supreme.trycloudflare.com/api';
+// String baseUrl = 'https://dash-oral-bars-dry.trycloudflare.com/api';
 //CU-7,5/6/2026,17:12,0.096,0.049,ROUND,G,MACKABLE,klhkhkhjkkh,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
 
 //CU-7,5/6/2026,17:12,0.096,0.049,S.OVAL,G,VVS2,omjewR-1.50,,L:3.10,W:2.07,1.31,96.01,firoz,S.OVAL
@@ -297,6 +299,12 @@ Future<void> bootstrap({required FutureOr<Widget> Function() fn}) async {
             ),
             ChangeNotifierProvider<FactoryIssueEntryProvider>(
               create: (_) => FactoryIssueEntryProvider(),
+            ),
+            ChangeNotifierProvider<RepairIssueEntryProvider>(
+              create: (_) => RepairIssueEntryProvider(),
+            ),
+            ChangeNotifierProvider<RepairReceivedEntryProvider>(
+              create: (_) => RepairReceivedEntryProvider(),
             ),
             ChangeNotifierProvider<FactoryReceivedEntryProvider>(
               create: (_) => FactoryReceivedEntryProvider(),

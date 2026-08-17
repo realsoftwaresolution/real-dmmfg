@@ -561,6 +561,16 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     set('fluoCode', r.fluo?.toString());
     set('tensionsCode', r.tensionsCode?.toString());
 
+    // Populate DmWt/DmPer from scan response so values are not lost during edit
+    final scanDmWt = r.LastDmWt ?? r.dmWt;
+    final scanDmPer = r.LastDmPer ?? r.dmPer;
+    if (scanDmWt != null) {
+      set('dmwt', fThreeDecimal(scanDmWt));
+    }
+    if (scanDmPer != null) {
+      set('dmper', scanDmPer.toStringAsFixed(2));
+    }
+
     setState(() => _scannedDet = r);
 
     Future.delayed(const Duration(milliseconds: 100), () {
@@ -866,13 +876,17 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     final issPcStr = _entryVals['issPc'] ?? '0';
     final issWtStr = _entryVals['issWt'] ?? '0.000';
 
+    // Resolve DmWt: from entry fields → scan response → existing row (for edit)
+    final existingDmWt = _editingDetIndex != null ? _detRows[_editingDetIndex!].dmWt : null;
+    final existingDmPer = _editingDetIndex != null ? _detRows[_editingDetIndex!].dmPer : null;
+
     final finalDmWt = hasDmWt || hasDmPer
-        ? double.tryParse(_entryVals['dmwt'] ?? '')
-        : _scannedDet?.LastDmWt;
+        ? (double.tryParse(_entryVals['dmwt'] ?? '') ?? existingDmWt)
+        : (_scannedDet?.LastDmWt ?? existingDmWt);
 
     final finalDmPer = hasDmPer || hasDmWt
-        ? double.tryParse(_entryVals['dmper'] ?? '')
-        : _scannedDet?.LastDmPer;
+        ? (double.tryParse(_entryVals['dmper'] ?? '') ?? existingDmPer)
+        : (_scannedDet?.LastDmPer ?? existingDmPer);
 
     final srno = _editingDetIndex != null
         ? _detRows[_editingDetIndex!].srno
@@ -990,8 +1004,8 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       recWt: recWt,
       totalPc: recPc,
       totalWt: recWt,
-      dmWt: dmWt,
-      dmPer: dmPer,
+      dmWt: dmWt ?? existing.dmWt,
+      dmPer: dmPer ?? existing.dmPer,
       kPc: int.tryParse(_entryVals['kpc'] ?? ''),
       kWt: double.tryParse(_entryVals['kwt'] ?? ''),
       brPc: int.tryParse(_entryVals['brpc'] ?? ''),
@@ -1100,7 +1114,6 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
       _entryVals[k] = v ?? '';
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
-
     set('orgPc', r.pc?.toString());
     set('orgWt', fThreeDecimal(r.wt));
     set('issPc', r.issPc?.toString());

@@ -347,11 +347,11 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       entryType: 'B',
       formType: 'FACTORY ISSUE',
       size: r.size ?? 0.00,
-      length: r.length
+      length: r.length,
+        amount: r.amount
     );
     setState(() {
       _detRows.add(newRow);
-
       _syncDetGrid();
     });
 
@@ -461,6 +461,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
               plDmPer: v.plDmPer,
               clvCut: v.clvCut,
               jnoRecPc: v.jnoRecPc,
+              amount: v.amount,
             );
           }).toList();
 
@@ -472,6 +473,10 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           theme: _theme,
           itemName: '1 row(s) deleted successfully',
         );
+      }
+      if(_detRows.isEmpty) {
+        _resetForm();
+        context.read<FactoryIssueEntryProvider>().load();
       }
     } else {
       setState(() {
@@ -540,6 +545,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
             plDmPer: v.plDmPer,
             clvCut: v.clvCut,
             jnoRecPc: v.jnoRecPc,
+            amount: v.amount,
           );
         }).toList();
 
@@ -648,6 +654,9 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
     if (!mounted) return;
 
+    final dueDayVal = row['dueDay'] ?? row['DueDay'];
+    final dueDateVal = row['dueDate'] ?? row['DueDate'];
+
     setState(() {
       _selectedRow = row;
       _isEditMode = true;
@@ -666,11 +675,11 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         'entry': _s(row['entry']),
         'type': _s(row['type']),
 
-        'dueDay': _s(row['dueDay']),
-        'dueDayCount': _date(row['dueDate']),
+        'dueDay': _s(dueDayVal),
+        'dueDayCount': _date(dueDateVal),
 
-        'factory': _s(row['factoryCode']),
-        'scanValue': _s(_detRows.first.bCode),
+        'factory': _s(row['factoryCode'] ?? row['FactoryCode']),
+        'scanValue': _detRows.isNotEmpty ? _s(_detRows.first.bCode) : '',
         'report': 'REPORT',
       };
       _entryVals['report'] = 'REPORT';
@@ -681,6 +690,12 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       if (!mounted) return;
 
       try {
+        if (dueDayVal != null) {
+          _erpFormKey.currentState?.updateFieldValue('dueDay', _s(dueDayVal));
+        }
+        if (dueDateVal != null) {
+          _erpFormKey.currentState?.updateFieldValue('dueDayCount', _date(dueDateVal));
+        }
         _erpFormKey.currentState?.focusField('scanValue');
       } catch (_) {}
     });
@@ -729,7 +744,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
             "RateID": '',
             "Rateon": '',
             "Rate":  0,
-            "Amount": r.amountRs ?? 0.00,
+            "Amount": r.amount ?? 0.00,
 
             "Diam": r.diam ?? 0,
           };

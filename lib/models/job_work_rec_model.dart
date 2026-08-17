@@ -207,6 +207,11 @@ class JobWorkRecDetModel {
 // Message
   final String? message;
 
+// Attachments
+  final List<String>? images;
+  final List<String>? videos;
+  final List<String>? certificates;
+
   const JobWorkRecDetModel({
     this.jobWorkRecDetID,
     this.jobWorkRecMstID,
@@ -294,8 +299,34 @@ class JobWorkRecDetModel {
     this.amount,
     this.rateID,
     this.rateon,
-    this.message, this.jobWorkIssMstID,
+    this.message,
+    this.jobWorkIssMstID,
+    this.images,
+    this.videos,
+    this.certificates,
   });
+
+  static List<String>? _toListString(dynamic val) {
+    if (val == null) return null;
+    if (val is List) {
+      return val.map((e) => e.toString()).where((e) => e.trim().isNotEmpty).toList();
+    }
+    if (val is String) {
+      final s = val.trim();
+      if (s.isEmpty || s == 'null' || s == '[]') return null;
+      if (s.startsWith('[') && s.endsWith(']')) {
+        final inner = s.substring(1, s.length - 1);
+        final list = inner.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        return list.isNotEmpty ? list : null;
+      }
+      if (s.contains(',')) {
+        final list = s.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        return list.isNotEmpty ? list : null;
+      }
+      return [s];
+    }
+    return null;
+  }
 
   factory JobWorkRecDetModel.fromJson(Map<String, dynamic> json) {
     return JobWorkRecDetModel(
@@ -402,6 +433,9 @@ class JobWorkRecDetModel {
       rateon: json['Rateon']?.toString(),
 
       message: json['message']?.toString(),
+      images: _toListString(json['images'] ?? json['Images'] ?? json['IMAGE'] ?? json['image']),
+      videos: _toListString(json['videos'] ?? json['Videos'] ?? json['VIDEO'] ?? json['video']),
+      certificates: _toListString(json['certificates'] ?? json['Certificates'] ?? json['CERTIFICATE'] ?? json['certificate']),
     );
   }
 
@@ -501,6 +535,9 @@ class JobWorkRecDetModel {
     'Rateon': rateon,
 
     'message': message,
+    'images': images ?? [],
+    'videos': videos ?? [],
+    'certificates': certificates ?? [],
   };
 
   /// Convert to table row for display
@@ -530,7 +567,9 @@ class JobWorkRecDetModel {
     'polishCode': polishName ?? '',
     'symmetryCode': symmetryName ?? '',
     'fluoCode': fluoName ?? '',
-
+    'images': images ?? [],
+    'videos': videos ?? [],
+    'certificates': certificates ?? [],
   };
   JobWorkRecDetModel copyWith({
     dynamic srno,
@@ -574,6 +613,9 @@ class JobWorkRecDetModel {
     String? ha,
     double? rate,
     double? amount,
+    List<String>? images,
+    List<String>? videos,
+    List<String>? certificates,
   }) {
     return JobWorkRecDetModel(
       jobWorkRecDetID: jobWorkRecDetID,
@@ -683,6 +725,9 @@ class JobWorkRecDetModel {
       rateon: rateon,
 
       message: message,
+      images: images ?? this.images,
+      videos: videos ?? this.videos,
+      certificates: certificates ?? this.certificates,
     );
   }
 }

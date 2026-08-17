@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
-import 'package:diam_mfg/models/factory_receive_mst_model.dart';
+import 'package:diam_mfg/models/repair_receive_mst_model.dart';
 import 'package:diam_mfg/providers/charni_provider.dart';
 import 'package:diam_mfg/providers/color_provider.dart';
 import 'package:diam_mfg/providers/counter_manager_det_provider.dart';
@@ -12,11 +12,11 @@ import 'package:diam_mfg/providers/dept_group_provider.dart';
 import 'package:diam_mfg/providers/dept_process_provider.dart';
 import 'package:diam_mfg/providers/employee_provider.dart';
 import 'package:diam_mfg/providers/fColor_provider.dart';
-import 'package:diam_mfg/providers/factory_receive_provider.dart';
 import 'package:diam_mfg/providers/fluo_provider.dart';
 import 'package:diam_mfg/providers/over_provider.dart';
 import 'package:diam_mfg/providers/polish_provider.dart';
 import 'package:diam_mfg/providers/remarks_provider.dart';
+import 'package:diam_mfg/providers/repair_receive_provider.dart';
 import 'package:diam_mfg/providers/symmetry_provider.dart';
 import 'package:diam_mfg/providers/tensions_provider.dart';
 import 'package:diam_mfg/utils/app_images.dart';
@@ -42,18 +42,18 @@ import '../providers/user_visibility_provider.dart';
 //  WIDGET
 // ─────────────────────────────────────────────────────────────────────────────
 
-class FactoryReceiveEntry extends StatefulWidget {
-  const FactoryReceiveEntry({super.key});
+class RepairReceiveEntry extends StatefulWidget {
+  const RepairReceiveEntry({super.key});
 
   @override
-  State<FactoryReceiveEntry> createState() => _TrnMakableEntryState();
+  State<RepairReceiveEntry> createState() => _TrnMakableEntryState();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
+class _TrnMakableEntryState extends State<RepairReceiveEntry> {
   // ── Theme ──────────────────────────────────────────────────────────────────
   final ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
 
@@ -74,8 +74,8 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
   // ── Selection state ────────────────────────────────────────────────────────
   Map<String, dynamic>? _selectedRow;
-  FactoryReceiveMstModel? _selectedMst;
-  FactoryReceiveDetModel? _scannedDet;
+  RepairReceiveMstModel? _selectedMst;
+  RepairReceiveDetModel? _scannedDet;
 
   // ── UI flags ───────────────────────────────────────────────────────────────
   bool _isEditMode = false;
@@ -95,7 +95,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   int? _toDeptCodeVal;
 
   // ── Detail rows ────────────────────────────────────────────────────────────
-  List<FactoryReceiveDetModel> _detRows = [];
+  List<RepairReceiveDetModel> _detRows = [];
   List<Map<String, dynamic>> _detDisplay = [];
   List<String> _activeDetColumns = [];
   int? _editingDetIndex;
@@ -326,7 +326,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         context.read<FColorProvider>().loadColors(),
         context.read<OverProvider>().loadOvers(),
         context.read<IntentProvider>().loadIntents(),
-        context.read<FactoryReceivedEntryProvider>().load(),
+        context.read<RepairReceivedEntryProvider>().load(),
       ]);
       if (!mounted) return;
       _setDefaultFormValues();
@@ -346,7 +346,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   void _setDefaultFormValues() {
     final now = DateTime.now();
     _formValues = {
-      'factoryRecDate': DateFormat('dd/MM/yyyy').format(now),
+      'repairRecDate': DateFormat('dd/MM/yyyy').format(now),
       'factoryIssMstID': '0',
     };
     if (mounted) setState(() {});
@@ -535,7 +535,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     try {
       print('step---1');
       final rows = await context
-          .read<FactoryReceivedEntryProvider>()
+          .read<RepairReceivedEntryProvider>()
           .fetchByBCode(bCode: bCode, fCode: fCode);
       print('step---3');
       if (!mounted) return;
@@ -788,12 +788,12 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     // 🟡 EDIT MODE → UPDATE API
     // ─────────────────────────────
     if (_isEditMode && _editingDetIndex != null) {
-      final prov = context.read<FactoryReceivedEntryProvider>();
+      final prov = context.read<RepairReceivedEntryProvider>();
       final payloadData = {
-        "FactoryRecMstID":
-            int.tryParse(_formValues['factoryRecMstID'] ?? '0') ?? 0,
+        "RepairRecMstID":
+            int.tryParse(_formValues['repairRecMstID'] ?? '0') ?? 0,
 
-        "FactoryRecDetID": _detRows[_editingDetIndex!].FactoryRecDetID ?? 0,
+        "RepairRecDetID": _detRows[_editingDetIndex!].FactoryRecDetID ?? 0,
 
         "BCode": int.tryParse(_entryVals['scanValue'] ?? '0') ?? 0,
 
@@ -855,6 +855,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           "Height": double.tryParse(_entryVals['height'] ?? '0') ?? 0,
 
         'expectedProcess': ProcessConstants.factoryRec,
+        'NewRecMstID': _detRows[_editingDetIndex!].newRecMstId,
         "TopSide": _entryVals['TopSide'] ?? '',
         "FcIntentCode": int.tryParse(_entryVals['FcIntentCode'] ?? '0') ?? 0,
         "FcOverCode": int.tryParse(_entryVals['FcOverCode'] ?? '0') ?? 0,
@@ -874,7 +875,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         recWt: recWt,
       );
 
-      FactoryReceiveDetModel updatedRowData = updatedRow;
+      RepairReceiveDetModel updatedRowData = updatedRow;
 
       try {
         /// STEP 1 : RATE CALC
@@ -947,7 +948,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             message: 'Factory Receive Entry Updated.',
           );
 
-          context.read<FactoryReceivedEntryProvider>().load();
+          context.read<RepairReceivedEntryProvider>().load();
         }
       } catch (e) {
         debugPrint('Edit Error => $e');
@@ -1010,11 +1011,11 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             recWt: recWt,
           );
 
-    final prov = context.read<FactoryReceivedEntryProvider>();
+    final prov = context.read<RepairReceivedEntryProvider>();
     bool isRateCallRunning = false;
     setState(() => isRateCallRunning = true);
 
-    FactoryReceiveDetModel updatedRow = newRow;
+    RepairReceiveDetModel updatedRow = newRow;
     try {
       final apiDataFirst = await prov.rateCallApi(
         _formValues['factory']!,
@@ -1067,15 +1068,15 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   }
 
   /// Build a detail row for an existing (edit) record.
-  FactoryReceiveDetModel _buildEditedRow({
+  RepairReceiveDetModel _buildEditedRow({
     required int? srno,
-    required FactoryReceiveDetModel existing,
+    required RepairReceiveDetModel existing,
     required String issPcStr,
     required String issWtStr,
     required int recPc,
     required double recWt,
   }) {
-    return FactoryReceiveDetModel(
+    return RepairReceiveDetModel(
       srno: srno,
       factoryRecMstID: existing.factoryRecMstID,
       factoryIssDetID: existing.factoryIssDetID,
@@ -1088,6 +1089,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       bCode: _entryVals['scanValue'] ?? existing.bCode,
       pktNo: _entryVals['lotNo'] ?? existing.pktNo,
       cutNo: existing.cutNo,
+      newRecMstId: existing.newRecMstId,
       ArticalCode: existing.ArticalCode,
       clvCut: existing.clvCut,
       shapeCode: int.tryParse(_entryVals['shape'] ?? '') ?? existing.shapeCode,
@@ -1184,14 +1186,14 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   }
 
   /// Build a detail row for a new (add) record.
-  FactoryReceiveDetModel _buildNewRow({
+  RepairReceiveDetModel _buildNewRow({
     required int? srno,
     required String issPcStr,
     required String issWtStr,
     required int recPc,
     required double recWt,
   }) {
-    return FactoryReceiveDetModel(
+    return RepairReceiveDetModel(
       srno: srno,
       id: _scannedDet?.id,
       jno: _scannedDet?.jno,
@@ -1339,7 +1341,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     set('jno', r.jno.toString());
     set('mfgCut', r.MfgCut.toString());
     set('lotNo', r.pktNo.toString());
-    set('factoryRecMstID', _isEditMode ? r.factoryRecMstID.toString() : '0');
+    set('repairRecMstID', _isEditMode ? r.factoryRecMstID.toString() : '0');
     set('pairNo', r.pairNo?.toString());
     set('polishCode', r.polishCode?.toString());
     set('symmetryCode', r.symmetryCode?.toString());
@@ -1368,15 +1370,16 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       final confirm = await ErpDeleteDialog.show(
         context: context,
         theme: _theme,
-        title: 'Factory Issue',
+        title: 'Repair Rec',
         itemName: 'ID: ${_detRows[actualIdx].FactoryRecDetID?.toString()}',
       );
       if (confirm != true || !mounted) return;
 
-      success = await context.read<FactoryReceivedEntryProvider>().deleteRow(
+      success = await context.read<RepairReceivedEntryProvider>().deleteRow(
         _detRows[actualIdx].factoryRecMstID?.toString(),
         _detRows[actualIdx].FactoryRecDetID?.toString(),
         _detRows[actualIdx].bCode,
+        _detRows[actualIdx].newRecMstId,
         _theme,
         context,
       );
@@ -1392,7 +1395,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         // Re-number srno
         _detRows = _detRows.asMap().entries.map((e) {
           final v = e.value;
-          return FactoryReceiveDetModel(
+          return RepairReceiveDetModel(
             srno: e.key + 1,
             factoryRecMstID: v.factoryRecMstID,
             id: v.id,
@@ -1479,7 +1482,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     }
     if(_detRows.isEmpty) {
       _resetForm();
-      context.read<FactoryReceivedEntryProvider>().load();
+      context.read<RepairReceivedEntryProvider>().load();
     }
   }
 
@@ -1489,7 +1492,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
   void _clearEntryFields() {
     const keys = [
-      'factoryRecMstID',
+      'repairRecMstID',
       'orgPc',
       'orgWt',
       'issPc',
@@ -1537,7 +1540,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     _scannedDet = null;
     _isBCodePending = false;
     _entryVals['scanValue'] = '';
-    _entryVals['factoryRecMstID'] = '0';
+    _entryVals['repairRecMstID'] = '0';
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
@@ -1635,21 +1638,17 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
         'diam': r.diam ?? '',
         'length': r.length ?? '',
-
         'purity': _purityNameFor(r.purityCode),
         'charniCode': _charniNameFor(r.charniCode),
         'colorCode': _colorNameFor(r.colorCode),
         'cutCode': _cutNameFor(r.cutCode),
         'shapeCode': _shapeNameFor(r.shapeCode),
-
         'dmWt': fThreeDecimal(r.dmWt),
         'dmPer': r.dmPer ?? '',
-
         // 👇 Custom calculated (as per your image)
         'per': r.dmPer ?? '',
         'diffPer': r.diffDmWt ?? '',
         'diffWt': r.diffDmWt ?? '',
-
         'size': r.size ?? '',
         'factoryIssDetID': r.factoryIssDetID ?? '',
         'pairNo': r.pairNo ?? '',
@@ -1671,7 +1670,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         'rateon': r.rateon ?? '',
         'rate': fThreeDecimal(r.rate ?? 0),
         'amount': fThreeDecimal(r.amount ?? 0),
-
         'sellCode': r.SellCode ?? '',
         'sellRate': fThreeDecimal(r.SellRate ?? 0),
         'sellAmount': fThreeDecimal(r.SellAmount ?? 0),
@@ -1697,7 +1695,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   }
 
   Future<void> _onRowTap(Map<String, dynamic> row) async {
-    final prov = context.read<FactoryReceivedEntryProvider>();
+    final prov = context.read<RepairReceivedEntryProvider>();
     final id = int.tryParse(row['id'].toString()) ?? 0;
 
     final details = await prov.loadDetails(id);
@@ -1711,7 +1709,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       _isAdding = false;
       _showTableOnMobile = false;
 
-      final mstModel = row['_raw'] as FactoryReceiveMstModel?;
+      final mstModel = row['_raw'] as RepairReceiveMstModel?;
       final fCode = mstModel?.factoryCode ??
           int.tryParse(row['factoryCode']?.toString() ?? '') ??
           int.tryParse(row['factory']?.toString() ?? '');
@@ -1722,8 +1720,8 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
       // ✅ CLEAN FORM VALUES (ONLY REQUIRED FIELDS)
       _formValues = {
-        'factoryRecMstID': _s(_detRows.isNotEmpty ? _detRows.first.factoryRecMstID : row['id'], '0'),
-        'factoryRecDate': _date(row['date']),
+        'repairRecMstID': _s(_detRows.isNotEmpty ? _detRows.first.factoryRecMstID : row['id'], '0'),
+        'repairRecDate': _date(row['date']),
         'time': _s(row['time']),
         'factory': _s(fCode ?? row['factory']),
         'type': _s(row['type']),
@@ -1746,7 +1744,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   //  SAVE
   // ─────────────────────────────────────────────────────────────────────────
 
-  Map<String, dynamic> _mapToApiDetail(FactoryReceiveDetModel r) {
+  Map<String, dynamic> _mapToApiDetail(RepairReceiveDetModel r) {
     return {
       "Jno": r.jno,
       "FactoryIssDetID": r.factoryIssDetID ?? 0,
@@ -1854,12 +1852,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     final reversedDet = _detRows.toList();
 
     if (reversedDet.isNotEmpty) {
-      final prov = context.read<FactoryReceivedEntryProvider>();
+      final prov = context.read<RepairReceivedEntryProvider>();
       final payload = {
-        "FactoryRecDate": toUtcIso(values['factoryRecDate']),
+        "RepairRecDate": toUtcIso(values['repairRecDate']),
         "FactoryCode": int.tryParse(values['factory'] ?? '0') ?? 0,
-        "Sdate": DateTime.now().toUtc().toIso8601String(),
-        "Stime": DateTime.now().toUtc().toIso8601String(),
         "EntryType": _formValues['type'] ?? '',
         "details": reversedDet.map(_mapToApiDetail).toList(),
       };
@@ -1875,10 +1871,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           theme: _theme,
           title: wasEdit ? 'Updated' : 'Saved',
           message: wasEdit
-              ? 'Factory Receive Entry Updated.'
-              : 'Factory Receive Entry Saved.',
+              ? 'Repair Receive Entry Updated.'
+              : 'Repair Receive Entry Saved.',
         );
-        context.read<FactoryReceivedEntryProvider>().load();
+        context.read<RepairReceivedEntryProvider>().load();
       }
     } else {
       await ErpResultDialog.showError(
@@ -1895,34 +1891,35 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _onDelete() async {
-    if (_formValues['factoryRecMstID'] == null) return;
+    if (_formValues['repairRecMstID'] == null) return;
 
     final confirm = await ErpDeleteDialog.show(
       context: context,
       theme: _theme,
-      title: 'Factory Received',
-      itemName: 'ID: ${_formValues['factoryRecMstID'].toString()}',
+      title: 'Repair Received',
+      itemName: 'ID: ${_formValues['repairRecMstID'].toString()}',
     );
 
     if (confirm != true || !mounted) return;
 
-    final success = await context.read<FactoryReceivedEntryProvider>().delete(
-      _formValues['factoryRecMstID'].toString(),
+    final success = await context.read<RepairReceivedEntryProvider>().delete(
+      _formValues['repairRecMstID'].toString(),
       _theme,
       context,
       _detRows
           .where((r) => r.bCode != null && r.bCode != '0')
           .map((r) => num.parse(r.bCode.toString()))
           .toList(),
+      _detRows.first.newRecMstId,
     );
 
     if (success && mounted) {
-      final id = _formValues['factoryRecMstID'].toString();
+      final id = _formValues['repairRecMstID'].toString();
       _resetForm();
       await ErpResultDialog.showDeleted(
         context: context,
         theme: _theme,
-        itemName: 'Factory Received $id',
+        itemName: 'Repair Received $id',
       );
     }
   }
@@ -2151,7 +2148,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       // Row 1 — date / time / ID
       [
         ErpFieldConfig(
-          key: 'factoryRecDate',
+          key: 'repairRecDate',
           label: 'DATE',
           type: ErpFieldType.date,
           readOnly: true,
@@ -2191,7 +2188,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           readOnly: _isEditMode || _detRows.isNotEmpty,
         ),
         ErpFieldConfig(
-          key: 'factoryRecMstID',
+          key: 'repairRecMstID',
           label: 'ID',
           type: ErpFieldType.number,
           readOnly: true,
@@ -2794,11 +2791,11 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       'fluo': 'Fluo',
       'tensionCode': 'Tension',
       'groupType': 'Group Type',
-      'factoryRecDate': 'Date',
+      'repairRecDate': 'Date',
       'factory': 'Factory',
       'polishChecker': 'Polish Checker',
       'MarkerMstID': 'Marker',
-      'factoryRecMstID': 'ID',
+      'repairRecMstID': 'ID',
       'lotNo': 'LOT NO',
       // Rate Details
       'rateID': 'Rate ID',
@@ -2819,7 +2816,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<FactoryReceivedEntryProvider>(
+    return Consumer<RepairReceivedEntryProvider>(
       builder: (ctx, prov, _) => Padding(
         padding: const EdgeInsets.all(8),
         child: Responsive.isMobile(context)
@@ -2848,7 +2845,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       autoStartAdding: _isAdding,
       addButtonSections: const {4},
       logo: AppImages.logo,
-      title: 'FACTORY RECEIVE ENTRY',
+      title: 'REPAIR RECEIVE ENTRY',
       tabBarBackgroundColor: const Color(0xfff2f0ef),
       tabBarSelectedColor: _theme.primaryGradient.first,
       tabBarSelectedTxtColor: Colors.white,
@@ -3126,10 +3123,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
   /// Compute footer totals map for ErpEntryGrid.
   Map<String, String> _buildFooterTotals() {
-    double sumD(double? Function(FactoryReceiveDetModel r) fn) =>
+    double sumD(double? Function(RepairReceiveDetModel r) fn) =>
         _detRows.fold(0.0, (s, r) => s + (fn(r) ?? 0));
 
-    int sumI(int? Function(FactoryReceiveDetModel r) fn) =>
+    int sumI(int? Function(RepairReceiveDetModel r) fn) =>
         _detRows.fold(0, (s, r) => s + (fn(r) ?? 0));
 
     // 🔹 Totals
@@ -3230,7 +3227,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     }
   }
 
-  Widget _buildTable(FactoryReceivedEntryProvider prov) {
+  Widget _buildTable(RepairReceivedEntryProvider prov) {
     final data = prov.list.map((e) {
       return {
         'id': e.factoryRecMstID?.toString() ?? '',
@@ -3271,7 +3268,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       isReportRow: false,
       token: token ?? '',
       url: '',
-      title: 'FACTORY RECEIVE ENTRY LIST',
+      title: 'REPAIR RECEIVE ENTRY LIST',
       columns: _tableColumns,
       data: data,
       showSearch: true,

@@ -40,6 +40,7 @@ import 'package:diam_mfg/screens/mst_firm_team.dart';
 import 'package:diam_mfg/screens/mst_firm_tensions.dart';
 import 'package:diam_mfg/screens/trn_cut_create.dart';
 import 'package:diam_mfg/screens/trn_factory_issue.dart';
+import 'package:diam_mfg/screens/trn_repair_issue.dart';
 import 'package:diam_mfg/screens/trn_jobwork_issue.dart';
 import 'package:diam_mfg/screens/trn_jobwork_rec.dart';
 import 'package:diam_mfg/screens/trn_laser_received.dart';
@@ -48,6 +49,7 @@ import 'package:diam_mfg/screens/trn_packet_create.dart';
 import 'package:diam_mfg/screens/trn_planning_received.dart';
 import 'package:diam_mfg/screens/trn_process_issue.dart';
 import 'package:diam_mfg/screens/trn_process_rec.dart';
+import 'package:diam_mfg/screens/trn_repair_receive.dart';
 import 'package:diam_mfg/screens/trn_rough_assort.dart';
 import 'package:diam_mfg/screens/trn_rough_entry.dart';
 import 'package:diam_mfg/screens/trn_spk_dept_iss.dart';
@@ -121,6 +123,8 @@ class AppRouter {
     '/3.12': (context) => const TrnProcessRecEntry(),
     '/3.13': (context) => const TrnJobWorkIssueEntry(),
     '/3.14': (context) => const TrnJobWorkRecEntry(),
+    '/3.15': (context) => const TrnRepairIssueEntry(),
+    '/3.16': (context) => const RepairReceiveEntry(),
     '/4': (context) => const AdminMenuCreateScreen(),
     '/4.01': (context) => const ReportScreen(),
     '/5.01': (context) => const PairScreen(),

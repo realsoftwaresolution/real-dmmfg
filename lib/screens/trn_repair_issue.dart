@@ -493,6 +493,10 @@ class _TrnRepairIssueEntryState extends State<TrnRepairIssueEntry> {
           itemName: '1 row(s) deleted successfully',
         );
       }
+      if(_detRows.isEmpty) {
+        _resetForm();
+        context.read<RepairIssueEntryProvider>().load();
+      }
     } else {
       setState(() {
         _detRows.removeAt(actualIdx);

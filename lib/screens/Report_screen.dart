@@ -46,6 +46,7 @@ import 'package:universal_html/html.dart' as html;
 import 'package:pdfx/pdfx.dart';
 
 import '../bootstrap.dart';
+import 'pair_media_detail_dialog.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -2003,6 +2004,45 @@ class _ReportScreenState extends State<ReportScreen> {
                         }
                       }
                     : null,
+                cellBuilder: (context, row, colKey) {
+                  if (colKey == 'PktNo' || colKey == 'pktNo') {
+                    final images = row['images'] ?? row['Images'];
+                    final videos = row['videos'] ?? row['Videos'];
+                    final certs = row['certificates'] ?? row['Certificates'];
+                    final bool hasMedia = (images is List && images.isNotEmpty) ||
+                        (videos is List && videos.isNotEmpty) ||
+                        (certs is List && certs.isNotEmpty) ||
+                        (images is String && images.trim().isNotEmpty) ||
+                        (videos is String && videos.trim().isNotEmpty) ||
+                        (certs is String && certs.trim().isNotEmpty);
+
+                    if (hasMedia) {
+                      final pktNoText = row['PktNo'] ?? row['pktNo'] ?? '--';
+                      return MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => PairMediaDetailDialog(row: row),
+                            );
+                          },
+                          child: Text(
+                            '$pktNoText',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.blue.shade700,
+                              decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                  return null;
+                },
               );
             }
 

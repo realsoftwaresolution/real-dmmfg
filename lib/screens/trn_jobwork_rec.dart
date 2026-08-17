@@ -422,6 +422,11 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
 
       // Message
       message: r.message,
+
+      // Attachments
+      images: r.images,
+      videos: r.videos,
+      certificates: r.certificates,
     );
 
     setState(() {
@@ -483,6 +488,21 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
     set('height', r.height?.toString());
     set('length', r.length.toString());
     set('pairNo', r.pairNo?.toString());
+
+    if (r.certificates != null && r.certificates!.isNotEmpty) {
+      final certVal = r.certificates!.length == 1 ? r.certificates!.first : r.certificates;
+      _pickedMediaFiles['certificate'] = certVal;
+      set('certificate', certVal is List ? certVal.join(',') : certVal.toString());
+    }
+    if (r.images != null && r.images!.isNotEmpty) {
+      _pickedMediaFiles['images'] = r.images;
+      set('images', r.images!.join(','));
+    }
+    if (r.videos != null && r.videos!.isNotEmpty) {
+      final vidVal = r.videos!.length == 1 ? r.videos!.first : r.videos;
+      _pickedMediaFiles['videoAttachment'] = vidVal;
+      set('videoAttachment', vidVal is List ? vidVal.join(',') : vidVal.toString());
+    }
   }
 
   void _editDetRow(int idx) {
@@ -493,6 +513,29 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       _scannedRow = null;
     });
     _loadRowIntoFields(_detRows[actualIdx]);
+  }
+
+  List<String>? _parseMediaList(dynamic input) {
+    if (input == null) return null;
+    if (input is List) {
+      final list = input.map((e) => e.toString()).where((e) => e.trim().isNotEmpty).toList();
+      return list.isNotEmpty ? list : null;
+    }
+    if (input is String) {
+      final s = input.trim();
+      if (s.isEmpty || s == 'null' || s == '[]') return null;
+      if (s.startsWith('[') && s.endsWith(']')) {
+        final inner = s.substring(1, s.length - 1);
+        final list = inner.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        return list.isNotEmpty ? list : null;
+      }
+      if (s.contains(',')) {
+        final list = s.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        return list.isNotEmpty ? list : null;
+      }
+      return [s];
+    }
+    return [input.toString()];
   }
 
   void _updateEditedRow() {
@@ -513,6 +556,10 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
     final symmetryCode = int.tryParse(_entryVals['symmetryCode'] ?? '');
     final fluoCode = int.tryParse(_entryVals['fluo'] ?? '');
     final tensionsCode = int.tryParse(_entryVals['tensionCode'] ?? '');
+
+    final certList = _parseMediaList(_pickedMediaFiles['certificate'] ?? _entryVals['certificate']);
+    final imgList = _parseMediaList(_pickedMediaFiles['images'] ?? _entryVals['images']);
+    final videoList = _parseMediaList(_pickedMediaFiles['videoAttachment'] ?? _pickedMediaFiles['video'] ?? _entryVals['videoAttachment'] ?? _entryVals['video']);
 
     final updated = existing.copyWith(
       recPc: int.tryParse(_entryVals['recPc'] ?? ''),
@@ -555,6 +602,9 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       polishName: _polishNameFor(polishCode) ?? existing.polishName,
       symmetryName: _symmetryNameFor(symmetryCode) ?? existing.symmetryName,
       fluoName: _fluoNameFor(fluoCode) ?? existing.fluoName,
+      images: imgList ?? existing.images,
+      videos: videoList ?? existing.videos,
+      certificates: certList ?? existing.certificates,
     );
 
     setState(() {
@@ -734,6 +784,10 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
         _maxSrNo = targetSrno;
       }
 
+      final certList = _parseMediaList(_pickedMediaFiles['certificate'] ?? _entryVals['certificate']);
+      final imgList = _parseMediaList(_pickedMediaFiles['images'] ?? _entryVals['images']);
+      final videoList = _parseMediaList(_pickedMediaFiles['videoAttachment'] ?? _pickedMediaFiles['video'] ?? _entryVals['videoAttachment'] ?? _entryVals['video']);
+
       r = _scannedRow!.copyWith(
         srno: targetSrno,
         recPc: int.tryParse(_entryVals['recPc'] ?? ''),
@@ -776,6 +830,9 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
         polishName: _polishNameFor(polishCode) ?? _scannedRow!.polishName,
         symmetryName: _symmetryNameFor(symmetryCode) ?? _scannedRow!.symmetryName,
         fluoName: _fluoNameFor(fluoCode) ?? _scannedRow!.fluoName,
+        images: imgList ?? _scannedRow!.images,
+        videos: videoList ?? _scannedRow!.videos,
+        certificates: certList ?? _scannedRow!.certificates,
       );
     }
 
@@ -804,7 +861,7 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       final singleRowPayload = {
         "JobWorkRecMstID": mstID,
         "JobWorkRecDetID": detID,
-        "JobWorkIssMstID": r.jobWorkIssMstID,
+        // "JobWorkIssMstID": r.jobWorkIssMstID,
         "BCode": r.bCode,
         "PairNo": r.pairNo ?? '',
         "RecPc": r.recPc ?? 0,
@@ -842,6 +899,9 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
         "Amount": r.amount ?? 0.0,
         "RateID": r.rateID,
         "Rateon": r.rateon,
+        // "images": r.images ?? [],
+        // "videos": r.videos ?? [],
+        // "certificates": r.certificates ?? [],
         "expectedProcess": ProcessConstants.jobWorkRec,
       };
 

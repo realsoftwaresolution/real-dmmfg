@@ -3633,6 +3633,11 @@ class ReportRegistry {
           'certificate': certificate,
           'certificateNo': certiNo,
           'pairNo': pairNo,
+
+          // Media lists
+          'images': e['images'] ?? e['Images'] ?? [],
+          'videos': e['videos'] ?? e['Videos'] ?? [],
+          'certificates': e['certificates'] ?? e['Certificates'] ?? [],
         };
       }).toList(),
     ),
