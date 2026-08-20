@@ -1401,50 +1401,45 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
     }
     /// SUMMARY REPORT
     else if (_entryVals['report'] == 'SUMMARY') {
-      /// GROUP CUTNO WISE
-      final Map<String, Map<String, dynamic>> grouped = {};
+      final masterId =
+      (_detRows.first.spkDeptIssMstID ??
+          prov.list.first.spkDeptIssMstID ??
+          0)
+          .toInt();
+      final summaryModel = await prov.loadSummaryReport(masterId);
+      if (!mounted) return;
 
-      for (final e in _detRows) {
-        final cutNo = e.cutNo ?? '';
-
-        if (!grouped.containsKey(cutNo)) {
-          grouped[cutNo] = {
-            'cutNo': cutNo,
-
-            'articalName': e.ArticalName ?? '',
-
-            'pktNos': <String>{},
-
-            'pcs': 0,
-
-            'wt': 0.0,
-          };
-        }
-
-        /// PKTNO COUNT
-        grouped[cutNo]!['pktNos'].add(e.pktNo?.toString() ?? '');
-
-        /// PCS SUM
-        grouped[cutNo]!['pcs'] += (e.recPc ?? 0);
-
-        /// WT SUM
-        grouped[cutNo]!['wt'] += (e.recWt ?? 0.0);
+      if (summaryModel.isEmpty) {
+        _showSnack('Failed to load summary data.');
+        return;
       }
+      // Real rows only (exclude Grand Total)
+      final dataRows = summaryModel.where((r) => !r.isGrandTotal).toList();
 
-      /// CONVERT SUMMARY ITEMS
-      final summaryItems = grouped.values.map((g) {
+      final grandTotal = summaryModel.firstWhereOrNull((r) => r.isGrandTotal);
+
+      // Map grandTotal to JobWorkItem if it exists
+      final grandTotalItem = grandTotal != null
+          ? JobWorkItem(
+        kapan: '',
+        bCode: (grandTotal.totalPkt ?? 0).toString(),
+        pktNo: '',
+        type: '',
+        pcs: grandTotal.totalPc.toString(),
+        cts: grandTotal.totalWt.toStringAsFixed(3),
+      )
+          : null;
+
+      final summaryItems = dataRows.map((r) {
         return JobWorkItem(
-          kapan: g['cutNo'],
-
-          /// PKT COUNT
-          bCode: (g['pktNos'] as Set).length.toString(),
-
-          type: g['articalName'],
-          pktNo: '',
-
-          pcs: g['pcs'].toString(),
-
-          cts: (g['wt'] as double).toStringAsFixed(3),
+          kapan: r.cutNo,
+          bCode: (r.totalPkt ?? 0).toString(),
+          // pkt count
+          pktNo: r.size,
+          type: r.articalName,
+          pcs: r.totalPc.toString(),
+          size: r.size.toString(),
+          cts: r.totalWt.toStringAsFixed(3),
         );
       }).toList();
 
@@ -1456,10 +1451,10 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         partyType: _toDeptName ?? '',
 
         jobNo:
-            (_detRows.first.spkDeptIssMstID ??
-                    prov.list.first.spkDeptIssMstID ??
-                    0)
-                .toString(),
+        (_detRows.first.spkDeptIssMstID ??
+            prov.list.first.spkDeptIssMstID ??
+            0)
+            .toString(),
 
         date: _formValues['spkDeptIssDate']?.toString() ?? '',
         CVDPartyCode: toCounter?.CVDPartyCode ?? '',
@@ -1467,10 +1462,86 @@ class _TrnSpkDeptIssEntryState extends State<TrnSpkDeptIssEntry> {
         items: summaryItems,
       );
 
-      final pdf = await generateJobWorkPdfSummary(summaryPdfData);
+      final pdf = await generateJobWorkPdfSummary(
+        summaryPdfData,
+        showSize: true,
+        grandTotal: grandTotalItem,
+      );
 
       await Printing.layoutPdf(onLayout: (_) async => pdf);
     }
+
+    // else if (_entryVals['report'] == 'SUMMARY') {
+    //   /// GROUP CUTNO WISE
+    //   final Map<String, Map<String, dynamic>> grouped = {};
+    //
+    //   for (final e in _detRows) {
+    //     final cutNo = e.cutNo ?? '';
+    //
+    //     if (!grouped.containsKey(cutNo)) {
+    //       grouped[cutNo] = {
+    //         'cutNo': cutNo,
+    //
+    //         'articalName': e.ArticalName ?? '',
+    //
+    //         'pktNos': <String>{},
+    //
+    //         'pcs': 0,
+    //
+    //         'wt': 0.0,
+    //       };
+    //     }
+    //
+    //     /// PKTNO COUNT
+    //     grouped[cutNo]!['pktNos'].add(e.pktNo?.toString() ?? '');
+    //
+    //     /// PCS SUM
+    //     grouped[cutNo]!['pcs'] += (e.recPc ?? 0);
+    //
+    //     /// WT SUM
+    //     grouped[cutNo]!['wt'] += (e.recWt ?? 0.0);
+    //   }
+    //
+    //   /// CONVERT SUMMARY ITEMS
+    //   final summaryItems = grouped.values.map((g) {
+    //     return JobWorkItem(
+    //       kapan: g['cutNo'],
+    //
+    //       /// PKT COUNT
+    //       bCode: (g['pktNos'] as Set).length.toString(),
+    //
+    //       type: g['articalName'],
+    //       pktNo: '',
+    //
+    //       pcs: g['pcs'].toString(),
+    //
+    //       cts: (g['wt'] as double).toStringAsFixed(3),
+    //     );
+    //   }).toList();
+    //
+    //   final summaryPdfData = JobWorkPdfModel(
+    //     headerInfo: _selectedCompany,
+    //
+    //     partyName: toCounter?.crName ?? '',
+    //
+    //     partyType: _toDeptName ?? '',
+    //
+    //     jobNo:
+    //         (_detRows.first.spkDeptIssMstID ??
+    //                 prov.list.first.spkDeptIssMstID ??
+    //                 0)
+    //             .toString(),
+    //
+    //     date: _formValues['spkDeptIssDate']?.toString() ?? '',
+    //     CVDPartyCode: toCounter?.CVDPartyCode ?? '',
+    //     NaturalPartyCode: toCounter?.NaturalPartyCode ?? '',
+    //     items: summaryItems,
+    //   );
+    //
+    //   final pdf = await generateJobWorkPdfSummary(summaryPdfData);
+    //
+    //   await Printing.layoutPdf(onLayout: (_) async => pdf);
+    // }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
