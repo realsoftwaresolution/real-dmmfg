@@ -235,7 +235,7 @@ class _PacketDeleteScreenState extends State<PacketDeleteScreen> {
 
   Future<void> _showDeletePopup(BuildContext context, int rowIndex) async {
     final prov = context.read<PacketDeleteProvider>();
-    final rowsToDelete = prov.tableData.take(rowIndex + 1).toList();
+    final rowsToDelete = prov.tableData.skip(rowIndex).toList();
     final body = rowsToDelete.map((e) {
       return {"bcode": e['BCode'], "mstId": e['MstID']};
     }).toList();

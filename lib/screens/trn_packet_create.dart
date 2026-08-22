@@ -900,15 +900,58 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     set('entryPlusWt', fThreeDecimal(pendWt * 0.15 / 100));
   }
 
-  void _deleteDetRow(Map<String, dynamic> row) {
-    final srno = int.tryParse(row['srno'].toString());
+  // void _deleteDetRow(Map<String, dynamic> row) {
+  //   final srno = int.tryParse(row['srno'].toString());
+  //
+  //   if (srno == null) return;
+  //
+  //   setState(() {
+  //     _detRows.removeWhere((e) => e.srno == srno);
+  //
+  //     // Re-generate srno
+  //     for (int i = 0; i < _detRows.length; i++) {
+  //       _detRows[i] = PacketDetModel(
+  //         srno: i + 1,
+  //         packetMstID: _detRows[i].packetMstID,
+  //         cutNo: _detRows[i].cutNo,
+  //         lotNo: _detRows[i].lotNo,
+  //         lotCode: _detRows[i].lotCode,
+  //         bCode: _detRows[i].bCode,
+  //         pc: _detRows[i].pc,
+  //         wt: _detRows[i].wt,
+  //         pktType: _detRows[i].pktType,
+  //         colorCode: _detRows[i].colorCode,
+  //         tensionsCode: _detRows[i].tensionsCode,
+  //         fluoCode: _detRows[i].fluoCode,
+  //         pDmPer: _detRows[i].pDmPer,
+  //         jno: _detRows[i].jno,
+  //         packetDate: _detRows[i].packetDate,
+  //         entryType: _detRows[i].entryType,
+  //         lastProcess: _detRows[i].lastProcess,
+  //         pktValid: _detRows[i].pktValid,
+  //         packetDetID: _detRows[i].packetDetID,
+  //         pktTypeCode: _detRows[i].pktTypeCode,
+  //       );
+  //     }
+  //
+  //     _syncDetGrid();
+  //
+  //     _editingDetIndex = null;
+  //   });
+  //
+  //   _recalcPending();
+  // }
+  void _deleteDetRow(int displayIdx) {
+    // Convert from reversed display grid index to actual _detRows index
+    final actualIdx = _detRows.length - 1 - displayIdx;
 
-    if (srno == null) return;
+    if (actualIdx < 0 || actualIdx >= _detRows.length) return;
 
     setState(() {
-      _detRows.removeWhere((e) => e.srno == srno);
+      // 1. Remove exact row by index
+      _detRows.removeAt(actualIdx);
 
-      // Re-generate srno
+      // 2. Re-assign clean sequential srno (1, 2, 3...)
       for (int i = 0; i < _detRows.length; i++) {
         _detRows[i] = PacketDetModel(
           srno: i + 1,
@@ -935,7 +978,6 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
       }
 
       _syncDetGrid();
-
       _editingDetIndex = null;
     });
 
@@ -1357,8 +1399,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
                 title: 'PACKET DETAILS',
                 theme: t,
                 onDeleteRow: (idx) {
-                  final row = _detDisplay[idx];
-                  _deleteDetRow(row);
+                  _deleteDetRow(idx);
                 },
                 onEditRow: _editDetRow,
                 editingIndex: _editingDetIndex != null
