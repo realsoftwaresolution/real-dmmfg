@@ -708,7 +708,45 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   Future<void> _onSave(Map<String, dynamic> values) async {
     final prov = context.read<FactoryIssueEntryProvider>();
     final reversedDet = _detRows.toList();
+    final factoryCode =
+    int.tryParse(_formValues['factory']?.trim() ?? '');
 
+    final factoryType =
+        _formValues['type']?.trim() ?? '';
+
+    final entryType =
+        _formValues['entry']?.trim() ?? '';
+
+// Validate required fields
+    if (factoryCode == null || factoryCode == 0) {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'Factory Required',
+        message: 'Please select a Factory.',
+      );
+      return;
+    }
+
+    if (factoryType.isEmpty) {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'Factory Type Required',
+        message: 'Please select Factory Type.',
+      );
+      return;
+    }
+
+    if (entryType.isEmpty) {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'Entry Type Required',
+        message: 'Please select Entry Type.',
+      );
+      return;
+    }
     if (reversedDet.isNotEmpty) {
       // ✅ MASTER PAYLOAD
       final payload = {
@@ -716,9 +754,9 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         "SelectType": "SPK",
         "DueDay": int.tryParse(_formValues['dueDay'] ?? '0') ?? 0,
         "DueDate": toUtcIso(_formValues['dueDayCount']),
-        "FactoryCode": int.tryParse(_formValues['factory'] ?? '0') ?? 0,
-        "FactoryType": _formValues['type'] ?? '',
-        "EntryType": _formValues['entry'],
+        "FactoryCode": factoryCode,
+        "FactoryType": factoryType,
+        "EntryType": entryType,
         "Sdate": DateTime.now().toUtc().toIso8601String(),
 
         // ✅ DETAILS
@@ -1387,10 +1425,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     final totGhatWt = sumDouble((r) => r.lossWt ?? 0); // 👈 GHAT WT
 
     final totDmWt = sumDouble((r) => r.dmWt ?? 0);
-
-    final baseWt = totWt > 0 ? totWt : totIssWt;
-
-    final dmPer = baseWt > 0 ? (totDmWt / baseWt * 100) : 0;
+    final dmPer = sumDouble((r) => r.dmPer ?? 0);
 
     final avgSize = _detRows.isNotEmpty
         ? sumDouble((r) => (r.size ?? 0)) / _detRows.length
@@ -1404,7 +1439,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       'issWt': fThreeDecimal(totIssWt),
       'ghatWt': fThreeDecimal(totGhatWt),
       'dmWt': fThreeDecimal(totDmWt),
-      'dmPer': dmPer.toStringAsFixed(2),
+      'dmPer': f2TwoDecimal(dmPer),
       'size': avgSize.toStringAsFixed(2),
     };
   }

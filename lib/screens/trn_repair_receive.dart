@@ -3149,6 +3149,7 @@ class _TrnMakableEntryState extends State<RepairReceiveEntry> {
     final lossWt = sumD((r) => r.lossWt);
 
     final dmWt = sumD((r) => r.dmWt);
+    final dmPer = sumD((r) => r.dmPer ?? 0);
 
     final size = sumD((r) => r.size);
 
@@ -3195,10 +3196,9 @@ class _TrnMakableEntryState extends State<RepairReceiveEntry> {
 
       // 🔹 DM
       'dmWt': fThreeDecimal(dmWt),
-      'dmPer': per.toStringAsFixed(2),
+      'dmPer': f2TwoDecimal(dmPer),
 
       // 🔹 EXTRA (MATCH IMAGE)
-      'per': per.toStringAsFixed(2),
       'diffPer': diffPer.toStringAsFixed(2),
       'diffWt': fThreeDecimal(diffWt),
 

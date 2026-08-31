@@ -2586,13 +2586,9 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         _detRows.fold(0, (s, r) => s + fn(r));
 
     final totDmWt = fold((r) => r.dmWt ?? 0);
+    final totDmPer = fold((r) => r.dmPer ?? 0);
     final totRecWt = fold((r) => r.recWt ?? 0);
     final totIssWt = fold((r) => r.issWt ?? 0);
-    final base = totRecWt > 0 ? totRecWt : totIssWt;
-    final dmPerStr = base > 0
-        ? (totDmWt / base * 100).toStringAsFixed(2)
-        : '0.00';
-
     return {
       // 🔹 PCS / WT
       'orgPc': '${foldInt((r) => r.pc ?? 0)}',
@@ -2605,7 +2601,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
       'recWt': fThreeDecimal(totRecWt),
 
       // 🔹 DM
-      'dmPer': dmPerStr,
+      'dmPer': f2TwoDecimal(totDmPer),
       'dmWt': fThreeDecimal(totDmWt),
 
       // 🔹 K

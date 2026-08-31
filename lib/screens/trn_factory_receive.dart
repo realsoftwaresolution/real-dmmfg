@@ -1852,15 +1852,41 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       return;
     }
     final reversedDet = _detRows.toList();
+    final factoryCode =
+    int.tryParse(values['factory']?.trim() ?? '');
 
+    final entryType =
+        values['type']?.trim() ?? '';
+
+// Validate Factory
+    if (factoryCode == null || factoryCode == 0) {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'Factory Required',
+        message: 'Please select a Factory.',
+      );
+      return;
+    }
+
+// Validate Entry Type
+    if (entryType.isEmpty) {
+      await ErpResultDialog.showError(
+        context: context,
+        theme: _theme,
+        title: 'Entry Type Required',
+        message: 'Please select Entry Type.',
+      );
+      return;
+    }
     if (reversedDet.isNotEmpty) {
       final prov = context.read<FactoryReceivedEntryProvider>();
       final payload = {
         "FactoryRecDate": toUtcIso(values['factoryRecDate']),
-        "FactoryCode": int.tryParse(values['factory'] ?? '0') ?? 0,
+        "FactoryCode": factoryCode,
         "Sdate": DateTime.now().toUtc().toIso8601String(),
         "Stime": DateTime.now().toUtc().toIso8601String(),
-        "EntryType": _formValues['type'] ?? '',
+        "EntryType": entryType,
         "details": reversedDet.map(_mapToApiDetail).toList(),
       };
 
@@ -3152,7 +3178,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     final lossWt = sumD((r) => r.lossWt);
 
     final dmWt = sumD((r) => r.dmWt);
-
+    final dmPer = sumD((r) => r.dmPer ?? 0);
     final size = sumD((r) => r.size);
 
     final rate = sumD((r) => r.rate);
@@ -3163,7 +3189,6 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     // 🔹 Percentage Calculation (IMPORTANT)
     final baseWt = recWt > 0 ? recWt : issWt;
 
-    final per = baseWt > 0 ? (dmWt / baseWt) * 100 : 0;
 
     final diffWt = sumD((r) => r.diffDmWt);
     final diffPer = baseWt > 0 ? (diffWt / baseWt) * 100 : 0;
@@ -3198,10 +3223,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
       // 🔹 DM
       'dmWt': fThreeDecimal(dmWt),
-      'dmPer': per.toStringAsFixed(2),
+      'dmPer': f2TwoDecimal(dmPer),
 
       // 🔹 EXTRA (MATCH IMAGE)
-      'per': per.toStringAsFixed(2),
       'diffPer': diffPer.toStringAsFixed(2),
       'diffWt': fThreeDecimal(diffWt),
 

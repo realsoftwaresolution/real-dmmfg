@@ -1427,10 +1427,10 @@ class _TrnRepairIssueEntryState extends State<TrnRepairIssueEntry> {
     final totGhatWt = sumDouble((r) => r.lossWt ?? 0);
 
     final totDmWt = sumDouble((r) => r.dmWt ?? 0);
+    final totDmPer = sumDouble((r) => r.dmPer ?? 0);
 
     final baseWt = totWt > 0 ? totWt : totIssWt;
 
-    final dmPer = baseWt > 0 ? (totDmWt / baseWt * 100) : 0;
 
     final avgSize = _detRows.isNotEmpty
         ? sumDouble((r) => (r.size ?? 0)) / _detRows.length
@@ -1444,7 +1444,7 @@ class _TrnRepairIssueEntryState extends State<TrnRepairIssueEntry> {
       'issWt': fThreeDecimal(totIssWt),
       'ghatWt': fThreeDecimal(totGhatWt),
       'dmWt': fThreeDecimal(totDmWt),
-      'dmPer': dmPer.toStringAsFixed(2),
+      'dmPer': f2TwoDecimal(totDmPer),
       'size': avgSize.toStringAsFixed(2),
     };
   }
