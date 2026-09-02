@@ -1073,6 +1073,15 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   // ─────────────────────────────────────────────────────────────────────────
 
   List<ErpColumnConfig> get _tableColumns => [
+    ErpColumnConfig(
+      key: 'print',
+      label: '',
+      width: 50,
+      sortable: false,
+      searchable: false,
+      align: ColumnAlign.center,
+      required: true,
+    ),
     ErpColumnConfig(key: 'jno', label: 'Jno', width: 70, required: true),
     ErpColumnConfig(key: 'date', label: 'DATE', width: 160, isDate: true),
     ErpColumnConfig(key: 'time', label: 'TIME', width: 140),
@@ -1494,6 +1503,9 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
         // ✅ DM PER
         'dmPer': (e.dmPer ?? 0).toStringAsFixed(2),
+
+        // ✅ PRINT
+        'print': '',
       };
     }).toList();
 
@@ -1506,6 +1518,35 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       data: data,
       showSearch: true,
       dateFilter: true,
+      cellBuilder: (context, row, colKey) {
+        if (colKey == 'print') {
+          return Center(
+            child: Tooltip(
+              message: 'Print',
+              child: InkWell(
+                onTap: () async {
+                  print(row);
+                  final details = await prov.loadDetails(row['factoryIssMstID'] ?? 0);
+                  if (details.isEmpty) {
+                    _showSnack('No details found for this entry.');
+                    return;
+                  }
+                },
+                borderRadius: BorderRadius.circular(4),
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Icon(
+                    Icons.print,
+                    size: 18,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+        return null;
+      },
       onClose: () {
         setState(() {
           _showTableOnMobile = false;

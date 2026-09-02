@@ -135,6 +135,7 @@ class FactoryIssueDetModel {
   final String? pktType;
   final String? formType;
   final String? clvRec;
+  final String? FactRec;
   final double? size;
   final int?    jnoRecPc;
   final int?    partName;
@@ -376,7 +377,7 @@ class FactoryIssueDetModel {
     this.planPurity,
     this.planShape,
     this.recutEmp,
-    this.ArticalName,
+    this.ArticalName, this.FactRec,
   });
 
   factory FactoryIssueDetModel.fromJson(Map<String, dynamic> json) =>
@@ -412,6 +413,7 @@ class FactoryIssueDetModel {
         cutCode: json['CutCode'],
 
         size: _d(json['Size']),
+        FactRec: json['FactRec'],
         diam: _d(json['Diam']),
         length: json['Length'],
         ArticalName: json['ArticalName'],
@@ -641,6 +643,7 @@ class FactoryIssueDetModel {
     'RecutEmp': recutEmp ?? '',
     'PlanShape': planShape ?? '',
     'ArticalName': ArticalName ?? '',
+    'FactRec': FactRec ?? '',
   };
 
   static double? _d(dynamic v) {
