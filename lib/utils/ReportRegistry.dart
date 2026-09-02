@@ -3514,7 +3514,7 @@ class ReportRegistry {
         'purities': filter['purityCode'],
       },
     ),
-    // ── PAIR_DATA ─────────────────────────────────────────────────────── 60
+    // ── PAIR_DATA ─────────────────────────────────────────────────────── 63
     'PAIR_DATA': ReportConfig(
       reportTypeCode: 'PAIR_DATA',
       endpoint: '/factoryRec/pair-data',
@@ -3642,7 +3642,7 @@ class ReportRegistry {
       }).toList(),
     ),
 
-    // ── PAIR PACKET DETAILS ────────────────────────────────────────────────
+    // ── PAIR PACKET DETAILS ──────────────────────────────────────────────── 64
     'PAIR_PACKET_DETAIL': ReportConfig(
       reportTypeCode: 'PAIR_PACKET_DETAIL',
       endpoint: '/reports/pair-packet-detail',

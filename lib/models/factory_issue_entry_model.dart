@@ -21,7 +21,8 @@ class FactoryIssueMstModel {
   final int? pc;
   final double? wt;
   final int? issPc;
-  final double? issWt;
+  final double? issWt;final int? pendPc;
+  final double? pendWt;
   final double? dmWt;
   final double? dmPer;
 
@@ -43,7 +44,7 @@ class FactoryIssueMstModel {
     this.issPc,
     this.issWt,
     this.dmWt,
-    this.dmPer,
+    this.dmPer, this.pendPc, this.pendWt,
   });
 
   factory FactoryIssueMstModel.fromJson(Map<String, dynamic> json) {
@@ -72,6 +73,8 @@ class FactoryIssueMstModel {
 
       dmWt: (json['DmWt'] as num?)?.toDouble(),
       dmPer: (json['DmPer'] as num?)?.toDouble(),
+      pendPc: json['PendPc'],
+      pendWt: (json['PendWt'] as num?)?.toDouble(),
     );
   }
 }
@@ -668,6 +671,8 @@ extension FactoryIssMstExt on FactoryIssueMstModel {
 
     'issPc': (issPc ?? 0).toString(),
     'issWt': fThreeDecimal(issWt ?? 0),
+    'pendPc': (pendPc ?? 0).toString(),
+    'pendWt': fThreeDecimal(pendWt ?? 0),
 
     'dmWt': fThreeDecimal(dmWt ?? 0),
     'dmPer': (dmPer ?? 0).toStringAsFixed(2),

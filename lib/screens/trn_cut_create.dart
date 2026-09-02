@@ -22,11 +22,6 @@ import '../bootstrap.dart';
 import '../models/rough_assort_model.dart';
 import '../models/rough_model.dart';
 
-const List<ErpDropdownItem> _cutTypeItems = [
-  ErpDropdownItem(label: 'GENERAL', value: 'GENERAL'),
-  ErpDropdownItem(label: 'SPK', value: 'SPK'),
-];
-
 class TrnCutCreateEntry extends StatefulWidget {
   const TrnCutCreateEntry({super.key});
 
@@ -170,21 +165,11 @@ print(assortWt);
       // SECTION 1: ENTRY
       [
         ErpFieldConfig(
-          key: 'entryCutType',
-          label: 'TYPE',
-          type: ErpFieldType.dropdown,
-          dropdownItems: _cutTypeItems,
-          flex: 1,
-          sectionTitle: 'ENTRY',
-          sectionIndex: 1,
-          isEntryField: true,
-          isEntryRequired: true,
-        ),
-        ErpFieldConfig(
           key: 'entryCutNo',
           label: 'CUT NO',
           type: ErpFieldType.text,
           flex: 1,
+          sectionTitle: 'ENTRY',
           sectionIndex: 1,
           isEntryField: true,
           isEntryRequired: true,
@@ -199,6 +184,7 @@ print(assortWt);
           flex: 1,
           sectionIndex: 1,
           isEntryField: true,
+          width: 80
         ),
         ErpFieldConfig(
           key: 'entryWt',
@@ -208,6 +194,7 @@ print(assortWt);
           sectionIndex: 1,
           isEntryField: true,
           isEntryRequired: true,
+          width: 100
         ),
         ErpFieldConfig(
           key: 'entryComparisionCode',
@@ -216,6 +203,7 @@ print(assortWt);
           flex: 1,
           sectionIndex: 1,
           isEntryField: true,
+          width: 160
         ),
         ErpFieldConfig(
           key: 'entryAssortNo',
@@ -378,16 +366,10 @@ print(assortWt);
     );
     if (exists) return;
 
-    final cutType = _entryVals['entryCutType'] ?? '';
     final cutNo = _entryVals['entryCutNo'] ?? '';
     final wtStr = _entryVals['entryWt'] ?? '';
     final purityType = _entryVals['entryPurityType'] ?? '';
 
-    if (cutType.isEmpty) {
-      _showSnack('Type required');
-      _erpFormKey.currentState?.focusField('entryCutType');
-      return;
-    }
     if (cutNo.isEmpty) {
       _showSnack('Cut No required');
       _erpFormKey.currentState?.focusField('entryCutNo');
@@ -482,7 +464,7 @@ print(assortWt);
       srno: _editingDetIndex != null
           ? _detRows[_editingDetIndex!].srno
           : _detRows.length + 1,
-      cutType: cutType,
+      cutType: 'SPK',
       cutNo: cutNo,
       pc: int.tryParse(_entryVals['entryPc'] ?? ''),
       wt: double.parse((double.tryParse(wtStr) ?? 0).toStringAsFixed(3)),
@@ -524,7 +506,6 @@ print(assortWt);
       _erpFormKey.currentState?.updateFieldValue(k, v ?? '');
     }
 
-    set('entryCutType', r.cutType);
     set('entryCutNo', r.cutNo);
     set('entryPc', r.pc?.toString());
     set('entryWt', fThreeDecimal(r.wt));
@@ -534,7 +515,7 @@ print(assortWt);
 
     Future.delayed(
       const Duration(milliseconds: 50),
-      () => _erpFormKey.currentState?.focusField('entryCutType'),
+      () => _erpFormKey.currentState?.focusField('entryCutNo'),
     );
   }
 
@@ -550,7 +531,7 @@ print(assortWt);
             (e) => CutCreateDetModel(
               srno: e.key + 1,
               cutCreateMstID: e.value.cutCreateMstID,
-              cutType: e.value.cutType,
+              cutType: e.value.cutType ?? 'SPK',
               cutNo: e.value.cutNo,
               pc: e.value.pc,
               wt: e.value.wt,
@@ -571,7 +552,7 @@ print(assortWt);
         .map(
           (r) => {
             'srno': r.srno?.toString() ?? '',
-            'cutType': r.cutType ?? '',
+            'cutType': r.cutType ?? 'SPK',
             'cutNo': r.cutNo ?? '',
             'pc': r.pc?.toString() ?? '',
             'wt': fThreeDecimal(r.wt),
@@ -604,7 +585,6 @@ print(assortWt);
 
   void _clearEntryFields() {
     const keys = [
-      'entryCutType',
       'entryCutNo',
       'entryPc',
       'entryWt',
@@ -618,7 +598,7 @@ print(assortWt);
     _erpFormKey.currentState?.updateFieldValue('entryAssortNo', _assortNo);
     Future.delayed(
       const Duration(milliseconds: 50),
-      () => _erpFormKey.currentState?.focusField('entryCutType'),
+      () => _erpFormKey.currentState?.focusField('entryCutNo'),
     );
   }
 

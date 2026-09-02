@@ -180,6 +180,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       'date': DateFormat('dd/MM/yyyy').format(now),
       'jno': '0',
       'report': 'REPORT',
+      'entry': 'SPK',
     };
     _entryVals['report'] = 'REPORT';
     if (mounted) setState(() {});
@@ -672,7 +673,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         'date': _date(row['date']),
         'time': _s(row['time']),
 
-        'entry': _s(row['entry']),
+        'entry': _s(row['entry'], 'SPK'),
         'type': _s(row['type']),
 
         'dueDay': _s(dueDayVal),
@@ -714,9 +715,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     final factoryType =
         _formValues['type']?.trim() ?? '';
 
-    final entryType =
-        _formValues['entry']?.trim() ?? '';
-
 // Validate required fields
     if (factoryCode == null || factoryCode == 0) {
       await ErpResultDialog.showError(
@@ -738,15 +736,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       return;
     }
 
-    if (entryType.isEmpty) {
-      await ErpResultDialog.showError(
-        context: context,
-        theme: _theme,
-        title: 'Entry Type Required',
-        message: 'Please select Entry Type.',
-      );
-      return;
-    }
     if (reversedDet.isNotEmpty) {
       // ✅ MASTER PAYLOAD
       final payload = {
@@ -756,7 +745,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
         "DueDate": toUtcIso(_formValues['dueDayCount']),
         "FactoryCode": factoryCode,
         "FactoryType": factoryType,
-        "EntryType": entryType,
+        "EntryType": "SPK",
         "Sdate": DateTime.now().toUtc().toIso8601String(),
 
         // ✅ DETAILS
@@ -967,16 +956,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       // Row 1 — date / time / ID
       [
         ErpFieldConfig(
-          key: 'entry',
-          label: 'ENTRY',
-          type: ErpFieldType.dropdown,
-          dropdownItems: [
-            ErpDropdownItem(label: 'SPK', value: 'SPK'),
-            ErpDropdownItem(label: 'GENERAL', value: 'GENERAL'),
-          ],
-          sectionIndex: 0,
-        ),
-        ErpFieldConfig(
           key: 'dueDay',
           label: 'DUE DAY',
           type: ErpFieldType.number,
@@ -1003,15 +982,12 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           readOnly: true,
           sectionIndex: 0,
         ),
-      ],
-
-      [
         ErpFieldConfig(
           key: 'factory',
           label: 'FACTORY',
           type: ErpFieldType.dropdown,
           dropdownItems: factoryDropdown,
-          sectionIndex: 1,
+          sectionIndex: 0,
           width: 500,
         ),
         ErpFieldConfig(
@@ -1019,7 +995,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           label: 'FACTORY TYPE',
           type: ErpFieldType.text,
           readOnly: true,
-          sectionIndex: 1,
+          sectionIndex: 0,
           width: 250,
         ),
       ],
@@ -1029,7 +1005,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           key: 'scanValue',
           label: 'BCODE',
           type: ErpFieldType.text,
-          sectionIndex: 2,
+          sectionIndex: 1,
           width: 200,
         ),
         ErpFieldConfig(
@@ -1037,7 +1013,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           label: 'QRCODE',
           type: ErpFieldType.text,
           readOnly: true,
-          sectionIndex: 2,
+          sectionIndex: 1,
           width: 200,
         ),
         ErpFieldConfig(
@@ -1051,7 +1027,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
             ErpRadioOption(label: 'Summary', value: 'SUMMARY'),
           ],
           width: 250,
-          sectionIndex: 3,
+          sectionIndex: 1,
         ),
       ],
     ];
@@ -1100,12 +1076,8 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     ErpColumnConfig(key: 'jno', label: 'Jno', width: 70, required: true),
     ErpColumnConfig(key: 'date', label: 'DATE', width: 160, isDate: true),
     ErpColumnConfig(key: 'time', label: 'TIME', width: 140),
-    ErpColumnConfig(key: 'entry', label: 'ENTRY', width: 180),
-    ErpColumnConfig(key: 'dueDay', label: 'DUE DAY', width: 180),
-    ErpColumnConfig(key: 'dueDate', label: 'DUE DATE', width: 160),
     ErpColumnConfig(key: 'factory', label: 'FACTORY', width: 160),
     ErpColumnConfig(key: 'type', label: 'FACT TYPE', width: 150),
-    ErpColumnConfig(key: 'totPkt', label: 'TOT PKT', width: 140),
     ErpColumnConfig(
       key: 'pc',
       label: 'PC',
@@ -1131,6 +1103,18 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       align: ColumnAlign.right,
     ),
     ErpColumnConfig(
+      key: 'pendPc',
+      label: 'Pending PC',
+      width: 170,
+      align: ColumnAlign.right,
+    ),
+    ErpColumnConfig(
+      key: 'pendWt',
+      label: 'Pending WT',
+      width: 170,
+      align: ColumnAlign.right,
+    ),
+    ErpColumnConfig(
       key: 'dmWt',
       label: 'DM WT',
       width: 170,
@@ -1142,6 +1126,10 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       width: 170,
       align: ColumnAlign.right,
     ),
+    ErpColumnConfig(key: 'totPkt', label: 'TOT PKT', width: 140),
+    ErpColumnConfig(key: 'entry', label: 'ENTRY', width: 180),
+    ErpColumnConfig(key: 'dueDay', label: 'DUE DAY', width: 180),
+    ErpColumnConfig(key: 'dueDate', label: 'DUE DATE', width: 160),
   ];
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1319,13 +1307,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       onFieldChanged: (key, value) {
         _formValues[key] = value.toString();
         switch (key) {
-          case 'entry':
-            _entryVals[key] = value.toString();
-            Future.delayed(
-              const Duration(milliseconds: 50),
-              () => _erpFormKey.currentState?.focusField('dueDay'),
-            );
-
           case 'dueDay':
             _formValues[key] = value.toString();
             _calcDueDate();
@@ -1501,6 +1482,12 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
 
         // ✅ ISS WT
         'issWt': fThreeDecimal(e.issWt ?? 0),
+
+        // ✅ PEND PC
+        'pendPc': (e.pendPc ?? 0).toString(),
+
+        // ✅ PEND WT
+        'pendWt': fThreeDecimal(e.pendWt ?? 0),
 
         // ✅ DM WT
         'dmWt': fThreeDecimal(e.dmWt ?? 0),
