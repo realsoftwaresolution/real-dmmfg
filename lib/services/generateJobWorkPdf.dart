@@ -489,7 +489,8 @@ pw.Widget _buildHeader(JobWorkPdfModel data, {String title = 'Job Work Out'}) {
           style: pw.TextStyle(fontSize: 15, fontWeight: pw.FontWeight.bold),
         ),
       ),
-      pw.SizedBox(height: 4),
+      pw.Divider(height: 10),
+      // pw.SizedBox(height: 4),
       pw.Center(
         child: pw.Text(
           '$address\nGSTIN: $gstNo',

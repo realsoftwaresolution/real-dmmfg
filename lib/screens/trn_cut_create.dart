@@ -568,7 +568,6 @@ print(assortWt);
 
   List<String> get _detGridColumns => [
     'srno',
-    'cutType',
     'cutNo',
     'pc',
     'wt',
@@ -863,7 +862,6 @@ print(assortWt);
               },
               columnLabels: const {
                 'srno': 'SR NO',
-                'cutType': 'TYPE',
                 'cutNo': 'CUT NO',
                 'pc': 'PC',
                 'wt': 'WT',
