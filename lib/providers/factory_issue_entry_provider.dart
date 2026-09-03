@@ -42,8 +42,39 @@ class FactoryIssueEntryProvider extends BaseProvider {
     return dets;
   }
 
+  Future<List<FactoryIssueDetModel>> loadDetailsFromSearch(int mstID) async {
+    final result = await request<List<FactoryIssueDetModel>>(
+      call: () => api.get('/factoryIss/fromSearch/$mstID'),
+      onSuccess: (res) {
+        final json = res.data as Map<String, dynamic>;
+        final data = json['data'] as List;
 
+        return data
+            .map(
+              (e) => FactoryIssueDetModel.fromJson(e as Map<String, dynamic>),
+        )
+            .toList();
+      },
+    );
 
+    final dets = result ?? [];
+
+    detMap[mstID] = dets;
+    notifyListeners();
+
+    return dets;
+  }
+
+  Future<FactoryIssueSummaryModel?> loadSummaryReportFromSearh(int mstID) async {
+    final result = await request<FactoryIssueSummaryModel>(
+      call: () => api.get('/factoryIss/fromSearch/$mstID?isSummary=true'),
+      onSuccess: (res) {
+        final json = res.data as Map<String, dynamic>;
+        return FactoryIssueSummaryModel.fromJson(json);
+      },
+    );
+    return result;
+  }
   Future<FactoryIssueSummaryModel?> loadSummaryReport(int mstID) async {
     final result = await request<FactoryIssueSummaryModel>(
       call: () => api.get('/factoryIss/$mstID?isSummary=true'),

@@ -721,6 +721,7 @@ class FactoryIssueSummaryRow {
   final int? totalPkt;
   final int totalPc;
   final double totalWt;
+  final String? FactRec;
 
   // Computed helper
   bool get isGrandTotal => sr == 'Grand Total';
@@ -733,6 +734,7 @@ class FactoryIssueSummaryRow {
     required this.totalPkt,
     required this.totalPc,
     required this.totalWt,
+    this.FactRec,
   });
 
   factory FactoryIssueSummaryRow.fromJson(Map<String, dynamic> json) {
@@ -746,6 +748,7 @@ class FactoryIssueSummaryRow {
       // totalWt: _toDouble(json['TotalWt']),
       totalPc: _toInt(json['TotalIssPc']),
       totalWt: _toDouble(json['TotalIssWt']),
+      FactRec: json['FactRec']?.toString(),
     );
   }
 

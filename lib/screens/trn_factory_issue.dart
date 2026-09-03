@@ -960,6 +960,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           label: 'DUE DAY',
           type: ErpFieldType.number,
           sectionIndex: 0,
+            width: 150
         ),
         ErpFieldConfig(
           key: 'dueDayCount',
@@ -967,6 +968,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           type: ErpFieldType.date,
           sectionIndex: 0,
           readOnly: true,
+            width: 150
         ),
         ErpFieldConfig(
           key: 'date',
@@ -974,6 +976,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           type: ErpFieldType.date,
           readOnly: true,
           sectionIndex: 0,
+          width: 150
         ),
         ErpFieldConfig(
           key: 'jno',
@@ -981,6 +984,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           type: ErpFieldType.number,
           readOnly: true,
           sectionIndex: 0,
+            width: 150
         ),
         ErpFieldConfig(
           key: 'factory',
@@ -988,7 +992,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           type: ErpFieldType.dropdown,
           dropdownItems: factoryDropdown,
           sectionIndex: 0,
-          width: 500,
         ),
         ErpFieldConfig(
           key: 'type',
@@ -996,7 +999,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           type: ErpFieldType.text,
           readOnly: true,
           sectionIndex: 0,
-          width: 250,
         ),
       ],
 
@@ -1076,67 +1078,60 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     ErpColumnConfig(
       key: 'print',
       label: '',
-      width: 50,
+      width: 80,
       sortable: false,
       searchable: false,
-      align: ColumnAlign.center,
       required: true,
     ),
     ErpColumnConfig(key: 'jno', label: 'Jno', width: 70, required: true),
     ErpColumnConfig(key: 'date', label: 'DATE', width: 160, isDate: true),
     ErpColumnConfig(key: 'time', label: 'TIME', width: 140),
     ErpColumnConfig(key: 'factory', label: 'FACTORY', width: 160),
-    ErpColumnConfig(key: 'type', label: 'FACT TYPE', width: 150),
-    ErpColumnConfig(
-      key: 'pc',
-      label: 'PC',
-      width: 140,
-      align: ColumnAlign.right,
-    ),
-    ErpColumnConfig(
-      key: 'wt',
-      label: 'WT',
-      width: 170,
-      align: ColumnAlign.right,
-    ),
+    // ErpColumnConfig(key: 'type', label: 'FACT TYPE', width: 150),
+    // ErpColumnConfig(
+    //   key: 'pc',
+    //   label: 'PC',
+    //   width: 140,
+    //   align: ColumnAlign.right,
+    // ),
+    // ErpColumnConfig(
+    //   key: 'wt',
+    //   label: 'WT',
+    //   width: 170,
+    //   align: ColumnAlign.right,
+    // ),
     ErpColumnConfig(
       key: 'issPc',
       label: 'ISS PC',
       width: 170,
-      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'issWt',
       label: 'ISS WT',
       width: 170,
-      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'pendPc',
       label: 'Pending PC',
       width: 170,
-      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'pendWt',
       label: 'Pending WT',
       width: 170,
-      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'dmWt',
       label: 'DM WT',
       width: 170,
-      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'dmPer',
       label: 'DM PER',
       width: 170,
-      align: ColumnAlign.right,
     ),
     ErpColumnConfig(key: 'totPkt', label: 'TOT PKT', width: 140),
-    ErpColumnConfig(key: 'entry', label: 'ENTRY', width: 180),
+    // ErpColumnConfig(key: 'entry', label: 'ENTRY', width: 180),
     ErpColumnConfig(key: 'dueDay', label: 'DUE DAY', width: 180),
     ErpColumnConfig(key: 'dueDate', label: 'DUE DATE', width: 160),
   ];
@@ -1439,7 +1434,6 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   // ─────────────────────────────────────────────────────────────────────────
   String _formatDate(String? value) {
     if (value == null || value.isEmpty) return '';
-
     try {
       final dt = DateTime.parse(value).toLocal();
       return DateFormat('dd/MM/yyyy').format(dt);
@@ -1521,27 +1515,181 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       cellBuilder: (context, row, colKey) {
         if (colKey == 'print') {
           return Center(
-            child: Tooltip(
-              message: 'Print',
-              child: InkWell(
-                onTap: () async {
-                  print(row);
-                  final details = await prov.loadDetails(row['factoryIssMstID'] ?? 0);
-                  if (details.isEmpty) {
-                    _showSnack('No details found for this entry.');
-                    return;
-                  }
-                },
-                borderRadius: BorderRadius.circular(4),
-                child: Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Icon(
-                    Icons.print,
-                    size: 18,
-                    color: Theme.of(context).primaryColor,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // ── 1. DETAIL PRINT (FactRec == N) ──
+                Tooltip(
+                  message: 'Detail Print',
+                  child: InkWell(
+                    onTap: () async {
+                      final masterId = int.tryParse(row['factoryIssMstID']?.toString() ?? '') ?? 0;
+                      if (masterId == 0) {
+                        _showSnack('Invalid Factory Issue ID');
+                        return;
+                      }
+
+                      final details = await prov.loadDetailsFromSearch(masterId);
+                      if (!mounted) return;
+
+                      if (details.isEmpty) {
+                        _showSnack('No details found for this entry.');
+                        return;
+                      }
+
+                      // ✅ Filter only rows where FactRec == 'N'
+                      final filteredRows = details.where((e) {
+                        final factRec = (e.FactRec ?? '').toString().trim().toUpperCase();
+                        return factRec == 'N' || factRec.isEmpty;
+                      }).toList();
+
+                      if (filteredRows.isEmpty) {
+                        _showSnack('No pending (FactRec == N) items to print.');
+                        return;
+                      }
+
+                      final companies = context.read<CompanyProvider>().companies;
+                      final selectedCompany = context.read<CompanyProvider>().selectedCompanyCode;
+                      final company = companies.firstWhereOrNull(
+                        (e) => e.companyCode.toString() == selectedCompany.toString(),
+                      );
+
+                      final partyName = row['factory']?.toString() ?? '';
+                      final partyType = row['type']?.toString() ?? '';
+                      final dateStr = row['date']?.toString() ?? '';
+
+                      final pdfData = JobWorkPdfModel(
+                        headerInfo: company,
+                        partyName: partyName,
+                        partyType: partyType,
+                        jobNo: masterId.toString(),
+                        date: dateStr,
+                        items: filteredRows.map((e) {
+                          return JobWorkItem(
+                            kapan: e.cutNo ?? '',
+                            bCode: e.bCode ?? '',
+                            pktNo: e.pktNo ?? '',
+                            type: e.ArticalName ?? '',
+                            pcs: (e.issPc ?? e.pc ?? 0).toString(),
+                            cts: (e.issWt ?? e.wt ?? 0).toStringAsFixed(3),
+                          );
+                        }).toList(),
+                      );
+
+                      final pdf = await generateJobWorkPdf(pdfData);
+                      await Printing.layoutPdf(onLayout: (_) async => pdf);
+                    },
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Icon(
+                        Icons.print,
+                        size: 15,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(width: 4),
+                // ── 2. SUMMARY PRINT ──
+                Tooltip(
+                  message: 'Summary Print',
+                  child: InkWell(
+                    onTap: () async {
+                      final masterId = int.tryParse(row['factoryIssMstID']?.toString() ?? '') ?? 0;
+                      if (masterId == 0) {
+                        _showSnack('Invalid Factory Issue ID');
+                        return;
+                      }
+                      final summaryModel = await prov.loadSummaryReportFromSearh(masterId);
+                      if (!mounted) return;
+
+                      if (summaryModel == null || summaryModel.summary.isEmpty) {
+                        _showSnack('Failed to load summary data.');
+                        return;
+                      }
+
+                      // ✅ Filter only rows where FactRec == 'N'
+                      final filteredRows = summaryModel.summary.where((e) {
+                        final factRec = (e.FactRec ?? '').toString().trim().toUpperCase();
+                        return factRec == 'N' || factRec.isEmpty;
+                      }).toList();
+
+                      if (filteredRows.isEmpty) {
+                        _showSnack('No pending (FactRec == N) items to print.');
+                        return;
+                      }
+
+                      final companies = context.read<CompanyProvider>().companies;
+                      final selectedCompany = context.read<CompanyProvider>().selectedCompanyCode;
+                      final company = companies.firstWhereOrNull(
+                        (e) => e.companyCode.toString() == selectedCompany.toString(),
+                      );
+
+                      final partyName = row['factory']?.toString() ?? '';
+                      final partyType = row['type']?.toString() ?? '';
+                      final dateStr = row['date']?.toString() ?? '';
+
+                      final dataRows = filteredRows
+                          .where((r) => !r.isGrandTotal)
+                          .toList();
+
+                      final grandTotal = filteredRows.firstWhereOrNull(
+                        (r) => r.isGrandTotal,
+                      );
+
+                      final grandTotalItem = grandTotal != null
+                          ? JobWorkItem(
+                              kapan: '',
+                              bCode: (grandTotal.totalPkt ?? 0).toString(),
+                              pktNo: '',
+                              type: '',
+                              pcs: grandTotal.totalPc.toString(),
+                              cts: grandTotal.totalWt.toStringAsFixed(3),
+                            )
+                          : null;
+
+                      final summaryItems = dataRows.map((r) {
+                        return JobWorkItem(
+                          kapan: r.cutNo,
+                          bCode: (r.totalPkt ?? 0).toString(),
+                          pktNo: r.size,
+                          type: r.articalName,
+                          pcs: r.totalPc.toString(),
+                          size: r.size.toString(),
+                          cts: r.totalWt.toStringAsFixed(3),
+                        );
+                      }).toList();
+
+                      final summaryPdfData = JobWorkPdfModel(
+                        headerInfo: company,
+                        partyName: partyName,
+                        partyType: partyType,
+                        jobNo: masterId.toString(),
+                        date: dateStr,
+                        items: summaryItems,
+                      );
+
+                      final pdf = await generateJobWorkPdfSummary(
+                        summaryPdfData,
+                        showSize: true,
+                        grandTotal: grandTotalItem,
+                      );
+                      await Printing.layoutPdf(onLayout: (_) async => pdf);
+                    },
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Icon(
+                        Icons.summarize_outlined,
+                        size: 15,
+                        color: Colors.orange.shade700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         }
