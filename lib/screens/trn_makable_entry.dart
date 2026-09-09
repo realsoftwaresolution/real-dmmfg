@@ -280,7 +280,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
   void _setDefaultFormValues() {
     final now = DateTime.now();
     _formValues = {
-      'spkDeptIssDate': DateFormat('dd/MM/yyyy').format(now),
+      'spkDeptIssDate': DateFormat('dd/MM/yy').format(now),
       'spkDeptIssMstID': '0',
       'time': DateFormat('hh:mm a').format(now),
       'report': 'REPORT',
@@ -1398,9 +1398,13 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
     String toIso(String? v) {
       if (v == null || v.isEmpty) return '';
       try {
-        return DateFormat(
-          'yyyy-MM-dd',
-        ).format(DateFormat('dd/MM/yyyy').parse(v));
+        DateTime parsed;
+        try {
+          parsed = DateFormat('dd/MM/yy').parseStrict(v);
+        } catch (_) {
+          parsed = DateFormat('dd/MM/yyyy').parse(v);
+        }
+        return DateFormat('yyyy-MM-dd').format(parsed);
       } catch (_) {
         return v;
       }
@@ -2348,7 +2352,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
         if (sectionIndex != 3) return;
         _addEntry();
       },
-
       onFieldChanged: (key, value) {
         _formValues[key] = value.toString();
         switch (key) {
@@ -2423,7 +2426,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
             _entryVals[key] = value.toString();
         }
       },
-
       onFieldSubmitted: (key, value) async {
         final val = value.toString().trim();
 
@@ -2502,7 +2504,6 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
 
         await _onBCodeScanned(val);
       },
-
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
       onSave: _detRows.isNotEmpty ? _onSave : null,
       onCancel: _resetForm,
@@ -2517,7 +2518,7 @@ class _TrnMakableEntryState extends State<TrnMakableEntry> {
               ErpEntryGrid(
                 data: _detDisplay,
                 columns: _activeDetColumns,
-                title: 'ISSUE DETAILS',
+                title: 'MAKABLE ENTRY DETAILS',
                 theme: t,
                 onDeleteRow: _deleteDetRow,
                 onEditRow: _editDetRow,

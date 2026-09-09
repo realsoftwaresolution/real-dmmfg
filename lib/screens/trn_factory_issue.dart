@@ -177,7 +177,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
   void _setDefaultFormValues() {
     final now = DateTime.now();
     _formValues = {
-      'date': DateFormat('dd/MM/yyyy').format(now),
+      'date': DateFormat('dd/MM/yy').format(now),
       'jno': '0',
       'report': 'REPORT',
       'entry': 'SPK',
@@ -404,6 +404,9 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
             return FactoryIssueDetModel(
               srno: e.key + 1,
               spkDeptIssMstID: v.spkDeptIssMstID,
+              PacketMstID: v.PacketMstID, // <--- ADD THIS
+              size: v.size,               // <--- Also missing
+              ArticalName: v.ArticalName, // <--- Also missing
               id: v.id,
               jno: v.jno,
               bCode: v.bCode,
@@ -488,6 +491,9 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
           return FactoryIssueDetModel(
             srno: e.key + 1,
             spkDeptIssMstID: v.spkDeptIssMstID,
+            PacketMstID: v.PacketMstID, // <--- ADD THIS
+            size: v.size,               // <--- Also missing
+            ArticalName: v.ArticalName, // <--- Also missing
             id: v.id,
             jno: v.jno,
             bCode: v.bCode,
@@ -630,7 +636,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     try {
       if (v is String && v.contains('/')) return v; // already formatted
       final dt = DateTime.parse(v.toString());
-      return DateFormat('dd/MM/yyyy').format(dt.toLocal());
+      return DateFormat('dd/MM/yy').format(dt.toLocal());
     } catch (_) {
       return v.toString();
     }
@@ -913,7 +919,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       final today = DateTime.now();
       final dueDate = today.add(Duration(days: dueDay));
 
-      final formatted = DateFormat('dd/MM/yyyy').format(dueDate);
+      final formatted = DateFormat('dd/MM/yy').format(dueDate);
 
       _formValues['dueDayCount'] = formatted;
 
@@ -1078,62 +1084,51 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     ErpColumnConfig(
       key: 'print',
       label: '',
-      width: 80,
       sortable: false,
       searchable: false,
       required: true,
     ),
-    ErpColumnConfig(key: 'jno', label: 'Jno', width: 70, required: true),
-    ErpColumnConfig(key: 'date', label: 'DATE', width: 160, isDate: true),
-    ErpColumnConfig(key: 'time', label: 'TIME', width: 140),
-    ErpColumnConfig(key: 'factory', label: 'FACTORY', width: 160),
-    // ErpColumnConfig(key: 'type', label: 'FACT TYPE', width: 150),
-    // ErpColumnConfig(
-    //   key: 'pc',
-    //   label: 'PC',
-    //   width: 140,
-    //   align: ColumnAlign.right,
-    // ),
-    // ErpColumnConfig(
-    //   key: 'wt',
-    //   label: 'WT',
-    //   width: 170,
-    //   align: ColumnAlign.right,
-    // ),
+    ErpColumnConfig(key: 'jno', label: 'Jno', required: true),
+    ErpColumnConfig(key: 'date', label: 'DATE', isDate: true),
+    ErpColumnConfig(key: 'time', label: 'TIME'),
+    ErpColumnConfig(key: 'factory', label: 'FACTORY'),
     ErpColumnConfig(
       key: 'issPc',
       label: 'ISS PC',
-      width: 170,
+      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'issWt',
       label: 'ISS WT',
-      width: 170,
+      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'pendPc',
       label: 'Pending PC',
-      width: 170,
+      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'pendWt',
       label: 'Pending WT',
-      width: 170,
+      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'dmWt',
       label: 'DM WT',
-      width: 170,
+      align: ColumnAlign.right,
     ),
     ErpColumnConfig(
       key: 'dmPer',
       label: 'DM PER',
-      width: 170,
+      align: ColumnAlign.right,
     ),
-    ErpColumnConfig(key: 'totPkt', label: 'TOT PKT', width: 140),
-    // ErpColumnConfig(key: 'entry', label: 'ENTRY', width: 180),
-    ErpColumnConfig(key: 'dueDay', label: 'DUE DAY', width: 180),
-    ErpColumnConfig(key: 'dueDate', label: 'DUE DATE', width: 160),
+    ErpColumnConfig(
+      key: 'totPkt',
+      label: 'TOT PKT',
+      align: ColumnAlign.right,
+    ),
+    ErpColumnConfig(key: 'dueDay', label: 'DUE DAY'),
+    ErpColumnConfig(key: 'dueDate', label: 'DUE DATE'),
   ];
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1436,7 +1431,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
     if (value == null || value.isEmpty) return '';
     try {
       final dt = DateTime.parse(value).toLocal();
-      return DateFormat('dd/MM/yyyy').format(dt);
+      return DateFormat('dd/MM/yy').format(dt);
     } catch (_) {
       return value;
     }
@@ -1510,6 +1505,15 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
       title: 'FACTORY ISSUE ENTRY LIST',
       columns: _tableColumns,
       data: data,
+      showFooterTotals: true,
+      totals: {
+        'issPc': data.fold<double>(0, (sum, row) => sum + double.tryParse(row['issPc'] ?? '0')!),
+        'issWt': data.fold<double>(0.0, (sum, row) => sum + double.tryParse(row['issWt'] ?? '0')!),
+        'pendPc': data.fold<double>(0.0, (sum, row) => sum + double.tryParse(row['pendPc'] ?? '0')!),
+        'pendWt': data.fold<double>(0.0, (sum, row) => sum + double.tryParse(row['pendWt'] ?? '0')!),
+        'dmWt': data.fold<double>(0.0, (sum, row) => sum + double.tryParse(row['dmWt'] ?? '0')!),
+        'dmPer': data.fold<double>(0.0, (sum, row) => sum + double.tryParse(row['dmPer'] ?? '0')!),
+      },
       showSearch: true,
       dateFilter: true,
       cellBuilder: (context, row, colKey) {
@@ -1585,13 +1589,13 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
                       padding: const EdgeInsets.all(4.0),
                       child: Icon(
                         Icons.print,
-                        size: 15,
+                        size: 14,
                         color: Theme.of(context).primaryColor,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 4),
+                // const SizedBox(width: 4),
                 // ── 2. SUMMARY PRINT ──
                 Tooltip(
                   message: 'Summary Print',
@@ -1683,7 +1687,7 @@ class _TrnFactoryIssueEntryState extends State<TrnFactoryIssueEntry> {
                       padding: const EdgeInsets.all(4.0),
                       child: Icon(
                         Icons.summarize_outlined,
-                        size: 15,
+                        size: 14,
                         color: Colors.orange.shade700,
                       ),
                     ),

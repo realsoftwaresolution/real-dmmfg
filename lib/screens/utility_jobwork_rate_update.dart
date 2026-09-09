@@ -57,8 +57,8 @@ class _UtilityJobWorkRateUpdateState extends State<UtilityJobWorkRateUpdate> {
   void _setDefaultFormValues() {
     final now = DateTime.now();
     _formValues = {
-      'fromDate': DateFormat('dd/MM/yyyy').format(now),
-      'toDate': DateFormat('dd/MM/yyyy').format(now),
+      'fromDate': DateFormat('dd/MM/yy').format(now),
+      'toDate': DateFormat('dd/MM/yy').format(now),
     };
     if (mounted) setState(() {});
   }

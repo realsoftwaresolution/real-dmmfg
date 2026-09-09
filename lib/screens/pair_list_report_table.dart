@@ -64,11 +64,13 @@ class _PairListReportTableState extends State<PairListReportTable> {
     if (dateStr == null) return '-';
     try {
       final dt = DateTime.parse(dateStr.toString());
-      return "${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}";
+      final yy = (dt.year % 100).toString().padLeft(2, '0');
+      return "${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/$yy";
     } catch (_) {
       final parts = dateStr.toString().split('T').first.split('-');
       if (parts.length == 3) {
-        return "${parts[2].padLeft(2, '0')}/${parts[1].padLeft(2, '0')}/${parts[0]}";
+        final yy = parts[0].length >= 2 ? parts[0].substring(parts[0].length - 2) : parts[0];
+        return "${parts[2].padLeft(2, '0')}/${parts[1].padLeft(2, '0')}/$yy";
       }
       return dateStr.toString().split('T').first;
     }

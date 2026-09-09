@@ -373,7 +373,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
   }
 
   void _setDefaultFormValues() {
-    final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
+    final today = DateFormat('dd/MM/yy').format(DateTime.now());
     setState(() {
       _formValues = {'roughAssortDate': today, 'roughAssortMstID': '0'};
     });
@@ -841,9 +841,13 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
       String toIso(String? v) {
         if (v == null || v.isEmpty) return '';
         try {
-          return DateFormat(
-            'yyyy-MM-dd',
-          ).format(DateFormat('dd/MM/yyyy').parse(v));
+          DateTime parsed;
+          try {
+            parsed = DateFormat('dd/MM/yy').parseStrict(v);
+          } catch (_) {
+            parsed = DateFormat('dd/MM/yyyy').parse(v);
+          }
+          return DateFormat('yyyy-MM-dd').format(parsed);
         } catch (_) {
           return v;
         }
@@ -910,7 +914,7 @@ class _TrnRoughAssortEntryState extends State<TrnRoughAssortEntry> {
   // ══════════════════════════════════════════════════════════════════════════
   void _resetForm() {
     _erpFormKey.currentState?.resetForm();
-    final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
+    final today = DateFormat('dd/MM/yy').format(DateTime.now());
     setState(() {
       _selectedRow = null;
       _selectedMst = null;

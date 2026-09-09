@@ -133,7 +133,7 @@ class _TrnProcessRecEntryState extends State<TrnProcessRecEntry> {
 
   void _setDefaultFormValues() {
     final now = DateTime.now();
-    _formValues = {'date': DateFormat('dd/MM/yyyy').format(now), 'jno': '0'};
+    _formValues = {'date': DateFormat('dd/MM/yy').format(now), 'jno': '0'};
     if (mounted) setState(() {});
   }
 
@@ -468,7 +468,7 @@ class _TrnProcessRecEntryState extends State<TrnProcessRecEntry> {
     try {
       if (v is String && v.contains('/')) return v; // already formatted
       final dt = DateTime.parse(v.toString());
-      return DateFormat('dd/MM/yyyy').format(dt.toLocal());
+      return DateFormat('dd/MM/yy').format(dt.toLocal());
     } catch (_) {
       return v.toString();
     }
@@ -686,7 +686,7 @@ class _TrnProcessRecEntryState extends State<TrnProcessRecEntry> {
       final today = DateTime.now();
       final dueDate = today.add(Duration(days: dueDay));
 
-      final formatted = DateFormat('dd/MM/yyyy').format(dueDate);
+      final formatted = DateFormat('dd/MM/yy').format(dueDate);
 
       _formValues['dueDayCount'] = formatted;
 
@@ -1079,7 +1079,7 @@ class _TrnProcessRecEntryState extends State<TrnProcessRecEntry> {
 
     try {
       final dt = DateTime.parse(value).toLocal();
-      return DateFormat('dd/MM/yyyy').format(dt);
+      return DateFormat('dd/MM/yy').format(dt);
     } catch (_) {
       return value;
     }

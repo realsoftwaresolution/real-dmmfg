@@ -305,7 +305,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
   void _setDefaultFormValues() {
     final now = DateTime.now();
     _formValues = {
-      'spkDeptIssDate': DateFormat('dd/MM/yyyy').format(now),
+      'spkDeptIssDate': DateFormat('dd/MM/yy').format(now),
       'spkDeptIssMstID': '0',
       'time': DateFormat('hh:mm a').format(now),
       'report': 'REPORT',
@@ -714,6 +714,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       preSpkDeptIssID: existing.preSpkDeptIssID,
       jno: existing.jno,
       bCode: existing.bCode,
+      MainBCode: existing.MainBCode,
       fluoCode: int.tryParse(_entryVals['fluoCode'] ?? _entryVals['fluo'] ?? '') ?? existing.fluoCode,
       symmetryCode: int.tryParse(_entryVals['symmetryCode'] ?? _entryVals['symmetry'] ?? '') ?? existing.symmetryCode,
       polishCode: int.tryParse(_entryVals['polishCode'] ?? _entryVals['polish'] ?? '') ?? existing.polishCode,
@@ -795,6 +796,7 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
       jno: _scannedDet?.jno,
       jnoRecPc: _scannedDet?.jnoRecPc,
       bCode: isFirstRow ? (_scannedDet?.bCode ?? _entryVals['scanValue']) : '0',
+      MainBCode: _scannedDet?.bCode ?? _entryVals['scanValue'],
       fluoCode: int.tryParse(_entryVals['fluoCode'] ?? _entryVals['fluo'] ?? '') ?? _scannedDet?.fluoCode,
       symmetryCode: int.tryParse(_entryVals['symmetryCode'] ?? _entryVals['symmetry'] ?? '') ?? _scannedDet?.symmetryCode,
       polishCode: int.tryParse(_entryVals['polishCode'] ?? _entryVals['polish'] ?? '') ?? _scannedDet?.polishCode,
@@ -2000,15 +2002,18 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
         if (selectedRows.isNotEmpty) {
           final bCodeArray = selectedRows
               .where((bCode) {
-                final row = _laserApiRows.firstWhere(
+                final row = _laserApiRows.firstWhereOrNull(
                   (r) => r.bCode.toString() == bCode.toString(),
                 );
 
-                return row.bCode != row.MainBCode;
+                return row != null && row.bCode != row.MainBCode;
               })
               .map((bCode) {
+                final row = _laserApiRows.firstWhere(
+                  (r) => r.bCode.toString() == bCode.toString(),
+                );
                 return {
-                  'SPKDeptIssMstID': _laserApiRows.first.spkDeptIssMstID,
+                  'SPKDeptIssMstID': row.spkDeptIssMstID,
                   'BCode': int.tryParse(bCode.toString()) ?? 0,
                 };
               })
@@ -2101,15 +2106,16 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
                       context: context,
                     );
                 if (data.isNotEmpty) {
+                  final mstId = data.first.spkDeptIssMstID;
+
                   if (_entryVals['print'] == 'true' && token != null) {
-                    final mstId = data.first.spkDeptIssMstID;
                     final selectedMainBCode = data
-                        .firstWhere(
+                        .firstWhereOrNull(
                           (e) =>
                               e.bCode.toString() ==
                               _entryVals['scanValue'].toString(),
                         )
-                        .MainBCode;
+                        ?.MainBCode;
                     final bCodeArray = data
                         .where(
                           (e) =>
@@ -2132,6 +2138,9 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
                       );
                     }
                   }
+
+                  if (!mounted) return;
+
                   setState(() {
                     _laserApiRows.clear();
                     _laserApiRows.addAll(data);
@@ -2643,8 +2652,6 @@ class _TrnLaserReceivedEntryState extends State<TrnLaserReceivedEntry> {
                 .deptProcessName ??
             '';
       } catch (_) {}
-
-      final dets = prov.detMap[e.spkDeptIssMstID] ?? [];
 
       final row = e.toTableRow()
         ..['fromName'] = fromName

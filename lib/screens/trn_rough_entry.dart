@@ -468,7 +468,7 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
   }
 
   Future<void> _setDefaultFormValues() async {
-    final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
+    final today = DateFormat('dd/MM/yy').format(DateTime.now());
 
     // ✅ DB se next JNO lo
     final nextJno = await context.read<RoughProvider>().getNextJno();
@@ -505,12 +505,16 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
 
   void _recalcDueDate() {
     try {
-      final base = DateFormat(
-        'dd/MM/yyyy',
-      ).parse(_formValues['roughDate'] ?? '');
+      DateTime base;
+      final raw = _formValues['roughDate'] ?? '';
+      try {
+        base = DateFormat('dd/MM/yy').parseStrict(raw);
+      } catch (_) {
+        base = DateFormat('dd/MM/yyyy').parse(raw);
+      }
       final days = int.tryParse(_formValues['dueDay'] ?? '') ?? 0;
       _formValues['dueDate'] = DateFormat(
-        'dd/MM/yyyy',
+        'dd/MM/yy',
       ).format(base.add(Duration(days: days)));
     } catch (_) {}
   }
@@ -891,9 +895,13 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
     String toIso(String? v) {
       if (v == null || v.isEmpty) return '';
       try {
-        return DateFormat(
-          'yyyy-MM-dd',
-        ).format(DateFormat('dd/MM/yyyy').parse(v));
+        DateTime parsed;
+        try {
+          parsed = DateFormat('dd/MM/yy').parseStrict(v);
+        } catch (_) {
+          parsed = DateFormat('dd/MM/yyyy').parse(v);
+        }
+        return DateFormat('yyyy-MM-dd').format(parsed);
       } catch (_) {
         return v;
       }
@@ -1037,7 +1045,7 @@ class _TrnRoughEntryState extends State<TrnRoughEntry> {
   // ══════════════════════════════════════════════════════════════════════════
   void _resetForm() {
     _erpFormKey.currentState?.resetForm();
-    final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
+    final today = DateFormat('dd/MM/yy').format(DateTime.now());
     setState(() {
       _selectedRow = null;
       _selectedRough = null;

@@ -346,7 +346,7 @@ class _TrnMakableEntryState extends State<RepairReceiveEntry> {
   void _setDefaultFormValues() {
     final now = DateTime.now();
     _formValues = {
-      'repairRecDate': DateFormat('dd/MM/yyyy').format(now),
+      'repairRecDate': DateFormat('dd/MM/yy').format(now),
       'factoryIssMstID': '0',
     };
     if (mounted) setState(() {});
@@ -1688,7 +1688,7 @@ class _TrnMakableEntryState extends State<RepairReceiveEntry> {
     try {
       if (v is String && v.contains('/')) return v; // already formatted
       final dt = DateTime.parse(v.toString());
-      return DateFormat('dd/MM/yyyy').format(dt.toLocal());
+      return DateFormat('dd/MM/yy').format(dt.toLocal());
     } catch (_) {
       return v.toString();
     }
@@ -3221,7 +3221,7 @@ class _TrnMakableEntryState extends State<RepairReceiveEntry> {
 
     try {
       final dt = DateTime.parse(value).toLocal();
-      return DateFormat('dd/MM/yyyy').format(dt);
+      return DateFormat('dd/MM/yy').format(dt);
     } catch (_) {
       return value;
     }

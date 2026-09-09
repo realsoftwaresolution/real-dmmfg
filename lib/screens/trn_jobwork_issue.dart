@@ -78,7 +78,7 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
 
   void _setDefaultFormValues() {
     final now = DateTime.now();
-    _formValues = {'date': DateFormat('dd/MM/yyyy').format(now)};
+    _formValues = {'date': DateFormat('dd/MM/yy').format(now)};
     if (mounted) setState(() {});
   }
 
@@ -383,7 +383,7 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
     try {
       if (v is String && v.contains('/')) return v;
       final dt = DateTime.parse(v.toString());
-      return DateFormat('dd/MM/yyyy').format(dt.toLocal());
+      return DateFormat('dd/MM/yy').format(dt.toLocal());
     } catch (_) {
       return v.toString();
     }
@@ -932,7 +932,7 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
     if (value == null || value.isEmpty) return '';
     try {
       final dt = DateTime.parse(value).toLocal();
-      return DateFormat('dd/MM/yyyy').format(dt);
+      return DateFormat('dd/MM/yy').format(dt);
     } catch (_) {
       return value;
     }

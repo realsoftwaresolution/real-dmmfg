@@ -1,27 +1,6 @@
 import 'package:intl/intl.dart';
 
 import '../models/purity_model.dart';
-
-String? formatDate(String? date) {
-  if (date == null || date.isEmpty) return null;
-
-  final parts = date.split('-'); // dd-mm-yyyy
-  if (parts.length == 3) {
-    return "${parts[2]}-${parts[1]}-${parts[0]}"; // yyyy-mm-dd
-  }
-  return date;
-}
-String? formatDate1(String? date) {
-  if (date == null || date.isEmpty) return null;
-
-  final parts = date.split('-'); // dd-MM-yyyy
-  if (parts.length == 3) {
-    return "${parts[2]}-${parts[1]}-${parts[0]}"; // yyyy-MM-dd
-  }
-
-  return date;
-}
-
 String getPurityName(List<PurityModel> list, int? purityCode) {
   if (purityCode == null) return '';
 
@@ -35,8 +14,8 @@ String getPurityName(List<PurityModel> list, int? purityCode) {
 String toDisplayDate(String? v) {
   if (v == null || v.isEmpty) return '';
   try {
-    return DateFormat('dd/MM/yyyy')
-        .format(DateFormat('yyyy-MM-dd').parse(v));
+    final parsed = DateTime.tryParse(v) ?? DateFormat('yyyy-MM-dd').parse(v);
+    return DateFormat('dd/MM/yy').format(parsed);
   } catch (_) {
     return v;
   }

@@ -255,7 +255,7 @@ print(assortWt);
   }
 
   void _setDefaultFormValues() {
-    final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
+    final today = DateFormat('dd/MM/yy').format(DateTime.now());
     _formValues = {'cutCreateDate': today, 'cutCreateMstID': '0'};
     if (mounted) setState(() {});
   }
@@ -706,7 +706,7 @@ print(assortWt);
   // ── RESET ──────────────────────────────────────────────────────────────────
   void _resetForm() {
     _erpFormKey.currentState?.resetForm();
-    final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
+    final today = DateFormat('dd/MM/yy').format(DateTime.now());
     _entryVals.clear();
     setState(() {
       _selectedRow = null;

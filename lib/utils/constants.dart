@@ -6,11 +6,23 @@ import 'package:intl/intl.dart';
 
 
 
+DateTime _parseFlexibleDisplayDate(String v) {
+  try {
+    return DateFormat('dd/MM/yy').parseStrict(v);
+  } catch (_) {
+    try {
+      return DateFormat('dd/MM/yyyy').parseStrict(v);
+    } catch (_) {
+      return DateTime.parse(v);
+    }
+  }
+}
+
 String toUtcIso(String? v) {
   if (v == null || v.isEmpty) return '';
 
   try {
-    final parsed = DateFormat('dd/MM/yyyy').parse(v);
+    final parsed = _parseFlexibleDisplayDate(v);
 
     // attach time (optional: 00:00 or current time)
     final dt = DateTime(
@@ -36,7 +48,7 @@ String formatDecimal(dynamic value, {int decimal = 3}) {
 
 String formatDate(dynamic value) {
   try {
-    return DateFormat('dd-MM-yyyy')
+    return DateFormat('dd/MM/yy')
         .format(DateTime.parse(value.toString()));
   } catch (_) {
     return value?.toString() ?? '-';
@@ -69,9 +81,7 @@ String formatDisplayDate(dynamic value) {
 
     final date = DateTime.parse(str);
 
-    return '${date.day.toString().padLeft(2, '0')}/'
-        '${date.month.toString().padLeft(2, '0')}/'
-        '${date.year}';
+    return DateFormat('dd/MM/yy').format(date);
 
   } catch (e) {
 
@@ -83,15 +93,7 @@ String toIsoDate(String value) {
 
   try {
 
-    final parts = value.split('/');
-
-    if (parts.length != 3) return value;
-
-    final date = DateTime.utc(
-      int.parse(parts[2]), // year
-      int.parse(parts[1]), // month
-      int.parse(parts[0]), // day
-    );
+    final date = _parseFlexibleDisplayDate(value).toUtc();
 
     return date.toIso8601String();
 
@@ -106,7 +108,7 @@ String toIso(String? v) {
   try {
     return DateFormat(
       'yyyy-MM-dd',
-    ).format(DateFormat('dd/MM/yyyy').parse(v));
+    ).format(_parseFlexibleDisplayDate(v));
   } catch (_) {
     return v;
   }
@@ -116,7 +118,7 @@ String? parseDateForApi(String? displayDate) {
   if (displayDate == null || displayDate.isEmpty) return null;
 
   try {
-    final date = DateFormat('dd/MM/yyyy').parse(displayDate);
+    final date = _parseFlexibleDisplayDate(displayDate);
     return DateFormat('yyyy-MM-dd').format(date);
   } catch (_) {
     return null;

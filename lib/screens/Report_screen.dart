@@ -1739,13 +1739,25 @@ class _ReportScreenState extends State<ReportScreen> {
     if (registryKey != 'PACKET_WISE_PLANNING_SUMMARY' &&
         registryKey != 'PACKET_WISE_PLANNING_DETAIL') {
       filter.addAll({
-        "fromDate": DateFormat(
-          'yyyy-MM-dd',
-        ).format(DateFormat('dd/MM/yyyy').parse(_formValues['dateFrom']!)),
+        "fromDate": DateFormat('yyyy-MM-dd').format(
+          (() {
+            try {
+              return DateFormat('dd/MM/yy').parseStrict(_formValues['dateFrom']!);
+            } catch (_) {
+              return DateFormat('dd/MM/yyyy').parse(_formValues['dateFrom']!);
+            }
+          })(),
+        ),
 
-        "toDate": DateFormat(
-          'yyyy-MM-dd',
-        ).format(DateFormat('dd/MM/yyyy').parse(_formValues['dateTo']!)),
+        "toDate": DateFormat('yyyy-MM-dd').format(
+          (() {
+            try {
+              return DateFormat('dd/MM/yy').parseStrict(_formValues['dateTo']!);
+            } catch (_) {
+              return DateFormat('dd/MM/yyyy').parse(_formValues['dateTo']!);
+            }
+          })(),
+        ),
 
         // "fromTime": DateFormat('HH:mm:ss')
         //     .format(DateFormat('hh:mm a').parse(_formValues['timeFrom']!)),
@@ -1807,8 +1819,8 @@ class _ReportScreenState extends State<ReportScreen> {
   void _setDefaultFormValues() {
     final now = DateTime.now();
     _formValues = {
-      'dateFrom': DateFormat('dd/MM/yyyy').format(now),
-      'dateTo': DateFormat('dd/MM/yyyy').format(now),
+      'dateFrom': DateFormat('dd/MM/yy').format(now),
+      'dateTo': DateFormat('dd/MM/yy').format(now),
       'timeFrom': DateFormat('hh:mm a').format(now),
       'timeTo': DateFormat('hh:mm a').format(now),
     };
@@ -3103,8 +3115,12 @@ class _ReportScreenState extends State<ReportScreen> {
     DateTime initialDate = DateTime.now();
     if (initialDateStr != null && initialDateStr.isNotEmpty) {
       try {
-        initialDate = DateFormat('dd/MM/yyyy').parse(initialDateStr);
-      } catch (_) {}
+        initialDate = DateFormat('dd/MM/yy').parseStrict(initialDateStr);
+      } catch (_) {
+        try {
+          initialDate = DateFormat('dd/MM/yyyy').parse(initialDateStr);
+        } catch (_) {}
+      }
     }
 
     final picked = await showDatePicker(
@@ -3115,7 +3131,7 @@ class _ReportScreenState extends State<ReportScreen> {
     );
 
     if (picked != null) {
-      final formatted = DateFormat('dd/MM/yyyy').format(picked);
+      final formatted = DateFormat('dd/MM/yy').format(picked);
       _handleFieldValueChanged(key, formatted);
     }
   }
@@ -3123,7 +3139,7 @@ class _ReportScreenState extends State<ReportScreen> {
   void _setPresetDates(int daysAgo) {
     final now = DateTime.now();
     final fromDate = now.subtract(Duration(days: daysAgo));
-    final format = DateFormat('dd/MM/yyyy');
+    final format = DateFormat('dd/MM/yy');
     setState(() {
       _formValues['dateFrom'] = format.format(fromDate);
       _formValues['dateTo'] = format.format(now);
@@ -3135,7 +3151,7 @@ class _ReportScreenState extends State<ReportScreen> {
   void _setMonthlyPreset() {
     final now = DateTime.now();
     final firstDay = DateTime(now.year, now.month, 1);
-    final format = DateFormat('dd/MM/yyyy');
+    final format = DateFormat('dd/MM/yy');
     setState(() {
       _formValues['dateFrom'] = format.format(firstDay);
       _formValues['dateTo'] = format.format(now);

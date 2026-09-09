@@ -365,7 +365,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
   }
 
   void _setDefaultFormValues() {
-    final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
+    final today = DateFormat('dd/MM/yy').format(DateTime.now());
     _formValues = {
       'packetDate': today,
       'packetMstID': '0',
@@ -1196,9 +1196,13 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     String toIso(String? v) {
       if (v == null || v.isEmpty) return '';
       try {
-        return DateFormat(
-          'yyyy-MM-dd',
-        ).format(DateFormat('dd/MM/yyyy').parse(v));
+        DateTime parsed;
+        try {
+          parsed = DateFormat('dd/MM/yy').parseStrict(v);
+        } catch (_) {
+          parsed = DateFormat('dd/MM/yyyy').parse(v);
+        }
+        return DateFormat('yyyy-MM-dd').format(parsed);
       } catch (_) {
         return v;
       }
@@ -1277,7 +1281,7 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
   // ══════════════════════════════════════════════════════════════════════════
   void _resetForm() {
     _erpFormKey.currentState?.resetForm();
-    final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
+    final today = DateFormat('dd/MM/yy').format(DateTime.now());
     _entryVals.clear();
     setState(() {
       _selectedRow = null;
@@ -1730,7 +1734,6 @@ class _TrnPacketCreateEntryState extends State<TrnPacketCreateEntry> {
     return ErpDataTable(
       isReportRow: false,
       dateFilter: true,
-
       token: token ?? '',
       url: baseUrl,
       title: 'PACKET CREATE LIST',
