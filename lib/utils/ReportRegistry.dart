@@ -3040,8 +3040,8 @@ class ReportRegistry {
         ReportColumnDef(key: 'DiffPer', label: 'Diff %', width: 140),
         ReportColumnDef(key: 'DiffWt', label: 'Diff Wt', width: 140),
 
-        ReportColumnDef(key: 'Diam', label: 'Diam', width: 140),
         ReportColumnDef(key: 'Length', label: 'Length', width: 140),
+        ReportColumnDef(key: 'Diam', label: 'Diam', width: 140),
         ReportColumnDef(key: 'Height', label: 'Height', width: 140),
         ReportColumnDef(key: 'TopSide', label: 'Top Side', width: 140),
 
@@ -3530,8 +3530,11 @@ class ReportRegistry {
       },
       columns: const [
         ReportColumnDef(key: 'DetID', label: 'ID', width: 120),
+        ReportColumnDef(key: 'KapanNo', label: 'KAPAN NO', width: 160),
         ReportColumnDef(key: 'PktNo', label: 'PKT NO', width: 160),
-        ReportColumnDef(key: 'Wt', label: 'WT', width: 120),
+        ReportColumnDef(key: 'Shape', label: 'SHAPE', width: 140),
+        ReportColumnDef(key: 'IssWt', label: 'ISS WT', width: 140),
+        ReportColumnDef(key: 'RecWt', label: 'REC WT', width: 140),
         ReportColumnDef(key: 'Color', label: 'COLOR', width: 140),
         ReportColumnDef(key: 'Clarity', label: 'CLARITY', width: 160),
         ReportColumnDef(key: 'Cut', label: 'CUT', width: 140),
@@ -3540,20 +3543,15 @@ class ReportRegistry {
         ReportColumnDef(key: 'Flou', label: 'FLOU', width: 140),
         ReportColumnDef(key: 'SellPrice', label: 'SELL PRICE', width: 180),
         ReportColumnDef(key: 'SellAmount', label: 'SELL AMOUNT', width: 180),
-        ReportColumnDef(key: 'mm', label: 'MM', width: 180),
+        ReportColumnDef(key: 'Length', label: 'LENGTH', width: 160),
+        ReportColumnDef(key: 'Dia', label: 'DIA', width: 120),
+        ReportColumnDef(key: 'Height', label: 'HEIGHT', width: 140),
         ReportColumnDef(key: 'TopSide', label: 'TOP SIDE', width: 160),
         ReportColumnDef(key: 'GroupType', label: 'GROUP TYPE', width: 180),
         ReportColumnDef(key: 'Certificate', label: 'CERTIFICATE', width: 180),
         ReportColumnDef(key: 'CertiNo', label: 'CERTI NO', width: 160),
+        ReportColumnDef(key: 'mm', label: 'MM', width: 180),
         ReportColumnDef(key: 'PairNo', label: 'PAIR NO', width: 160),
-
-        ReportColumnDef(key: 'KapanNo', label: 'KAPAN NO', width: 160),
-        ReportColumnDef(key: 'Shape', label: 'SHAPE', width: 140),
-        ReportColumnDef(key: 'IssWt', label: 'ISS WT', width: 140),
-        ReportColumnDef(key: 'RecWt', label: 'REC WT', width: 140),
-        ReportColumnDef(key: 'Length', label: 'LENGTH', width: 160),
-        ReportColumnDef(key: 'Dia', label: 'DIA', width: 120),
-        ReportColumnDef(key: 'Height', label: 'HEIGHT', width: 140),
       ],
       mapper: (raw) => raw.map((e) {
         final detId = '${e['DetID'] ?? e['detID'] ?? e['Id'] ?? e['id'] ?? '-'}';

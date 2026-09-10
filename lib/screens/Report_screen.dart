@@ -245,15 +245,21 @@ class _ReportScreenState extends State<ReportScreen> {
   List<String> _getFluoList() {
     try {
       final fluoProv = context.read<FluoProvider>();
-      return fluoProv.list
+
+      final list = fluoProv.list
           .where(
             (e) =>
-                e.active == true &&
-                e.fluoName != null &&
-                e.fluoName!.isNotEmpty,
-          )
-          .map((e) => e.fluoName!)
+        e.active == true &&
+            e.fluoName != null &&
+            e.fluoName!.isNotEmpty,
+      )
           .toList();
+
+      // Sort SortID ascending: 1, 2, 3, 4...
+      list.sort(
+            (a, b) => a.sortID!.compareTo(b.sortID!),
+      );
+      return list.map((e) => e.fluoName!).toList();
     } catch (_) {
       return [];
     }
@@ -300,7 +306,7 @@ class _ReportScreenState extends State<ReportScreen> {
       set.add(currentVal);
     }
     final list = set.toList();
-    list.sort();
+    // list.sort();
     return list;
   }
 
@@ -1605,35 +1611,6 @@ class _ReportScreenState extends State<ReportScreen> {
     return [];
   }
 
-  List<List<ErpFieldConfig>> _sanitizeRows(List<List<ErpFieldConfig>> rows) {
-    return rows.map((section) {
-      return section.whereType<ErpFieldConfig>().map((field) {
-        final safeItems = (field.dropdownItems ?? [])
-            .whereType<ErpDropdownItem>()
-            .where((item) => item.value.isNotEmpty && item.label.isNotEmpty)
-            .toList();
-
-        if (safeItems.length == (field.dropdownItems?.length ?? 0)) {
-          return field;
-        }
-        return ErpFieldConfig(
-          key: field.key,
-          label: field.label,
-          type: field.type,
-          flex: field.flex,
-          readOnly: field.readOnly,
-          required: field.required,
-          sectionIndex: field.sectionIndex ?? 0,
-          sectionTitle: field.sectionTitle,
-          isEntryField: field.isEntryField,
-          isEntryRequired: field.isEntryRequired,
-          showAddButton: field.showAddButton,
-          dropdownItems: safeItems,
-        );
-      }).toList();
-    }).toList();
-  }
-
   // ─────────────────────────────────────────────────────────────────────────
   //  REGISTRY KEY HELPER
   // ─────────────────────────────────────────────────────────────────────────
@@ -1971,6 +1948,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 url: '',
                 isReportRow: false,
                 showFooterTotals: true,
+                showCheckBox: isPairReport,
                 headerActions: isPairReport
                     ? [
                         Padding(

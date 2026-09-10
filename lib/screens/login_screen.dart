@@ -62,12 +62,11 @@ class _LoginScreenV7State extends State<LoginScreenV7> {
       );
       if (ok && mounted) {
         final companyProvider = context.read<CompanyProvider>();
-        final prov = context.read<MenuProvider>();
-        await prov.loadMenus();
         if (!mounted) return;
         await companyProvider.loadCompanies();
         if (!mounted) return;
-
+        final prov = context.read<MenuProvider>();
+        await prov.loadMenus();
         setState(() {
           _isLoading = false;
         });

@@ -752,11 +752,11 @@ class _TrnMakableEntryState extends State<RepairReceiveEntry> {
       return;
     }
 
-    if (dmWt > issWt) {
-      _showSnack('DM WT cannot be greater than Iss WT');
-      _erpFormKey.currentState?.focusField('dmWt');
-      return;
-    }
+    // if (dmWt > issWt) {
+    //   _showSnack('DM WT cannot be greater than Iss WT');
+    //   _erpFormKey.currentState?.focusField('dmWt');
+    //   return;
+    // }
 
     final totalWt = recWt + kWt + brWt;
     if (totalWt > issWt) {

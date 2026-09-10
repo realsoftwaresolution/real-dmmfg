@@ -1,10 +1,12 @@
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:diam_mfg/models/job_work_issue_model.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
 import 'package:diam_mfg/providers/dept_process_provider.dart';
 import 'package:diam_mfg/providers/dept_provider.dart';
 import 'package:diam_mfg/providers/job_work_issue_entry_provider.dart';
+import 'package:diam_mfg/services/job_work_issue_excel_service.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/constants.dart';
 import 'package:diam_mfg/utils/delete_dialogue.dart';
@@ -319,9 +321,9 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
     _activeDetColumns = [
       'srno',
       'mfgCut',
+      'pktNo',
       'qrCode',
       'bCode',
-      'pktNo',
       'pairNo',
       'pc',
       'wt',
@@ -331,13 +333,14 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
       'charniCode',
       'colorCode',
       'shapeCode',
-      'dmWt',
-      'dmPer',
+      'recPc',
+      'recWt',
       'size',
       'cutCode',
+      'length',
       'diam',
       'height',
-      'length',
+      'topSide',
       'polishCode',
       'symmetryCode',
       'fluoCode',
@@ -356,6 +359,8 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
             'wt': fThreeDecimal(r.wt ?? 0),
             'issPc': (r.issPc ?? 0).toString(),
             'issWt': fThreeDecimal(r.issWt ?? 0),
+            'recPc': (r.recPc ?? 0).toString(),
+            'recWt': fThreeDecimal(r.recWt ?? 0),
             'purityCode': r.purityName ?? '',
             'charniCode': r.charniName ?? '',
             'colorCode': r.colorName ?? '',
@@ -365,12 +370,11 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
             'polishCode': r.polishName ?? '',
             'symmetryCode': r.symmetryName ?? '',
             'fluoCode': r.fluoName ?? '',
-            'dmWt': fThreeDecimal(r.dmWt ?? 0),
-            'dmPer': (r.dmPer ?? 0).toStringAsFixed(2),
+            'topSide': r.topSide ?? '',
             'size': fThreeDecimal(r.size ?? 0),
+            'length': (r.length ?? 0).toStringAsFixed(2),
             'diam': (r.diam ?? 0).toStringAsFixed(2),
             'height': (r.height ?? 0).toStringAsFixed(2),
-            'length': (r.length ?? 0).toStringAsFixed(2),
           },
         )
         .toList();
@@ -391,11 +395,20 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
 
   Future<void> _onRowTap(Map<String, dynamic> row) async {
     final prov = context.read<JobWorkIssueEntryProvider>();
-    final id = int.tryParse(row['jobWorkIssMstID'].toString()) ?? 0;
+    final id = int.tryParse(
+      (row['jobWorkIssMstID'] ?? row['JobWorkIssMstID'] ?? '0').toString(),
+    ) ?? 0;
     print(row);
     final details = await prov.loadDetails(id);
 
     if (!mounted) return;
+
+    final partyIdStr =
+        (row['partyMstID'] ?? row['PartyMstID'] ?? '0').toString();
+    final processCodeStr =
+        (row['deptProcessCode'] ?? row['DeptProcessCode'] ?? '0').toString();
+    final dateVal =
+        row['date'] ?? row['jobWorkIssDate'] ?? row['JobWorkIssDate'];
 
     setState(() {
       _selectedRow = row;
@@ -405,10 +418,10 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
       _showTableOnMobile = false;
 
       _formValues = {
-        'date': _date(row['date']),
-        'jobWorkIssMstID': _s(row['jobWorkIssMstID'], '0'),
-        'partyMstID': _s(row['partyMstID'], '0'),
-        'deptProcessCode': _s(row['deptProcessCode'], '0'),
+        'date': _date(dateVal),
+        'jobWorkIssMstID': id.toString(),
+        'partyMstID': partyIdStr,
+        'deptProcessCode': processCodeStr,
       };
       _selectedPartyMstID = int.tryParse(_formValues['partyMstID'] ?? '0');
       final counterProvider = context.read<CounterProvider>();
@@ -425,6 +438,17 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
       _selectedDeptProcessCode = int.tryParse(
         _formValues['deptProcessCode'] ?? '0',
       );
+
+      // Fallback: If party didn't supply deptCode, resolve from process
+      if (_selectedDeptCode == null && _selectedDeptProcessCode != null) {
+        final proc = context.read<DeptProcessProvider>().list.firstWhereOrNull(
+          (p) => p.deptProcessCode == _selectedDeptProcessCode,
+        );
+        if (proc != null) {
+          _selectedDeptCode = proc.deptCode;
+        }
+      }
+
       _syncDetGrid();
     });
 
@@ -432,6 +456,18 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
       if (!mounted) return;
 
       try {
+        _erpFormKey.currentState?.updateFieldValue(
+          'date',
+          _formValues['date'] ?? '',
+        );
+        _erpFormKey.currentState?.updateFieldValue(
+          'partyMstID',
+          _formValues['partyMstID'] ?? '',
+        );
+        _erpFormKey.currentState?.updateFieldValue(
+          'deptProcessCode',
+          _formValues['deptProcessCode'] ?? '',
+        );
         _erpFormKey.currentState?.focusField('scanValue');
       } catch (_) {}
     });
@@ -760,14 +796,16 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
     const labels = {
       'srno': 'SR NO',
       'mfgCut': 'MFG CUT',
+      'pktNo': 'PKT NO',
       'qrCode': 'QR CODE',
       'bCode': 'BCODE',
-      'pktNo': 'PKT NO',
       'pairNo': 'PAIR NO',
       'pc': 'PC',
       'wt': 'WT',
       'issPc': 'ISS PC',
       'issWt': 'ISS WT',
+      'recPc': 'REC PC',
+      'recWt': 'REC WT',
       'purityCode': 'PURITY',
       'charniCode': 'CHARNI',
       'colorCode': 'COLOR',
@@ -776,9 +814,10 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
       'dmPer': 'DM %',
       'size': 'SIZE',
       'cutCode': 'CUT',
+      'length': 'LENGTH',
       'diam': 'DIAM',
       'height': 'HEIGHT',
-      'length': 'LENGTH',
+      'topSide': 'TOP SIDE',
       'polishCode': 'POLISH',
       'symmetryCode': 'SYMMETRY',
       'fluoCode': 'FLUO',
@@ -878,6 +917,25 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
       onCancel: _resetForm,
       onDelete: _isEditMode ? _onDelete : null,
       onSearch: () => setState(() => _showTableOnMobile = true),
+      extraActions: [
+        SizedBox(width: 10),
+        if (_detRows.isNotEmpty)
+          Tooltip(
+            message: 'Export loaded details to Excel',
+            child: InkWell(
+              onTap: _exportToExcel,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF107C41),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.table_view, size: 20, color: Colors.white),
+              ),
+            ),
+          ),
+      ],
       detailBuilder: (ctx) {
         final t = ctx.erpTheme;
         return Column(
@@ -901,6 +959,71 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
         );
       },
     );
+  }
+
+  Future<void> _exportToExcel() async {
+    if (_detRows.isEmpty) {
+      _showSnack('No detail rows to export.');
+      return;
+    }
+
+    try {
+      final mstId = _formValues['jobWorkIssMstID'] ?? '0';
+      final dateStr = _formValues['date'] ?? '';
+
+      String partyName = '';
+      if (_selectedPartyMstID != null) {
+        final counterProv = context.read<CounterProvider>();
+        partyName = counterProv.list
+                .firstWhereOrNull((e) => e.crId == _selectedPartyMstID)
+                ?.crName ??
+            '';
+      }
+
+      String processName = '';
+      if (_selectedDeptProcessCode != null) {
+        final procProv = context.read<DeptProcessProvider>();
+        processName = procProv.list
+                .firstWhereOrNull(
+                  (e) => e.deptProcessCode == _selectedDeptProcessCode,
+                )
+                ?.deptProcessName ??
+            '';
+      }
+
+      final dateFormatted = dateStr.replaceAll('/', '-');
+      final fileName = (mstId.isNotEmpty && mstId != '0')
+          ? 'JobWorkIssue_${mstId}_$dateFormatted.xlsx'
+          : 'JobWorkIssue_Details_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
+      // Specify any columns you want excluded from the export here
+      final excludedColumns = {'wt', 'issWt'};
+      final exportCols = _activeDetColumns.where((c) => !excludedColumns.contains(c)).toList();
+
+      final savedPath = await JobWorkIssueExcelService.exportDetails(
+        masterId: mstId,
+        date: dateStr,
+        partyName: partyName,
+        processName: processName,
+        rows: _detRows,
+        columns: exportCols, // <--- pass filtered list
+        columnLabels: {
+          for (final c in exportCols) c: _colLabel(c),
+        },
+        fileName: fileName,
+      );
+
+      if (!mounted) return;
+
+      if (savedPath != null && savedPath.isNotEmpty) {
+        _showSnack('Excel exported: $fileName');
+      } else {
+        _showSnack('Excel exported successfully: $fileName');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnack('Failed to export Excel: $e');
+      }
+    }
   }
 
   Map<String, String> _buildFooterTotals() {
@@ -941,9 +1064,12 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
   Widget _buildTable(JobWorkIssueEntryProvider prov) {
     final data = prov.list.map((e) {
       return {
+        // Display and camelCase keys
         'jobWorkIssMstID': e.jobWorkIssMstID?.toString() ?? '',
         'date': _formatDate(e.jobWorkIssDate),
+        'jobWorkIssDate': e.jobWorkIssDate,
         'time': e.time ?? '',
+        'partyMstID': e.partyMstID.toString(),
         'partyName': e.partyName ?? '',
         'deptProcessCode': e.deptProcessCode,
         'deptProcessName': e.deptProcessName ?? '',
@@ -954,6 +1080,22 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
         'issPc': (e.issPc ?? 0).toString(),
         'totalDmWt': fThreeDecimal(e.totalDmWt ?? 0),
         'totalDmPer': (e.totalDmPer ?? 0).toStringAsFixed(2),
+
+        // Master API / PascalCase keys matching server response
+        'JobWorkIssMstID': e.jobWorkIssMstID,
+        'JobWorkIssDate': e.jobWorkIssDate,
+        'Time': e.time ?? '',
+        'PartyMstID': e.partyMstID,
+        'PartyName': e.partyName ?? '',
+        'DeptProcessCode': e.deptProcessCode,
+        'DeptProcessName': e.deptProcessName ?? '',
+        'Jno': e.jno,
+        'Pkt': e.pkt,
+        'Pc': e.totalPc,
+        'Wt': e.totalWt,
+        'IssPc': e.issPc,
+        'DmWt': e.totalDmWt,
+        'DmPer': e.totalDmPer,
       };
     }).toList();
 
