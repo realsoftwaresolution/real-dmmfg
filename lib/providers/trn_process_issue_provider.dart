@@ -41,6 +41,17 @@ class ProcessIssueEntryProvider extends BaseProvider {
     return dets;
   }
 
+  // ── LOAD SUMMARY REPORT ────────────────────────────────────────────────────
+  Future<dynamic> loadSummaryReport(int mstID) async {
+    final result = await request<dynamic>(
+      call: () => api.get('/spkProcessIss/details/$mstID?isSummary=true'),
+      onSuccess: (res) {
+        return res.data;
+      },
+    );
+    return result;
+  }
+
   // ── LOAD ALL ──────────────────────────────────────────────────────────────
   Future<void> load() async {
     final result = await request<List<ProcessIssueMstModel>>(

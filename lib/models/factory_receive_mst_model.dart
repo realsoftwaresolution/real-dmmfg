@@ -278,6 +278,7 @@ class FactoryReceiveDetModel {
   final String? SellCode;
   final double? SellAmount;
   final double? SellRate;
+  final String? unCutBreak;
 
   const FactoryReceiveDetModel({
     this.pairNo,
@@ -442,6 +443,7 @@ class FactoryReceiveDetModel {
     this.fColorCode2,
     this.ha,
     this.topSide, this.SellCode, this.SellAmount, this.SellRate,
+    this.unCutBreak,
   });
 
   factory FactoryReceiveDetModel.fromJson(Map<String, dynamic> json) =>
@@ -609,6 +611,11 @@ class FactoryReceiveDetModel {
         ha: json['HA']?.toString(),
         groupType: json['GroupType']?.toString(),
         topSide: json['TopSide']?.toString(),
+        unCutBreak: json['UnCutBreak']?.toString() ??
+            json['unCutBreak']?.toString() ??
+            json['UnCutOrBreak']?.toString() ??
+            json['unCutOrBreak']?.toString() ??
+            json['Status']?.toString(),
         sarinData: (json['sarinData'] as List?)
             ?.map((e) => Map<String, dynamic>.from(e as Map))
             .toList() ?? [],
@@ -710,10 +717,10 @@ class FactoryReceiveDetModel {
     if (mackRoughWt      != null) 'MackRoughWt':      mackRoughWt,
     if (rateRs           != null) 'RateRs':           rateRs,
     if (amountRs         != null) 'AmountRs':         amountRs,
-     'RateID':           rateID,
-     'Rateon':           rateon,
-     'Rate':             rate,
-     'Amount':           amount,
+    'RateID':           rateID,
+    'Rateon':           rateon,
+    'Rate':             rate,
+    'Amount':           amount,
     if (ratio            != null) 'Ratio':            ratio,
     if (pcName           != null) 'PcName':           pcName,
     if (machineSrNo      != null) 'MachineSrNo':      machineSrNo,
@@ -785,6 +792,7 @@ class FactoryReceiveDetModel {
     if (ha            != null) 'HA':             ha,
     if (groupType            != null) 'GroupType':             groupType,
     if (topSide       != null) 'TopSide':        topSide,
+    if (unCutBreak    != null && unCutBreak!.isNotEmpty) 'UnCutBreak': unCutBreak,
   };
 
 
@@ -954,6 +962,7 @@ class FactoryReceiveDetModel {
     String? SellCode,
     double? SellAmount,
     double? SellRate,
+    String? unCutBreak,
   }) =>
       FactoryReceiveDetModel(
         factoryIssDetID: factoryIssDetID ?? this.factoryIssDetID,
@@ -1121,6 +1130,7 @@ class FactoryReceiveDetModel {
         SellRate: SellRate ?? this.SellRate,
         SellAmount: SellAmount ?? this.SellAmount,
         SellCode: SellCode ?? this.SellCode,
+        unCutBreak: unCutBreak ?? this.unCutBreak,
       );
 
   static double? _d(dynamic v) {

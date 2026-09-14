@@ -1197,22 +1197,27 @@ class _TrnRepairIssueEntryState extends State<TrnRepairIssueEntry> {
     if (_detRows.isEmpty) return;
 
     final prov = context.read<RepairIssueEntryProvider>();
-    final masterId =
-        (_detRows.first.spkDeptIssMstID ?? prov.list.firstOrNull?.repairIssMstID ?? prov.list.firstOrNull?.factoryIssMstID ?? 0)
-            .toInt();
-    final summaryModel = await prov.loadSummaryReport(masterId);
+    final masterId = (int.tryParse(
+              _formValues['repairIssMstID']?.toString() ??
+                  _formValues['factoryIssMstID']?.toString() ??
+                  _selectedRow?['repairIssMstID']?.toString() ??
+                  _selectedRow?['factoryIssMstID']?.toString() ??
+                  '',
+            ) ??
+            _detRows.first.spkDeptIssMstID ??
+            prov.list.firstOrNull?.repairIssMstID ??
+            prov.list.firstOrNull?.factoryIssMstID ??
+            0)
+        .toInt();
+
     final companies = context.read<CompanyProvider>().companies;
     final selectedCompany = context.read<CompanyProvider>().selectedCompanyCode;
     final company = companies.firstWhereOrNull(
-          (e) => e.companyCode.toString() == selectedCompany.toString(),
+      (e) => e.companyCode.toString() == selectedCompany.toString(),
     );
     _selectedCompany = company;
     if (!mounted) return;
 
-    if (summaryModel == null) {
-      _showSnack('Failed to load summary data.');
-      return;
-    }
     // ── DETAIL REPORT ─────────────────────────────────────────
     if (_entryVals['report'] == 'REPORT') {
       final pdfData = JobWorkPdfModel(
@@ -1238,6 +1243,14 @@ class _TrnRepairIssueEntryState extends State<TrnRepairIssueEntry> {
     }
     // ── SUMMARY REPORT ─────────────────────────────────────
     else if (_entryVals['report'] == 'SUMMARY') {
+      final summaryModel = await prov.loadSummaryReport(masterId);
+      if (!mounted) return;
+
+      if (summaryModel == null) {
+        _showSnack('Failed to load summary data.');
+        return;
+      }
+
       final dataRows = summaryModel.summary
           .where((r) => !r.isGrandTotal)
           .toList();
@@ -1269,9 +1282,13 @@ class _TrnRepairIssueEntryState extends State<TrnRepairIssueEntry> {
         );
       }).toList();
 
+      final party = (_selectedFactory?.factoryName != null && _selectedFactory!.factoryName!.isNotEmpty)
+          ? _selectedFactory!.factoryName!
+          : (summaryModel.factoryName?.isNotEmpty == true ? summaryModel.factoryName! : 'REPAIR');
+
       final summaryPdfData = JobWorkPdfModel(
         headerInfo: _selectedCompany,
-        partyName: _selectedFactory?.factoryName ?? 'REPAIR',
+        partyName: party,
         partyType: _selectedFactory?.factoryType ?? 'REPAIR ISSUE',
         jobNo: masterId.toString(),
         date: _formValues['date']?.toString() ?? '',

@@ -789,21 +789,54 @@ class RepairIssueDetModel {
 //  RepairIssueSummaryModel & SummaryRow
 // ─────────────────────────────────────────────────────────────────────────────
 class RepairIssueSummaryModel {
+  final String? factoryName;
+  final String? factoryAddress;
+  final String? gstNo;
+  final String? counterName;
   final List<RepairIssueSummaryRow> summary;
 
-  const RepairIssueSummaryModel({required this.summary});
+  const RepairIssueSummaryModel({
+    this.factoryName,
+    this.factoryAddress,
+    this.gstNo,
+    this.counterName,
+    required this.summary,
+  });
 
   factory RepairIssueSummaryModel.fromJson(Map<String, dynamic> json) {
-    final list = json['data'] as List? ?? json['summary'] as List? ?? [];
+    Map<String, dynamic>? dataMap;
+    List<dynamic>? list;
+
+    if (json['data'] is Map<String, dynamic>) {
+      dataMap = json['data'] as Map<String, dynamic>;
+      if (dataMap['summary'] is List) {
+        list = dataMap['summary'] as List;
+      } else if (dataMap['data'] is List) {
+        list = dataMap['data'] as List;
+      }
+    } else if (json['data'] is List) {
+      list = json['data'] as List;
+    } else if (json['summary'] is List) {
+      list = json['summary'] as List;
+    }
+
+    list ??= [];
+
     return RepairIssueSummaryModel(
+      factoryName: dataMap?['FactoryName']?.toString() ?? json['FactoryName']?.toString(),
+      factoryAddress: dataMap?['FactoryAddress']?.toString() ?? json['FactoryAddress']?.toString(),
+      gstNo: dataMap?['GstNo']?.toString() ?? json['GstNo']?.toString(),
+      counterName: dataMap?['CounterName']?.toString() ?? json['CounterName']?.toString(),
       summary: list
-          .map((e) => RepairIssueSummaryRow.fromJson(e as Map<String, dynamic>))
+          .where((e) => e is Map)
+          .map((e) => RepairIssueSummaryRow.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList(),
     );
   }
 }
 
 class RepairIssueSummaryRow {
+  final String? sr;
   final String? groupName;
   final int? pkt;
   final int? pc;
@@ -816,9 +849,12 @@ class RepairIssueSummaryRow {
   final String size;
   final int totalPc;
   final double totalWt;
+  final int? totalIssPc;
+  final double? totalIssWt;
   final bool isGrandTotal;
 
   const RepairIssueSummaryRow({
+    this.sr,
     this.groupName,
     this.pkt,
     this.pc,
@@ -831,26 +867,40 @@ class RepairIssueSummaryRow {
     this.size = '',
     this.totalPc = 0,
     this.totalWt = 0.0,
+    this.totalIssPc,
+    this.totalIssWt,
     this.isGrandTotal = false,
   });
 
   factory RepairIssueSummaryRow.fromJson(Map<String, dynamic> json) {
+    final srVal = json['Sr']?.toString() ?? json['sr']?.toString();
+    final isGt = json['IsGrandTotal'] == true ||
+        json['isGrandTotal'] == true ||
+        (srVal != null && srVal.trim().toLowerCase() == 'grand total') ||
+        json['CutNo']?.toString().trim().toLowerCase() == 'grand total' ||
+        json['cutNo']?.toString().trim().toLowerCase() == 'grand total';
+
+    final totalPktNum = json['TotalPkt'] ?? json['totalPkt'] ?? json['Pkt'] ?? json['pkt'];
+    final totalPcNum = json['TotalPc'] ?? json['totalPc'] ?? json['IssPc'] ?? json['issPc'] ?? json['Pc'] ?? json['pc'];
+    final totalWtNum = json['TotalWt'] ?? json['totalWt'] ?? json['IssWt'] ?? json['issWt'] ?? json['Wt'] ?? json['wt'];
+
     return RepairIssueSummaryRow(
+      sr: srVal,
       groupName: json['GroupName']?.toString() ?? json['groupName']?.toString(),
-      pkt: json['Pkt'] ?? json['pkt'],
-      pc: json['Pc'] ?? json['pc'],
-      wt: (json['Wt'] as num?)?.toDouble(),
-      issPc: json['IssPc'] ?? json['issPc'],
-      issWt: (json['IssWt'] as num?)?.toDouble(),
+      pkt: (json['Pkt'] as num?)?.toInt() ?? (json['pkt'] as num?)?.toInt(),
+      pc: (json['Pc'] as num?)?.toInt() ?? (json['pc'] as num?)?.toInt(),
+      wt: (json['Wt'] as num?)?.toDouble() ?? (json['wt'] as num?)?.toDouble(),
+      issPc: (json['IssPc'] as num?)?.toInt() ?? (json['issPc'] as num?)?.toInt(),
+      issWt: (json['IssWt'] as num?)?.toDouble() ?? (json['issWt'] as num?)?.toDouble(),
       cutNo: json['CutNo']?.toString() ?? json['cutNo']?.toString() ?? json['GroupName']?.toString() ?? '',
       articalName: json['ArticalName']?.toString() ?? json['articalName']?.toString() ?? '',
-      totalPkt: json['TotalPkt'] ?? json['totalPkt'] ?? json['Pkt'] ?? json['pkt'] ?? 0,
+      totalPkt: (totalPktNum as num?)?.toInt() ?? 0,
       size: json['Size']?.toString() ?? json['size']?.toString() ?? '',
-      totalPc: json['TotalPc'] ?? json['totalPc'] ?? json['IssPc'] ?? json['issPc'] ?? json['Pc'] ?? json['pc'] ?? 0,
-      totalWt: (json['TotalWt'] ?? json['totalWt'] ?? json['IssWt'] ?? json['issWt'] ?? json['Wt'] ?? json['wt'] ?? 0) is double
-          ? (json['TotalWt'] ?? json['totalWt'] ?? json['IssWt'] ?? json['issWt'] ?? json['Wt'] ?? json['wt'] ?? 0) as double
-          : ((json['TotalWt'] ?? json['totalWt'] ?? json['IssWt'] ?? json['issWt'] ?? json['Wt'] ?? json['wt'] ?? 0) as num).toDouble(),
-      isGrandTotal: json['IsGrandTotal'] == true || json['isGrandTotal'] == true,
+      totalPc: (totalPcNum as num?)?.toInt() ?? 0,
+      totalWt: (totalWtNum as num?)?.toDouble() ?? 0.0,
+      totalIssPc: (json['TotalIssPc'] as num?)?.toInt() ?? (json['totalIssPc'] as num?)?.toInt(),
+      totalIssWt: (json['TotalIssWt'] as num?)?.toDouble() ?? (json['totalIssWt'] as num?)?.toDouble(),
+      isGrandTotal: isGt,
     );
   }
 }

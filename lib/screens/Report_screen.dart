@@ -46,6 +46,8 @@ import 'package:universal_html/html.dart' as html;
 import 'package:pdfx/pdfx.dart';
 
 import '../bootstrap.dart';
+import '../services/pair_excel_export_service.dart';
+import '../services/pair_label_pdf_service.dart';
 import 'pair_media_detail_dialog.dart';
 
 class ReportScreen extends StatefulWidget {
@@ -101,6 +103,7 @@ class _ReportScreenState extends State<ReportScreen> {
   int? _toDeptCodeVal;
 
   int? _editingDetIndex;
+  List<Map<String, dynamic>> _selectedTableRows = [];
 
   // ── PAIR_REPORT Editing state ──────────────────────────────────────────────
   // ── PAIR_REPORT Editing state ──────────────────────────────────────────────
@@ -330,9 +333,20 @@ class _ReportScreenState extends State<ReportScreen> {
     final pktNoVal = row != null
         ? '${row['PktNo'] ?? row['pktNo'] ?? row['packetNo'] ?? row['PacketNo'] ?? ''}'
         : '';
-    final pairNoVal = row != null
-        ? '${row['PairNo'] ?? row['pairNo'] ?? ''}'
+    final rawPairNo = row != null
+        ? (row['PairNo'] ??
+            row['pairNo'] ??
+            row['raw']?['PairNo'] ??
+            row['raw']?['pairNo'] ??
+            '')
         : '';
+    final pairNoStr = '$rawPairNo'.trim();
+    final pairNoVal = (pairNoStr == '-' ||
+            pairNoStr == '--' ||
+            pairNoStr == 'null' ||
+            pairNoStr == '0')
+        ? ''
+        : pairNoStr;
     final groupTypeVal = row != null
         ? '${row['GroupType'] ?? row['groupType'] ?? row['category'] ?? ''}'
         : '';
@@ -379,10 +393,15 @@ class _ReportScreenState extends State<ReportScreen> {
         ? '${row['CertiNo'] ?? row['certiNo'] ?? row['certificateNo'] ?? ''}'
         : '';
 
+    final status = row != null
+        ? '${row['Status'] ?? ''}'
+        : '';
+
     _pairControllers['DetID']?.text = detIdVal;
     _pairControllers['PktNo']?.text = pktNoVal;
     _pairControllers['KapanNo']?.text = kapanNoVal;
     _pairControllers['PairNo']?.text = pairNoVal;
+    _pairControllers['pairNo']?.text = pairNoVal;
     _pairControllers['GroupType']?.text = groupTypeVal;
     _pairControllers['Wt']?.text = wtVal;
     _pairControllers['IssWt']?.text = issWtVal;
@@ -395,6 +414,7 @@ class _ReportScreenState extends State<ReportScreen> {
     _pairControllers['TopSide']?.text = topSideVal;
     _pairControllers['Certificate']?.text = certificateVal;
     _pairControllers['CertiNo']?.text = certiNoVal;
+    _pairControllers['Status']?.text = status;
 
     String? selectedColor = colorVal.isNotEmpty ? colorVal : null;
     String? selectedPurity = clarityVal.isNotEmpty ? clarityVal : null;
@@ -688,6 +708,7 @@ class _ReportScreenState extends State<ReportScreen> {
                               },
                             ),
                             _buildTextField('CertiNo', 'CERTI NO', theme),
+                            _buildTextField('Status', 'STATUS', theme),
                           ],
                         ),
                       ),
@@ -727,9 +748,14 @@ class _ReportScreenState extends State<ReportScreen> {
                         const SizedBox(width: 12),
                         ElevatedButton.icon(
                           onPressed: () async {
+                            final pairNoInput =
+                                _pairControllers['PairNo']?.text.trim().isNotEmpty == true
+                                    ? _pairControllers['PairNo']!.text.trim()
+                                    : _pairControllers['pairNo']?.text.trim();
                             await _savePairRowFromDialog(
                               originalRow: row,
                               index: index,
+                              pairNo: pairNoInput,
                               color: selectedColor,
                               purity: selectedPurity,
                               cut: selectedCut,
@@ -1020,6 +1046,7 @@ class _ReportScreenState extends State<ReportScreen> {
     required String? kapanNo,
     required String? groupType,
     required String? certificate,
+    required String? pairNo,
   }) async {
     final reportProv = context.read<ReportProvider>();
     final existingRow =
@@ -1149,6 +1176,11 @@ class _ReportScreenState extends State<ReportScreen> {
         ? topSideText
         : existingRow?['TopSide'];
 
+    final statusText = _pairControllers['Status']?.text.trim();
+    final statusVal = (statusText != null && statusText.isNotEmpty)
+        ? statusText
+        : existingRow?['Status'];
+
     final groupTypeText = _pairControllers['GroupType']?.text.trim();
     final groupTypeVal = (groupType != null && groupType.isNotEmpty)
         ? groupType
@@ -1167,13 +1199,6 @@ class _ReportScreenState extends State<ReportScreen> {
     final certiNoVal = (certiNoText != null && certiNoText.isNotEmpty)
         ? certiNoText
         : existingRow?['CertiNo'];
-
-    final pairNoText = _pairControllers['PairNo']?.text.trim();
-    final pairNoVal = (pairNoText != null && pairNoText.isNotEmpty)
-        ? (int.tryParse(pairNoText) ?? 0)
-        : (existingRow?['PairNo'] is num
-              ? existingRow!['PairNo'].toInt()
-              : int.tryParse(existingRow?['PairNo']?.toString() ?? '') ?? 0);
 
     final kapanVal = (kapanNo != null && kapanNo.isNotEmpty)
         ? kapanNo
@@ -1200,8 +1225,9 @@ class _ReportScreenState extends State<ReportScreen> {
       "GroupType": groupTypeVal,
       "Certificate": certVal,
       "CertiNo": certiNoVal,
-      "PairNo": pairNoVal.toString(),
+      "PairNo": pairNo.toString(),
       "ShapeCode": shapeCodeVal,
+      "Status": statusVal,
     };
 
     final factoryProv = context.read<FactoryReceivedEntryProvider>();
@@ -1239,7 +1265,7 @@ class _ReportScreenState extends State<ReportScreen> {
       updatedRow['BCode'] = bCodeVal;
       updatedRow['KapanNo'] = kapanVal ?? '-';
       updatedRow['PktNo'] = pktNoVal ?? '-';
-      updatedRow['PairNo'] = '$pairNoVal';
+      updatedRow['PairNo'] = '$pairNo';
       updatedRow['GroupType'] = groupTypeVal ?? '-';
       updatedRow['ShapeCode'] = shapeCodeVal;
       updatedRow['Shape'] = shapeVal ?? '-';
@@ -1284,7 +1310,7 @@ class _ReportScreenState extends State<ReportScreen> {
       updatedRow['category'] = groupTypeVal ?? '-';
       updatedRow['certificate'] = certVal ?? '-';
       updatedRow['certificateNo'] = certiNoVal ?? '-';
-      updatedRow['pairNo'] = '$pairNoVal';
+      updatedRow['pairNo'] = '$pairNo';
 
       if (index != null && index >= 0 && index < reportProv.tableData.length) {
         reportProv.updateRow(index, updatedRow);
@@ -1752,6 +1778,10 @@ class _ReportScreenState extends State<ReportScreen> {
     print('FINAL FILTER');
     print(jsonEncode(filter));
 
+    setState(() {
+      _selectedTableRows.clear();
+    });
+
     await prov.loadReport(
       reportTypeCode: registryKey,
       filter: filter,
@@ -1776,6 +1806,7 @@ class _ReportScreenState extends State<ReportScreen> {
     _multiSelectValues?.clear();
     context.read<ReportProvider>().clear();
     setState(() {
+      _selectedTableRows.clear();
       _editingDetIndex = null;
       _fromCrId = _toCrId = null;
       _fromDeptName = _toDeptName = null;
@@ -1949,6 +1980,12 @@ class _ReportScreenState extends State<ReportScreen> {
                 isReportRow: false,
                 showFooterTotals: true,
                 showCheckBox: isPairReport,
+                selectedRowsCheckBox: _selectedTableRows,
+                onSelectionChanged: (rows) {
+                  setState(() {
+                    _selectedTableRows = rows;
+                  });
+                },
                 headerActions: isPairReport
                     ? [
                         Padding(
@@ -1959,6 +1996,37 @@ class _ReportScreenState extends State<ReportScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  final rowsToPrint = _selectedTableRows.isNotEmpty
+                                      ? _selectedTableRows
+                                      : prov.tableData;
+                                  if (rowsToPrint.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('No records to print')),
+                                    );
+                                    return;
+                                  }
+                                  PairLabelPdfService.printPairLabels(
+                                    context: context,
+                                    selectedRows: rowsToPrint,
+                                    allReportRows: prov.tableData,
+                                  );
+                                },
+                                icon: const Icon(Icons.label, size: 18),
+                                label: Text(_selectedTableRows.isNotEmpty
+                                    ? 'Print Labels (${_selectedTableRows.length})'
+                                    : 'Print Labels'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.teal.shade700,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 0,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
                               ElevatedButton.icon(
                                 onPressed: () => _fetchAndPrintPairPdf(context),
                                 icon: const Icon(Icons.print, size: 18),
@@ -1971,6 +2039,36 @@ class _ReportScreenState extends State<ReportScreen> {
                                     vertical: 0,
                                   ),
                                 ),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                onPressed: () {
+                                  final rowsToExport = _selectedTableRows.isNotEmpty
+                                      ? _selectedTableRows
+                                      : prov.tableData;
+                                  if (rowsToExport.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('No records to export')),
+                                    );
+                                    return;
+                                  }
+                                  PairExcelExportService.exportPairExcel(
+                                    context: context,
+                                    selectedRows: rowsToExport,
+                                    allReportRows: prov.tableData,
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 0,
+                                  ),
+                                ),
+                                child: Text(_selectedTableRows.isNotEmpty
+                                    ? 'Export Excel (${_selectedTableRows.length})'
+                                    : 'Export Excel'),
                               ),
                             ],
                           ),
@@ -2058,6 +2156,19 @@ class _ReportScreenState extends State<ReportScreen> {
       },
     );
   }
+  String getDate(dynamic value1, dynamic value2) {
+    if (value1 != null && value1.toString().trim().isNotEmpty) {
+      return value1.toString();
+    }
+
+    if (value2 != null && value2.toString().trim().isNotEmpty) {
+      return value2.toString();
+    }
+
+    final now = DateTime.now();
+
+    return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  }
 
   Future<void> _fetchAndPrintPairPdf(BuildContext context) async {
     try {
@@ -2065,9 +2176,16 @@ class _ReportScreenState extends State<ReportScreen> {
       final String? token = AppStorage.getString('token');
 
       final filter = Map<String, dynamic>.from(_entryVals);
+
       final queryParams = <String, dynamic>{
-        'fromDate': filter['fromDate'] ?? filter['FromDate'] ?? '2025-01-01',
-        'toDate': filter['toDate'] ?? filter['ToDate'] ?? '2026-07-31',
+        'fromDate': getDate(
+          filter['fromDate'],
+          filter['FromDate'],
+        ),
+        'toDate': getDate(
+          filter['toDate'],
+          filter['ToDate'],
+        ),
       };
 
       if (filter['kNo'] != null || filter['KapanNo'] != null) {
@@ -2091,7 +2209,10 @@ class _ReportScreenState extends State<ReportScreen> {
       );
 
       if (response.statusCode == 200 && response.data != null) {
+        print('response.data');
+        print(response.data);
         final pdfBytes = Uint8List.fromList(List<int>.from(response.data));
+        print(pdfBytes);
         await Printing.layoutPdf(onLayout: (_) async => pdfBytes);
       } else {
         if (context.mounted) {

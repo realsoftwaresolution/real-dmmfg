@@ -1,11 +1,14 @@
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
+import 'package:diam_mfg/models/company_model.dart';
 import 'package:diam_mfg/models/job_work_issue_model.dart';
+import 'package:diam_mfg/providers/company_provider.dart';
 import 'package:diam_mfg/providers/counter_provider.dart';
 import 'package:diam_mfg/providers/dept_process_provider.dart';
 import 'package:diam_mfg/providers/dept_provider.dart';
 import 'package:diam_mfg/providers/job_work_issue_entry_provider.dart';
+import 'package:diam_mfg/services/generateJobWorkPdf.dart';
 import 'package:diam_mfg/services/job_work_issue_excel_service.dart';
 import 'package:diam_mfg/utils/app_images.dart';
 import 'package:diam_mfg/utils/constants.dart';
@@ -14,6 +17,7 @@ import 'package:diam_mfg/utils/msg_dialogue.dart';
 import 'package:erp_data_table/erp_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
 import '../models/user_visibility_model.dart';
@@ -80,7 +84,11 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
 
   void _setDefaultFormValues() {
     final now = DateTime.now();
-    _formValues = {'date': DateFormat('dd/MM/yy').format(now)};
+    _formValues = {
+      'date': DateFormat('dd/MM/yy').format(now),
+      'report': 'REPORT',
+    };
+    _entryVals['report'] = 'REPORT';
     if (mounted) setState(() {});
   }
 
@@ -422,6 +430,7 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
         'jobWorkIssMstID': id.toString(),
         'partyMstID': partyIdStr,
         'deptProcessCode': processCodeStr,
+        'report': _formValues['report'] ?? _entryVals['report'] ?? 'REPORT',
       };
       _selectedPartyMstID = int.tryParse(_formValues['partyMstID'] ?? '0');
       final counterProvider = context.read<CounterProvider>();
@@ -467,6 +476,10 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
         _erpFormKey.currentState?.updateFieldValue(
           'deptProcessCode',
           _formValues['deptProcessCode'] ?? '',
+        );
+        _erpFormKey.currentState?.updateFieldValue(
+          'report',
+          _formValues['report'] ?? 'REPORT',
         );
         _erpFormKey.currentState?.focusField('scanValue');
       } catch (_) {}
@@ -738,6 +751,19 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
           type: ErpFieldType.text,
           sectionIndex: 0,
         ),
+        ErpFieldConfig(
+          key: 'report',
+          label: '',
+          type: ErpFieldType.radio,
+          radioDirection: Axis.horizontal,
+          isRadioRow: true,
+          radioItems: [
+            ErpRadioOption(label: 'Details', value: 'REPORT'),
+            ErpRadioOption(label: 'Summary', value: 'SUMMARY'),
+          ],
+          width: 250,
+          sectionIndex: 0,
+        ),
       ],
     ];
 
@@ -845,6 +871,300 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
     );
   }
 
+  CompanyModel? _selectedCompany;
+
+  Future<void> printJobWorkPdf() async {
+    final companies = context.read<CompanyProvider>().companies;
+    final selectedCompany = context.read<CompanyProvider>().selectedCompanyCode;
+    final company = companies.firstWhereOrNull(
+          (e) => e.companyCode.toString() == selectedCompany.toString(),
+    ) ?? companies.firstOrNull;
+    _selectedCompany = company;
+    setState(() {});
+
+    if (_detRows.isEmpty) {
+      _showSnack('No detail rows to print.');
+      return;
+    }
+
+    final prov = context.read<JobWorkIssueEntryProvider>();
+
+    // ── 1. Party resolution ──────────────────────────────────────────────────
+    final partyId = _selectedPartyMstID ??
+        int.tryParse(_formValues['partyMstID'] ?? '') ??
+        _detRows.firstOrNull?.partyMstID ??
+        int.tryParse(_selectedRow?['PartyMstID']?.toString() ??
+            _selectedRow?['partyMstID']?.toString() ??
+            '');
+
+    final counterProv = context.read<CounterProvider>();
+    final partyCounter = partyId != null
+        ? counterProv.list.firstWhereOrNull((e) => e.crId == partyId)
+        : null;
+
+    final partyName = partyCounter?.crName ??
+        _selectedRow?['PartyName']?.toString() ??
+        _selectedRow?['partyName']?.toString() ??
+        '';
+
+    final cvdPartyCode = partyCounter?.CVDPartyCode?.toString() ??
+        _selectedRow?['CVDPartyCode']?.toString() ??
+        _selectedRow?['cvdPartyCode']?.toString() ??
+        '';
+
+    final naturalPartyCode = partyCounter?.NaturalPartyCode?.toString() ??
+        _selectedRow?['NaturalPartyCode']?.toString() ??
+        _selectedRow?['naturalPartyCode']?.toString() ??
+        '';
+
+    // ── 2. Dept & Process resolution ─────────────────────────────────────────
+    final deptCode = _selectedDeptCode ??
+        partyCounter?.deptCode ??
+        _detRows.firstOrNull?.deptCode;
+    final deptName = _deptNameFor(deptCode);
+
+    final processCode = _selectedDeptProcessCode ??
+        int.tryParse(_formValues['deptProcessCode'] ?? '') ??
+        _detRows.firstOrNull?.deptProcessCode ??
+        int.tryParse(_selectedRow?['DeptProcessCode']?.toString() ??
+            _selectedRow?['deptProcessCode']?.toString() ??
+            '');
+
+    String processName = '';
+    if (processCode != null) {
+      final procProv = context.read<DeptProcessProvider>();
+      processName = procProv.list
+              .firstWhereOrNull((e) => e.deptProcessCode == processCode)
+              ?.deptProcessName ??
+          '';
+    }
+    if (processName.isEmpty) {
+      processName = _selectedRow?['DeptProcessName']?.toString() ??
+          _selectedRow?['deptProcessName']?.toString() ??
+          '';
+    }
+
+    final partyType = [deptName, processName]
+        .where((s) => s.trim().isNotEmpty)
+        .join(' - ');
+
+    // ── 3. Master ID & Job No ────────────────────────────────────────────────
+    final masterId = int.tryParse(_formValues['jobWorkIssMstID'] ?? '') ??
+        _detRows.firstOrNull?.jobWorkIssMstID ??
+        int.tryParse(_selectedRow?['JobWorkIssMstID']?.toString() ??
+            _selectedRow?['jobWorkIssMstID']?.toString() ??
+            '') ??
+        prov.list.firstOrNull?.jobWorkIssMstID ??
+        0;
+
+    final jno = _detRows.firstOrNull?.jno ??
+        int.tryParse(_selectedRow?['Jno']?.toString() ??
+            _selectedRow?['jno']?.toString() ??
+            '') ??
+        (masterId != 0 ? masterId : null);
+
+    final jobNo = (jno != null && jno != 0) ? jno.toString() : masterId.toString();
+
+    // ── 4. Date ──────────────────────────────────────────────────────────────
+    final rawDate = _formValues['date'] ??
+        _detRows.firstOrNull?.jobWorkIssDate ??
+        _selectedRow?['JobWorkIssDate']?.toString() ??
+        _selectedRow?['date']?.toString() ??
+        '';
+    final dateStr = rawDate.isNotEmpty
+        ? _date(rawDate)
+        : DateFormat('dd/MM/yy').format(DateTime.now());
+
+    // ── 5. Detail Items mapping ──────────────────────────────────────────────
+    final detailItems = _detRows.map((e) {
+      final kapan = e.cutNo.isNotEmpty
+          ? e.cutNo
+          : (e.mfgCut.isNotEmpty ? e.mfgCut : '');
+      final bCode = e.bCode != 0 ? e.bCode.toString() : '';
+      final pktNo = e.pktNo;
+      final artical = (e.articalName != null && e.articalName!.isNotEmpty)
+          ? e.articalName!
+          : ((e.shapeName != null && e.shapeName!.isNotEmpty)
+              ? e.shapeName!
+              : (e.shape ?? ''));
+      final pcs = (e.issPc > 0
+              ? e.issPc
+              : (e.pc > 0 ? e.pc : (e.recPc ?? 0)))
+          .toString();
+      final cts = (e.issWt > 0
+              ? e.issWt
+              : (e.wt > 0 ? e.wt : (e.recWt ?? 0.0)))
+          .toStringAsFixed(3);
+      final size = e.size > 0 ? e.size.toStringAsFixed(2) : '';
+
+      return JobWorkItem(
+        kapan: kapan,
+        bCode: bCode,
+        pktNo: pktNo,
+        type: artical,
+        pcs: pcs,
+        cts: cts,
+        size: size,
+      );
+    }).toList();
+
+    final pdfData = JobWorkPdfModel(
+      headerInfo: _selectedCompany,
+      partyName: partyName,
+      partyType: partyType,
+      jobNo: jobNo,
+      date: dateStr,
+      CVDPartyCode: cvdPartyCode,
+      NaturalPartyCode: naturalPartyCode,
+      items: detailItems,
+    );
+
+    final reportType =
+        _formValues['report'] ?? _entryVals['report'] ?? 'REPORT';
+
+    /// DETAIL REPORT
+    if (reportType == 'REPORT') {
+      final pdf = await generateJobWorkPdf(pdfData);
+      await Printing.layoutPdf(onLayout: (_) async => pdf);
+    }
+    /// SUMMARY REPORT
+    else if (reportType == 'SUMMARY') {
+      List<JobWorkItem> summaryItems = [];
+      JobWorkItem? grandTotalItem;
+
+      if (masterId > 0) {
+        final summaryModel = await prov.loadSummaryReport(masterId);
+        if (!mounted) return;
+
+        if (summaryModel != null && summaryModel.summary.isNotEmpty) {
+          final dataRows =
+              summaryModel.summary.where((r) => !r.isGrandTotal).toList();
+
+          summaryItems = dataRows.map((r) {
+            final cut = r.cutNo.isNotEmpty
+                ? r.cutNo
+                : (r.mfgCut.isNotEmpty ? r.mfgCut : '');
+            final matchedDets = _detRows
+                .where((d) => d.cutNo == cut || d.mfgCut == cut)
+                .toList();
+            final pktCount = matchedDets.isNotEmpty
+                ? matchedDets.length
+                : (r.pairNo > 0 ? r.pairNo : 1);
+            final artName = matchedDets
+                    .firstWhereOrNull(
+                        (e) => (e.articalName ?? '').isNotEmpty)
+                    ?.articalName ??
+                matchedDets
+                    .firstWhereOrNull((e) => (e.shapeName ?? '').isNotEmpty)
+                    ?.shapeName ??
+                _detRows
+                    .firstWhereOrNull(
+                        (e) => (e.articalName ?? '').isNotEmpty)
+                    ?.articalName ??
+                '';
+
+            return JobWorkItem(
+              kapan: cut,
+              bCode: pktCount.toString(),
+              pktNo: '',
+              type: artName,
+              pcs: r.pc.toString(),
+              cts: r.wt.toStringAsFixed(3),
+            );
+          }).toList();
+
+          grandTotalItem = JobWorkItem(
+            kapan: '',
+            bCode: _detRows.length.toString(),
+            pktNo: '',
+            type: '',
+            pcs: summaryModel.totalPc.toString(),
+            cts: summaryModel.totalWt.toStringAsFixed(3),
+          );
+        }
+      }
+
+      // Fallback if summaryModel is empty or masterId == 0
+      if (summaryItems.isEmpty) {
+        final Map<String, List<JobWorkIssueDetModel>> grouped = {};
+        for (final r in _detRows) {
+          final key = r.cutNo.isNotEmpty
+              ? r.cutNo
+              : (r.mfgCut.isNotEmpty ? r.mfgCut : 'OTHER');
+          grouped.putIfAbsent(key, () => []).add(r);
+        }
+
+        int totalPcs = 0;
+        double totalCts = 0.0;
+
+        summaryItems = grouped.entries.map((entry) {
+          final cut = entry.key;
+          final rows = entry.value;
+          final sumPc = rows.fold<int>(
+            0,
+            (s, e) => s +
+                (e.issPc > 0 ? e.issPc : (e.pc > 0 ? e.pc : (e.recPc ?? 0))),
+          );
+          final sumWt = rows.fold<double>(
+            0.0,
+            (s, e) => s +
+                (e.issWt > 0
+                    ? e.issWt
+                    : (e.wt > 0 ? e.wt : (e.recWt ?? 0.0))),
+          );
+          totalPcs += sumPc;
+          totalCts += sumWt;
+
+          final artName = rows
+                  .firstWhereOrNull((e) => (e.articalName ?? '').isNotEmpty)
+                  ?.articalName ??
+              rows
+                  .firstWhereOrNull((e) => (e.shapeName ?? '').isNotEmpty)
+                  ?.shapeName ??
+              '';
+
+          return JobWorkItem(
+            kapan: cut,
+            bCode: rows.length.toString(),
+            pktNo: '',
+            type: artName,
+            pcs: sumPc.toString(),
+            cts: sumWt.toStringAsFixed(3),
+          );
+        }).toList();
+
+        grandTotalItem = JobWorkItem(
+          kapan: '',
+          bCode: _detRows.length.toString(),
+          pktNo: '',
+          type: '',
+          pcs: totalPcs.toString(),
+          cts: totalCts.toStringAsFixed(3),
+        );
+      }
+
+      final summaryPdfData = JobWorkPdfModel(
+        headerInfo: _selectedCompany,
+        partyName: partyName,
+        partyType: partyType,
+        jobNo: jobNo,
+        date: dateStr,
+        CVDPartyCode: cvdPartyCode,
+        NaturalPartyCode: naturalPartyCode,
+        items: summaryItems,
+      );
+
+      final pdf = await generateJobWorkPdfSummary(
+        summaryPdfData,
+        showSize: false,
+        grandTotal: grandTotalItem,
+      );
+
+      await Printing.layoutPdf(onLayout: (_) async => pdf);
+    }
+  }
+
+
   Widget _buildForm(BuildContext context) {
     return ErpForm(
       key: _erpFormKey,
@@ -910,7 +1230,8 @@ class _TrnJobWorkIssueEntryState extends State<TrnJobWorkIssueEntry> {
 
         await _onBCodeScanned(scanVal);
       },
-      isShowPrintButton: false,
+      isShowPrintButton: true,
+      printOnPress: printJobWorkPdf,
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
       onSave: _onSave,
       isShowSaveButton: !_isEditMode,

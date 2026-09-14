@@ -189,6 +189,8 @@ class ProcessIssueDetModel {
   final double? size;
   final int?    jnoRecPc;
   final int?    partName;
+  final int?    articalCode;
+  final String? articalName;
   final int?    shapeCode;
   final int?    cutCode;
   final int?    purityCode;
@@ -282,6 +284,8 @@ class ProcessIssueDetModel {
   final dynamic orderMstId;
 
   const ProcessIssueDetModel({
+    this.articalCode,
+    this.articalName,
     this.spkDeptIssDetID,
     this.spkDeptIssMstID,
     this.spkProcessIssMstID,
@@ -476,6 +480,12 @@ class ProcessIssueDetModel {
         repairing: json['Repairing']?.toString()?.trim(),
         remarks: json['DeptRemark']?.toString() ?? json['Remarks']?.toString(),
         topsPc: json['TopsPc'],
+        articalCode: json['ArticalCode'] != null
+            ? int.tryParse(json['ArticalCode'].toString())
+            : (json['articalCode'] != null
+                ? int.tryParse(json['articalCode'].toString())
+                : null),
+        articalName: json['ArticalName']?.toString() ?? json['articalName']?.toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -630,6 +640,8 @@ class ProcessIssueDetModel {
     if (recutEmp       != null) 'RecutEmp':       recutEmp,
     if (planShape       != null) 'PlanShape':       planShape,
     if (repairing       != null) 'Repairing':       repairing,
+    if (articalCode     != null) 'ArticalCode':     articalCode,
+    if (articalName     != null) 'ArticalName':     articalName,
     if (spkProcessIssMstID != null) 'SPKProcessIssMstID': spkProcessIssMstID,
   };
 

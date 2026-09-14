@@ -3533,7 +3533,7 @@ class ReportRegistry {
         ReportColumnDef(key: 'KapanNo', label: 'KAPAN NO', width: 160),
         ReportColumnDef(key: 'PktNo', label: 'PKT NO', width: 160),
         ReportColumnDef(key: 'Shape', label: 'SHAPE', width: 140),
-        ReportColumnDef(key: 'IssWt', label: 'ISS WT', width: 140),
+        // ReportColumnDef(key: 'IssWt', label: 'ISS WT', width: 140),
         ReportColumnDef(key: 'RecWt', label: 'REC WT', width: 140),
         ReportColumnDef(key: 'Color', label: 'COLOR', width: 140),
         ReportColumnDef(key: 'Clarity', label: 'CLARITY', width: 160),
@@ -3557,7 +3557,10 @@ class ReportRegistry {
         final detId = '${e['DetID'] ?? e['detID'] ?? e['Id'] ?? e['id'] ?? '-'}';
         final kapanNo = '${e['KapanNo'] ?? e['kapanNo'] ?? '-'}';
         final pktNo = '${e['PktNo'] ?? e['pktNo'] ?? e['packetNo'] ?? e['PacketNo'] ?? '-'}';
-        final pairNo = '${e['PairNo'] ?? e['pairNo'] ?? '-'}';
+        final rawPair = e['PairNo'] ?? e['pairNo'];
+        final pairNo = (rawPair == null || rawPair == 0 || '$rawPair' == '0' || '$rawPair' == '-' || '$rawPair' == '--')
+            ? '-'
+            : '$rawPair';
         final groupType = '${e['GroupType'] ?? e['groupType'] ?? e['category'] ?? '-'}';
         final shape = '${e['Shape'] ?? e['shape'] ?? '-'}';
         final color = '${e['Color'] ?? e['color'] ?? '-'}';
@@ -3636,6 +3639,10 @@ class ReportRegistry {
           'images': e['images'] ?? e['Images'] ?? [],
           'videos': e['videos'] ?? e['Videos'] ?? [],
           'certificates': e['certificates'] ?? e['Certificates'] ?? [],
+          'raw': e,
+          'articalCode': e['ArticalCode'],
+          'articalName': e['ArticalName'],
+          'cutNo': e['CutNo'] ?? e['cutNo'],
         };
       }).toList(),
     ),

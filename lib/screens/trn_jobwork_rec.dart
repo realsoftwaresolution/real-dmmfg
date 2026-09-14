@@ -489,19 +489,55 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
     set('length', r.length.toString());
     set('pairNo', r.pairNo?.toString());
 
-    if (r.certificates != null && r.certificates!.isNotEmpty) {
-      final certVal = r.certificates!.length == 1 ? r.certificates!.first : r.certificates;
+    final validCerts = r.certificates
+        ?.where((e) => e.trim().isNotEmpty && e.trim() != 'null')
+        .toList();
+    if (validCerts != null && validCerts.isNotEmpty) {
+      final certVal = validCerts.length == 1 ? validCerts.first : validCerts;
       _pickedMediaFiles['certificate'] = certVal;
       set('certificate', certVal is List ? certVal.join(',') : certVal.toString());
+    } else {
+      _pickedMediaFiles.remove('certificate');
+      _pickedMediaFiles.remove('Certificate');
+      set('certificate', '');
+      try {
+        _erpFormKey.currentState?.updateFieldValue('certificate', '');
+      } catch (_) {}
     }
-    if (r.images != null && r.images!.isNotEmpty) {
-      _pickedMediaFiles['images'] = r.images;
-      set('images', r.images!.join(','));
+
+    final validImgs = r.images
+        ?.where((e) => e.trim().isNotEmpty && e.trim() != 'null')
+        .toList();
+    if (validImgs != null && validImgs.isNotEmpty) {
+      _pickedMediaFiles['images'] = validImgs;
+      set('images', validImgs.join(','));
+    } else {
+      _pickedMediaFiles.remove('images');
+      _pickedMediaFiles.remove('Images');
+      set('images', '');
+      try {
+        _erpFormKey.currentState?.updateFieldValue('images', '');
+      } catch (_) {}
     }
-    if (r.videos != null && r.videos!.isNotEmpty) {
-      final vidVal = r.videos!.length == 1 ? r.videos!.first : r.videos;
+
+    final validVids = r.videos
+        ?.where((e) => e.trim().isNotEmpty && e.trim() != 'null')
+        .toList();
+    if (validVids != null && validVids.isNotEmpty) {
+      final vidVal = validVids.length == 1 ? validVids.first : validVids;
       _pickedMediaFiles['videoAttachment'] = vidVal;
       set('videoAttachment', vidVal is List ? vidVal.join(',') : vidVal.toString());
+    } else {
+      _pickedMediaFiles.remove('videoAttachment');
+      _pickedMediaFiles.remove('videoattachment');
+      _pickedMediaFiles.remove('video');
+      _pickedMediaFiles.remove('Video');
+      set('videoAttachment', '');
+      set('video', '');
+      try {
+        _erpFormKey.currentState?.updateFieldValue('videoAttachment', '');
+        _erpFormKey.currentState?.updateFieldValue('video', '');
+      } catch (_) {}
     }
   }
 
@@ -561,6 +597,16 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
     final imgList = _parseMediaList(_pickedMediaFiles['images'] ?? _entryVals['images']);
     final videoList = _parseMediaList(_pickedMediaFiles['videoAttachment'] ?? _pickedMediaFiles['video'] ?? _entryVals['videoAttachment'] ?? _entryVals['video']);
 
+    final finalCertList = (_mediaUpdatedFlags['certificate'] == true || _mediaUpdatedFlags['Certificate'] == true)
+        ? (certList ?? const <String>[])
+        : (certList ?? existing.certificates);
+    final finalImgList = (_mediaUpdatedFlags['images'] == true || _mediaUpdatedFlags['Images'] == true)
+        ? (imgList ?? const <String>[])
+        : (imgList ?? existing.images);
+    final finalVideoList = (_mediaUpdatedFlags['videoAttachment'] == true || _mediaUpdatedFlags['video'] == true || _mediaUpdatedFlags['videoattachment'] == true)
+        ? (videoList ?? const <String>[])
+        : (videoList ?? existing.videos);
+
     final updated = existing.copyWith(
       recPc: int.tryParse(_entryVals['recPc'] ?? ''),
       recWt: double.tryParse(_entryVals['recWt'] ?? ''),
@@ -602,9 +648,9 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
       polishName: _polishNameFor(polishCode) ?? existing.polishName,
       symmetryName: _symmetryNameFor(symmetryCode) ?? existing.symmetryName,
       fluoName: _fluoNameFor(fluoCode) ?? existing.fluoName,
-      images: imgList ?? existing.images,
-      videos: videoList ?? existing.videos,
-      certificates: certList ?? existing.certificates,
+      images: finalImgList,
+      videos: finalVideoList,
+      certificates: finalCertList,
     );
 
     setState(() {
@@ -1207,6 +1253,8 @@ class _TrnJobWorkRecEntryState extends State<TrnJobWorkRecEntry> {
     final details = await prov.loadDetails(id);
 
     if (!mounted) return;
+
+    _clearEntryFields();
 
     setState(() {
       _selectedRow = row;

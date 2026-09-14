@@ -25,6 +25,10 @@ import 'package:rs_dashboard/rs_dashboard.dart';
 import '../providers/auth_provider.dart';
 import '../providers/purity_provider.dart';
 import '../providers/shape_provider.dart';
+import 'package:diam_mfg/models/company_model.dart';
+import 'package:diam_mfg/providers/company_provider.dart';
+import 'package:diam_mfg/services/generateJobWorkPdf.dart';
+import 'package:printing/printing.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  WIDGET
@@ -49,8 +53,14 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
 
   // ── Form ───────────────────────────────────────────────────────────────────
   GlobalKey<ErpFormState> _erpFormKey = GlobalKey<ErpFormState>();
-  Map<String, String> _formValues = {};
-  final Map<String, String> _entryVals = {};
+  Map<String, String> _formValues = {
+    'date': DateFormat('dd/MM/yy').format(DateTime.now()),
+    'jno': '0',
+    'report': 'REPORT',
+  };
+  final Map<String, String> _entryVals = {
+    'report': 'REPORT',
+  };
 
   // ── Auth ───────────────────────────────────────────────────────────────────
   final String? token = AppStorage.getString('token');
@@ -110,6 +120,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
   @override
   void initState() {
     super.initState();
+    _setDefaultFormValues();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.wait([
         context.read<ProcessIssueEntryProvider>().load(),
@@ -119,6 +130,8 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
         context.read<DeptGroupProvider>().load(),
         context.read<DeptProcessProvider>().load(),
         context.read<EmployeeProvider>().loadEmployees(),
+        context.read<CompanyProvider>().loadCompanies(),
+        context.read<ShapeProvider>().load(),
       ]);
       if (!mounted) return;
       _setDefaultFormValues();
@@ -137,7 +150,14 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
 
   void _setDefaultFormValues() {
     final now = DateTime.now();
-    _formValues = {'date': DateFormat('dd/MM/yy').format(now), 'jno': '0'};
+    final dateStr = DateFormat('dd/MM/yy').format(now);
+    _formValues['date'] = dateStr;
+    _formValues['jno'] = '0';
+    _formValues['report'] = 'REPORT';
+    _entryVals['report'] = 'REPORT';
+    _erpFormKey.currentState?.updateFieldValue('date', dateStr);
+    _erpFormKey.currentState?.updateFieldValue('jno', '0');
+    _erpFormKey.currentState?.updateFieldValue('report', 'REPORT');
     if (mounted) setState(() {});
   }
 
@@ -261,6 +281,8 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
       cutCode: r.cutCode,
       size: r.size,
       length: r.length,
+      articalCode: r.articalCode,
+      articalName: r.articalName,
       repairing: r.repairing,
       employeeCode: r.employeeCode,
       deptCode: r.deptCode,
@@ -371,6 +393,8 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
             plDmWt: v.plDmWt,
             plDmPer: v.plDmPer,
             clvCut: v.clvCut,
+            articalCode: v.articalCode,
+            articalName: v.articalName,
             jnoRecPc: v.jnoRecPc,
           );
         }).toList();
@@ -420,6 +444,8 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
 
             'bCode': r.bCode ?? '',
             'pktNo': r.pktNo ?? '',
+            'articalName': r.articalName ?? '',
+            'articalCode': r.articalCode?.toString() ?? '',
 
             'pc': (r.pc ?? 0).toString(),
             'wt': fThreeDecimal(r.wt ?? 0),
@@ -489,6 +515,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
         'deptName': _s(row['deptCode']),
         'employee': _s(row['employeeCode']),
         'time': _s(row['time']),
+        'report': _formValues['report'] ?? _entryVals['report'] ?? 'REPORT',
       };
       _toCrId = row['crID'];
       _syncDetGrid();
@@ -538,6 +565,8 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
               int.tryParse(_formValues['employee'] ?? '0') ??
               0,
           "QRCode": r.qrCode ?? '',
+          if (r.articalCode != null) "ArticalCode": r.articalCode,
+          if (r.articalName != null) "ArticalName": r.articalName,
         };
       }).toList(),
     };
@@ -586,6 +615,8 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
             "EntryType": r.entryType ?? 'P',
             "TopsPc": r.topsPc ?? 0,
             "QRCode": r.qrCode ?? '',
+            if (r.articalCode != null) "ArticalCode": r.articalCode,
+            if (r.articalName != null) "ArticalName": r.articalName,
           };
         }).toList(),
       };
@@ -647,6 +678,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
   void _resetForm() {
     _erpFormKey.currentState?.resetForm();
     _entryVals.clear();
+    _entryVals['report'] = 'REPORT';
     setState(() {
       _isEditMode = _showTableOnMobile = false;
       _isAdding = false;
@@ -656,6 +688,9 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
       _fromCrId = _toCrId = null;
       _erpFormKey = GlobalKey<ErpFormState>();
       _formValues.clear();
+      _formValues['date'] = DateFormat('dd/MM/yy').format(DateTime.now());
+      _formValues['jno'] = '0';
+      _formValues['report'] = 'REPORT';
     });
     _setDefaultFormValues();
   }
@@ -824,6 +859,20 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
           sectionIndex: 2,
           width: 200,
         ),
+        ErpFieldConfig(
+          key: 'report',
+          label: '',
+          type: ErpFieldType.radio,
+          radioDirection: Axis.horizontal,
+          isRadioRow: true,
+          skipFocus: true,
+          radioItems: [
+            ErpRadioOption(label: 'Details', value: 'REPORT'),
+            ErpRadioOption(label: 'Summary', value: 'SUMMARY'),
+          ],
+          width: 250,
+          sectionIndex: 2,
+        ),
       ],
     ];
 
@@ -897,6 +946,7 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
       'qrCode': 'QRCODE',
       'bCode': 'BCODE',
       'pktNo': 'PKT NO',
+      'articalName': 'ARTICLE',
       'pc': 'PC',
       'wt': 'WT',
       'issPc': 'ISS PC',
@@ -933,6 +983,295 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
               ),
       ),
     );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  PRINT JOB WORK PDF
+  // ─────────────────────────────────────────────────────────────────────────
+
+  CompanyModel? _selectedCompany;
+
+  Future<void> printJobWorkPdf() async {
+    final companies = context.read<CompanyProvider>().companies;
+    final selectedCompany = context.read<CompanyProvider>().selectedCompanyCode;
+    final company = companies.firstWhereOrNull(
+          (e) => e.companyCode.toString() == selectedCompany.toString(),
+    ) ?? companies.firstOrNull;
+    _selectedCompany = company;
+
+    if (_detRows.isEmpty) {
+      _showSnack('No detail rows to print.');
+      return;
+    }
+
+    final prov = context.read<ProcessIssueEntryProvider>();
+    final counterProv = context.read<CounterProvider>();
+    final deptProcessProv = context.read<DeptProcessProvider>();
+    final shapeProv = context.read<ShapeProvider>();
+
+    // ── 1. Party / Manager resolution ────────────────────────────────────────
+    final partyId = _toCrId ??
+        int.tryParse(_formValues['manager'] ?? '') ??
+        _detRows.firstOrNull?.toCrId ??
+        int.tryParse(_selectedRow?['CrID']?.toString() ??
+            _selectedRow?['crID']?.toString() ??
+            '');
+
+    final partyCounter = partyId != null
+        ? counterProv.list.firstWhereOrNull((e) => e.crId == partyId)
+        : null;
+
+    final partyName = partyCounter?.crName ??
+        _selectedRow?['Manager']?.toString() ??
+        _selectedRow?['manager']?.toString() ??
+        _formValues['manager'] ??
+        '';
+
+    final cvdPartyCode = partyCounter?.CVDPartyCode?.toString() ?? '';
+    final naturalPartyCode = partyCounter?.NaturalPartyCode?.toString() ?? '';
+
+    // ── 2. Dept & Process resolution ─────────────────────────────────────────
+    final deptCode = partyCounter?.deptCode ??
+        _detRows.firstOrNull?.deptCode ??
+        int.tryParse(_formValues['deptName'] ?? '');
+    final deptName = _deptNameFor(deptCode).isNotEmpty
+        ? _deptNameFor(deptCode)
+        : (_selectedRow?['Department']?.toString() ?? _formValues['deptName'] ?? '');
+
+    final processCode = int.tryParse(_formValues['deptProcessCode'] ?? '') ??
+        _detRows.firstOrNull?.deptProcessCode ??
+        int.tryParse(_selectedRow?['DeptProcessCode']?.toString() ??
+            _selectedRow?['deptProcessCode']?.toString() ??
+            '');
+
+    String processName = '';
+    if (processCode != null) {
+      processName = deptProcessProv.list
+              .firstWhereOrNull((e) => e.deptProcessCode == processCode)
+              ?.deptProcessName ??
+          '';
+    }
+    if (processName.isEmpty) {
+      processName = _selectedRow?['Process']?.toString() ??
+          _selectedRow?['process']?.toString() ??
+          '';
+    }
+
+    final partyType = [deptName, processName]
+        .where((s) => s.trim().isNotEmpty)
+        .join(' - ');
+
+    // ── 3. Master ID & Job No ────────────────────────────────────────────────
+    final masterId = int.tryParse(_formValues['id'] ??
+            _formValues['spkProcessIssMstID'] ??
+            '') ??
+        _detRows.firstOrNull?.spkProcessIssMstID ??
+        int.tryParse(_selectedRow?['SPKProcessIssMstID']?.toString() ??
+            _selectedRow?['spkProcessIssMstID']?.toString() ??
+            _selectedRow?['id']?.toString() ??
+            _selectedRow?['ID']?.toString() ??
+            '') ??
+        prov.list.firstOrNull?.SPKProcessIssMstID ??
+        0;
+
+    final jno = _detRows.firstOrNull?.jno ??
+        int.tryParse(_formValues['jno'] ?? '') ??
+        int.tryParse(_selectedRow?['Jno']?.toString() ??
+            _selectedRow?['jno']?.toString() ??
+            '') ??
+        (masterId != 0 ? masterId : null);
+
+    final jobNo = (jno != null && jno != 0) ? jno.toString() : masterId.toString();
+
+    // ── 4. Date ──────────────────────────────────────────────────────────────
+    final rawDate = _formValues['date'] ??
+        _selectedRow?['Date']?.toString() ??
+        _selectedRow?['date']?.toString() ??
+        '';
+    final dateStr = rawDate.isNotEmpty
+        ? _date(rawDate)
+        : DateFormat('dd/MM/yy').format(DateTime.now());
+
+    // ── 5. Detail Items mapping ──────────────────────────────────────────────
+    final detailItems = _detRows.map((e) {
+      final kapan = (e.cutNo != null && e.cutNo!.isNotEmpty)
+          ? e.cutNo!
+          : (e.clvCut ?? '');
+      final bCode = (e.bCode != null && e.bCode != '0') ? e.bCode! : '';
+      final pktNo = e.pktNo ?? '';
+      final shape = shapeProv.list
+              .firstWhereOrNull((s) => s.shapeCode == e.shapeCode)
+              ?.shapeName ??
+          '';
+      final artical = (e.articalName != null && e.articalName!.isNotEmpty)
+          ? e.articalName!
+          : (shape.isNotEmpty ? shape : '');
+      final pcs = (e.issPc != null && e.issPc! > 0
+              ? e.issPc!
+              : (e.pc != null && e.pc! > 0 ? e.pc! : (e.recPc ?? 0)))
+          .toString();
+      final cts = (e.issWt != null && e.issWt! > 0
+              ? e.issWt!
+              : (e.wt != null && e.wt! > 0 ? e.wt! : (e.recWt ?? 0.0)))
+          .toStringAsFixed(3);
+      final size = (e.size != null && e.size! > 0)
+          ? e.size!.toStringAsFixed(2)
+          : ((e.diam != null && e.diam! > 0) ? e.diam!.toStringAsFixed(2) : '');
+
+      return JobWorkItem(
+        kapan: kapan,
+        bCode: bCode,
+        pktNo: pktNo,
+        type: artical,
+        pcs: pcs,
+        cts: cts,
+        size: size,
+      );
+    }).toList();
+
+    final pdfData = JobWorkPdfModel(
+      headerInfo: _selectedCompany,
+      partyName: partyName,
+      partyType: partyType,
+      jobNo: jobNo,
+      date: dateStr,
+      CVDPartyCode: cvdPartyCode,
+      NaturalPartyCode: naturalPartyCode,
+      items: detailItems,
+    );
+
+    final reportType = _formValues['report'] ?? _entryVals['report'] ?? 'REPORT';
+
+    /// DETAIL REPORT
+    if (reportType == 'REPORT') {
+      final pdf = await generateJobWorkPdf(pdfData);
+      await Printing.layoutPdf(onLayout: (_) async => pdf);
+    }
+    /// SUMMARY REPORT
+    else if (reportType == 'SUMMARY') {
+      List<JobWorkItem> summaryItems = [];
+      JobWorkItem? grandTotalItem;
+
+      if (masterId > 0) {
+        try {
+          final summaryRes = await prov.loadSummaryReport(masterId);
+          if (!mounted) return;
+
+          if (summaryRes != null && summaryRes is Map && summaryRes['data'] != null) {
+            final summaryList = summaryRes['data']['summary'] as List? ?? summaryRes['data'] as List? ?? [];
+            final dataRows = summaryList.where((r) => r['isGrandTotal'] != true && r['IsGrandTotal'] != true).toList();
+
+            summaryItems = dataRows.map((r) {
+              final cut = (r['CutNo'] ?? r['cutNo'] ?? r['MfgCut'] ?? r['mfgCut'] ?? '').toString();
+              final matchedDets = _detRows.where((d) => d.cutNo == cut || d.clvCut == cut).toList();
+              final pktCount = matchedDets.isNotEmpty ? matchedDets.length : (int.tryParse((r['TotalPkt'] ?? r['totalPkt'] ?? r['Pkt'] ?? r['pkt'] ?? '1').toString()) ?? 1);
+              final articalName = (r['ArticalName'] ?? r['articalName'] ?? '').toString().isNotEmpty
+                  ? (r['ArticalName'] ?? r['articalName']).toString()
+                  : (matchedDets.firstWhereOrNull((e) => (e.articalName ?? '').isNotEmpty)?.articalName ??
+                      shapeProv.list.firstWhereOrNull((s) => s.shapeCode == matchedDets.firstOrNull?.shapeCode)?.shapeName ??
+                      (r['Shape'] ?? r['shape'] ?? '').toString());
+
+              final pc = int.tryParse((r['TotalPc'] ?? r['totalPc'] ?? r['Pc'] ?? r['pc'] ?? r['IssPc'] ?? r['issPc'] ?? '0').toString()) ?? 0;
+              final wt = double.tryParse((r['TotalWt'] ?? r['totalWt'] ?? r['Wt'] ?? r['wt'] ?? r['IssWt'] ?? r['issWt'] ?? '0').toString()) ?? 0.0;
+              final sizeStr = (r['Size'] ?? r['size'] ?? '').toString();
+
+              return JobWorkItem(
+                kapan: cut,
+                bCode: pktCount.toString(),
+                pktNo: sizeStr,
+                type: articalName,
+                pcs: pc.toString(),
+                size: sizeStr,
+                cts: wt.toStringAsFixed(3),
+              );
+            }).toList();
+
+            final grandTotal = summaryList.firstWhereOrNull((r) => r['isGrandTotal'] == true || r['IsGrandTotal'] == true);
+            if (grandTotal != null) {
+              grandTotalItem = JobWorkItem(
+                kapan: '',
+                bCode: (grandTotal['TotalPkt'] ?? grandTotal['totalPkt'] ?? _detRows.length).toString(),
+                pktNo: '',
+                type: '',
+                pcs: (grandTotal['TotalPc'] ?? grandTotal['totalPc'] ?? 0).toString(),
+                cts: (double.tryParse((grandTotal['TotalWt'] ?? grandTotal['totalWt'] ?? '0').toString()) ?? 0.0).toStringAsFixed(3),
+              );
+            }
+          }
+        } catch (_) {}
+      }
+
+      // Fallback if summaryItems is empty
+      if (summaryItems.isEmpty) {
+        final Map<String, List<ProcessIssueDetModel>> grouped = {};
+        for (final r in _detRows) {
+          final key = (r.cutNo != null && r.cutNo!.isNotEmpty)
+              ? r.cutNo!
+              : ((r.clvCut != null && r.clvCut!.isNotEmpty) ? r.clvCut! : 'OTHER');
+          grouped.putIfAbsent(key, () => []).add(r);
+        }
+
+        int totalPcs = 0;
+        double totalCts = 0.0;
+
+        summaryItems = grouped.entries.map((entry) {
+          final cut = entry.key;
+          final rows = entry.value;
+          final sumPc = rows.fold<int>(
+            0,
+            (s, e) => s + (e.issPc != null && e.issPc! > 0 ? e.issPc! : (e.pc != null && e.pc! > 0 ? e.pc! : (e.recPc ?? 0))),
+          );
+          final sumWt = rows.fold<double>(
+            0.0,
+            (s, e) => s + (e.issWt != null && e.issWt! > 0 ? e.issWt! : (e.wt != null && e.wt! > 0 ? e.wt! : (e.recWt ?? 0.0))),
+          );
+          totalPcs += sumPc;
+          totalCts += sumWt;
+
+          final articalName = rows.firstWhereOrNull((e) => (e.articalName ?? '').isNotEmpty)?.articalName ??
+              shapeProv.list
+                  .firstWhereOrNull((s) => s.shapeCode == rows.first.shapeCode)
+                  ?.shapeName ??
+              '';
+
+          return JobWorkItem(
+            kapan: cut,
+            bCode: rows.length.toString(),
+            pktNo: '',
+            type: articalName,
+            pcs: sumPc.toString(),
+            cts: sumWt.toStringAsFixed(3),
+          );
+        }).toList();
+
+        grandTotalItem = JobWorkItem(
+          kapan: '',
+          bCode: _detRows.length.toString(),
+          pktNo: '',
+          type: '',
+          pcs: totalPcs.toString(),
+          cts: totalCts.toStringAsFixed(3),
+        );
+      }
+
+      final summaryPdfData = JobWorkPdfModel(
+        headerInfo: _selectedCompany,
+        partyName: partyName,
+        partyType: partyType,
+        jobNo: jobNo,
+        date: dateStr,
+        CVDPartyCode: cvdPartyCode,
+        NaturalPartyCode: naturalPartyCode,
+        items: summaryItems,
+      );
+
+      final pdf = await generateJobWorkPdfSummary(
+        summaryPdfData,
+        showSize: false,
+        grandTotal: grandTotalItem,
+      );
+      await Printing.layoutPdf(onLayout: (_) async => pdf);
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1008,6 +1347,12 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
 
             break;
 
+          case 'report':
+            final valStr = value.toString();
+            _formValues['report'] = valStr;
+            _entryVals['report'] = valStr;
+            break;
+
           default:
             _entryVals[key] = value.toString();
         }
@@ -1021,6 +1366,9 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
 
         _onBCodeScanned(scanVal);
       },
+
+      isShowPrintButton: true,
+      printOnPress: printJobWorkPdf,
 
       onExit: () => context.read<TabProvider>().closeCurrentTab(),
       onSave: _onSave,
@@ -1044,13 +1392,13 @@ class _TrnProcessIssueEntryState extends State<TrnProcessIssueEntry> {
                 columnLabels: {
                   for (final c in _activeDetColumns) c: _colLabel(c),
                 },
-                columnWidths: {for (final c in _activeDetColumns) c: 90},
                 columnAlignments: const {
                   'srno': TextAlign.left,
                   'cutNo': TextAlign.left,
                   'qrCode': TextAlign.left,
                   'bCode': TextAlign.left,
                   'pktNo': TextAlign.left,
+                  'articalName': TextAlign.left,
                 },
                 footerTotCount: 'Tot: ${_detRows.length}',
                 footerTotals: _buildFooterTotals(),

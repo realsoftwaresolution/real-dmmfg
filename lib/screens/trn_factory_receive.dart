@@ -69,6 +69,11 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     return gt == 'pair' || gt.contains('pair');
   }
 
+  bool get _isUnCutOrBreak {
+    final v = (_entryVals['unCutBreak'] ?? _formValues['unCutBreak'] ?? '').trim();
+    return v == 'Un Cut' || v == 'Break';
+  }
+
   // ── Auth ───────────────────────────────────────────────────────────────────
   final String? token = AppStorage.getString('token');
 
@@ -121,10 +126,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     if (deptCode == null) return '';
     try {
       return context
-              .read<DeptProvider>()
-              .list
-              .firstWhere((d) => d.deptCode == deptCode)
-              .deptName ??
+          .read<DeptProvider>()
+          .list
+          .firstWhere((d) => d.deptCode == deptCode)
+          .deptName ??
           '';
     } catch (_) {
       return '';
@@ -135,10 +140,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     if (code == null) return '';
     try {
       return context
-              .read<DeptGroupProvider>()
-              .list
-              .firstWhere((d) => d.deptGroupCode == code)
-              .deptGroupName ??
+          .read<DeptGroupProvider>()
+          .list
+          .firstWhere((d) => d.deptGroupCode == code)
+          .deptGroupName ??
           '';
     } catch (_) {
       return '';
@@ -149,10 +154,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     if (code == null) return '';
     try {
       return context
-              .read<ShapeProvider>()
-              .list
-              .firstWhere((s) => s.shapeCode.toString() == code.toString())
-              .shapeName ??
+          .read<ShapeProvider>()
+          .list
+          .firstWhere((s) => s.shapeCode.toString() == code.toString())
+          .shapeName ??
           '';
     } catch (_) {
       return '';
@@ -163,10 +168,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     if (code == null) return '';
     try {
       return context
-              .read<CutProvider>()
-              .cuts
-              .firstWhere((s) => s.cutCode.toString() == code.toString())
-              .cutName ??
+          .read<CutProvider>()
+          .cuts
+          .firstWhere((s) => s.cutCode.toString() == code.toString())
+          .cutName ??
           '';
     } catch (_) {
       return '';
@@ -177,10 +182,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     if (code == null) return '';
     try {
       return context
-              .read<PurityProvider>()
-              .list
-              .firstWhere((p) => p.purityCode.toString() == code.toString())
-              .purityName ??
+          .read<PurityProvider>()
+          .list
+          .firstWhere((p) => p.purityCode.toString() == code.toString())
+          .purityName ??
           '';
     } catch (_) {
       return '';
@@ -191,10 +196,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     if (code == null) return '';
     try {
       return context
-              .read<ColorProvider>()
-              .list
-              .firstWhere((p) => p.colorCode.toString() == code.toString())
-              .colorName ??
+          .read<ColorProvider>()
+          .list
+          .firstWhere((p) => p.colorCode.toString() == code.toString())
+          .colorName ??
           '';
     } catch (_) {
       return '';
@@ -205,10 +210,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     if (code == null) return '';
     try {
       return context
-              .read<CharniProvider>()
-              .list
-              .firstWhere((p) => p.charniCode.toString() == code.toString())
-              .charniName ??
+          .read<CharniProvider>()
+          .list
+          .firstWhere((p) => p.charniCode.toString() == code.toString())
+          .charniName ??
           '';
     } catch (_) {
       return '';
@@ -219,10 +224,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     if (code == null) return '';
     try {
       return context
-              .read<PolishProvider>()
-              .polishs
-              .firstWhere((p) => p.polishCode.toString() == code.toString())
-              .polishName ??
+          .read<PolishProvider>()
+          .polishs
+          .firstWhere((p) => p.polishCode.toString() == code.toString())
+          .polishName ??
           '';
     } catch (_) {
       return '';
@@ -233,10 +238,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     if (code == null) return '';
     try {
       return context
-              .read<SymmetryProvider>()
-              .symmetrys
-              .firstWhere((p) => p.symmetryCode.toString() == code.toString())
-              .symmetryName ??
+          .read<SymmetryProvider>()
+          .symmetrys
+          .firstWhere((p) => p.symmetryCode.toString() == code.toString())
+          .symmetryName ??
           '';
     } catch (_) {
       return '';
@@ -247,10 +252,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     if (code == null) return '';
     try {
       return context
-              .read<FluoProvider>()
-              .list
-              .firstWhere((p) => p.fluoCode.toString() == code.toString())
-              .fluoName ??
+          .read<FluoProvider>()
+          .list
+          .firstWhere((p) => p.fluoCode.toString() == code.toString())
+          .fluoName ??
           '';
     } catch (_) {
       return '';
@@ -261,10 +266,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     if (code == null) return '';
     try {
       return context
-              .read<IntentProvider>()
-              .cuts
-              .firstWhere((p) => p.fcIntentCode.toString() == code.toString())
-              .fcIntentName ??
+          .read<IntentProvider>()
+          .cuts
+          .firstWhere((p) => p.fcIntentCode.toString() == code.toString())
+          .fcIntentName ??
           '';
     } catch (_) {
       return '';
@@ -275,10 +280,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     if (code == null) return '';
     try {
       return context
-              .read<OverProvider>()
-              .cuts
-              .firstWhere((p) => p.fcOverCode.toString() == code.toString())
-              .fcOverName ??
+          .read<OverProvider>()
+          .cuts
+          .firstWhere((p) => p.fcOverCode.toString() == code.toString())
+          .fcOverName ??
           '';
     } catch (_) {
       return '';
@@ -289,10 +294,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     if (code == null) return '';
     try {
       return context
-              .read<FColorProvider>()
-              .cuts
-              .firstWhere((p) => p.fColorCode.toString() == code.toString())
-              .fColorName ??
+          .read<FColorProvider>()
+          .cuts
+          .firstWhere((p) => p.fColorCode.toString() == code.toString())
+          .fColorName ??
           '';
     } catch (_) {
       return '';
@@ -358,7 +363,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
   Future<void> _loadFromDisplayFields(int crId) async {
     final counter = context.read<CounterProvider>().list.firstWhereOrNull(
-      (c) => c.crId == crId,
+          (c) => c.crId == crId,
     );
     if (counter == null || counter.counterMstID == null) return;
 
@@ -375,7 +380,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
   Future<void> _loadToDisplayFields(int crId) async {
     final counter = context.read<CounterProvider>().list.firstWhereOrNull(
-      (c) => c.crId == crId,
+          (c) => c.crId == crId,
     );
     if (counter == null || counter.counterMstID == null) return;
 
@@ -398,23 +403,23 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     return rawList
         .where(
           (r) =>
-              r.counterType == counterType &&
-              r.userVisibilityCode != null &&
-              _visProv.list.any(
+      r.counterType == counterType &&
+          r.userVisibilityCode != null &&
+          _visProv.list.any(
                 (v) => v.userVisibilityCode == r.userVisibilityCode,
-              ),
-        )
+          ),
+    )
         .map(
           (r) => _visProv.list.firstWhereOrNull(
             (v) => v.userVisibilityCode == r.userVisibilityCode,
-          ),
-        )
+      ),
+    )
         .where(
           (v) =>
-              v != null &&
-              v!.userVisibilityCode != null &&
-              (v.userVisibilityName ?? '').isNotEmpty,
-        )
+      v != null &&
+          v!.userVisibilityCode != null &&
+          (v.userVisibilityName ?? '').isNotEmpty,
+    )
         .cast<UserVisibilityModel>()
         .toList()
       ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
@@ -430,7 +435,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
     try {
       final counter = context.read<CounterProvider>().list.firstWhere(
-        (c) => c.crId == crId,
+            (c) => c.crId == crId,
       );
       final deptName = _deptNameFor(counter.deptCode);
 
@@ -460,7 +465,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
     try {
       final counter = context.read<CounterProvider>().list.firstWhere(
-        (c) => c.crId == crId,
+            (c) => c.crId == crId,
       );
       final deptName = _deptNameFor(counter.deptCode);
 
@@ -570,18 +575,20 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         _erpFormKey.currentState?.updateFieldValue('scanValue', '');
         Future.delayed(
           const Duration(milliseconds: 100),
-          () => _erpFormKey.currentState?.focusField('scanValue'),
+              () => _erpFormKey.currentState?.focusField('scanValue'),
         );
         return;
       } else {
         print('step---6');
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
+        if (!_isUnCutOrBreak) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
 
-          try {
-            _erpFormKey.currentState?.focusField('dmWt');
-          } catch (_) {}
-        });
+            try {
+              _erpFormKey.currentState?.focusField('dmWt');
+            } catch (_) {}
+          });
+        }
       }
       print('step---7');
       final r = rows.first;
@@ -722,46 +729,48 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     // ─────────────────────────────
     // ✅ VALIDATIONS
     // ─────────────────────────────
-    if (recPc > 0 && recWt <= 0) {
-      _showSnack('Rec WT cannot be 0 or empty when Rec PC is entered');
-      _erpFormKey.currentState?.focusField('recWt');
-      return;
-    }
+    if (!_isUnCutOrBreak) {
+      if (recPc > 0 && recWt <= 0) {
+        _showSnack('Rec WT cannot be 0 or empty when Rec PC is entered');
+        _erpFormKey.currentState?.focusField('recWt');
+        return;
+      }
 
-    if (recPc <= 0 && kPc <= 0) {
-      _showSnack('K PC must be greater than 0 when Rec PC is 0');
-      _erpFormKey.currentState?.focusField('kPc');
-      return;
-    }
+      if (recPc <= 0 && kPc <= 0) {
+        _showSnack('K PC must be greater than 0 when Rec PC is 0');
+        _erpFormKey.currentState?.focusField('kPc');
+        return;
+      }
 
-    if (recWt > issWt) {
-      _showSnack('Rec WT cannot be greater than Iss WT');
-      _erpFormKey.currentState?.focusField('recWt');
-      return;
-    }
+      if (recWt > issWt) {
+        _showSnack('Rec WT cannot be greater than Iss WT');
+        _erpFormKey.currentState?.focusField('recWt');
+        return;
+      }
 
-    if (kWt > issWt) {
-      _showSnack('K WT cannot be greater than Iss WT');
-      _erpFormKey.currentState?.focusField('kWt');
-      return;
-    }
+      if (kWt > issWt) {
+        _showSnack('K WT cannot be greater than Iss WT');
+        _erpFormKey.currentState?.focusField('kWt');
+        return;
+      }
 
-    if (brWt > issWt) {
-      _showSnack('Br WT cannot be greater than Iss WT');
-      _erpFormKey.currentState?.focusField('brWt');
-      return;
-    }
+      if (brWt > issWt) {
+        _showSnack('Br WT cannot be greater than Iss WT');
+        _erpFormKey.currentState?.focusField('brWt');
+        return;
+      }
 
-    // if (dmWt > issWt) {
-    //   _showSnack('DM WT cannot be greater than Iss WT');
-    //   _erpFormKey.currentState?.focusField('dmWt');
-    //   return;
-    // }
+      // if (dmWt > issWt) {
+      //   _showSnack('DM WT cannot be greater than Iss WT');
+      //   _erpFormKey.currentState?.focusField('dmWt');
+      //   return;
+      // }
 
-    final totalWt = recWt + kWt + brWt;
-    if (totalWt > issWt) {
-      _showSnack('Total WT (Rec + K + Br) cannot exceed Iss WT');
-      return;
+      final totalWt = recWt + kWt + brWt;
+      if (totalWt > issWt) {
+        _showSnack('Total WT (Rec + K + Br) cannot exceed Iss WT');
+        return;
+      }
     }
 
     // ─────────────────────────────
@@ -791,7 +800,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       final prov = context.read<FactoryReceivedEntryProvider>();
       final payloadData = {
         "FactoryRecMstID":
-            int.tryParse(_formValues['factoryRecMstID'] ?? '0') ?? 0,
+        int.tryParse(_formValues['factoryRecMstID'] ?? '0') ?? 0,
 
         "FactoryRecDetID": _detRows[_editingDetIndex!].FactoryRecDetID ?? 0,
 
@@ -863,6 +872,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         "HA": _entryVals['HA'] ?? '',
         "MarkerMstID": int.tryParse(_entryVals['MarkerMstID']?.toString() ?? _formValues['MarkerMstID']?.toString() ?? '') ?? _detRows[_editingDetIndex!].markerMstID ?? 0,
         "GroupType": _entryVals['groupType'] ?? '',
+        "UnCutBreak": _entryVals['unCutBreak'] ?? '',
       };
 
       final updatedRow = _buildEditedRow(
@@ -963,7 +973,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
     if (_editingDetIndex == null && currentBCode != null) {
       final alreadyExists = _detRows.any(
-        (e) => int.tryParse(e.bCode?.toString() ?? '0') == currentBCode,
+            (e) => int.tryParse(e.bCode?.toString() ?? '0') == currentBCode,
       );
 
       if (alreadyExists) {
@@ -995,20 +1005,20 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
     final newRow = _editingDetIndex != null
         ? _buildEditedRow(
-            srno: srno,
-            existing: _detRows[_editingDetIndex!],
-            issPcStr: _entryVals['issPc'] ?? '',
-            issWtStr: _entryVals['issWt'] ?? '',
-            recPc: recPc,
-            recWt: recWt,
-          )
+      srno: srno,
+      existing: _detRows[_editingDetIndex!],
+      issPcStr: _entryVals['issPc'] ?? '',
+      issWtStr: _entryVals['issWt'] ?? '',
+      recPc: recPc,
+      recWt: recWt,
+    )
         : _buildNewRow(
-            srno: srno,
-            issPcStr: _entryVals['issPc'] ?? '',
-            issWtStr: _entryVals['issWt'] ?? '',
-            recPc: recPc,
-            recWt: recWt,
-          );
+      srno: srno,
+      issPcStr: _entryVals['issPc'] ?? '',
+      issWtStr: _entryVals['issWt'] ?? '',
+      recPc: recPc,
+      recWt: recWt,
+    );
 
     final prov = context.read<FactoryReceivedEntryProvider>();
     bool isRateCallRunning = false;
@@ -1165,21 +1175,22 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       pairNo: _entryVals['pairNo'] ?? existing.pairNo,
       topSide: _entryVals['TopSide'] ?? existing.topSide,
       fcIntentCode:
-          _isFieldVisible('FC INTENT CODE')
+      _isFieldVisible('FC INTENT CODE')
           ? int.tryParse(_entryVals['FcIntentCode'] ?? '') ??
-                existing.fcIntentCode
+          existing.fcIntentCode
           : existing.fcIntentCode,
       fcOverCode:
-          int.tryParse(_entryVals['FcOverCode'] ?? '') ?? existing.fcOverCode,
+      int.tryParse(_entryVals['FcOverCode'] ?? '') ?? existing.fcOverCode,
       fColorCode1:
-          int.tryParse(_entryVals['FColorCode1'] ?? '') ?? existing.fColorCode1,
+      int.tryParse(_entryVals['FColorCode1'] ?? '') ?? existing.fColorCode1,
       fColorCode2:
-          int.tryParse(_entryVals['FColorCode2'] ?? '') ?? existing.fColorCode2,
+      int.tryParse(_entryVals['FColorCode2'] ?? '') ?? existing.fColorCode2,
       ha: _entryVals['HA'] ?? existing.ha,
       markerMstID: int.tryParse(_entryVals['MarkerMstID'] ?? '') ??
           ((existing.markerMstID != null && existing.markerMstID != 0)
               ? existing.markerMstID
               : (int.tryParse(_formValues['MarkerMstID'] ?? '') ?? 0)),
+      unCutBreak: _entryVals['unCutBreak'] ?? existing.unCutBreak,
     );
   }
 
@@ -1285,6 +1296,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       fColorCode2: int.tryParse(_entryVals['FColorCode2'] ?? '') ?? 0,
       ha: _entryVals['HA'] ?? '',
       markerMstID: int.tryParse(_entryVals['MarkerMstID'] ?? _formValues['MarkerMstID'] ?? '') ?? 0,
+      unCutBreak: _entryVals['unCutBreak'] ?? '',
     );
   }
 
@@ -1357,6 +1369,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     set('MarkerMstID', (r.markerMstID != null && r.markerMstID != 0) ? r.markerMstID.toString() : _formValues['MarkerMstID']);
     set('HA', r.ha?.toString());
     set('groupType', r.groupType?.toString());
+    set('unCutBreak', r.unCutBreak?.toString() ?? '');
   }
 
   dynamic _deleteDetRow(int idx) async {
@@ -1470,6 +1483,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             size: v.size,
             ArticalCode: v.ArticalCode,
             groupType: v.groupType,
+            unCutBreak: v.unCutBreak,
           );
         }).toList();
 
@@ -1529,11 +1543,14 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       'FColorCode2',
       'HA',
       'groupType',
+      'unCutBreak',
     ];
     for (final k in keys) {
       _entryVals.remove(k);
       _erpFormKey.currentState?.updateFieldValue(k, '');
     }
+    _formValues['unCutBreak'] = '';
+    _entryVals['unCutBreak'] = '';
     _scannedDet = null;
     _isBCodePending = false;
     _entryVals['scanValue'] = '';
@@ -1557,6 +1574,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       'jno',
       'qrCode',
       'bCode',
+      'unCutBreak',
       'pktNo',
       'mfgCut',
       'orgPc',
@@ -1612,6 +1630,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         'jno': r.jno ?? '',
         'qrCode': r.qrCode ?? '',
         'bCode': r.bCode ?? '',
+        'unCutBreak': r.unCutBreak ?? '',
         'pktNo': r.pktNo ?? '',
         'mfgCut': r.MfgCut ?? '',
 
@@ -1824,6 +1843,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           ? r.markerMstID!
           : (int.tryParse(_formValues['MarkerMstID']?.toString() ?? '0') ?? 0),
       "GroupType": r.groupType ?? '',
+      "UnCutBreak": r.unCutBreak ?? '',
     };
   }
 
@@ -1863,7 +1883,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     dynamic entryType;
     if (selectedFactory != null) {
       final type = selectedFactory.factoryType ?? '';
-       entryType = type;
+      entryType = type;
       _formValues['type'] = type;
       _erpFormKey.currentState?.updateFieldValue('type', type);
     }
@@ -2048,15 +2068,15 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     // ── FROM dropdown ────────────────────────────────────────────────────────
     final fromItems = counterProv.list
         .where((c) {
-          final grp = _deptGroupNameFor(c.deptGroupCode).toUpperCase();
-          return grp.contains('CLEAVING');
-        })
+      final grp = _deptGroupNameFor(c.deptGroupCode).toUpperCase();
+      return grp.contains('CLEAVING');
+    })
         .map(
           (c) => ErpDropdownItem(
-            label: '${c.crName ?? ''}  |  ${_deptNameFor(c.deptCode)}',
-            value: c.crId?.toString() ?? '',
-          ),
-        )
+        label: '${c.crName ?? ''}  |  ${_deptNameFor(c.deptCode)}',
+        value: c.crId?.toString() ?? '',
+      ),
+    )
         .toList();
 
     // factoryDropdown
@@ -2066,10 +2086,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     final factoryDropdown = factoryItems
         .map(
           (e) => ErpDropdownItem(
-            label: e.factoryName ?? '',
-            value: e.factoryCode?.toString() ?? '',
-          ),
-        )
+        label: e.factoryName ?? '',
+        value: e.factoryCode?.toString() ?? '',
+      ),
+    )
         .toList();
 
     //COLOR
@@ -2078,10 +2098,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     final colorDropdown = colorItems
         .map(
           (e) => ErpDropdownItem(
-            label: e.colorName ?? '',
-            value: e.colorCode?.toString() ?? '',
-          ),
-        )
+        label: e.colorName ?? '',
+        value: e.colorCode?.toString() ?? '',
+      ),
+    )
         .toList();
 
     //PURITY
@@ -2090,10 +2110,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     final purityDropdown = purityItems
         .map(
           (e) => ErpDropdownItem(
-            label: e.purityName ?? '',
-            value: e.purityCode?.toString() ?? '',
-          ),
-        )
+        label: e.purityName ?? '',
+        value: e.purityCode?.toString() ?? '',
+      ),
+    )
         .toList();
 
     //SHAPE
@@ -2102,10 +2122,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     final shapeDropdown = shapeItems
         .map(
           (e) => ErpDropdownItem(
-            label: e.shapeName ?? '',
-            value: e.shapeCode?.toString() ?? '',
-          ),
-        )
+        label: e.shapeName ?? '',
+        value: e.shapeCode?.toString() ?? '',
+      ),
+    )
         .toList();
 
     //CUT
@@ -2114,10 +2134,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     final cutDropdown = cutItems
         .map(
           (e) => ErpDropdownItem(
-            label: e.cutName ?? '',
-            value: e.cutCode?.toString() ?? '',
-          ),
-        )
+        label: e.cutName ?? '',
+        value: e.cutCode?.toString() ?? '',
+      ),
+    )
         .toList();
     //CHARNi
     final charniItems = charniProv.list.where((e) => e.active == true).toList()
@@ -2125,35 +2145,35 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     final charniDropdown = charniItems
         .map(
           (e) => ErpDropdownItem(
-            label: e.charniName ?? '',
-            value: e.charniCode?.toString() ?? '',
-          ),
-        )
+        label: e.charniName ?? '',
+        value: e.charniCode?.toString() ?? '',
+      ),
+    )
         .toList();
 
     //POLISH
     final polishItems =
-        polishProv.polishs.where((e) => e.active == true).toList()
-          ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+    polishProv.polishs.where((e) => e.active == true).toList()
+      ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
     final polishDropdown = polishItems
         .map(
           (e) => ErpDropdownItem(
-            label: e.polishName ?? '',
-            value: e.polishCode?.toString() ?? '',
-          ),
-        )
+        label: e.polishName ?? '',
+        value: e.polishCode?.toString() ?? '',
+      ),
+    )
         .toList();
     //SYMMETRY
     final symmetryItems =
-        symmetryProv.symmetrys.where((e) => e.active == true).toList()
-          ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+    symmetryProv.symmetrys.where((e) => e.active == true).toList()
+      ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
     final symmetryDropdown = symmetryItems
         .map(
           (e) => ErpDropdownItem(
-            label: e.symmetryName ?? '',
-            value: e.symmetryCode?.toString() ?? '',
-          ),
-        )
+        label: e.symmetryName ?? '',
+        value: e.symmetryCode?.toString() ?? '',
+      ),
+    )
         .toList();
     //FLUO
     final fluoItems = fluoProv.list.where((e) => e.active == true).toList()
@@ -2161,23 +2181,23 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
     final fluoDropdown = fluoItems
         .map(
           (e) => ErpDropdownItem(
-            label: e.fluoName ?? '',
-            value: e.fluoCode?.toString() ?? '',
-          ),
-        )
+        label: e.fluoName ?? '',
+        value: e.fluoCode?.toString() ?? '',
+      ),
+    )
         .toList();
 
     //TENSIONS
     final tensionItems =
-        tensionProv.list.where((e) => e.active == true).toList()
-          ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
+    tensionProv.list.where((e) => e.active == true).toList()
+      ..sort((a, b) => (a.sortID ?? 0).compareTo(b.sortID ?? 0));
     final tensionDropdown = tensionItems
         .map(
           (e) => ErpDropdownItem(
-            label: e.tensionsName ?? '',
-            value: e.tensionsCode?.toString() ?? '',
-          ),
-        )
+        label: e.tensionsName ?? '',
+        value: e.tensionsCode?.toString() ?? '',
+      ),
+    )
         .toList();
 
     // ─────────────────────────────────────────────────────────────────────
@@ -2218,10 +2238,10 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
               .where((e) => e.active == true)
               .map(
                 (e) => ErpDropdownItem(
-                  label: e.crName ?? '',
-                  value: e.crId?.toString() ?? '',
-                ),
-              )
+              label: e.crName ?? '',
+              value: e.crId?.toString() ?? '',
+            ),
+          )
               .toList(),
           sectionIndex: 0,
           readOnly: _isEditMode || _detRows.isNotEmpty,
@@ -2237,6 +2257,18 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           key: 'scanValue',
           label: 'BCODE',
           type: ErpFieldType.text,
+          sectionIndex: 0,
+        ),
+        ErpFieldConfig(
+          key: 'unCutBreak',
+          label: 'STATUS',
+          type: ErpFieldType.dropdown,
+          skipFocus: true,
+          dropdownItems: const [
+            ErpDropdownItem(label: '-- None --', value: ''),
+            ErpDropdownItem(label: 'Un Cut', value: 'Un Cut'),
+            ErpDropdownItem(label: 'Break', value: 'Break'),
+          ],
           sectionIndex: 0,
         ),
         ErpFieldConfig(
@@ -2260,15 +2292,15 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           readOnly: true,
           sectionIndex: 0,
         ),
+      ],
+      [
         ErpFieldConfig(
           key: 'lotNo',
           label: 'LOT NO',
           type: ErpFieldType.number,
           readOnly: true,
-          sectionIndex: 0,
+          sectionIndex: 1,
         ),
-      ],
-      [
         // ORG
         ErpFieldConfig(
           key: 'orgPc',
@@ -2313,6 +2345,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'recPc',
             label: 'REC PC',
             type: ErpFieldType.number,
+            readOnly: _isUnCutOrBreak,
             sectionIndex: 2,
             flex: 1,
           ),
@@ -2321,6 +2354,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'recWt',
             label: 'REC WT',
             type: ErpFieldType.wt,
+            readOnly: _isUnCutOrBreak,
             sectionIndex: 2,
             flex: 1,
           ),
@@ -2329,6 +2363,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'kPc',
             label: 'K PC',
             type: ErpFieldType.number,
+            readOnly: _isUnCutOrBreak,
             sectionIndex: 2,
             flex: 1,
           ),
@@ -2337,6 +2372,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'kWt',
             label: 'K WT',
             type: ErpFieldType.wt,
+            readOnly: _isUnCutOrBreak,
             sectionIndex: 2,
             flex: 1,
           ),
@@ -2401,6 +2437,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         ErpFieldConfig(
           key: 'groupType',
           label: 'GROUP TYPE',
+          readOnly: _isUnCutOrBreak,
           sectionIndex: 2,
           type: ErpFieldType.dropdown,
           dropdownItems: const [
@@ -2420,6 +2457,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'purity',
             label: 'PURITY',
             type: ErpFieldType.dropdown,
+            readOnly: _isUnCutOrBreak,
             dropdownItems: purityDropdown,
             sectionIndex: 3,
             flex: 1,
@@ -2429,6 +2467,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'charni',
             label: 'CHARNI',
             type: ErpFieldType.dropdown,
+            readOnly: _isUnCutOrBreak,
             dropdownItems: charniDropdown,
             sectionIndex: 3,
             flex: 1,
@@ -2438,6 +2477,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'color',
             label: 'COLOR',
             type: ErpFieldType.dropdown,
+            readOnly: _isUnCutOrBreak,
             dropdownItems: colorDropdown,
             sectionIndex: 3,
             flex: 1,
@@ -2447,6 +2487,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'cutCode',
             label: 'CUT',
             type: ErpFieldType.dropdown,
+            readOnly: _isUnCutOrBreak,
             dropdownItems: cutDropdown,
             sectionIndex: 3,
             flex: 1,
@@ -2456,6 +2497,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'shape',
             label: 'SHAPE',
             type: ErpFieldType.dropdown,
+            readOnly: _isUnCutOrBreak,
             dropdownItems: shapeDropdown,
             sectionIndex: 3,
             flex: 1,
@@ -2465,6 +2507,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'polishCode',
             label: 'POLISH',
             type: ErpFieldType.dropdown,
+            readOnly: _isUnCutOrBreak,
             dropdownItems: polishDropdown,
             sectionIndex: 3,
           ),
@@ -2474,6 +2517,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'symmetryCode',
             label: 'SYMMETRY',
             type: ErpFieldType.dropdown,
+            readOnly: _isUnCutOrBreak,
             dropdownItems: symmetryDropdown,
             sectionIndex: 3,
           ),
@@ -2482,6 +2526,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'fluo',
             label: 'FLUO',
             type: ErpFieldType.dropdown,
+            readOnly: _isUnCutOrBreak,
             dropdownItems: fluoDropdown,
             sectionIndex: 3,
           ),
@@ -2490,6 +2535,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'tensionCode',
             label: 'TENSIONS',
             type: ErpFieldType.dropdown,
+            readOnly: _isUnCutOrBreak,
             dropdownItems: tensionDropdown,
             sectionIndex: 3,
           ),
@@ -2499,14 +2545,15 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           key: 'FcIntentCode',
           label: 'FC INTENT CODE',
           type: ErpFieldType.dropdown,
+          readOnly: _isUnCutOrBreak,
           dropdownItems: fcIntentProv.cuts
               .where((e) => e.active == true)
               .map(
                 (e) => ErpDropdownItem(
-                  label: e.fcIntentName ?? '',
-                  value: e.fcIntentCode?.toString() ?? '',
-                ),
-              )
+              label: e.fcIntentName ?? '',
+              value: e.fcIntentCode?.toString() ?? '',
+            ),
+          )
               .toList(),
           sectionIndex: 4,
         ),
@@ -2514,14 +2561,15 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           key: 'FColorCode1',
           label: 'FC COLOR CODE 1',
           type: ErpFieldType.dropdown,
+          readOnly: _isUnCutOrBreak,
           dropdownItems: fColorProv.cuts
               .where((e) => e.active == true && e.type == 'color1')
               .map(
                 (e) => ErpDropdownItem(
-                  label: e.fColorName ?? '',
-                  value: e.fColorCode?.toString() ?? '',
-                ),
-              )
+              label: e.fColorName ?? '',
+              value: e.fColorCode?.toString() ?? '',
+            ),
+          )
               .toList(),
           sectionIndex: 4,
         ),
@@ -2529,14 +2577,15 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           key: 'FColorCode2',
           label: 'FC COLOR CODE 2',
           type: ErpFieldType.dropdown,
+          readOnly: _isUnCutOrBreak,
           dropdownItems: fColorProv.cuts
               .where((e) => e.active == true && e.type == 'color2')
               .map(
                 (e) => ErpDropdownItem(
-                  label: e.fColorName ?? '',
-                  value: e.fColorCode?.toString() ?? '',
-                ),
-              )
+              label: e.fColorName ?? '',
+              value: e.fColorCode?.toString() ?? '',
+            ),
+          )
               .toList(),
           sectionIndex: 4,
         ),
@@ -2544,14 +2593,15 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           key: 'FcOverCode',
           label: 'FC OVER CODE',
           type: ErpFieldType.dropdown,
+          readOnly: _isUnCutOrBreak,
           dropdownItems: fcOverProv.cuts
               .where((e) => e.active == true)
               .map(
                 (e) => ErpDropdownItem(
-                  label: e.fcOverName ?? '',
-                  value: e.fcOverCode?.toString() ?? '',
-                ),
-              )
+              label: e.fcOverName ?? '',
+              value: e.fcOverCode?.toString() ?? '',
+            ),
+          )
               .toList(),
           sectionIndex: 4,
         ),
@@ -2560,6 +2610,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           label: 'H&A',
           sectionIndex: 4,
           type: ErpFieldType.dropdown,
+          readOnly: _isUnCutOrBreak,
           initialDropValue: true,
           dropdownItems: const [
             ErpDropdownItem(label: 'N', value: 'N'),
@@ -2571,6 +2622,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'length',
             label: 'LENGTH',
             type: ErpFieldType.amount,
+            readOnly: _isUnCutOrBreak,
             sectionIndex: 4,
             flex: 1,
           ),
@@ -2579,6 +2631,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'diam',
             label: 'DIAM',
             type: ErpFieldType.amount,
+            readOnly: _isUnCutOrBreak,
             sectionIndex: 4,
             flex: 1,
           ),
@@ -2587,6 +2640,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'height',
             label: 'HEIGHT',
             type: ErpFieldType.amount,
+            readOnly: _isUnCutOrBreak,
             sectionIndex: 4,
             flex: 1,
           ),
@@ -2595,6 +2649,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
           key: 'TopSide',
           label: 'TOP SIDE',
           type: ErpFieldType.text,
+          readOnly: _isUnCutOrBreak,
           sectionIndex: 4,
           isEntryField: !_isPairGroup,
           showAddButton: !_isPairGroup,
@@ -2605,6 +2660,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             key: 'pairNo',
             label: 'PAIR NO',
             type: ErpFieldType.text,
+            readOnly: _isUnCutOrBreak,
             sectionIndex: 4,
             skipFocus: true,
             showAddButton: true,
@@ -2626,7 +2682,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       return section.whereType<ErpFieldConfig>().map((field) {
         final safeItems = (field.dropdownItems ?? [])
             .whereType<ErpDropdownItem>()
-            .where((item) => item.value.isNotEmpty && item.label.isNotEmpty)
+            .where((item) =>
+        (field.key == 'unCutBreak' || item.value.isNotEmpty) &&
+            item.label.isNotEmpty)
             .toList();
 
         if (safeItems.length == (field.dropdownItems?.length ?? 0)) {
@@ -2779,6 +2837,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
       'jno': 'J No',
       'qrCode': 'QR Code',
       'bCode': 'B Code',
+      'unCutBreak': 'Status',
       'pktNo': 'Pkt No',
       'mfgCut': 'Mfg Cut',
 
@@ -2861,14 +2920,14 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         child: Responsive.isMobile(context)
             ? (_showTableOnMobile ? _buildTable(prov) : _buildForm(context))
             : Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!_showTableOnMobile)
-                    Expanded(flex: 2, child: _buildForm(context)),
-                  if (_showTableOnMobile)
-                    Expanded(flex: 2, child: _buildTable(prov)),
-                ],
-              ),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!_showTableOnMobile)
+              Expanded(flex: 2, child: _buildForm(context)),
+            if (_showTableOnMobile)
+              Expanded(flex: 2, child: _buildTable(prov)),
+          ],
+        ),
       ),
     );
   }
@@ -2903,14 +2962,14 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         _entryVals[key] = val;
 
         switch (key) {
-          // ─────────────────────────────
-          // MASTER FIELDS
-          // ─────────────────────────────
+        // ─────────────────────────────
+        // MASTER FIELDS
+        // ─────────────────────────────
           case 'fromCrId':
             _onFromSelected(val);
             Future.delayed(
               const Duration(milliseconds: 50),
-              () => _erpFormKey.currentState?.focusField('toCrId'),
+                  () => _erpFormKey.currentState?.focusField('toCrId'),
             );
             break;
 
@@ -2918,7 +2977,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             _onToSelected(val);
             Future.delayed(
               const Duration(milliseconds: 50),
-              () => _erpFormKey.currentState?.focusField('deptProcessCode'),
+                  () => _erpFormKey.currentState?.focusField('deptProcessCode'),
             );
             break;
 
@@ -2926,7 +2985,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             _onProcessSelected(val);
             Future.delayed(
               const Duration(milliseconds: 100),
-              () => _erpFormKey.currentState?.focusField('scanValue'),
+                  () => _erpFormKey.currentState?.focusField('scanValue'),
             );
             break;
           case 'factory':
@@ -2935,7 +2994,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             final factoryProv = context.read<FactoryProvider>();
 
             final selectedFactory = factoryProv.factories.firstWhereOrNull(
-              (f) => f.factoryCode.toString() == value.toString(),
+                  (f) => f.factoryCode.toString() == value.toString(),
             );
 
             if (selectedFactory != null) {
@@ -2947,9 +3006,16 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             }
 
             break;
-          // ─────────────────────────────
-          // SCAN FIELD
-          // ─────────────────────────────
+        // ─────────────────────────────
+        // SCAN FIELD
+        // ─────────────────────────────
+          case 'unCutBreak':
+            setState(() {
+              _formValues['unCutBreak'] = val;
+              _entryVals['unCutBreak'] = val;
+            });
+            break;
+
           case 'groupType':
             setState(() {
               _entryVals['groupType'] = value ?? '';
@@ -2962,9 +3028,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             });
             break;
 
-          // ─────────────────────────────
-          // DM VALIDATION
-          // ─────────────────────────────
+        // ─────────────────────────────
+        // DM VALIDATION
+        // ─────────────────────────────
           case 'dmPer':
             final dmPerVal = double.tryParse(val) ?? 0;
             if (dmPerVal > 100) {
@@ -2973,9 +3039,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             }
             break;
 
-          // ─────────────────────────────
-          // 🔥 MAIN CALC TRIGGERS (VERY IMPORTANT)
-          // ─────────────────────────────
+        // ─────────────────────────────
+        // 🔥 MAIN CALC TRIGGERS (VERY IMPORTANT)
+        // ─────────────────────────────
           case 'recWt':
           case 'kWt':
           case 'brWt':
@@ -2986,9 +3052,9 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
 
             break;
 
-          // ─────────────────────────────
-          // OPTIONAL: DM WT change → recalc %
-          // ─────────────────────────────
+        // ─────────────────────────────
+        // OPTIONAL: DM WT change → recalc %
+        // ─────────────────────────────
           case 'dmWt':
             final recWt = double.tryParse(_entryVals['recWt'] ?? '') ?? 0;
             final dmWt = double.tryParse(val) ?? 0;
@@ -3028,7 +3094,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
             // PAIR MODE -> FOCUS pairNo
             Future.delayed(
               const Duration(milliseconds: 100),
-              () => _erpFormKey.currentState?.focusField('pairNo'),
+                  () => _erpFormKey.currentState?.focusField('pairNo'),
             );
           }
           return;
@@ -3053,7 +3119,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
         // ✅ Duplicate check
         if (_editingDetIndex == null) {
           final isDuplicate = _detRows.any(
-            (r) => r.bCode?.toString() == scanVal,
+                (r) => r.bCode?.toString() == scanVal,
           );
 
           if (isDuplicate) {
@@ -3106,6 +3172,7 @@ class _TrnMakableEntryState extends State<FactoryReceiveEntry> {
                   'jno': TextAlign.center,
                   'qrCode': TextAlign.center,
                   'bCode': TextAlign.center,
+                  'unCutBreak': TextAlign.center,
                   'pktNo': TextAlign.center,
                   'mfgCut': TextAlign.center,
                   'purityCode': TextAlign.center,
