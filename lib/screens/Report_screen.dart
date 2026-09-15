@@ -1629,6 +1629,7 @@ class _ReportScreenState extends State<ReportScreen> {
         context.read<CutCreateProvider>().load(),
         context.read<DivisionProvider>().loadDivisions(),
         context.read<ReportMstProvider>().load(),
+        context.read<FluoProvider>().load(),
       ]);
     });
   }
@@ -4008,18 +4009,6 @@ class _ReportScreenState extends State<ReportScreen> {
         );
       },
     );
-  }
-
-  String? get _selectedReportName {
-    final selVal = _formValues['sel'];
-    if (selVal == null || selVal.isEmpty) return null;
-    final code = int.tryParse(selVal);
-    final reportsProv = context.read<ReportMstProvider>();
-    final matched = reportsProv.list.firstWhereOrNull(
-      (e) =>
-          (code != null && e.reportTypeCode == code) || e.reportName == selVal,
-    );
-    return matched?.reportName ?? selVal;
   }
 }
 
