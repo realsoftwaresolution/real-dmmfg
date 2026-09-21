@@ -1999,18 +1999,15 @@ class _ReportScreenState extends State<ReportScreen> {
                             children: [
                               ElevatedButton.icon(
                                 onPressed: () {
-                                  final rowsToPrint = _selectedTableRows.isNotEmpty
-                                      ? _selectedTableRows
-                                      : prov.tableData;
-                                  if (rowsToPrint.isEmpty) {
+                                  if (_selectedTableRows.isEmpty) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('No records to print')),
+                                      const SnackBar(content: Text('Please select at least one row to print')),
                                     );
                                     return;
                                   }
                                   PairLabelPdfService.printPairLabels(
                                     context: context,
-                                    selectedRows: rowsToPrint,
+                                    selectedRows: _selectedTableRows,
                                     allReportRows: prov.tableData,
                                   );
                                 },
