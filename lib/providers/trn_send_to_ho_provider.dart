@@ -219,9 +219,14 @@ class TrnSendToHoProvider extends BaseProvider {
       return [v];
     }
 
+    final int detId = toInt(raw['DetID'] ?? raw['detID'] ?? raw['FactoryRecDetID'] ?? raw['factoryRecDetID'] ?? row['DetID'] ?? row['Id']);
+    final int mstId = toInt(raw['MstID'] ?? raw['mstID'] ?? raw['FactoryRecMstID'] ?? raw['factoryRecMstID'] ?? row['MstID']);
+
     return {
-      "DetID": toInt(raw['DetID'] ?? raw['detID'] ?? row['DetID'] ?? row['Id']),
-      "MstID": toInt(raw['MstID'] ?? raw['mstID'] ?? row['MstID']),
+      "DetID": detId,
+      "FactoryRecDetID": detId,
+      "MstID": mstId,
+      "FactoryRecMstID": mstId,
       "BCode": toInt(raw['BCode'] ?? raw['bCode'] ?? row['BCode']),
       "PktNo": toNonEmptyString(raw['PktNo'] ?? raw['pktNo'] ?? row['PktNo'] ?? row['packetNo']),
       "CutNo": toNonEmptyString(raw['CutNo'] ?? raw['cutNo'] ?? row['CutNo']),
@@ -258,6 +263,8 @@ class TrnSendToHoProvider extends BaseProvider {
       "images": toList(raw['images'] ?? raw['Images'] ?? row['images']),
       "videos": toList(raw['videos'] ?? raw['Videos'] ?? row['videos']),
       "certificates": toList(raw['certificates'] ?? raw['Certificates'] ?? row['certificates']),
+      "layoutname": toNullableString(raw['layoutname'] ?? raw['LayoutName'] ?? row['layoutname'] ?? row['LayoutName']),
+      "LayoutName": toNullableString(raw['LayoutName'] ?? raw['layoutname'] ?? row['LayoutName'] ?? row['layoutname']),
       "sendToHo": sendToHo,
     };
   }
@@ -272,49 +279,55 @@ class TrnSendToHoProvider extends BaseProvider {
     _lastMessage = null;
     notifyListeners();
 
-    final groupedRows = <int, List<Map<String, dynamic>>>{};
+    final List<Map<String, dynamic>> details = [];
+    int factoryRecMstId = 0;
+
     for (final row in selectedRows) {
       final formatted = formatRowForSendToHo(row);
       int mstId = formatted['MstID'] as int? ?? 0;
       if (mstId == 0) {
         final raw = (row['raw'] is Map ? Map<String, dynamic>.from(row['raw'] as Map) : null) ?? row;
-        mstId = int.tryParse('${raw['FactoryRecMstID'] ?? raw['factoryRecMstID'] ?? raw['MstID'] ?? raw['mstID'] ?? row['FactoryRecMstID'] ?? 0}') ?? 0;
+        mstId = int.tryParse('${raw['FactoryRecMstID'] ?? raw['factoryRecMstID'] ?? raw['MstID'] ?? raw['mstID'] ?? 0}') ?? 0;
         formatted['MstID'] = mstId;
+        formatted['FactoryRecMstID'] = mstId;
       }
-      groupedRows.putIfAbsent(mstId, () => []).add(formatted);
+      if (factoryRecMstId == 0 && mstId != 0) {
+        factoryRecMstId = mstId;
+      }
+      details.add(formatted);
+    }
+
+    if (factoryRecMstId == 0 && _jsonResponse['FactoryRecMstID'] != null) {
+      factoryRecMstId = int.tryParse('${_jsonResponse['FactoryRecMstID']}') ?? 0;
+    }
+    if (factoryRecMstId == 0 && _jsonResponse['MstID'] != null) {
+      factoryRecMstId = int.tryParse('${_jsonResponse['MstID']}') ?? 0;
     }
 
     try {
-      bool allSuccess = true;
-      for (final entry in groupedRows.entries) {
-        final payload = {
-          "sendToHo": "Y",
-          "FactoryRecMstID": entry.key,
-          "details": entry.value,
-        };
+      final payload = {
+        "sendToHo": "Y",
+        "FactoryRecMstID": factoryRecMstId,
+        "details": details,
+      };
 
-        final result = await request<bool>(
-          showLoader: true,
-          call: () => api.post('/factoryRec/send-to-ho', data: payload),
-          onSuccess: (res) {
-            final data = res.data;
-            if (data is Map) {
-              if (data['success'] == false) {
-                _error = data['message']?.toString() ?? 'Failed to send to HO';
-                return false;
-              }
-              _lastMessage = data['message']?.toString() ?? _lastMessage;
+      final result = await request<bool>(
+        showLoader: true,
+        call: () => api.post('/factoryRec/send-to-ho', data: payload),
+        onSuccess: (res) {
+          final data = res.data;
+          if (data is Map) {
+            if (data['success'] == false) {
+              _error = data['message']?.toString() ?? 'Failed to send to HO';
+              return false;
             }
-            return true;
-          },
-        );
+            _lastMessage = data['message']?.toString() ?? _lastMessage;
+          }
+          return true;
+        },
+      );
 
-        if (result != true) {
-          allSuccess = false;
-          break;
-        }
-      }
-      return allSuccess;
+      return result == true;
     } catch (e) {
       _error = e.toString();
       return false;

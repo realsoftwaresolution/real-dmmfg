@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:rs_dashboard/core/theme/app_color.dart';
 import '../providers/production_dashboard_provider.dart';
 
@@ -107,7 +106,7 @@ class _PairListReportTableState extends State<PairListReportTable> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Iconsax.danger, color: Colors.red, size: 40),
+              const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 40),
               const SizedBox(height: 12),
               Text(
                 _errorMessage!,
@@ -120,7 +119,7 @@ class _PairListReportTableState extends State<PairListReportTable> {
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: _loadData,
-                icon: const Icon(Iconsax.refresh),
+                icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,
@@ -195,7 +194,7 @@ class _PairListReportTableState extends State<PairListReportTable> {
               ),
               IconButton(
                 icon: const Icon(
-                  Iconsax.refresh,
+                  Icons.refresh,
                   size: 14,
                   color: AppColors.primaryBlue,
                 ),

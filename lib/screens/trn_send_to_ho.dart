@@ -60,6 +60,7 @@ class _TrnSendToHoState extends State<TrnSendToHo> {
   final Map<String, List<String>> _filterDrawerMultiSelectValues = {};
   final Map<String, dynamic> _lastFilter = {};
   List<Map<String, dynamic>> _selectedTableRows = [];
+  bool _isSaving = false;
   // ── Theme ──────────────────────────────────────────────────────────────────
   final ErpThemeVariant _themeVariant = ErpThemeVariant.frost;
 
@@ -111,70 +112,81 @@ class _TrnSendToHoState extends State<TrnSendToHo> {
   }
 
   Future<void> _onSave() async {
-    final prov = context.read<TrnSendToHoProvider>();
-    final selectedType = _formValues['type'] ?? '';
-    final isPdfMode = prov.pdfBytes != null || selectedType == 'Layout' || selectedType == 'LAYOUT';
+    if (_isSaving) return;
+    _isSaving = true;
 
-    // In PDF mode (Layout), send all loaded JSON rows. In table mode (Pair Data), send checked rows.
-    final List<Map<String, dynamic>> rowsToSend = isPdfMode
-        ? prov.tableData
-        : _selectedTableRows;
+    try {
+      final prov = context.read<TrnSendToHoProvider>();
+      final selectedType = _formValues['type'] ?? '';
+      final isPdfMode = prov.pdfBytes != null || selectedType == 'Layout' || selectedType == 'LAYOUT';
 
-    if (rowsToSend.isEmpty) {
-      final msg = isPdfMode
-          ? 'No layout data available to send.'
-          : 'Please select at least one row.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(msg),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-      await ErpResultDialog.showError(
-        context: context,
-        theme: _theme,
-        title: 'Validation',
-        message: msg,
-      );
-      return;
-    }
+      // In PDF mode (Layout), send all loaded JSON rows. In table mode (Pair Data), send checked rows.
+      final List<Map<String, dynamic>> rowsToSend = isPdfMode
+          ? prov.tableData
+          : _selectedTableRows;
 
-    final success = await prov.sendToHo(selectedRows: rowsToSend);
-
-    if (!mounted) return;
-
-    if (success) {
-      await ErpResultDialog.showSuccess(
-        context: context,
-        theme: _theme,
-        title: 'Success',
-        message: prov.lastMessage ?? 'Data sent to HO successfully.',
-      );
-      setState(() {
-        _selectedTableRows.clear();
-      });
-      final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-      final reloadFilter = _lastFilter.isNotEmpty
-          ? _lastFilter
-          : {
-              'fromDate': todayStr,
-              'toDate': todayStr,
-              'sendToHo': _filterDrawerValues['sendToHo'] ?? 'N',
-              if (isPdfMode) 'format': 'both',
-            };
-      if (isPdfMode) {
-        await prov.loadLayoutData(filter: reloadFilter);
-      } else {
-        await prov.loadPairData(filter: reloadFilter);
+      if (rowsToSend.isEmpty) {
+        final msg = isPdfMode 
+            ? 'No layout data available to send.'
+            : 'Please select at least one row.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        await ErpResultDialog.showError(
+          context: context,
+          theme: _theme,
+          title: 'Validation',
+          message: msg,
+        );
+        return;
       }
-    } else {
-      await ErpResultDialog.showError(
-        context: context,
-        theme: _theme,
-        title: 'Error',
-        message: prov.error ?? 'Failed to send data to HO.',
-      );
+
+      final success = await prov.sendToHo(selectedRows: rowsToSend);
+
+      if (!mounted) return;
+
+      if (success) {
+        await ErpResultDialog.showSuccess(
+          context: context,
+          theme: _theme,
+          title: 'Success',
+          message: prov.lastMessage ?? 'Data sent to HO successfully.',
+        );
+        setState(() {
+          _selectedTableRows.clear();
+        });
+        final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+        final reloadFilter = _lastFilter.isNotEmpty
+            ? _lastFilter
+            : {
+                'fromDate': todayStr,
+                'toDate': todayStr,
+                'sendToHo': _filterDrawerValues['sendToHo'] ?? 'N',
+                if (isPdfMode) 'format': 'both',
+              };
+        if (isPdfMode) {
+          await prov.loadLayoutData(filter: reloadFilter);
+        } else {
+          await prov.loadPairData(filter: reloadFilter);
+        }
+      } else {
+        await ErpResultDialog.showError(
+          context: context,
+          theme: _theme,
+          title: 'Error',
+          message: prov.error ?? 'Failed to send data to HO.',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
     }
   }
 
@@ -300,6 +312,8 @@ class _TrnSendToHoState extends State<TrnSendToHo> {
       initialValues: _formValues,
       onCancel: _resetForm,
       isShowSaveButton: true,
+      isShowAddButton: false,
+      autoStartAdding: true,
       onSave: (_) => _onSave(),
       isEditMode: false,
       isShowSearch: false,
@@ -518,16 +532,6 @@ class _PdfReportViewState extends State<_PdfReportView> {
     super.dispose();
   }
 
-  Future<void> _openInNewTab(BuildContext context) async {
-    final blob = html.Blob([widget.pdfBytes], 'application/pdf');
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    html.window.open(url, '_blank');
-    Future.delayed(
-      const Duration(seconds: 10),
-      () => html.Url.revokeObjectUrl(url),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -541,21 +545,6 @@ class _PdfReportViewState extends State<_PdfReportView> {
           height: height,
           child: Column(
             children: [
-              const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.topRight,
-                child: ElevatedButton.icon(
-                  onPressed: () => _openInNewTab(context),
-                  icon: const Icon(Icons.print, size: 18),
-                  label: const Text('Open'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                  ),
-                ),
-              ),
               Expanded(
                 child: PdfViewPinch(
                   controller: _pdfController,

@@ -3491,13 +3491,23 @@ class ReportRegistry {
       reportTypeCode: 'SELL_PRICE',
       endpoint: '/reports/sell-price-report',
       isPdf: true, // 🔥 ADD THIS
-      columns: const [],
-      mapper: (raw) => [],
+      columns: const [
+        ReportColumnDef(key: 'layoutname', label: 'LAYOUT NAME', width: 220),
+        ReportColumnDef(key: 'ShapeName', label: 'SHAPE', width: 140),
+        ReportColumnDef(key: 'mm', label: 'MM', width: 140),
+        ReportColumnDef(key: 'TotalPc', label: 'TOTAL PC', width: 100),
+        ReportColumnDef(key: 'TotalWt', label: 'TOTAL WT', width: 120),
+        ReportColumnDef(key: 'Rate', label: 'RATE', width: 120),
+        ReportColumnDef(key: 'SellCode', label: 'SELL CODE', width: 140),
+        ReportColumnDef(key: 'PktNo', label: 'PKT NO', width: 140),
+      ],
+      mapper: (raw) => raw,
       queryBuilder: (filter) => {
         'kapanNos': filter['KapanNo'],
         'shapecodes': filter['shapeCode'],
         'colors': filter['colorCode'],
         'purities': filter['purityCode'],
+        'format': 'both',
       },
     ),
     // ── FACTORY_REC_SELL_PRICE ─────────────────────────────────────────────────────── 62
@@ -3505,14 +3515,144 @@ class ReportRegistry {
       reportTypeCode: 'FACTORY_REC_SELL_PRICE',
       endpoint: '/reports/sell-price-report/factory-rec',
       isPdf: true, // 🔥 ADD THIS
-      columns: const [],
-      mapper: (raw) => [],
+      columns: const [
+        ReportColumnDef(key: 'DetID', label: 'ID', width: 120),
+        ReportColumnDef(key: 'KapanNo', label: 'KAPAN NO', width: 160),
+        ReportColumnDef(key: 'PktNo', label: 'PKT NO', width: 160),
+        ReportColumnDef(key: 'CutNo', label: 'CUT NO', width: 140),
+        ReportColumnDef(key: 'Shape', label: 'SHAPE', width: 140),
+        ReportColumnDef(key: 'RecWt', label: 'REC WT', width: 140),
+        ReportColumnDef(key: 'Color', label: 'COLOR', width: 140),
+        ReportColumnDef(key: 'Clarity', label: 'CLARITY', width: 160),
+        ReportColumnDef(key: 'Cut', label: 'CUT', width: 140),
+        ReportColumnDef(key: 'Polish', label: 'POLISH', width: 140),
+        ReportColumnDef(key: 'Symmetry', label: 'SYMMETRY', width: 180),
+        ReportColumnDef(key: 'Flou', label: 'FLOU', width: 140),
+        ReportColumnDef(key: 'SellPrice', label: 'SELL PRICE', width: 180),
+        ReportColumnDef(key: 'SellAmount', label: 'SELL AMOUNT', width: 180),
+        ReportColumnDef(key: 'Length', label: 'LENGTH', width: 160),
+        ReportColumnDef(key: 'Dia', label: 'DIA', width: 120),
+        ReportColumnDef(key: 'Height', label: 'HEIGHT', width: 140),
+        ReportColumnDef(key: 'TopSide', label: 'TOP SIDE', width: 160),
+        ReportColumnDef(key: 'GroupType', label: 'GROUP TYPE', width: 180),
+        ReportColumnDef(key: 'ArticalName', label: 'ARTICLE', width: 180),
+        ReportColumnDef(key: 'sendToHo', label: 'SEND TO HO', width: 140),
+        ReportColumnDef(key: 'PairNo', label: 'PAIR NO', width: 160),
+        ReportColumnDef(key: 'layoutname', label: 'LAYOUT NAME', width: 220),
+        ReportColumnDef(key: 'mm', label: 'MM', width: 180),
+      ],
       queryBuilder: (filter) => {
-        'kapanNos': filter['KapanNo'],
-        'shapecodes': filter['shapeCode'],
-        'colors': filter['colorCode'],
-        'purities': filter['purityCode'],
+        if (filter['kapanNos'] != null || filter['KapanNo'] != null || filter['kNo'] != null)
+          'kapanNos': filter['kapanNos'] ?? filter['KapanNo'] ?? filter['kNo'],
+        if (filter['shapecodes'] != null || filter['shapeCode'] != null)
+          'shapecodes': filter['shapecodes'] ?? filter['shapeCode'],
+        if (filter['colors'] != null || filter['colorCode'] != null)
+          'colors': filter['colors'] ?? filter['colorCode'],
+        if (filter['purities'] != null || filter['purityCode'] != null)
+          'purities': filter['purities'] ?? filter['purityCode'],
+        if (filter['fromDate'] != null || filter['FromDate'] != null)
+          'fromDate': filter['fromDate'] ?? filter['FromDate'],
+        if (filter['toDate'] != null || filter['ToDate'] != null)
+          'toDate': filter['toDate'] ?? filter['ToDate'],
+        if (filter['sendToHo'] != null || filter['SendToHo'] != null)
+          'sendToHo': filter['sendToHo'] ?? filter['SendToHo'],
+        'format': 'both',
       },
+      mapper: (raw) => raw.map((e) {
+        if (e.containsKey('layoutname') && !e.containsKey('DetID')) {
+          return e;
+        }
+        final detId = '${e['DetID'] ?? e['detID'] ?? e['Id'] ?? e['id'] ?? '-'}';
+        final kapanNo = '${e['KapanNo'] ?? e['kapanNo'] ?? '-'}';
+        final pktNo = '${e['PktNo'] ?? e['pktNo'] ?? e['packetNo'] ?? e['PacketNo'] ?? '-'}';
+        final rawPair = e['PairNo'] ?? e['pairNo'];
+        final pairNo = (rawPair == null || rawPair == 0 || '$rawPair' == '0' || '$rawPair' == '-' || '$rawPair' == '--')
+            ? '-'
+            : '$rawPair';
+        final groupType = '${e['GroupType'] ?? e['groupType'] ?? e['category'] ?? '-'}';
+        final shape = '${e['Shape'] ?? e['shape'] ?? '-'}';
+        final color = '${e['Color'] ?? e['color'] ?? '-'}';
+        final clarity = '${e['Clarity'] ?? e['clarity'] ?? e['purity'] ?? e['Purity'] ?? '-'}';
+        final cut = '${e['Cut'] ?? e['cut'] ?? '-'}';
+        final polish = '${e['Polish'] ?? e['polish'] ?? '-'}';
+        final symmetry = '${e['Symmetry'] ?? e['symmetry'] ?? '-'}';
+        final flou = '${e['Flou'] ?? e['flou'] ?? e['florence'] ?? e['Florence'] ?? '-'}';
+        final topSide = '${e['TopSide'] ?? e['topSide'] ?? e['topsSide'] ?? e['TopsSide'] ?? '-'}';
+        final certificate = '${e['Certificate'] ?? e['certificate'] ?? '-'}';
+        final certiNo = '${e['CertiNo'] ?? e['certiNo'] ?? e['certificateNo'] ?? e['CertificateNo'] ?? '-'}';
+
+        final wtFormatted = formatDecimal(e['Wt'] ?? e['wt'] ?? e['weight'] ?? e['Weight'], decimal: 3);
+        final issWtFormatted = formatDecimal(e['IssWt'] ?? e['issWt'], decimal: 3);
+        final recWtFormatted = formatDecimal(e['RecWt'] ?? e['recWt'], decimal: 3);
+        final sellPriceFormatted = formatDecimal(e['SellPrice'] ?? e['sellPrice'], decimal: 2);
+        final sellAmountFormatted = formatDecimal(e['SellAmount'] ?? e['sellAmount'] ?? e['totalPrice'], decimal: 2);
+        final lengthFormatted = formatDecimal(e['Length'] ?? e['length'], decimal: 2);
+        final diaFormatted = formatDecimal(e['Dia'] ?? e['dia'], decimal: 2);
+        final heightFormatted = formatDecimal(e['Height'] ?? e['height'], decimal: 2);
+
+        return {
+          'DetID': detId,
+          'MstID': e['MstID'] ?? e['mstID'] ?? 0,
+          'BCode': e['BCode'] ?? e['bCode'] ?? 0,
+          'KapanNo': kapanNo,
+          'PktNo': pktNo,
+          'CutNo': '${e['CutNo'] ?? e['cutNo'] ?? '-'}',
+          'PairNo': pairNo,
+          'GroupType': groupType,
+          'ShapeCode': e['ShapeCode'] ?? e['shapeCode'] ?? 0,
+          'Shape': shape,
+          'Wt': wtFormatted,
+          'IssWt': issWtFormatted,
+          'RecWt': recWtFormatted,
+          'ColorCode': e['ColorCode'] ?? e['colorCode'] ?? 0,
+          'Color': color,
+          'PurityCode': e['PurityCode'] ?? e['purityCode'] ?? 0,
+          'Clarity': clarity,
+          'CutCode': e['CutCode'] ?? e['cutCode'] ?? 0,
+          'Cut': cut,
+          'PolishCode': e['PolishCode'] ?? e['polishCode'] ?? 0,
+          'Polish': polish,
+          'SymmetryCode': e['SymmetryCode'] ?? e['symmetryCode'] ?? 0,
+          'Symmetry': symmetry,
+          'FluoCode': e['FluoCode'] ?? e['fluoCode'] ?? 0,
+          'Flou': flou,
+          'SellPrice': sellPriceFormatted,
+          'SellAmount': sellAmountFormatted,
+          'Length': lengthFormatted,
+          'Dia': diaFormatted,
+          'Height': heightFormatted,
+          'TopSide': topSide,
+          'Certificate': certificate,
+          'CertiNo': certiNo,
+          'sendToHo': '${e['sendToHo'] ?? e['SendToHo'] ?? 'N'}',
+
+          // Legacy/Alias keys
+          'Id': detId,
+          'packetNo': pktNo,
+          'weight': wtFormatted,
+          'color': color,
+          'purity': clarity,
+          'cut': cut,
+          'polish': polish,
+          'symmetry': symmetry,
+          'florence': flou,
+          'sellPrice': sellPriceFormatted,
+          'totalPrice': sellAmountFormatted,
+          'mm': '$lengthFormatted x $diaFormatted x $heightFormatted',
+          'topsSide': topSide,
+          'category': groupType,
+          'certificateNo': certiNo,
+          'pairNo': pairNo,
+          'images': e['images'] ?? e['Images'] ?? [],
+          'videos': e['videos'] ?? e['Videos'] ?? [],
+          'certificates': e['certificates'] ?? e['Certificates'] ?? [],
+          'raw': e,
+          'articalCode': e['ArticalCode'],
+          'ArticalName': e['ArticalName'] ?? e['articalName'] ?? '-',
+          'articalName': e['ArticalName'] ?? e['articalName'] ?? '-',
+          'cutNo': e['CutNo'] ?? e['cutNo'],
+        };
+      }).toList(),
     ),
     // ── PAIR_DATA ─────────────────────────────────────────────────────── 63
     'PAIR_DATA': ReportConfig(
@@ -3527,6 +3667,7 @@ class ReportRegistry {
           'toDate': filter['toDate'] ?? filter['ToDate'],
         if (filter['GroupType'] != null || filter['groupType'] != null)
           'GroupType': filter['GroupType'] ?? filter['groupType'],
+        'sendToHo': filter['sendToHo'] ?? filter['SendToHo'] ?? 'N',
       },
       columns: const [
         ReportColumnDef(key: 'DetID', label: 'ID', width: 120),

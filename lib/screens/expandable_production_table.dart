@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:rs_dashboard/core/theme/app_color.dart';
 import '../providers/production_dashboard_provider.dart';
 
@@ -289,7 +288,7 @@ class _ExpandableProductionTableState extends State<ExpandableProductionTable> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Iconsax.danger, color: Colors.red, size: 40),
+              const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 40),
               const SizedBox(height: 12),
               Text(
                 _errorMessage!,
@@ -302,7 +301,7 @@ class _ExpandableProductionTableState extends State<ExpandableProductionTable> {
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: _loadRootData,
-                icon: const Icon(Iconsax.refresh),
+                icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,
@@ -382,7 +381,7 @@ class _ExpandableProductionTableState extends State<ExpandableProductionTable> {
               ),
               IconButton(
                 icon: const Icon(
-                  Iconsax.refresh,
+                  Icons.refresh,
                   size: 14,
                   color: AppColors.primaryBlue,
                 ),
@@ -619,7 +618,7 @@ class _ExpandableProductionTableState extends State<ExpandableProductionTable> {
         turns: node.isExpanded ? 0.25 : 0.0,
         duration: const Duration(milliseconds: 200),
         child: Icon(
-          Iconsax.arrow_right_3,
+          Icons.chevron_right,
           size: 13,
           color: node.level == 1 ? AppColors.primaryBlue : AppColors.success,
         ),

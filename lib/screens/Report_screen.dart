@@ -1729,6 +1729,7 @@ class _ReportScreenState extends State<ReportScreen> {
       "factoryCode": _intList('factoryCode'),
       "divisionCode": _intList('divisionCode'),
       "employeeCode": _intList('employeeCode'),
+      "sendToHo": _formValues['sendToHo'] ?? 'N',
     };
 
     // Remove nulls and empty lists
@@ -1832,6 +1833,7 @@ class _ReportScreenState extends State<ReportScreen> {
       'dateTo': DateFormat('dd/MM/yy').format(now),
       'timeFrom': DateFormat('hh:mm a').format(now),
       'timeTo': DateFormat('hh:mm a').format(now),
+      'sendToHo': 'N',
     };
     _multiSelectValues?.clear();
     if (mounted) setState(() {});
@@ -2724,6 +2726,11 @@ class _ReportScreenState extends State<ReportScreen> {
                       'cutNo',
                       'CUT NO',
                       cutItems,
+                    ),
+                    _buildSidebarSingleSelect(
+                      'sendToHo',
+                      'SEND TO HO',
+                      const ['N', 'Y'],
                     ),
                   ),
 
@@ -4046,28 +4053,7 @@ class _PdfReportViewState extends State<_PdfReportView> {
   }
 
   Future<void> _openInNewTab(BuildContext context) async {
-    final dio = Dio();
-    final String? token = AppStorage.getString('token');
-    final config = ReportRegistry.of(widget.reportTitle);
-    if (config == null) return;
-
-    final queryParams =
-        config.queryBuilder?.call(widget.filter) ?? widget.filter;
-
-    final response = await dio.get(
-      '$baseUrl${config.endpoint}',
-      queryParameters: queryParams,
-      options: Options(
-        responseType: ResponseType.bytes,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/pdf',
-          'Authorization': 'Bearer $token',
-        },
-      ),
-    );
-
-    final blob = html.Blob([response.data], 'application/pdf');
+    final blob = html.Blob([widget.pdfBytes], 'application/pdf');
     final url = html.Url.createObjectUrlFromBlob(blob);
     html.window.open(url, '_blank');
     Future.delayed(

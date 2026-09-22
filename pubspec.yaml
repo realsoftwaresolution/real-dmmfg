@@ -50,7 +50,6 @@ dependencies:
   path_provider:
   intl:
   fl_chart:
-  iconsax:
   shared_preferences:
   dio:
   provider:

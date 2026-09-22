@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rs_dashboard/rs_dashboard.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:rs_dashboard/core/theme/app_color.dart';
 import '../providers/production_dashboard_provider.dart';
 import '../providers/rough_provider.dart';
