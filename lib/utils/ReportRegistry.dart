@@ -3514,13 +3514,14 @@ class ReportRegistry {
     'FACTORY_REC_SELL_PRICE': ReportConfig(
       reportTypeCode: 'FACTORY_REC_SELL_PRICE',
       endpoint: '/reports/sell-price-report/factory-rec',
-      isPdf: true, // 🔥 ADD THIS
+      isPdf: false,
       columns: const [
         ReportColumnDef(key: 'DetID', label: 'ID', width: 120),
         ReportColumnDef(key: 'KapanNo', label: 'KAPAN NO', width: 160),
         ReportColumnDef(key: 'PktNo', label: 'PKT NO', width: 160),
         ReportColumnDef(key: 'CutNo', label: 'CUT NO', width: 140),
         ReportColumnDef(key: 'Shape', label: 'SHAPE', width: 140),
+        ReportColumnDef(key: 'ArticalName', label: 'ARTICAL NAME', width: 160),
         ReportColumnDef(key: 'RecWt', label: 'REC WT', width: 140),
         ReportColumnDef(key: 'Color', label: 'COLOR', width: 140),
         ReportColumnDef(key: 'Clarity', label: 'CLARITY', width: 160),
@@ -3535,8 +3536,9 @@ class ReportRegistry {
         ReportColumnDef(key: 'Height', label: 'HEIGHT', width: 140),
         ReportColumnDef(key: 'TopSide', label: 'TOP SIDE', width: 160),
         ReportColumnDef(key: 'GroupType', label: 'GROUP TYPE', width: 180),
-        ReportColumnDef(key: 'ArticalName', label: 'ARTICLE', width: 180),
         ReportColumnDef(key: 'sendToHo', label: 'SEND TO HO', width: 140),
+        ReportColumnDef(key: 'Certificate', label: 'CERTIFICATE', width: 180),
+        ReportColumnDef(key: 'CertiNo', label: 'CERTI NO', width: 160),
         ReportColumnDef(key: 'PairNo', label: 'PAIR NO', width: 160),
         ReportColumnDef(key: 'layoutname', label: 'LAYOUT NAME', width: 220),
         ReportColumnDef(key: 'mm', label: 'MM', width: 180),
@@ -3647,6 +3649,7 @@ class ReportRegistry {
           'videos': e['videos'] ?? e['Videos'] ?? [],
           'certificates': e['certificates'] ?? e['Certificates'] ?? [],
           'raw': e,
+          'SendToHoDetID': e['SendToHoDetID'] ?? e['sendToHoDetID'],
           'articalCode': e['ArticalCode'],
           'ArticalName': e['ArticalName'] ?? e['articalName'] ?? '-',
           'articalName': e['ArticalName'] ?? e['articalName'] ?? '-',
@@ -3674,6 +3677,7 @@ class ReportRegistry {
         ReportColumnDef(key: 'KapanNo', label: 'KAPAN NO', width: 160),
         ReportColumnDef(key: 'PktNo', label: 'PKT NO', width: 160),
         ReportColumnDef(key: 'Shape', label: 'SHAPE', width: 140),
+        ReportColumnDef(key: 'ArticalName', label: 'ARTICAL NAME', width: 160),
         // ReportColumnDef(key: 'IssWt', label: 'ISS WT', width: 140),
         ReportColumnDef(key: 'RecWt', label: 'REC WT', width: 140),
         ReportColumnDef(key: 'Color', label: 'COLOR', width: 140),
@@ -3687,7 +3691,6 @@ class ReportRegistry {
         ReportColumnDef(key: 'Length', label: 'LENGTH', width: 160),
         ReportColumnDef(key: 'Dia', label: 'DIA', width: 120),
         ReportColumnDef(key: 'Height', label: 'HEIGHT', width: 140),
-        ReportColumnDef(key: 'TopSide', label: 'TOP SIDE', width: 160),
         ReportColumnDef(key: 'GroupType', label: 'GROUP TYPE', width: 180),
         ReportColumnDef(key: 'Certificate', label: 'CERTIFICATE', width: 180),
         ReportColumnDef(key: 'CertiNo', label: 'CERTI NO', width: 160),
@@ -3722,6 +3725,8 @@ class ReportRegistry {
         final lengthFormatted = formatDecimal(e['Length'] ?? e['length'], decimal: 2);
         final diaFormatted = formatDecimal(e['Dia'] ?? e['dia'], decimal: 2);
         final heightFormatted = formatDecimal(e['Height'] ?? e['height'], decimal: 2);
+        final rawArt = e['ArticalName'] ?? e['articalName'] ?? e['ArticleName'] ?? e['articleName'];
+        final articalName = (rawArt != null && '$rawArt'.isNotEmpty && '$rawArt' != 'null') ? '$rawArt' : '-';
 
         return {
           'DetID': detId,
@@ -3781,8 +3786,11 @@ class ReportRegistry {
           'videos': e['videos'] ?? e['Videos'] ?? [],
           'certificates': e['certificates'] ?? e['Certificates'] ?? [],
           'raw': e,
-          'articalCode': e['ArticalCode'],
-          'articalName': e['ArticalName'],
+          'SendToHoDetID': e['SendToHoDetID'] ?? e['sendToHoDetID'],
+          'ArticalName': articalName,
+          'articalName': articalName,
+          'ArticalCode': e['ArticalCode'] ?? e['articalCode'] ?? e['ArticleCode'] ?? e['articleCode'] ?? 0,
+          'articalCode': e['ArticalCode'] ?? e['articalCode'] ?? e['ArticleCode'] ?? e['articleCode'] ?? 0,
           'cutNo': e['CutNo'] ?? e['cutNo'],
         };
       }).toList(),

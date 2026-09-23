@@ -11,6 +11,7 @@ import 'package:diam_mfg/screens/mst_firm_department_rate.dart';
 import 'package:diam_mfg/screens/mst_firm_dept_group.dart';
 import 'package:diam_mfg/screens/mst_firm_dept_process.dart';
 import 'package:diam_mfg/screens/mst_firm_article.dart';
+import 'package:diam_mfg/screens/mst_firm_safe.dart';
 import 'package:diam_mfg/screens/mst_firm_charni.dart';
 import 'package:diam_mfg/screens/mst_firm_company.dart';
 import 'package:diam_mfg/screens/mst_firm_divison.dart';
@@ -110,6 +111,8 @@ class AppRouter {
     '/2.36': (context) => const MstOver(),
     '/2.37': (context) => const MstFColor(),
     '/2.38': (context) => const MstSellPrice(),
+    '/2.39': (context) => const MstSafe(),
+    '/mst_safe': (context) => const MstSafe(),
     '/3.01': (context) => const TrnRoughEntry(),
     '/3.02': (context) => const TrnRoughAssortEntry(),
     '/3.03': (context) => const TrnCutCreateEntry(),
