@@ -1,8 +1,11 @@
 // lib/screens/pair_media_detail_dialog.dart
+import 'dart:async';
 import 'dart:ui_web' as ui_web;
 import 'package:flutter/material.dart';
 import 'package:universal_html/html.dart' as html;
+import 'package:video_player/video_player.dart';
 import '../bootstrap.dart' show baseUrl;
+import '../services/video_player_cache_manager.dart';
 
 class PairMediaDetailDialog extends StatefulWidget {
   final Map<String, dynamic> row;
@@ -16,6 +19,18 @@ class PairMediaDetailDialog extends StatefulWidget {
 class _PairMediaDetailDialogState extends State<PairMediaDetailDialog> {
   int _activeTabIndex = 0; // 0: Description, 1: Certificate, 2: Photos, 3: Videos
   String? _selectedMediaUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    VideoPlayerCacheManager.instance.preloadFromRow(widget.row);
+  }
+
+  @override
+  void dispose() {
+    VideoPlayerCacheManager.instance.pauseActive();
+    super.dispose();
+  }
 
   List<String> _parseMediaList(dynamic list) {
     if (list == null) return [];
@@ -620,30 +635,907 @@ class EmbeddedVideoPlayer extends StatefulWidget {
 }
 
 class _EmbeddedVideoPlayerState extends State<EmbeddedVideoPlayer> {
-  late String _viewId;
+  VideoPlayerController? _controller;
+  bool _isInitialized = false;
+  bool _hasError = false;
+  String _errorMessage = '';
+  bool _showControls = true;
+  bool _isHoveringControls = false;
+  Timer? _hideTimer;
+  double _currentSpeed = 1.0;
+  bool _isLooping = true;
+  bool _isMuted = true;
 
   @override
   void initState() {
     super.initState();
-    _viewId = 'video-element-${widget.videoUrl.hashCode}-${DateTime.now().microsecondsSinceEpoch}';
-    ui_web.platformViewRegistry.registerViewFactory(_viewId, (int viewId) {
-      final videoElement = html.VideoElement()
-        ..src = widget.videoUrl
-        ..controls = true
-        ..autoplay = false
-        ..loop = false
-        ..muted = false
-        ..style.width = '100%'
-        ..style.height = '100%'
-        ..style.border = 'none'
-        ..style.objectFit = 'contain';
-      return videoElement;
+    _initPlayer();
+  }
+
+  @override
+  void didUpdateWidget(covariant EmbeddedVideoPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.videoUrl != widget.videoUrl) {
+      _cleanupCurrent();
+      _isInitialized = false;
+      _hasError = false;
+      _errorMessage = '';
+      _initPlayer();
+    }
+  }
+
+  void _cleanupCurrent() {
+    _hideTimer?.cancel();
+    _controller?.removeListener(_onControllerUpdate);
+  }
+
+  void _initPlayer() {
+    // 1. Check if controller is already cached and ready for instant playback
+    final cached = VideoPlayerCacheManager.instance.getCached(widget.videoUrl);
+    if (cached != null && cached.value.isInitialized) {
+      _controller = cached;
+      _isInitialized = true;
+      _isLooping = cached.value.isLooping;
+      _isMuted = cached.value.volume == 0.0;
+      _currentSpeed = cached.value.playbackSpeed;
+      _controller!.addListener(_onControllerUpdate);
+      if (!_controller!.value.isPlaying) {
+        _controller!.play();
+      }
+      _startHideTimer();
+      return;
+    }
+
+    // 2. Otherwise get or create from cache manager
+    VideoPlayerCacheManager.instance.getOrCreate(widget.videoUrl).then((controller) {
+      if (!mounted) return;
+      setState(() {
+        _controller = controller;
+        _isInitialized = true;
+        _isLooping = controller.value.isLooping;
+        _isMuted = controller.value.volume == 0.0;
+        _currentSpeed = controller.value.playbackSpeed;
+      });
+      _controller!.addListener(_onControllerUpdate);
+      if (!_controller!.value.isPlaying) {
+        _controller!.play();
+      }
+      _startHideTimer();
+    }).catchError((e) {
+      if (!mounted) return;
+      setState(() {
+        _hasError = true;
+        _errorMessage = e.toString();
+      });
     });
+  }
+
+  void _onControllerUpdate() {
+    if (!mounted) return;
+    if (_controller != null && _controller!.value.hasError && !_hasError) {
+      setState(() {
+        _hasError = true;
+        _errorMessage = _controller!.value.errorDescription ?? 'Video playback error';
+      });
+    }
+  }
+
+  void _startHideTimer() {
+    _hideTimer?.cancel();
+    _hideTimer = Timer(const Duration(milliseconds: 2500), () {
+      if (mounted && _controller != null && _controller!.value.isPlaying && !_isHoveringControls) {
+        setState(() => _showControls = false);
+      }
+    });
+  }
+
+  void _onUserInteraction() {
+    if (!_showControls) {
+      setState(() => _showControls = true);
+    }
+    _startHideTimer();
+  }
+
+  void _togglePlayPause() {
+    if (_controller == null || !_controller!.value.isInitialized) return;
+    if (_controller!.value.isPlaying) {
+      _controller!.pause();
+      setState(() => _showControls = true);
+      _hideTimer?.cancel();
+    } else {
+      _controller!.play();
+      _startHideTimer();
+    }
+  }
+
+  void _toggleMute() {
+    if (_controller == null) return;
+    setState(() {
+      _isMuted = !_isMuted;
+    });
+    _controller!.setVolume(_isMuted ? 0.0 : 1.0);
+  }
+
+  void _toggleLoop() {
+    if (_controller == null) return;
+    setState(() {
+      _isLooping = !_isLooping;
+    });
+    _controller!.setLooping(_isLooping);
+  }
+
+  void _changeSpeed(double speed) {
+    if (_controller == null) return;
+    setState(() {
+      _currentSpeed = speed;
+    });
+    _controller!.setPlaybackSpeed(speed);
+  }
+
+  void _seekRelative(int seconds) {
+    if (_controller == null || !_controller!.value.isInitialized) return;
+    final current = _controller!.value.position;
+    final target = current + Duration(seconds: seconds);
+    final duration = _controller!.value.duration;
+    if (target < Duration.zero) {
+      _controller!.seekTo(Duration.zero);
+    } else if (target > duration) {
+      _controller!.seekTo(duration);
+    } else {
+      _controller!.seekTo(target);
+    }
+    _onUserInteraction();
+  }
+
+  void _openFullscreen() {
+    if (_controller == null) return;
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.92),
+      builder: (ctx) => _FullscreenDiamondVideoDialog(
+        controller: _controller!,
+        videoUrl: widget.videoUrl,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _cleanupCurrent();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return HtmlElementView(viewType: _viewId);
+    return Container(
+      color: const Color(0xFF0F172A),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // 1. Main Video Render Layer
+          if (_isInitialized && _controller != null)
+            Center(
+              child: AspectRatio(
+                aspectRatio: _controller!.value.aspectRatio > 0
+                    ? _controller!.value.aspectRatio
+                    : 16 / 9,
+                child: RepaintBoundary(
+                  child: VideoPlayer(_controller!),
+                ),
+              ),
+            )
+          // else if (!_hasError)
+          //   _buildElegantPlaceholder(),
+
+          // 2. Error Fallback
+          else if (_hasError) _buildErrorOverlay(),
+
+          // 3. Subtle Center Buffering Indicator (leaves underlying frame visible)
+          if (_isInitialized && _controller != null)
+            ValueListenableBuilder<VideoPlayerValue>(
+              valueListenable: _controller!,
+              builder: (context, value, child) {
+                if (value.isBuffering) {
+                  return Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.55),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0288D1)),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+
+          // 4. Tap gesture detector across the video surface
+          Positioned.fill(
+            child: MouseRegion(
+              onHover: (_) => _onUserInteraction(),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _togglePlayPause,
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
+
+          // 5. Center Play Button (when paused)
+          if (_isInitialized && _controller != null)
+            ValueListenableBuilder<VideoPlayerValue>(
+              valueListenable: _controller!,
+              builder: (context, value, child) {
+                if (!value.isPlaying && _showControls) {
+                  return Center(
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: _togglePlayPause,
+                        child: Container(
+                          width: 58,
+                          height: 58,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0288D1).withValues(alpha: 0.9),
+                            shape: BoxShape.circle,
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black45,
+                                blurRadius: 10,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 38),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+
+          // 6. Bottom Controls Bar
+          if (_isInitialized && _controller != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: AnimatedOpacity(
+                opacity: _showControls ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 250),
+                child: IgnorePointer(
+                  ignoring: !_showControls,
+                  child: _buildControlsBar(),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildElegantPlaceholder() {
+    return Container(
+      color: const Color(0xFF0F172A),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0288D1).withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFF0288D1).withValues(alpha: 0.25)),
+              ),
+              child: const Icon(
+                Icons.diamond_outlined,
+                size: 36,
+                color: Color(0xFF0288D1),
+              ),
+            ),
+            const SizedBox(height: 14),
+            const SizedBox(
+              width: 130,
+              child: LinearProgressIndicator(
+                backgroundColor: Color(0xFF1E293B),
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0288D1)),
+                minHeight: 2.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorOverlay() {
+    return Container(
+      color: const Color(0xFF0F172A),
+      padding: const EdgeInsets.all(20),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline_rounded, size: 40, color: Color(0xFFEF4444)),
+            const SizedBox(height: 12),
+            const Text(
+              'Unable to play video',
+              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _errorMessage.isNotEmpty ? _errorMessage : 'Format not supported or network error',
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _hasError = false;
+                      _isInitialized = false;
+                    });
+                    _initPlayer();
+                  },
+                  icon: const Icon(Icons.refresh_rounded, size: 16),
+                  label: const Text('Retry'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0288D1),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    html.window.open(widget.videoUrl, '_blank');
+                  },
+                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                  label: const Text('Open in Browser'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white70,
+                    side: const BorderSide(color: Colors.white24),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    textStyle: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildControlsBar() {
+    return MouseRegion(
+      onEnter: (_) => _isHoveringControls = true,
+      onExit: (_) {
+        _isHoveringControls = false;
+        _startHideTimer();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+            colors: [
+              Colors.black.withValues(alpha: 0.88),
+              Colors.black.withValues(alpha: 0.45),
+              Colors.transparent,
+            ],
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Scrubber
+            _VideoProgressBar(
+              controller: _controller!,
+              onSeekStart: () => _hideTimer?.cancel(),
+              onSeekEnd: () => _startHideTimer(),
+            ),
+            const SizedBox(height: 4),
+
+            // Controls Row
+            Row(
+              children: [
+                // Play / Pause
+                ValueListenableBuilder<VideoPlayerValue>(
+                  valueListenable: _controller!,
+                  builder: (context, value, _) {
+                    return _buildIconButton(
+                      icon: value.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                      tooltip: value.isPlaying ? 'Pause' : 'Play',
+                      onTap: _togglePlayPause,
+                    );
+                  },
+                ),
+
+                // Rewind 5s
+                _buildIconButton(
+                  icon: Icons.replay_5_rounded,
+                  tooltip: 'Rewind 5s',
+                  iconSize: 18,
+                  onTap: () => _seekRelative(-5),
+                ),
+
+                // Forward 5s
+                _buildIconButton(
+                  icon: Icons.forward_5_rounded,
+                  tooltip: 'Forward 5s',
+                  iconSize: 18,
+                  onTap: () => _seekRelative(5),
+                ),
+
+                const SizedBox(width: 6),
+
+                // Time Display
+                ValueListenableBuilder<VideoPlayerValue>(
+                  valueListenable: _controller!,
+                  builder: (context, value, _) {
+                    final pos = _formatDuration(value.position);
+                    final dur = _formatDuration(value.duration);
+                    return Text(
+                      '$pos / $dur',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    );
+                  },
+                ),
+
+                const Spacer(),
+
+                // Continuous 360° Loop toggle
+                _buildIconButton(
+                  icon: Icons.repeat_rounded,
+                  tooltip: _isLooping ? '360° Loop: Active' : '360° Loop: Off',
+                  iconSize: 18,
+                  color: _isLooping ? const Color(0xFF0288D1) : Colors.white60,
+                  onTap: _toggleLoop,
+                ),
+
+                const SizedBox(width: 4),
+
+                // Speed Selector
+                PopupMenuButton<double>(
+                  tooltip: 'Playback Speed',
+                  initialValue: _currentSpeed,
+                  color: const Color(0xFF1E293B),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  onSelected: _changeSpeed,
+                  itemBuilder: (ctx) => [0.5, 0.75, 1.0, 1.25, 1.5, 2.0].map((s) {
+                    return PopupMenuItem<double>(
+                      value: s,
+                      height: 32,
+                      child: Text(
+                        '${s}x',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: s == _currentSpeed ? const Color(0xFF0288D1) : Colors.white,
+                          fontWeight: s == _currentSpeed ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '${_currentSpeed}x',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 4),
+
+                // Volume / Mute
+                _buildIconButton(
+                  icon: _isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+                  tooltip: _isMuted ? 'Unmute' : 'Mute',
+                  iconSize: 18,
+                  color: _isMuted ? Colors.white60 : Colors.white,
+                  onTap: _toggleMute,
+                ),
+
+                // Fullscreen
+                _buildIconButton(
+                  icon: Icons.fullscreen_rounded,
+                  tooltip: 'Fullscreen View',
+                  iconSize: 20,
+                  onTap: _openFullscreen,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIconButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+    double iconSize = 22,
+    Color color = Colors.white,
+  }) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: Tooltip(
+        message: tooltip,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(5),
+            child: Icon(icon, size: iconSize, color: color),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+}
+
+class _VideoProgressBar extends StatefulWidget {
+  final VideoPlayerController controller;
+  final VoidCallback onSeekStart;
+  final VoidCallback onSeekEnd;
+
+  const _VideoProgressBar({
+    required this.controller,
+    required this.onSeekStart,
+    required this.onSeekEnd,
+  });
+
+  @override
+  State<_VideoProgressBar> createState() => _VideoProgressBarState();
+}
+
+class _VideoProgressBarState extends State<_VideoProgressBar> {
+  bool _isDragging = false;
+  double _dragFraction = 0.0;
+
+  void _seekTo(double localDx, double width) {
+    final fraction = (localDx / width).clamp(0.0, 1.0);
+    final target = widget.controller.value.duration * fraction;
+    widget.controller.seekTo(target);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<VideoPlayerValue>(
+      valueListenable: widget.controller,
+      builder: (context, value, child) {
+        final durationMs = value.duration.inMilliseconds;
+        final positionMs = value.position.inMilliseconds;
+
+        double playedFraction = 0.0;
+        if (durationMs > 0) {
+          playedFraction = (_isDragging ? _dragFraction : (positionMs / durationMs)).clamp(0.0, 1.0);
+        }
+
+        double bufferedFraction = 0.0;
+        if (durationMs > 0 && value.buffered.isNotEmpty) {
+          for (final range in value.buffered) {
+            final f = range.end.inMilliseconds / durationMs;
+            if (f > bufferedFraction) bufferedFraction = f.clamp(0.0, 1.0);
+          }
+        }
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            return MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onHorizontalDragStart: (details) {
+                  setState(() {
+                    _isDragging = true;
+                    _dragFraction = (details.localPosition.dx / width).clamp(0.0, 1.0);
+                  });
+                  widget.onSeekStart();
+                },
+                onHorizontalDragUpdate: (details) {
+                  setState(() {
+                    _dragFraction = (details.localPosition.dx / width).clamp(0.0, 1.0);
+                  });
+                },
+                onHorizontalDragEnd: (details) {
+                  final target = widget.controller.value.duration * _dragFraction;
+                  widget.controller.seekTo(target);
+                  setState(() => _isDragging = false);
+                  widget.onSeekEnd();
+                },
+                onTapDown: (details) {
+                  _seekTo(details.localPosition.dx, width);
+                  widget.onSeekEnd();
+                },
+                child: SizedBox(
+                  height: 20,
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
+                    children: [
+                      // Background Track
+                      Container(
+                        height: 4,
+                        width: width,
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      // Buffered Track
+                      Container(
+                        height: 4,
+                        width: width * bufferedFraction,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      // Played Track
+                      Container(
+                        height: 4,
+                        width: width * playedFraction,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0288D1),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      // Scrubber Thumb
+                      Positioned(
+                        left: (width * playedFraction - 6).clamp(0.0, width - 12),
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 1)),
+                            ],
+                            border: Border.all(color: const Color(0xFF0288D1), width: 2),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _FullscreenDiamondVideoDialog extends StatefulWidget {
+  final VideoPlayerController controller;
+  final String videoUrl;
+
+  const _FullscreenDiamondVideoDialog({
+    required this.controller,
+    required this.videoUrl,
+  });
+
+  @override
+  State<_FullscreenDiamondVideoDialog> createState() => _FullscreenDiamondVideoDialogState();
+}
+
+class _FullscreenDiamondVideoDialogState extends State<_FullscreenDiamondVideoDialog> {
+  bool _showControls = true;
+  Timer? _hideTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startHideTimer();
+  }
+
+  void _startHideTimer() {
+    _hideTimer?.cancel();
+    _hideTimer = Timer(const Duration(milliseconds: 2500), () {
+      if (mounted && widget.controller.value.isPlaying) {
+        setState(() => _showControls = false);
+      }
+    });
+  }
+
+  void _onInteraction() {
+    if (!_showControls) {
+      setState(() => _showControls = true);
+    }
+    _startHideTimer();
+  }
+
+  @override
+  void dispose() {
+    _hideTimer?.cancel();
+    super.dispose();
+  }
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.black,
+      insetPadding: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.9,
+        child: MouseRegion(
+          onHover: (_) => _onInteraction(),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Large Video
+              Center(
+                child: AspectRatio(
+                  aspectRatio: widget.controller.value.aspectRatio > 0
+                      ? widget.controller.value.aspectRatio
+                      : 16 / 9,
+                  child: RepaintBoundary(
+                    child: VideoPlayer(widget.controller),
+                  ),
+                ),
+              ),
+
+              // Close button
+              Positioned(
+                top: 16,
+                right: 16,
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: InkWell(
+                    onTap: () => Navigator.of(context).pop(),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Fullscreen controls
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: AnimatedOpacity(
+                  opacity: _showControls ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 250),
+                  child: IgnorePointer(
+                    ignoring: !_showControls,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.88),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _VideoProgressBar(
+                            controller: widget.controller,
+                            onSeekStart: () => _hideTimer?.cancel(),
+                            onSeekEnd: () => _startHideTimer(),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              ValueListenableBuilder<VideoPlayerValue>(
+                                valueListenable: widget.controller,
+                                builder: (context, value, _) {
+                                  return IconButton(
+                                    icon: Icon(
+                                      value.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                      color: Colors.white,
+                                      size: 26,
+                                    ),
+                                    onPressed: () {
+                                      if (value.isPlaying) {
+                                        widget.controller.pause();
+                                        setState(() => _showControls = true);
+                                      } else {
+                                        widget.controller.play();
+                                        _startHideTimer();
+                                      }
+                                    },
+                                  );
+                                },
+                              ),
+                              ValueListenableBuilder<VideoPlayerValue>(
+                                valueListenable: widget.controller,
+                                builder: (context, value, _) {
+                                  final pos = _formatDuration(value.position);
+                                  final dur = _formatDuration(value.duration);
+                                  return Text(
+                                    '$pos / $dur',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontFeatures: [FontFeature.tabularFigures()],
+                                    ),
+                                  );
+                                },
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                icon: const Icon(Icons.fullscreen_exit_rounded, color: Colors.white, size: 26),
+                                onPressed: () => Navigator.of(context).pop(),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

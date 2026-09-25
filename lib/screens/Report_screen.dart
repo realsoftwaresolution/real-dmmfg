@@ -49,6 +49,7 @@ import '../bootstrap.dart';
 import '../services/pair_excel_export_service.dart';
 import '../services/pair_label_pdf_service.dart';
 import 'pair_media_detail_dialog.dart';
+import '../services/video_player_cache_manager.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -1688,7 +1689,6 @@ class _ReportScreenState extends State<ReportScreen> {
         selectedPurityNames.add(codeStr);
       }
     }
-
     final filter = <String, dynamic>{
       // Single-value fields
       "reportType": _intVal('type'),
@@ -2108,6 +2108,9 @@ class _ReportScreenState extends State<ReportScreen> {
                       final pktNoText = row['PktNo'] ?? row['pktNo'] ?? '--';
                       return MouseRegion(
                         cursor: SystemMouseCursors.click,
+                        onEnter: (_) {
+                          VideoPlayerCacheManager.instance.preloadFromRow(row);
+                        },
                         child: GestureDetector(
                           onTap: () {
                             showDialog(

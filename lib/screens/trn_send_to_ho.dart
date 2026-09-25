@@ -40,6 +40,7 @@ import '../utils/app_images.dart';
 import '../utils/msg_dialogue.dart';
 import '../widgets/report_filter_drawer.dart';
 import 'pair_media_detail_dialog.dart';
+import '../services/video_player_cache_manager.dart';
 
 class TrnSendToHo extends StatefulWidget {
   const TrnSendToHo({super.key});
@@ -969,6 +970,9 @@ class _TrnSendToHoState extends State<TrnSendToHo> {
                       final pktNoText = row['PktNo'] ?? row['pktNo'] ?? '--';
                       return MouseRegion(
                         cursor: SystemMouseCursors.click,
+                        onEnter: (_) {
+                          VideoPlayerCacheManager.instance.preloadFromRow(row);
+                        },
                         child: GestureDetector(
                           onTap: () {
                             showDialog(
