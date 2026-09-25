@@ -975,6 +975,7 @@ class _TrnSendToHoState extends State<TrnSendToHo> {
                         },
                         child: GestureDetector(
                           onTap: () {
+                            VideoPlayerCacheManager.instance.preloadFromRow(row);
                             showDialog(
                               context: context,
                               builder: (ctx) => PairMediaDetailDialog(row: row),

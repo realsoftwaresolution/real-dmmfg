@@ -636,6 +636,7 @@ class EmbeddedVideoPlayer extends StatefulWidget {
 
 class _EmbeddedVideoPlayerState extends State<EmbeddedVideoPlayer> {
   VideoPlayerController? _controller;
+  ValueNotifier<double?>? _progressNotifier;
   bool _isInitialized = false;
   bool _hasError = false;
   String _errorMessage = '';
@@ -667,9 +668,15 @@ class _EmbeddedVideoPlayerState extends State<EmbeddedVideoPlayer> {
   void _cleanupCurrent() {
     _hideTimer?.cancel();
     _controller?.removeListener(_onControllerUpdate);
+    try {
+      _controller?.pause();
+      _controller?.seekTo(Duration.zero);
+    } catch (_) {}
   }
 
   void _initPlayer() {
+    _progressNotifier = VideoPlayerCacheManager.instance.getProgressNotifier(widget.videoUrl);
+
     // 1. Check if controller is already cached and ready for instant playback
     final cached = VideoPlayerCacheManager.instance.getCached(widget.videoUrl);
     if (cached != null && cached.value.isInitialized) {
@@ -679,9 +686,12 @@ class _EmbeddedVideoPlayerState extends State<EmbeddedVideoPlayer> {
       _isMuted = cached.value.volume == 0.0;
       _currentSpeed = cached.value.playbackSpeed;
       _controller!.addListener(_onControllerUpdate);
-      if (!_controller!.value.isPlaying) {
-        _controller!.play();
-      }
+      // Play from start every time popup opens
+      _controller!.seekTo(Duration.zero).then((_) {
+        if (mounted && _controller != null) {
+          _controller!.play();
+        }
+      });
       _startHideTimer();
       return;
     }
@@ -697,9 +707,12 @@ class _EmbeddedVideoPlayerState extends State<EmbeddedVideoPlayer> {
         _currentSpeed = controller.value.playbackSpeed;
       });
       _controller!.addListener(_onControllerUpdate);
-      if (!_controller!.value.isPlaying) {
-        _controller!.play();
-      }
+      // Play from start every time popup opens
+      _controller!.seekTo(Duration.zero).then((_) {
+        if (mounted && _controller != null) {
+          _controller!.play();
+        }
+      });
       _startHideTimer();
     }).catchError((e) {
       if (!mounted) return;
@@ -824,11 +837,12 @@ class _EmbeddedVideoPlayerState extends State<EmbeddedVideoPlayer> {
                 ),
               ),
             )
-          // else if (!_hasError)
-          //   _buildElegantPlaceholder(),
+          else if (!_hasError)
+            _buildPreloadingView()
 
           // 2. Error Fallback
-          else if (_hasError) _buildErrorOverlay(),
+          else if (_hasError)
+            _buildErrorOverlay(),
 
           // 3. Subtle Center Buffering Indicator (leaves underlying frame visible)
           if (_isInitialized && _controller != null)
@@ -925,38 +939,72 @@ class _EmbeddedVideoPlayerState extends State<EmbeddedVideoPlayer> {
     );
   }
 
-  Widget _buildElegantPlaceholder() {
-    return Container(
-      color: const Color(0xFF0F172A),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0288D1).withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF0288D1).withValues(alpha: 0.25)),
-              ),
-              child: const Icon(
-                Icons.diamond_outlined,
-                size: 36,
-                color: Color(0xFF0288D1),
-              ),
+  Widget _buildPreloadingView() {
+    final notifier = _progressNotifier ?? VideoPlayerCacheManager.instance.getProgressNotifier(widget.videoUrl);
+    return ValueListenableBuilder<double?>(
+      valueListenable: notifier,
+      builder: (context, progress, _) {
+        final percentStr = (progress != null && progress > 0)
+            ? ' ${(progress * 100).toInt()}%'
+            : '';
+        return Container(
+          color: const Color(0xFF0F172A),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0288D1).withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFF0288D1).withValues(alpha: 0.3)),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.diamond_outlined,
+                      size: 28,
+                      color: Color(0xFF0288D1),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Loading Video$percentStr',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Preloading into memory for smooth, buffer-free playback',
+                  style: TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 11.5,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: 180,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: progress != null && progress > 0 ? progress : null,
+                      backgroundColor: const Color(0xFF1E293B),
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0288D1)),
+                      minHeight: 4,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 14),
-            const SizedBox(
-              width: 130,
-              child: LinearProgressIndicator(
-                backgroundColor: Color(0xFF1E293B),
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0288D1)),
-                minHeight: 2.5,
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
